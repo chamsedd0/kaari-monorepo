@@ -1,0 +1,69 @@
+/* Font Face Declarations */
+@font-face {
+  font-family: 'Visby CF';
+  src: url('./assets/fonts/VisbyCF-Heavy.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Visby CF';
+  src: url('./assets/fonts/VisbyCF-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Visby CF';
+  src: url('./assets/fonts/VisbyCF-DemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Visby CF';
+  src: url('./assets/fonts/VisbyCF-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+/* Apply font family to all elements */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Visby CF', sans-serif;
+}
+
+body {
+  font-family: 'Visby CF', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #511B72;
+  border-radius: 4px;
+  border: 1px solid #511B72;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8F27CE;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #511B72 transparent;
+}
