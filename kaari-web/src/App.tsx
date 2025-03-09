@@ -1,16 +1,16 @@
-
-import { Theme } from "./theme/theme"
+import PropertyPageComponent from "./pages/property-page/page";
 
 
 
 function App() {
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', gap: '20px', backgroundColor: Theme.colors.white }}>
-      
-      
+    <div>
+      <PropertyPageComponent>
+        
+      </PropertyPageComponent>
     </div>
   )
 }
 
-export default App
+export default App;

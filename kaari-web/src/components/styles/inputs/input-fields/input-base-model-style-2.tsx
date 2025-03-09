@@ -1,5 +1,5 @@
-import { Theme } from '../../../../theme/theme';
-import styled from 'styled-components';
+import { Theme } from "../../../../theme/theme";
+import styled from "styled-components";
 
 const InputBaseModel2 = styled.div`
   display: flex;
@@ -8,7 +8,7 @@ const InputBaseModel2 = styled.div`
   align-items: flex-start;
   width: 100%;
   max-width: 490px;
-  
+
   div {
     display: flex;
     align-items: center;
@@ -17,7 +17,7 @@ const InputBaseModel2 = styled.div`
     padding: 22px 24px;
     border: ${Theme.borders.primary};
     border-radius: ${Theme.borders.radius.extreme};
-    
+
     background-color: ${Theme.colors.white};
   }
 
@@ -37,7 +37,6 @@ const InputBaseModel2 = styled.div`
     background-color: transparent;
     font: ${Theme.typography.fonts.largeM};
     color: ${Theme.colors.primary};
-
 
     &::placeholder {
       color: ${Theme.colors.tertiary};

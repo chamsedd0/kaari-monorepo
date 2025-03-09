@@ -5,8 +5,9 @@ const SearchBarBaseModel = styled.div`
   display: flex;
   align-items: center;
   width: 100%;
-  max-width: 440px;
+  max-width: 550px;
   padding: 12px 24px;
+  height: 48px;
   border: ${Theme.borders.primary};
   border-radius: ${Theme.borders.radius.extreme};
   background-color: ${Theme.colors.white};

@@ -1,5 +1,5 @@
-import { Theme } from '../../../../theme/theme';
-import styled from 'styled-components';
+import { Theme } from "../../../../theme/theme";
+import styled from "styled-components";
 
 const InputBaseModel1 = styled.div`
   display: flex;
@@ -23,7 +23,6 @@ const InputBaseModel1 = styled.div`
     color: ${Theme.colors.primary};
     background-color: ${Theme.colors.white};
     transition: all 0.3s ease;
-
 
     &::placeholder {
       color: ${Theme.colors.tertiary};

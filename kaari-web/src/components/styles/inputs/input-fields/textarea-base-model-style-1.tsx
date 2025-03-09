@@ -1,5 +1,5 @@
-import { Theme } from '../../../../theme/theme';
-import styled from 'styled-components';
+import { Theme } from "../../../../theme/theme";
+import styled from "styled-components";
 
 const TextAreaBaseModel1 = styled.div`
   display: flex;
@@ -8,8 +8,9 @@ const TextAreaBaseModel1 = styled.div`
   align-items: flex-start;
   width: 100%;
   max-width: 757px;
-  transition: width 0.01s ease, height 0.01s ease;
-
+  transition:
+    width 0.01s ease,
+    height 0.01s ease;
 
   span {
     font: ${Theme.typography.fonts.extraLargeB};

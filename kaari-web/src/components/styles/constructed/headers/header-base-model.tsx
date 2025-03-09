@@ -1,0 +1,41 @@
+import styled from "styled-components";
+import { Theme } from "../../../../theme/theme";
+
+
+export const HeaderBaseModel = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    max-height: 80px;
+    width: 100%;
+    border: ${Theme.borders.primary};
+    padding: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+
+    .logo {
+        height: 100%;
+        max-width: 105px;
+        
+        img {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    .profilePic {
+        cursor: pointer;
+    }
+
+    .nav-links {
+        display: flex;
+        align-items: center;
+        justify-content: end;
+        gap: 40px;
+
+    }
+`

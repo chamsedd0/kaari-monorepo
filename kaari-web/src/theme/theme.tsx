@@ -4,23 +4,25 @@ export class Theme {
     // Base colors
     primary: '#511B72',
     secondary: '#8F27CE',
-    tertiary: '#A089AE',
-    quaternary: '#F7ECFE',
-    success: '#29822D',
+    tertiary: 'rgba(218, 196, 233, 1)',
+    quaternary: '#A089AE',
+    success: 'rgba(41, 130, 45, 1)',
     warning: '#FFCE4F',
-    error: '#FF0000',
+    error: 'rgba(155, 3, 3, 1)',
+    blue: 'rgba(5, 149, 195, 1)',
 
     // Neutral colors
     white: '#FFFFFF',
     black: '#252525',
     blockScreen: '#00000025',
     gray: '#D1D1D1',
+    gray2: '#767676',
   }
 
 
   // Borders
   static borders = {
-    primary: '1px solid #B7A0C6',
+    primary: '1px solid rgba(218, 196, 233, 1)',
     button: '4px solid #8F27CE',
     buttonHover: '4px solid #511B72',
     white: '4px solid #FFFFFF',
