@@ -8,15 +8,17 @@ interface LikeBannerProps {
 
 const LikeBannerBaseModelVariant1 = styled(LikeBannerBaseModel)<LikeBannerProps>`
   background-color: ${props => props.isLiked ? Theme.colors.secondary : Theme.colors.white};
-  border: none;
+  border: ${Theme.borders.primary};
   transition: all 0.3s ease-in-out;
+  padding-top: 2px;
 
   svg path {
     transition: fill 0.3s ease-in-out;
+    
   }
 
   &:hover {
-    opacity: 0.8;
+    background-color: ${Theme.colors.tertiary};
   }
 `;
 

@@ -13,6 +13,7 @@ export const WhiteHeaderUsers = ({user}: {user: boolean}) => {
         <div>
             {user ? (
                     <HeaderWhiteUsers>
+                        <div className="wrapper">
                         <div className="logo">
                             <img src={Logo} alt="" />
                         </div>
@@ -42,22 +43,25 @@ export const WhiteHeaderUsers = ({user}: {user: boolean}) => {
                                 <img src={ProfilePic} alt="" />
                             </div>
                         </div>
+                        </div>
                     </HeaderWhiteUsers>
                     
                 ) : (
                     <HeaderWhiteUsers>
-                        <div className="logo">
-                            <img src={Logo} alt="" />
-                        </div>
-                        <div className="nav-links">
-                            <div className="link">Are you a landlord?</div>
-                            <LanguageBanner text="ENG"></LanguageBanner>
-                            <div className="favorites">
-                                <HeartIcon bgColor={Theme.colors.primary}></HeartIcon>
+                        <div className="wrapper">
+                            <div className="logo">
+                                <img src={Logo} alt="" />
                             </div>
-                            <div className="link">Help</div>
-                            <div className="link">
-                                Sign in
+                            <div className="nav-links">
+                                <div className="link">Are you a landlord?</div>
+                                <LanguageBanner text="ENG"></LanguageBanner>
+                                <div className="favorites">
+                                    <HeartIcon bgColor={Theme.colors.primary}></HeartIcon>
+                                </div>
+                                <div className="link">Help</div>
+                                <div className="link">
+                                    Sign in
+                                </div>
                             </div>
                         </div>
                     </HeaderWhiteUsers>

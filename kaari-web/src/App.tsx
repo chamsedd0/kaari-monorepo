@@ -1,4 +1,4 @@
-import PropertyPageComponent from "./pages/property-page/page";
+import { ProfileShowcasePage } from "./pages/profile-advertiser-showcase/page";
 
 
 
@@ -6,9 +6,7 @@ function App() {
 
   return (
     <div>
-      <PropertyPageComponent>
-        
-      </PropertyPageComponent>
+        <ProfileShowcasePage></ProfileShowcasePage>
     </div>
   )
 }

@@ -5,13 +5,21 @@ interface PropertyPageProps {
     isFixed: boolean;
     isStopped: boolean;
     stopPosition: number;
+    total_Height: number;
 }
 
 export const PropertyPage = styled.div<PropertyPageProps>`
   display: flex;
   justify-content: space-between;
-  min-height: 200vh;
   position: relative;
+  width: 100%;
+  max-width: 1600px;
+  margin: auto;
+  display: flex;
+  align-items: start;
+  justify-content: start;
+  flex-direction: column;
+
 
 
   * {
@@ -20,23 +28,23 @@ export const PropertyPage = styled.div<PropertyPageProps>`
 
   .main-content {
     padding: 20px;
-    padding-top: 120px;
+    margin-top: 80px;
     width: 100%;
     padding-right: 475px;
     
     
-    z-index: -1;
+    
+    z-index: 0;
 
     @media (max-width: 1400px) {
       padding-right: calc(33.3% + 20px);
     }
   }
 
-  .slider {
+  .photo-slider {
     width: 100%;
-    height: 100%;
-    background-color: ${Theme.colors.primary};
-
+    height: 2000px;
+    background-color: gray;
   }
 
   .checkout-box {
@@ -44,28 +52,38 @@ export const PropertyPage = styled.div<PropertyPageProps>`
     width: 33.3%;
     min-height: calc(100vh);
     padding: 80px 20px;
-    background: ${Theme.colors.gray2};
+    padding-top: 108px;
+    background: ${Theme.colors.white};
+    border: ${Theme.borders.primary};
+    border-top: none;
+    border-right: none;
     display: flex;
-    align-items: end;
-    z-index: -1;
+    align-items: center;
+    justify-content: center;
+    z-index: 0;
   }
 
   .checkout-box.fixed {
     position: fixed;
     top: 0px;
     right: 0px;
+    
+    @media (min-width: 1760px) {
+      right: calc(100vw - 1600px - 160px);
+    }
   }
 
   .checkout-box.stopped {
     position: absolute;
-    bottom: calc(100vh - ${(props) => props.stopPosition}px);
+    bottom: calc(${(props) => props.total_Height}px - ${(props) => props.stopPosition}px);
     right: 0px;
+
+
   }
 
   .stop-point {
-    position: absolute;
-    bottom: 10%;
     width: 100%;
+    height: 1000px;
 
   }
 `;

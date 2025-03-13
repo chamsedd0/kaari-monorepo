@@ -14,6 +14,7 @@ export const PropertyRequestCardStyle = styled.div`
     flex-direction: column;
 
     gap: 28px;
+    z-index: 2;
 
 
     .title {
@@ -67,6 +68,17 @@ export const PropertyRequestCardStyle = styled.div`
                 }
 
             }
+
+            .view-profile {
+                font: ${Theme.typography.fonts.smallM};
+                color: ${Theme.colors.secondary};
+                transition: all 0.3s ease;
+                cursor: pointer;
+
+                &:hover{
+                    color: ${Theme.colors.primary};
+                }
+            }
         }
     }
 
@@ -78,6 +90,11 @@ export const PropertyRequestCardStyle = styled.div`
         justify-content: start;
         flex-direction: column;
         gap: 16px;
+
+        .info-title {
+            font: ${Theme.typography.fonts.largeB};
+            color: ${Theme.colors.black};
+        }
 
         .details {
 
@@ -94,6 +111,7 @@ export const PropertyRequestCardStyle = styled.div`
                 font: ${Theme.typography.fonts.mediumM};
                 color: ${Theme.colors.quaternary};
                 padding: 13px 54.5px;
+                border-radius: ${Theme.borders.radius.extreme};
             }
 
             .buttons {
@@ -134,12 +152,14 @@ export const PropertyRequestCardStyle = styled.div`
             img {
                 width: 20px;
                 height: 20px;
+                cursor: pointer;
             }
         }
 
         .separation-line {
             width: 100%;
             height: 1px;
+            background-color: ${Theme.colors.tertiary};
         }
 
         .total-price {

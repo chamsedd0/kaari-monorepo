@@ -11,6 +11,8 @@ const PhotoSlider = ({images}: {images: string[]}) => {
 
         <PhotoSliderStyle>
 
+            
+
         </PhotoSliderStyle>
       
     );

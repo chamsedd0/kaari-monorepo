@@ -15,6 +15,7 @@ export const PurpleHeaderUsers = ({user}: {user: boolean}) => {
         <div>
             {user ? (
                     <HeaderPurpleUsers>
+                        <div className="wrapper">
                         <div className="logo">
                             <img src={Logo} alt="" />
                         </div>
@@ -44,10 +45,12 @@ export const PurpleHeaderUsers = ({user}: {user: boolean}) => {
                                 <img src={ProfilePic} alt="" />
                             </div>
                         </div>
+                        </div>
                     </HeaderPurpleUsers>
                     
                 ) : (
                     <HeaderPurpleUsers>
+                        <div className="wrapper">
                         <div className="logo">
                             <img src={Logo} alt="" />
                         </div>
@@ -61,6 +64,7 @@ export const PurpleHeaderUsers = ({user}: {user: boolean}) => {
                             <div className="link">
                                 Sign in
                             </div>
+                        </div>
                         </div>
                     </HeaderPurpleUsers>
                 )}
