@@ -1,12 +1,11 @@
-import { ProfileShowcasePage } from "./pages/profile-advertiser-showcase/page";
-
+import  PropertyPage from "./pages/property-page/page";
 
 
 function App() {
 
   return (
     <div>
-        <ProfileShowcasePage></ProfileShowcasePage>
+        <PropertyPage></PropertyPage>
     </div>
   )
 }

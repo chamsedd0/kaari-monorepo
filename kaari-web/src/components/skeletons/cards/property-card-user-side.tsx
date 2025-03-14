@@ -27,6 +27,7 @@ export const PropertyCard = ({image, title, subtitle, price, minstay, priceType,
             {description}
         </div>
         <div className="recommendedBanner">
+            <div className="banner">Recommended by Kaari</div>
             <div className="icon">
                 <LikeBannerBaseModelLikeVariant2></LikeBannerBaseModelLikeVariant2>
             </div>

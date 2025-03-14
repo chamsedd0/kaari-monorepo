@@ -7,9 +7,10 @@ export const CertifiedBanner = styled.div<{ variant?: boolean }>`
     padding: 7.5px 22px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     gap: 6px;
-
+    
+    max-width: 45%;
     font: ${Theme.typography.fonts.smallB};
     border-radius: ${Theme.borders.radius.extreme};
 
@@ -21,16 +22,17 @@ export const CertifiedBanner = styled.div<{ variant?: boolean }>`
         height: 12px;
     }
 
+    .text {
+        max-width: 60%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
     * {
         transition: all 0.3s ease;
     }
 
 
-    @media (max-width: 1400px) {
-        .text {
-            display: none;
-        }
-        padding: 6px;
-        
-    }
+
 `
