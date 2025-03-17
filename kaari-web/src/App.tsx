@@ -1,11 +1,9 @@
-import  PropertyPage from "./pages/property-page/page";
-
-
+import AdminDashboard from "./pages/dashboards/user-dashboard/page";
 function App() {
 
   return (
     <div>
-        <PropertyPage></PropertyPage>
+        <AdminDashboard/>
     </div>
   )
 }

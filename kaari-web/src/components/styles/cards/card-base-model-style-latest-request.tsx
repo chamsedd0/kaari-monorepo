@@ -13,8 +13,6 @@ export const CardBaseModelStyleLatestRequest = styled.div<{ timer?: boolean }>`
     width: 100%;
     height: 100%;
 
-    max-width: 529px;
-    max-height: 291px;
 
     border: ${Theme.borders.primary};
     border-radius: ${Theme.borders.radius.lg};

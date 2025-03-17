@@ -13,7 +13,7 @@ export const PropertyPage = styled.div<PropertyPageProps>`
   justify-content: space-between;
   position: relative;
   width: 100%;
-  max-width: 1600px;
+  max-width: 1500px;
   margin: auto;
   display: flex;
   align-items: start;

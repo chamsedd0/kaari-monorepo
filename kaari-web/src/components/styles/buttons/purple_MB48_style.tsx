@@ -9,5 +9,4 @@ export const PurpleMB48 = styled(PurpleButtonWhiteText)`
 
     max-height: 48px;
     width: 100%;
-    max-width: 188px;
 `

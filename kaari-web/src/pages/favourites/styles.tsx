@@ -11,7 +11,7 @@ export const FavouritesStyle = styled.div`
     padding: 20px;
     padding-top: 32px;
     padding-bottom: 40px;
-    max-width: 1600px;
+    max-width: 1500px;
     margin-left: auto;
     margin-right: auto;
 
