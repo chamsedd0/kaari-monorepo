@@ -6,6 +6,8 @@ export class Theme {
     secondary: '#8F27CE',
     tertiary: 'rgba(218, 196, 233, 1)',
     quaternary: '#A089AE',
+    fifth: 'rgba(232, 228, 237, 1)',
+    sixth: 'rgba(218, 202, 228, 1)',
     success: 'rgba(41, 130, 45, 1)',
     warning: '#FFCE4F',
     error: 'rgba(155, 3, 3, 1)',

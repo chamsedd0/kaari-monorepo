@@ -1,7 +1,7 @@
 import MessageFieldBaseModel from "../../../styles/inputs/input-fields/message-field-base-model-style";
 import React from "react";
-import MoreIcon from '../../icons/More-Icon.svg'
-import SendIcon from '../../icons/Icon-Send.svg'
+import MoreIcon from '../../icons/more-icon.svg'
+import SendIcon from '../../icons/send-icon.svg'
 
 interface MessageFieldProps {
   value?: string;

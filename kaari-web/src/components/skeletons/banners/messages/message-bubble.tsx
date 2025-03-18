@@ -5,7 +5,7 @@ import checkIcon from '../../icons/Check-Icon.svg'
 
 
 
-export const MessageBubble = ( { variant, message, timestamp }: { variant: "primary" | "secondary", message: string, timestamp: string } ) => {
+const MessageBubble = ( { variant, message, timestamp }: { variant: "primary" | "secondary", message: string, timestamp: string } ) => {
     return (
         <MessageBubbleBaseModelStyle variant={variant}>
 
@@ -13,7 +13,7 @@ export const MessageBubble = ( { variant, message, timestamp }: { variant: "prim
                 {message}
            </div>
 
-           <div className="timestamp">
+           <div className="timestamp">  
                 <img src={checkIcon} alt="check" />
                 {timestamp}
                 
@@ -24,3 +24,4 @@ export const MessageBubble = ( { variant, message, timestamp }: { variant: "prim
     );
 };
 
+export default MessageBubble;
