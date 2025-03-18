@@ -7,7 +7,6 @@ const InputBaseModel1 = styled.div`
   gap: 16px;
   align-items: flex-start;
   width: 100%;
-  max-width: 757px;
 
   span {
     font: ${Theme.typography.fonts.extraLargeB};
