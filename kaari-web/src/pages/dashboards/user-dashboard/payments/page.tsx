@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { PaymentsPageStyle } from './styles';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import SecureIcon from '../../../../components/skeletons/icons/secure-payments.svg';
+import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-help-card';
+
 const PaymentsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'payments' | 'completed'>('payments');
 
@@ -55,21 +57,24 @@ const PaymentsPage: React.FC = () => {
                     </p>
                     <span className="learn-more">Learn More</span>
                 </div>
-                <div className="help-card">
-                    <h3>Need Help?</h3>
-                    <div className="faq-item">
-                        <span>When will I get my payout?</span>
-                        <span className="arrow"></span>
-                    </div>
-                    <div className="faq-item">
-                        <span>How payouts work?</span>
-                        <span className="arrow"></span>
-                    </div>
-                    <div className="faq-item">
-                        <span>My Transaction history</span>
-                        <span className="arrow"></span>
-                    </div>
-                </div>
+                <NeedHelpCardComponent 
+                    title="Need Help?" 
+                    faqItems={[
+                        {
+                            question: "How do I change my password?",
+                            onClick: () => {}
+                        },
+                        {
+                            question: "Why haven't I received my verification email?",
+                            onClick: () => {}
+                        },
+                        {
+                            question: "How do I connect my Google account?",
+                            onClick: () => {}
+                        }
+                    ]} 
+                />
+                   
             </div>
         </PaymentsPageStyle>
     );

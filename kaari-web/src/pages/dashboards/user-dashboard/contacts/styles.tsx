@@ -9,7 +9,7 @@ export const ContactsPageStyle = styled.div`
     .main-content{
         display: flex;
         flex-direction: column;
-        width: 70%;
+        flex: 1;
         gap: 48px;
 
         .contacts-content{
@@ -61,7 +61,7 @@ export const ContactsPageStyle = styled.div`
             width:100%;
             gap: 28px;
             border-radius: ${Theme.borders.radius.md};
-            border: 1px solid ${Theme.colors.quaternary};
+            border: ${Theme.borders.primary};
             padding: 24px;
             
             .social-media-content-title{
@@ -140,12 +140,11 @@ export const ContactsPageStyle = styled.div`
             
         }
     }
-    .side-content{
+    .right {
         display: flex;
         flex-direction: column;
-        width: 30%;
+        flex: 0.45;
         gap: 32px;
-        
     }
 
 

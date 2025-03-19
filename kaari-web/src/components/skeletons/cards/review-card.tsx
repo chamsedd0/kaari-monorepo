@@ -1,5 +1,5 @@
 import React from 'react';
-import { WrittenReviewsCard } from '../../styles/cards/card-base-modal-style-written-reviews';
+import { WrittenReviewsCard } from '../../styles/cards/card-base-model-style-written-reviews';
 import picture from '../../../assets/images/propertyExamplePic.png'
 import avatar from '../../../assets/images/ProfilePicture.png'
 

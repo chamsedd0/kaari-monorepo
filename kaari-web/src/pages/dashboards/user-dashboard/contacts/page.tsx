@@ -2,6 +2,9 @@ import React from 'react';
 import { ContactsPageStyle } from './styles';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import Picture from "../../../../assets/images/support.svg" ;
+import VerifyEmailCardComponent from '../../../../components/skeletons/cards/verify-email-card';
+import { GoogleCard } from '../../../../components/skeletons/cards/google-card';
+import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-help-card';
 
 const ContactsPage: React.FC = () => {
     return (
@@ -78,8 +81,26 @@ const ContactsPage: React.FC = () => {
                     </div>
                 </div>
             </div>
-            <div className="side-content">
-                <h2 className="side-content-title">Contact Us</h2>
+            <div className="right">
+                <VerifyEmailCardComponent />
+                <GoogleCard title="Connect to Google" description="Connect your Google account to your Kaari account to easily sign in and access your reservations." />
+                <NeedHelpCardComponent 
+                    title="Need Help?" 
+                    faqItems={[
+                        {
+                            question: "How do I change my password?",
+                            onClick: () => {}
+                        },
+                        {
+                            question: "Why haven't I received my verification email?",
+                            onClick: () => {}
+                        },
+                        {
+                            question: "How do I connect my Google account?",
+                            onClick: () => {}
+                        }
+                    ]} 
+                />
             </div>
         </ContactsPageStyle>
     );

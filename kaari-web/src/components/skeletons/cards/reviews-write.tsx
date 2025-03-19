@@ -1,4 +1,4 @@
-import { WriteReviewCard } from "../../styles/cards/card-base-modal-style-reviews-write";
+import { WriteReviewCard } from "../../styles/cards/card-base-model-style-reviews-write";
 import Picture from "../../../assets/images/propertyExamplePic.png" ;
 import { PurpleButtonMB48 } from "../buttons/purple_MB48";
 
