@@ -7,7 +7,6 @@ const MessageFieldBaseModel = styled.div<{isEmpty: boolean}>`
     align-items: center;
     justify-content: center;
     gap: 20px;
-    max-width: 611px;
     width: 100%;
     height: 100%;
     max-height: 48px;
@@ -21,9 +20,10 @@ const MessageFieldBaseModel = styled.div<{isEmpty: boolean}>`
         height: 24px;
         cursor: pointer;
         transition: all 0.3s ease;
+        opacity: 0.8;
 
         &:hover {
-            opacity: 0.8;
+            opacity: 1;
         }
     }
 
@@ -49,9 +49,13 @@ const MessageFieldBaseModel = styled.div<{isEmpty: boolean}>`
     .send-button {
         opacity: ${(props) => (props.isEmpty ? '0.5' : '1')};
         pointer-events: ${(props) => (props.isEmpty ? 'none' : 'all')};
-        width: 24px;
-        height: 24px;
+        width: 17px;
         cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+            opacity: 1;
+        }
     }
 
 `

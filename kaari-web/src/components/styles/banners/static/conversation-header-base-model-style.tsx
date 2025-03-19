@@ -7,7 +7,6 @@ const ConversationHeaderBaseModel = styled.div`
     width: 100%;
     height: 100%;
     max-height: 80px;
-    max-width: 611px;
     padding: 16px;
     background-color: white;
     border-radius: ${Theme.borders.radius.lg};

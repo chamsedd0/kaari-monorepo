@@ -1,23 +1,48 @@
 import React, { useState } from 'react';
-import {
-  MessagesPageLayout,
-  ConversationsList,
-  ConversationsHeader,
-  ConversationsListContent,
-  ConversationItem,
-  ChatArea,
-  ChatContent,
-  MessageContainer
-} from './styles';
+import { MessagesPageStyle } from './styles';
+import { MessageBanner } from '../../../../components/skeletons/banners/messages/message-banner';
+import EditIcon from '../../../../components/skeletons/icons/New-Chat-Icon.svg';
+import DeleteIcon from '../../../../components/skeletons/icons/BlackDots.svg';
+import profileImage from '../../../../assets/images/ProfilePicture.png';
+import { ConversationHeader } from '../../../../components/skeletons/banners/static/conversation-header';
+import MessageField from '../../../../components/skeletons/inputs/input-fields/message-field';
+import MessageBubble from '../../../../components/skeletons/banners/messages/message-bubble';
+import ArrowLeft from '../../../../components/skeletons/icons/ArrowRightThickPrimary.svg';
 
-// You'll replace these with your actual components
-const MessageBubble = () => <div>Message Bubble Component</div>;
-const MessageHeader = () => <div>Message Header Component</div>;
-const MessageInput = () => <div>Message Input Component</div>;
-const ConversationBanner = () => <div>Conversation Banner Component</div>;
+
+
+interface MessageHeaderProps {
+  onTogglePanel: () => void;
+  isPanelCollapsed: boolean;
+}
+
+const MessageHeader: React.FC<MessageHeaderProps> = ({ onTogglePanel, isPanelCollapsed }) => (
+  <div className="conversation-header-wrapper">
+    <button 
+      className={`toggle-panel-button ${isPanelCollapsed ? 'collapsed' : ''}`}
+      onClick={onTogglePanel}
+      aria-label={isPanelCollapsed ? "Expand conversations" : "Collapse conversations"}
+    >
+      <img src={ArrowLeft} alt="Toggle panel" />
+    </button>
+    <ConversationHeader senderName={'John Price'} senderPic={profileImage} lastOnline={'Today'} />
+  </div>
+);
+
+const MessageInput = () => {
+  const [message, setMessage] = useState<string>('');
+  
+  const handleMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage(e.target.value);
+  };
+  
+  return <MessageField value={message} onChange={handleMessageChange} />;
+};
+const ConversationBanner = () => <MessageBanner profileImage={profileImage} name={'John Price'} time={'Today'} message={'Hi! Nice to meet you! You can ask me anything...'} unreadCount={3} />;
 
 const MessagesPage: React.FC = () => {
   const [activeConversation, setActiveConversation] = useState<number | null>(0);
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState<boolean>(false);
 
   // Mock data - replace with your actual data
   const conversations = [
@@ -27,54 +52,81 @@ const MessagesPage: React.FC = () => {
   ];
 
   const messages = [
-    { id: 0, senderId: 0, text: 'Hello there! I want to ask a few questions about your stay', time: '10:48', isRead: true },
-    { id: 1, senderId: 'me', text: 'Hi! Nice to meet you! You can ask me anything anytime. I will try and respond as soon as possible. If I do not reply, call me', time: '10:48', isRead: true }
+    { id: 0, senderId: 0, text: 'Hello there! I want to ask a few questions about your stay', time: '10:45', isRead: true },
+    { id: 1, senderId: 1, text: 'Hi! Nice to meet you! You can ask me anything anytime. I will try and respond as soon as possible. If I do not reply, call me on 070 123 45 67', time: '10:45', isRead: true },
+    { id: 2, senderId: 0, text: 'Hello there! I want to ask a few questions about your stay', time: '10:45', isRead: true },
+    { id: 3, senderId: 1, text: 'Hello there! I want to ask a few questions about your stay', time: '10:45', isRead: true }
   ];
 
-  return (
-    <MessagesPageLayout>
-      <ConversationsList>
-        <ConversationsHeader>
-          <h2>Messages</h2>
-          <div className="actions">
-            <button>✏️</button>
-            <button>⋯</button>
-          </div>
-        </ConversationsHeader>
-        <ConversationsListContent>
-          {conversations.map(conversation => (
-            <ConversationItem 
-              key={conversation.id} 
-              isActive={activeConversation === conversation.id}
-              onClick={() => setActiveConversation(conversation.id)}
-            >
-              {/* Replace with your ConversationBanner component */}
-              <ConversationBanner />
-            </ConversationItem>
-          ))}
-        </ConversationsListContent>
-      </ConversationsList>
+  // Determine if message is from user (0) or other person (1)
+  const isMessageFromMe = (senderId: number) => senderId === 1;
 
-      <ChatArea>
-        {/* Replace with your MessageHeader component */}
-        <MessageHeader />
-        
-        <ChatContent>
-          {messages.map(message => (
-            <MessageContainer 
-              key={message.id} 
-              isSender={message.senderId === 'me'}
-            >
-              {/* Replace with your MessageBubble component */}
-              <MessageBubble />
-            </MessageContainer>
-          ))}
-        </ChatContent>
-        
-        {/* Replace with your MessageInput component */}
-        <MessageInput />
-      </ChatArea>
-    </MessagesPageLayout>
+  const togglePanel = () => {
+    setIsPanelCollapsed(!isPanelCollapsed);
+  };
+
+  return (
+    <MessagesPageStyle>
+      <div className="messages-page-layout">
+        <div className={`conversations-list ${isPanelCollapsed ? 'collapsed' : ''}`}>
+          <div className="conversations-list-content">
+            <div className="conversations-header">
+              <h2>Messages</h2>
+              <div className="actions">
+                <div className="edit-button">
+                  <img src={EditIcon} alt="Edit" />
+                </div>
+                <div className="delete-button">
+                  <img src={DeleteIcon} alt="Delete" />
+                </div>
+              </div>
+            </div>
+            {conversations.map(conversation => (
+              <div 
+                key={conversation.id} 
+                className={`conversation-item ${activeConversation === conversation.id ? 'active' : ''}`}
+                onClick={() => setActiveConversation(conversation.id)}
+              >
+                <ConversationBanner />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="chat-area">
+          <MessageHeader onTogglePanel={togglePanel} isPanelCollapsed={isPanelCollapsed} />
+          
+          <div className="chat-content">
+            {messages.map(message => (
+              <div 
+                key={message.id} 
+                className={`message-container ${isMessageFromMe(message.senderId) ? 'receiver' : 'sender'}`}
+              >
+                {!isMessageFromMe(message.senderId) && (
+                  <div className="avatar">
+                    <img src={profileImage} alt="Profile" />
+                  </div>
+                )}
+                <div className="message-bubble">
+                  <MessageBubble 
+                    variant={isMessageFromMe(message.senderId) ? 'secondary' : 'primary'} 
+                    message={message.text} 
+                    timestamp={message.time} 
+                  />
+                </div>
+                {isMessageFromMe(message.senderId) && (
+                  <div className="avatar">
+                    <img src={profileImage} alt="Profile" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          <MessageInput />
+        </div>
+      </div>
+    </MessagesPageStyle>
   );
 };
 

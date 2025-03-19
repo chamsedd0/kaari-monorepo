@@ -5,18 +5,17 @@ export const MessageBannerBaseModelStyle = styled.div`
     width: 100%;
     height: 100%;
     background-color: ${Theme.colors.white};
-    border-radius: ${Theme.borders.radius.lg};
     border: none;
-    padding: 15px;
+    padding: 15px 0px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 30px;
+    gap: 20px;
     transition: background-color 0.3s ease;
     cursor: pointer;
 
     &:hover {
-        background-color: ${Theme.colors.senary};
+        background-color: ${Theme.colors.fifth};
     }
 
     .content {
@@ -25,6 +24,7 @@ export const MessageBannerBaseModelStyle = styled.div`
         justify-content: start;
         gap: 14px;
         height: 100%;
+        width: 100%;
 
         img {
             width: 46px;
@@ -59,7 +59,7 @@ export const MessageBannerBaseModelStyle = styled.div`
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                max-width: 250px;
+                max-width: 150px;
             }
         }
     }
