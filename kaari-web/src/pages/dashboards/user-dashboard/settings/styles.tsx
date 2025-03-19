@@ -11,8 +11,8 @@ export const SettingsPageStyle = styled.div`
     .right {
         display: flex;
         flex-direction: column;
-        flex: 0.3;
-        gap: 40px;
+        flex: 0.45;
+        gap: 32px;
     }
 
     .left {

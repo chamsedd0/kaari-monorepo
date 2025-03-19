@@ -2,7 +2,6 @@ import styled from "styled-components";
 import { Theme } from "../../../theme/theme";
 export const CardBaseModelStyleGoogle = styled.div`
     width: 100%;
-    height: 100%;
     background-color: ${Theme.colors.white};
     gap: 20px;
     padding: 20px;
@@ -24,13 +23,15 @@ export const CardBaseModelStyleGoogle = styled.div`
 
     .description {
         font: ${Theme.typography.fonts.text16};
-        color: ${Theme.colors.black};
+        color: ${Theme.colors.gray2};
         text-align: start;
         width: 100%;
+        line-height: 150%;
+
     }
 
     .button {
-        width: 60%;
+        width: 100%;
     }
 
 `;
