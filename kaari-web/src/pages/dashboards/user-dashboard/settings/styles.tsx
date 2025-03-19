@@ -50,6 +50,7 @@ export const SettingsPageStyle = styled.div`
                     display: flex;
                     flex-direction: column;
                     gap: 40px;
+                    width: 100%;
 
                     .row {
                         display: flex;
@@ -59,11 +60,28 @@ export const SettingsPageStyle = styled.div`
 
                         input {
                             width: 100%;
+                            
+                            
                         }
+
+                        @media (max-width: 1300px) {
+                            flex-direction: column;
+                            gap: 40px;
+                        }
+                    }
+
+                    @media (max-width: 1300px) {
+                        width: 100%;
+                        
+                        input {
+                            width: 100%;
+                        }
+                    }
+                }
             }
             
         }
-    }
+    
 
     .save-button {
         display: flex;
@@ -111,9 +129,8 @@ export const SettingsPageStyle = styled.div`
                 font: ${Theme.typography.fonts.mediumB};
                 color: ${Theme.colors.black};
             }
-    }
+        }
         
-    }
     }
 `;
 
