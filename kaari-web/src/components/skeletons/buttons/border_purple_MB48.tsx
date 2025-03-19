@@ -1,3 +1,4 @@
+import { ReactElement } from "react";
 import { BpurpleMB48 } from "../../styles/buttons/Bpurple_MB48_style";
 
 

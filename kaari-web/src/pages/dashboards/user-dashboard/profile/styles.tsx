@@ -3,11 +3,25 @@ import { Theme } from "../../../../theme/theme";
 
 export const ProfilePageStyle = styled.div`
     display: flex;
-    flex-direction: column;
     width: 100%;
-    gap: 32px;
+    gap: 40px;
 
-    .section-title {
+    .right {
+        display: flex;
+        flex-direction: column;
+        flex: 0.45;
+        gap: 32px;
+    }
+
+    .left{
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        gap: 40px;
+    }
+
+    .profile-content{
+        .section-title {
         font: ${Theme.typography.fonts.h3};
         color: ${Theme.colors.black};
     }
@@ -22,9 +36,7 @@ export const ProfilePageStyle = styled.div`
     .profile-info {
         display: flex;
         gap: 32px;
-        padding: 24px;
-        border: ${Theme.borders.primary};
-        border-radius: ${Theme.borders.radius.md};
+        flex-direction: column;
     }
 
     .profile-image {
@@ -51,6 +63,11 @@ export const ProfilePageStyle = styled.div`
             height: 36px;
             cursor: pointer;
         }
+    }
+
+    .your-info-text{
+        font: ${Theme.typography.fonts.h4B};
+        color: ${Theme.colors.black};
     }
 
     .profile-details {
@@ -84,24 +101,7 @@ export const ProfilePageStyle = styled.div`
     .profile-actions {
         display: flex;
         gap: 16px;
-
-        button {
-            padding: 12px 24px;
-            border-radius: ${Theme.borders.radius.sm};
-            font: ${Theme.typography.fonts.text16};
-            cursor: pointer;
-        }
-
-        .primary-button {
-            background: ${Theme.colors.primary};
-            color: white;
-            border: none;
-        }
-
-        .secondary-button {
-            background: white;
-            color: ${Theme.colors.primary};
-            border: 1px solid ${Theme.colors.primary};
-        }
+        max-width: 200px;
+    }
     }
 `;
