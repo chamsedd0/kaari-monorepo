@@ -59,7 +59,8 @@ export class Theme {
       text16: 'normal 500 16px Visby CF',
       text14: 'normal 500 14px Visby CF',
       text12: 'normal 500 12px Visby CF',
-      link14: 'normal 700 14px Visby CF'
+      link14: 'normal 700 14px Visby CF',
+      link16: 'normal 700 16px Visby CF'
     },
 
   };

@@ -6,7 +6,6 @@ const UploadFieldBaseModel = styled.div`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  max-width: 370px;
   padding: 22px 24px;
   border: ${Theme.borders.primary};
   border-radius: ${Theme.borders.radius.extreme};
@@ -15,10 +14,11 @@ const UploadFieldBaseModel = styled.div`
   color: ${Theme.colors.black};
   cursor: pointer;
   font: ${Theme.typography.fonts.largeM};
+  
 
   img {
-    width: 21px;
-    height: 21px;
+    width: 24px;
+    height: 24px;
   }
 `;
 

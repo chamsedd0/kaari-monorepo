@@ -7,7 +7,7 @@ const TextAreaBaseModel1 = styled.div`
   gap: 16px;
   align-items: flex-start;
   width: 100%;
-  max-width: 757px;
+  
   transition:
     width 0.01s ease,
     height 0.01s ease;
@@ -19,9 +19,7 @@ const TextAreaBaseModel1 = styled.div`
 
   textarea {
     width: 100%;
-    min-height: 100px;
-    max-height: 200px;
-    max-width: 757px;
+    min-height: 200px;
     padding: 24px;
     border: ${Theme.borders.primary};
     border-radius: ${Theme.borders.radius.sm};

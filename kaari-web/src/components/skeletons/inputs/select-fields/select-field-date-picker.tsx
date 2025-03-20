@@ -5,7 +5,7 @@ import { Label2 } from '../../../styles/inputs/select-fields/select-field-base-m
 
 const DatePickerContainer = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 20px;
 `;
 
 interface DatePickerProps {

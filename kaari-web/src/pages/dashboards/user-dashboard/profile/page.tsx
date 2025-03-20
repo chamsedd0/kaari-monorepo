@@ -5,41 +5,52 @@ import VerifyEmailCardComponent from '../../../../components/skeletons/cards/ver
 import { GoogleCard } from '../../../../components/skeletons/cards/google-card';
 import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-help-card';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
+import InputBaseModel from '../../../../components/skeletons/inputs/input-fields/input-variant';
+import SelectFieldDatePicker from '../../../../components/skeletons/inputs/select-fields/select-field-date-picker';
+import UploadFieldModel from '../../../../components/skeletons/inputs/upload-fields/upload-field-variant';
+import TextAreaBaseModel from '../../../../components/skeletons/inputs/input-fields/textarea-variant';
+import GenderCheckBox from '../../../../components/skeletons/inputs/check-box/gander-check-box';
+import SelectFieldBaseModel from '../../../../components/skeletons/inputs/select-fields/select-field-base-model';
+
 const ProfilePage: React.FC = () => {
     return (
         <ProfilePageStyle>
             <div className="left">
                 <h1 className="section-title">Your Profile</h1>
-                <div className="profile-content">
-                    <div className="profile-info">
-                        <div className="profile-image">
-                            <img src={Picture} alt="Profile" />
-                            <button className="edit-button">Edit</button>
+                <div className="profile-image-container">
+                    <div className="profile-image">
+                        <img src={Picture} alt="Profile" />
+                    </div>
+                    <div className="text-button">Edit Profile Picture</div>
+                </div>
+                    <div className="profile-grid">
+                        <InputBaseModel title="Full Name" />
+                        <InputBaseModel title="Your Surname" />
+                        <InputBaseModel title="Phone Number" />
+                        <SelectFieldDatePicker /> 
+                        <div className="profile-inbut-group">
+                            <div className="profile-inbut-label">Government ID</div>
+                            <UploadFieldModel label="Passport or Front of ID" />
                         </div>
-                        <div className="your-info-text">Your Information</div>
-                        <div className="profile-details">
-                            <div className="detail-group">
-                                <label>Full Name</label>
-                                <input type="text" value="John Doe" readOnly />
-                            </div>
-                            <div className="detail-group">
-                                <label>Email</label>
-                                <input type="email" value="john.doe@example.com" readOnly />
-                            </div>
-                            <div className="detail-group">
-                                <label>Phone</label>
-                                <input type="tel" value="+1 234 567 8900" readOnly />
-                            </div>
-                            <div className="detail-group">
-                                <label>Address</label>
-                                <input type="text" value="123 Main St, City, Country" readOnly />
-                            </div>
+                        <UploadFieldModel label="Back of ID" />
+                        <div className="profile-inbut-group">
+                            <div className="profile-inbut-label">Gender</div>
+                            <GenderCheckBox />
+                            
                         </div>
-                        <div className="profile-actions">
-                            <PurpleButtonMB48 text="Save Data" />
+                        <div className="profile-inbut-group">
+                            <div className="profile-inbut-label">Languages</div>
+                            <div className="text-button">Add A Language+</div>
                         </div>
                     </div>
-                </div>
+                    <div className="profile-inbut-group">
+                    <div className="profile-inbut-label">Nationality</div>
+                   <SelectFieldBaseModel options={['English', 'French', 'Spanish', 'German', 'Italian', 'Portuguese', 'Russian', 'Arabic', 'Chinese', 'Japanese', 'Korean', 'Vietnamese', 'Other']} />  
+                   </div>
+                    <TextAreaBaseModel title="About Me" />
+                    <div className="profile-actions">
+                        <PurpleButtonMB48 text="Save Data" />
+                    </div>
             </div>
             <div className="right">
                 <VerifyEmailCardComponent />

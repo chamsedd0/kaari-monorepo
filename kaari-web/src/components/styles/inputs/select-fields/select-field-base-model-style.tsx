@@ -4,7 +4,6 @@ import { Theme } from '../../../../theme/theme';
 export const SelectContainer = styled.div`
   position: relative;
   width: 100%;
-  max-width: 757px;
   font: ${Theme.typography.fonts.largeB};
   color: ${Theme.colors.primary};
   
@@ -17,10 +16,11 @@ export const SelectHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 22px 24px;
+  padding: 23px 20px;
   background: ${Theme.colors.white};
   border: ${Theme.borders.primary};
-  max-height: 60px;
+  
+ 
 
   border-radius: ${Theme.borders.radius.extreme};
   cursor: pointer;

@@ -9,7 +9,7 @@ const InputBaseModel1 = styled.div`
   width: 100%;
 
   span {
-    font: ${Theme.typography.fonts.extraLargeB};
+    font: ${Theme.typography.fonts.largeB};
     color: ${Theme.colors.black};
   }
 

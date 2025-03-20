@@ -4,7 +4,6 @@ import { ChevronIcon, Label, Option, SelectDropdown, SelectHeader } from './sele
 import { SelectContainer } from './select-field-base-model-style';
 
 export const SelectContainer1 = styled(SelectContainer)`
-  max-width: 228px;
   font: ${Theme.typography.fonts.smallM};
   color: ${Theme.colors.quaternary};
 `;

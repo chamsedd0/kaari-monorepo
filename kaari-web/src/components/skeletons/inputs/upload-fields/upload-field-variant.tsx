@@ -4,6 +4,7 @@ import icon from '../../icons/Icon-Attach.svg';
 
 interface UploadFieldProps {
   label?: string;
+  hlabel?: string;
   onClick?: () => void;
 }
 

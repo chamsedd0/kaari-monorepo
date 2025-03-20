@@ -6,14 +6,15 @@ import { Theme } from '../../../../theme/theme';
 
 export const SelectContainer2 = styled(SelectContainer)`
     //same as select-field-base-model-style
-    max-width: 89px !important;
     min-width: 89px !important;
+    width: 100%;
+    
 `;
 
 export const SelectHeader2 = styled(SelectHeader)`
     //same as select-field-base-model-style
-    font: ${Theme.typography.fonts.largeM};
-    padding: 22px 20px;
+    font: ${Theme.typography.fonts.mediumM};
+    
 `;
 
 export const SelectDropdown2 = styled(SelectDropdown) <{ isOpen: boolean }>`
@@ -35,8 +36,8 @@ export const ChevronIcon2 = styled(ChevronIcon)<{ isOpen: boolean }>`
   //same as select-field-base-model-style
 
   img {
-    width: 10px;
-    height: 10px;
+    width: 15px;
+    height: 15px;
   }
 
 `;
