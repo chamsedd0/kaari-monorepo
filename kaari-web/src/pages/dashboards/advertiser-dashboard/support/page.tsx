@@ -2,15 +2,14 @@ import React from 'react';
 import { ContactsPageStyle } from './styles';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import Picture from "../../../../assets/images/support.svg" ;
-import VerifyEmailCardComponent from '../../../../components/skeletons/cards/verify-email-card';
 import { GoogleCard } from '../../../../components/skeletons/cards/google-card';
-import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-help-card';
 import facebook from "../../../../components/skeletons/icons/facebook.svg"
 import twitter from "../../../../components/skeletons/icons/twitter.svg"
 import instagram from "../../../../components/skeletons/icons/instagram.svg"
 import linkedin from "../../../../components/skeletons/icons/linkedin.svg"
 import InputBaseModel from '../../../../components/skeletons/inputs/input-fields/input-variant';
 import TextAreaBaseModel from '../../../../components/skeletons/inputs/input-fields/textarea-variant';
+import { NavigationCard } from '../../../../components/skeletons/cards/navigation-card';
 const ContactsPage: React.FC = () => {
     return (
         <ContactsPageStyle>
@@ -83,25 +82,9 @@ const ContactsPage: React.FC = () => {
                 </div>
             </div>
             <div className="right">
-                <VerifyEmailCardComponent />
+            <NavigationCard activeSection="profile" onSectionChange={() => {}} />
                 <GoogleCard title="Connect to Google" description="Connect your Google account to your Kaari account to easily sign in and access your reservations." />
-                <NeedHelpCardComponent 
-                    title="Need Help?" 
-                    faqItems={[
-                        {
-                            question: "How do I change my password?",
-                            onClick: () => {}
-                        },
-                        {
-                            question: "Why haven't I received my verification email?",
-                            onClick: () => {}
-                        },
-                        {
-                            question: "How do I connect my Google account?",
-                            onClick: () => {}
-                        }
-                    ]} 
-                />
+            
             </div>
         </ContactsPageStyle>
     );

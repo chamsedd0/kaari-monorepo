@@ -1,24 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { NavigationPannel } from '../../../components/skeletons/constructed/dashboard-navigation-pannel/navigation-pannel';
-import { WhiteHeaderUsers } from '../../../components/skeletons/constructed/headers/header-users-white';
-import { UserDashboardStyle } from './styles';
+import { NavigationPannelAdviser } from '../../../components/skeletons/constructed/dashboard-navigation-pannel/navigation-pannel-adviser';
+import { WhiteHeaderAdviser } from '../../../components/skeletons/constructed/headers/header-user-white-adviser';
+import { AdvertiserDashboardStyle } from './styles';
 import LoadingScreen from '../../../components/loading/LoadingScreen';
 
 // Import all section pages
+import DashboardPage from './dashboard/page';
 import ProfilePage from './profile/page';
 import MessagesPage from './messages/page';
+import PropertyPage from './properties/page';
 import ReservationsPage from './reservations/page';
 import ReviewsPage from './reviews/page';
 import PaymentsPage from './payments/page';
-import PerksPage from './perks/page';
-import SettingsPage from './settings/page';
-import ContactsPage from './contacts/page';
-import FAQsPage from './FAQs/page';
+import TenantsPage from './tenants/page';
+import PhotoshootsPage from './photoshoot/page';
+import SupprotPage from './support/page';
 
-type Section = 'profile' | 'messages' | 'reservations' | 'reviews' | 'payments' | 'perks' | 'settings' | 'contacts' | 'faq';
 
-const UserDashboard: React.FC = () => {
-    const [activeSection, setActiveSection] = useState<Section>('profile');
+
+
+type Section = 'Dashboard' | 'MyProfile' | 'Messages' | 'Properties' | 'Reservations' | 'Reviews' | 'Payments' | 'Tenants' | 'Photoshoot' | 'Support';
+
+const AdvertiserDashboard: React.FC = () => {
+    const [activeSection, setActiveSection] = useState<Section>('Dashboard');
     const [isAnimating, setIsAnimating] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isSectionLoading, setIsSectionLoading] = useState(false);
@@ -55,26 +59,26 @@ const UserDashboard: React.FC = () => {
 
     const renderSection = () => {
         switch (activeSection) {
-            case 'profile':
+            case 'Dashboard':
+                return <DashboardPage />;
+            case 'MyProfile':
                 return <ProfilePage />;
-            case 'messages':
+            case 'Messages':
                 return <MessagesPage />;
-            case 'reservations':
+            case 'Properties':
+                return <PropertyPage />;
+            case 'Reservations':
                 return <ReservationsPage />;
-            case 'reviews':
+            case 'Reviews':
                 return <ReviewsPage />;
-            case 'payments':
+            case 'Payments':
                 return <PaymentsPage />;
-            case 'perks':
-                return <PerksPage />;
-            case 'settings':
-                return <SettingsPage />;
-            case 'contacts':
-                return <ContactsPage />;
-            case 'faq':
-                return <FAQsPage />;
-            default:
-               
+            case 'Tenants':
+                return <TenantsPage />;
+            case 'Photoshoot':
+                return <PhotoshootsPage />;
+            case 'Support':
+                return <SupprotPage />;
         }
     };
 
@@ -82,19 +86,19 @@ const UserDashboard: React.FC = () => {
         <>
             <LoadingScreen isLoading={isLoading || isSectionLoading} />
             <div style={{ display: 'flex', maxWidth: '1500px', margin: '0 auto' }}>
-                <WhiteHeaderUsers user={true} />
-                <NavigationPannel 
+                <WhiteHeaderAdviser advertiser={true} />
+                <NavigationPannelAdviser 
                     activeSection={activeSection}
                     onSectionChange={setActiveSection}
                 />
-                <UserDashboardStyle>
+                <AdvertiserDashboardStyle>
                     <div className={`section-container ${isAnimating ? 'animating' : ''}`}>
                         {renderSection()}
                     </div>
-                </UserDashboardStyle>
+                </AdvertiserDashboardStyle>
             </div>
         </>
     );
 };
 
-export default UserDashboard;
+export default AdvertiserDashboard;

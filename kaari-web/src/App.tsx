@@ -1,9 +1,9 @@
-import AdminDashboard from "./pages/dashboards/user-dashboard/page";
+import AdvertiserDashboard from "./pages/dashboards/advertiser-dashboard/page";
 function App() {
 
   return (
     <div>
-        <AdminDashboard/>
+        <AdvertiserDashboard/>
     </div>
   )
 }

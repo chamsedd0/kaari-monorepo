@@ -1,28 +1,70 @@
-
+import React from 'react';
 import propertyExamplePic from "../../../assets/images/propertyExamplePic.png";
 import { CardBaseModelStyle2 } from "../../styles/cards/card-base-model-style-2";
-import BgButtonVariant1_8 from "../buttons/button-variants-1/bg-button-variant-1-8";
-import BdrButtonVariant2_5 from "../buttons/button-variants-2/bdr-button-variant-2-5";
+import { PurpleButtonLB40 } from '../buttons/purple_LB40';
+import { BpurpleButtonLB40 } from '../buttons/border_purple_LB40';
 
-export const PropertyCardAdvertiserSide = ({title, subtitle, description}: {title: string, subtitle: string, description: string}) => {
+interface PropertyCardProps {
+  title: string;
+  location?: string;
+  price?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  area?: number;
+  imageUrl?: string;
+  description?: string;
+  subtitle?: string;
+  minStay?: string;
+}
+
+const PropertyCardAdvertiserSide: React.FC<PropertyCardProps> = ({
+  title,
+  location,
+  price,
+  bedrooms,
+  bathrooms,
+  area,
+  imageUrl,
+  description,
+  subtitle,
+  minStay
+}) => {
   return (
     <CardBaseModelStyle2>
-        <img src={propertyExamplePic} alt="Property" />
+        <img src={imageUrl || propertyExamplePic} alt="Property" />
         <div className="title">
             <b>{title}</b> 
-            <span> {subtitle}</span>
+            <span> {subtitle || location}</span>
         </div>  
 
+        {price && <div className="price">{price}</div>}
 
-        <div className="description">
-            {description}
-        </div>
+        {description && (
+          <div className="description">
+              {description}
+          </div>
+        )}
+
+        {(bedrooms || bathrooms || area) && (
+          <div className="features">
+            {bedrooms && <span>{bedrooms} Bed</span>}
+            {bathrooms && <span>{bathrooms} Bath</span>}
+            {area && <span>{area} sqft</span>}
+          </div>
+        )}
+
+        {minStay && (
+          <div className="min-stay">
+            {minStay}
+          </div>
+        )}
 
         <div className="control">
-            <BdrButtonVariant2_5 text="Unlist" />
-            <BgButtonVariant1_8 text="Ask for Edit" />
+            <BpurpleButtonLB40 text="Unlist" />
+            <PurpleButtonLB40 text="Ask for Edit" />
         </div>
-
     </CardBaseModelStyle2>
   );
 };
+
+export default PropertyCardAdvertiserSide;

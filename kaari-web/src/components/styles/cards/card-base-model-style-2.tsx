@@ -42,6 +42,11 @@ export const CardBaseModelStyle2 = styled.div`
     color: ${Theme.colors.success};
   }
 
+  .min-stay {
+    font: ${Theme.typography.fonts.smallM};
+    color: ${Theme.colors.gray2};
+  }
+
   .control {
     display: flex;
     width: 100%;

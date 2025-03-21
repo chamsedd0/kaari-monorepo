@@ -43,7 +43,7 @@ const ReviewsWriteSkeleton = ({
                     </button>
 
                     <div className="write-review-button">
-                        <PurpleButtonMB48 text="Write Feedback" />
+                        <PurpleButtonMB48 text="Write Feedback" onClick={() => window.location.href = '/dashboards/user-dashboard/reviews/my-reviews/page'} />
                     </div>
 
                 </div>
