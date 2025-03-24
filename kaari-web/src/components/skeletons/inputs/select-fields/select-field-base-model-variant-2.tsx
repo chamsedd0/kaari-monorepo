@@ -18,7 +18,7 @@ interface SelectFieldProps {
   className?: string;
 }
 
-const SelectFieldBaseModelVariant1: React.FC<SelectFieldProps> = ({
+const SelectFieldBaseModelVariant2: React.FC<SelectFieldProps> = ({
   options,
   label,
   placeholder = 'Select an option',
@@ -69,4 +69,4 @@ const SelectFieldBaseModelVariant1: React.FC<SelectFieldProps> = ({
   );
 };
 
-export default SelectFieldBaseModelVariant1;
+export default SelectFieldBaseModelVariant2;

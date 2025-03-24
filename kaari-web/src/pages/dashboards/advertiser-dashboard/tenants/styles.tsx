@@ -29,7 +29,7 @@ export const TenantsPageStyle = styled.div`
       border-radius: ${Theme.borders.radius.md};
       overflow: hidden;      
       th, td {
-        padding: 15px;
+        padding: 24px 20px;
         text-align: left;
       }
       
@@ -52,7 +52,7 @@ export const TenantsPageStyle = styled.div`
       .tenant-info {
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 6px;
         
         img {
           width: 28px;

@@ -3,7 +3,7 @@ import { Theme } from "../../../theme/theme";
 
 export const NeedHelpCard = styled.div`
      background-color: ${Theme.colors.white};
-            border-radius: ${Theme.borders.radius.md};
+            border-radius: ${Theme.borders.radius.lg};
             border: ${Theme.borders.primary};
             padding: 32px 16px;
             display: flex;
