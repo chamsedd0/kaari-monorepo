@@ -54,7 +54,7 @@ export const PreparePropertyCard = styled.div`
                     width: 20px;
                     height: 20px;
                     border-radius: 50%;
-                    background-color: ${Theme.colors.primary};
+                    background-color: ${Theme.colors.secondary};
                     color: ${Theme.colors.white};
                     font: ${Theme.typography.fonts.extraSmallB};
                     padding: 8px;

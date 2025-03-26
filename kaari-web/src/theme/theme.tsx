@@ -42,6 +42,7 @@ export class Theme {
     fonts: {
       h1: 'normal 900 64px Visby CF',
       h2: 'normal 900 48px Visby CF',
+      h25: 'normal 800 40px Visby CF',
       h3: 'normal 700 32px Visby CF',
       h4B: 'normal 700 24px Visby CF',
       h4DB: 'normal 600 24px Visby CF',
