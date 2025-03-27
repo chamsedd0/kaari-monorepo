@@ -27,7 +27,6 @@ const DashboardPage: React.FC = () => {
       <h2 className="dashboard-title">Dashboard</h2>
       <div className="dashboard-content">
         <p>This is dashboard</p>
-        <PerformanceChart />
       </div>
     </DashboardPageStyle>
   );
