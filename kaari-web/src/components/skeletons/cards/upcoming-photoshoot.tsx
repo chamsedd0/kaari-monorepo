@@ -12,7 +12,7 @@ interface UpcomingPhotoshootProps {
   photographerInfo: string;
   photographerImage: string;
   location: string;
-  number: number;
+  number?: number;
 }
 
 const UpcomingPhotoshoot: React.FC<UpcomingPhotoshootProps> = ({
