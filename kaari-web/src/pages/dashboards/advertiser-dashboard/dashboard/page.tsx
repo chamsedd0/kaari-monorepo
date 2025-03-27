@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-
+import { PerformanceChart } from '../../../../components/skeletons/constructed/chart/performance-chart';
 const DashboardPageStyle = styled.div`
   display: flex;
   flex-direction: column;
@@ -27,6 +27,7 @@ const DashboardPage: React.FC = () => {
       <h2 className="dashboard-title">Dashboard</h2>
       <div className="dashboard-content">
         <p>This is dashboard</p>
+        <PerformanceChart />
       </div>
     </DashboardPageStyle>
   );
