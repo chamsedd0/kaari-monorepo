@@ -2,10 +2,10 @@ import { Theme } from "../../../theme/theme";
 import styled from "styled-components";
 
 export const WriteReviewCard = styled.div`
+    border: ${Theme.borders.primary};
     background-color: ${Theme.colors.white};
     border-radius: ${Theme.borders.radius.md};
     padding: 20px;
-    border: 1px solid ${Theme.colors.tertiary};
     display: flex;
     flex-direction: column;
     gap: 24px;

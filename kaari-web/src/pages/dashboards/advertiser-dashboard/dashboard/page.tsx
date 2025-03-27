@@ -1,32 +1,46 @@
 import React from 'react';
-import styled from 'styled-components';
-import { Theme } from '../../../../theme/theme';
-
-const DashboardPageStyle = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  padding: 20px;
-
-  .dashboard-title {
-    font: ${Theme.typography.fonts.h3};
-    color: ${Theme.colors.black};
-    margin-bottom: 20px;
-  }
-
-  .dashboard-content {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-`;
-
+import { DashboardPageStyle } from './styles';
+import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-help-card';
+import UpcomingPhotoshoot from '../../../../components/skeletons/cards/upcoming-photoshoot';
+import apartment from '../../../../assets/images/livingRoomExample.png' 
+import profile from '../../../../assets/images/advertiser.png'
+import LatestRequestDashboardCard from '../../../../components/skeletons/cards/lateest-request-dashboard-card';
+import MessagesCard from '../../../../components/skeletons/cards/messages-card';
 const DashboardPage: React.FC = () => {
   return (
     <DashboardPageStyle>
-      <h2 className="dashboard-title">Dashboard</h2>
-      <div className="dashboard-content">
-        <p>This is dashboard</p>
+      <div className="left">
+        <LatestRequestDashboardCard
+        title="Latest Request"
+        viewMoreText="View more"
+        requestImage={apartment}
+        requestTitle="Apartment - flat in the center of Agadir"
+        photographerName="John Price "
+        photographerInfo="John Price "
+        photographerImage={profile}
+        moveInDate="20/09/2024"
+        aplliedon="20/09/2024"
+        remainingTime="22h remaining"
+        />
+        <MessagesCard
+        title="Messages"
+        profilePicture={profile}
+        name="John Price"
+        messages="Hello! How many people will stay in this apartment? I will be requesting deposit before moving in. All other details.."
+        />
+      <UpcomingPhotoshoot
+        number={1}  
+        date="20/09/2024 6:00 PM"
+        time="01:15:44:23"
+        photographerName="Derek Xavier "
+        photographerInfo="Kaari Photography Agent "
+        photographerImage={profile}
+        location="123 Main Street, Apartment 4B"
+      />
+      </div>
+      <div className="right">
+
+        <NeedHelpCardComponent />
       </div>
     </DashboardPageStyle>
   );
