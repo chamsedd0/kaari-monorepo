@@ -6,6 +6,8 @@ import apartment from '../../../../assets/images/livingRoomExample.png'
 import profile from '../../../../assets/images/advertiser.png'
 import LatestRequestDashboardCard from '../../../../components/skeletons/cards/lateest-request-dashboard-card';
 import MessagesCard from '../../../../components/skeletons/cards/messages-card';
+import BookAPhotoshootComponent from '../../../../components/skeletons/cards/book-a-photoshoot-card';
+import PaymentCardComponent from '../../../../components/skeletons/cards/payment-card';
 const DashboardPage: React.FC = () => {
   return (
     <DashboardPageStyle>
@@ -39,7 +41,12 @@ const DashboardPage: React.FC = () => {
       />
       </div>
       <div className="right">
+        <BookAPhotoshootComponent/>
 
+        <PaymentCardComponent 
+        incomeAmount="3000$" 
+        incomeText="This month’s income" 
+        infoItems={[{title: "Tenants", number: "3"}, {title: "April", number: "1500$"},{title: "Total", number: "1500$"}]} />
         <NeedHelpCardComponent />
       </div>
     </DashboardPageStyle>

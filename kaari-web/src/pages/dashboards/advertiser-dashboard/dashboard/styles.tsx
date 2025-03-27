@@ -9,7 +9,7 @@ export const DashboardPageStyle = styled.div`
     .right {
         display: flex;
         flex-direction: column;
-        flex: 0.3;
+        flex: 0.35;
         gap: 24px;
     }
 
