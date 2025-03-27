@@ -25,7 +25,7 @@ const DashboardPage: React.FC = () => {
         remainingTime="22h remaining"
         />
         <MessagesCard
-        title="Messages "
+        title="Messages"
         profilePicture={profile}
         name="John Price"
         messages="Hello! How many people will stay in this apartment? I will be requesting deposit before moving in. All other details.."

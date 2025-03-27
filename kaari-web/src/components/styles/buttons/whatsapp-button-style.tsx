@@ -15,6 +15,11 @@ export const WhatsappButtonStyle = styled.button`
    transition: all 0.3s ease;
     font: ${Theme.typography.fonts.smallM};
     color: ${Theme.colors.white};
+
+    .icon {
+        width: 16px !important;
+        height: 16px !important;
+    }
   
    
 `
