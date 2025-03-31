@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "dev": "cd kaari-web && npm run dev"
+  },
   "dependencies": {
     "@types/react": "^19.0.10",
     "@types/react-router-dom": "^5.3.3",
