@@ -37,8 +37,8 @@ export const BookAPhotoshootCard = styled.div`
         }
 
         .picture-container {
-            width: 71px;
-            height: 81px;
+            width: 70px;
+            height: 80px;
         }
     }
     

@@ -8,6 +8,9 @@ import LatestRequestDashboardCard from '../../../../components/skeletons/cards/l
 import MessagesCard from '../../../../components/skeletons/cards/messages-card';
 import BookAPhotoshootComponent from '../../../../components/skeletons/cards/book-a-photoshoot-card';
 import PaymentCardComponent from '../../../../components/skeletons/cards/payment-card';
+import { PerformanceChart } from '../../../../components/skeletons/constructed/chart/performance-chart';
+import UpToDateCardComponent from '../../../../components/skeletons/cards/up-to-date-card';
+import PropertiesGraphCardComponent from '../../../../components/skeletons/cards/properties-garph-card';
 const DashboardPage: React.FC = () => {
   return (
     <DashboardPageStyle>
@@ -39,10 +42,62 @@ const DashboardPage: React.FC = () => {
         photographerImage={profile}
         location="123 Main Street, Apartment 4B"
       />
+
+      <PerformanceChart/>
+      <PropertiesGraphCardComponent
+        title="Views of Properties"
+        total="1500"
+        properties={[
+          {
+            propertyName: "Apartment - flat in Agadir",
+            propertyImage: apartment,
+            trend: "up",
+            thisMonth: "300",
+            lastMonth: "250",
+            clicks: "120",
+            requests: "15",
+            listedOn: "25/09/2024",
+            views: "500"
+          },
+          {
+            propertyName: "Apartment - flat in Agadir",
+            propertyImage: apartment,
+            trend: "up",
+            thisMonth: "280",
+            lastMonth: "230",
+            clicks: "100",
+            requests: "12",
+            listedOn: "25/09/2024",
+            views: "500"
+          },
+          {
+            propertyName: "Apartment - flat in Agadir",
+            propertyImage: apartment,
+            trend: "up",
+            thisMonth: "320",
+            lastMonth: "270",
+            clicks: "130",
+            requests: "18",
+            listedOn: "05/09/2024",
+            views: "500"
+          },
+          {
+            propertyName: "Apartment - flat in Agadir",
+            propertyImage: apartment,
+            trend: "down",
+            thisMonth: "200",
+            lastMonth: "250",
+            clicks: "80",
+            requests: "10",
+            listedOn: "05/09/2024",
+            views: "500"
+          }
+        ]}
+      />
       </div>
       <div className="right">
         <BookAPhotoshootComponent/>
-
+        <UpToDateCardComponent/>
         <PaymentCardComponent 
         incomeAmount="3000$" 
         incomeText="This month’s income" 
