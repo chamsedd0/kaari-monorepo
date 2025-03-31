@@ -1,52 +1,68 @@
 import React from 'react';
-import { NavigationCardBaseModalStyle } from '../../styles/cards/navigation-card-base-modal-style';
+import styled from 'styled-components';
+import { Theme } from '../../../theme/theme';
 
-type Section = 'profile' | 'Supporting Documents' | 'Contact Details' | 'Payout Method' | 'Recommend to Friends' | 'Help';
+const NavigationCardStyle = styled.div`
+    background-color: ${Theme.colors.white};
+    border-radius: ${Theme.borders.radius.lg};
+    border: ${Theme.borders.primary};
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-radius: ${Theme.borders.radius.md};
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: ${Theme.colors.gray2};
+        font: ${Theme.typography.fonts.largeM};
+
+        &:hover {
+            background-color: ${Theme.colors.quaternary};
+        }
+
+        &.active {
+            background-color: ${Theme.colors.primary};
+            color: ${Theme.colors.white};
+        }
+
+        
+    }
+`;
 
 interface NavigationCardProps {
-  activeSection: Section;
-  onSectionChange: (section: Section) => void;
+    activeSection: string;
+    onSectionChange: (section: string) => void;
 }
 
-export const NavigationCard: React.FC<NavigationCardProps> = ({ activeSection, onSectionChange }) => {
-  return (
-    <NavigationCardBaseModalStyle>
-      <button 
-        onClick={() => onSectionChange('profile')} 
-        className={`nav-link ${activeSection === 'profile' ? 'active' : ''}`}
-      >
-        <span className="nav-link-text">My Profile</span>
-      </button>
-      <button 
-        onClick={() => onSectionChange('Supporting Documents')} 
-        className={`nav-link ${activeSection === 'Supporting Documents' ? 'active' : ''}`}
-      >
-        <span className="nav-link-text">Supporting Documents</span>
-      </button>
-      <button 
-        onClick={() => onSectionChange('Contact Details')} 
-        className={`nav-link ${activeSection === 'Contact Details' ? 'active' : ''}`}
-      >
-        <span className="nav-link-text">Contact Details</span>
-      </button>
-      <button 
-        onClick={() => onSectionChange('Payout Method')} 
-        className={`nav-link ${activeSection === 'Payout Method' ? 'active' : ''}`}
-      >
-        <span className="nav-link-text">Payout Method</span>
-      </button>
-      <button 
-        onClick={() => onSectionChange('Recommend to Friends')} 
-        className={`nav-link ${activeSection === 'Recommend to Friends' ? 'active' : ''}`}
-      >
-        <span className="nav-link-text">Recommend to Friends</span>
-      </button>
-      <button 
-        onClick={() => onSectionChange('Help')} 
-        className={`nav-link ${activeSection === 'Help' ? 'active' : ''}`}
-      >
-        <span className="nav-link-text">Help</span>
-      </button>
-    </NavigationCardBaseModalStyle>
-  );
+const sections = [
+    { id: 'profile', label: 'Profile Section' },
+    { id: 'documents', label: 'Supporting Documents' },
+    { id: 'payout', label: 'Payout Methods' },
+    { id: 'recommend', label: 'Recommend to Friend' },
+    { id: 'contact', label: 'Contact Details' }
+];
+
+export const NavigationCard: React.FC<NavigationCardProps> = ({
+    activeSection,
+    onSectionChange
+}) => {
+    return (
+        <NavigationCardStyle>
+            {sections.map((section) => (
+                <div
+                    key={section.id}
+                    className={`nav-item ${activeSection === section.id ? 'active' : ''}`}
+                    onClick={() => onSectionChange(section.id)}
+                >
+                    {section.label}
+                </div>
+            ))}
+        </NavigationCardStyle>
+    );
 };

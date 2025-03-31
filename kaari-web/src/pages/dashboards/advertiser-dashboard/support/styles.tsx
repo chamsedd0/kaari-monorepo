@@ -4,7 +4,7 @@ import { Theme } from "../../../../theme/theme";
 export const ContactsPageStyle = styled.div`
     display: flex;
     width: 100%;
-    gap: 32px;
+    gap: 40px;
 
     .main-content{
         display: flex;
@@ -136,8 +136,8 @@ export const ContactsPageStyle = styled.div`
     .right {
         display: flex;
         flex-direction: column;
-        flex: 0.45;
-        gap: 32px;
+        flex: 0.35;
+        gap: 24px;
     }
 
 
