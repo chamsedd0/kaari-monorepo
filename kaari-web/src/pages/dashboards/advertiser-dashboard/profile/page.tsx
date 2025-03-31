@@ -6,6 +6,8 @@ import ProfileSection from './sections/profile-section/page';
 import SupportingDocumentsPage from './sections/supporting-documents/page';
 import RecommendToFriendPage from './sections/recommend-to-friend/page';
 import ContactDetailsPage from './sections/contact-details/page';
+import ChangePasswordPage from './sections/change-password/page';
+import PayoutMethodPage from './sections/payout-method/page';
 
 const ProfilePage: React.FC = () => {
     const [activeSection, setActiveSection] = useState('profile');
@@ -20,6 +22,11 @@ const ProfilePage: React.FC = () => {
                 return <RecommendToFriendPage />;
             case 'contact':
                 return <ContactDetailsPage />;
+            case 'password':
+                return <ChangePasswordPage />;
+            case 'payout':
+                return <PayoutMethodPage />;
+
             default:
                 return <ProfileSection />;
         }

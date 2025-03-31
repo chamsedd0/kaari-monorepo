@@ -27,7 +27,7 @@ const NavigationCardStyle = styled.div`
         }
 
         &.active {
-            background-color: ${Theme.colors.primary};
+            background-color: ${Theme.colors.secondary};
             color: ${Theme.colors.white};
         }
 
@@ -41,11 +41,12 @@ interface NavigationCardProps {
 }
 
 const sections = [
-    { id: 'profile', label: 'Profile Section' },
+    { id: 'profile', label: 'Profile' },
     { id: 'documents', label: 'Supporting Documents' },
+    { id: 'contact', label: 'Contact Details' },
     { id: 'payout', label: 'Payout Methods' },
     { id: 'recommend', label: 'Recommend to Friend' },
-    { id: 'contact', label: 'Contact Details' }
+    { id: 'password', label: 'Change Password' }
 ];
 
 export const NavigationCard: React.FC<NavigationCardProps> = ({

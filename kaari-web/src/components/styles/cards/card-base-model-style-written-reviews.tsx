@@ -5,7 +5,7 @@ export const WrittenReviewsCard = styled.div`
     background-color: ${Theme.colors.white};
     border-radius: ${Theme.borders.radius.md};
     padding: 40px 32px;
-    border: 1px solid ${Theme.colors.tertiary};
+    border: ${Theme.borders.primary};
     display: flex;
     flex-direction: column;
     gap: 32px;
