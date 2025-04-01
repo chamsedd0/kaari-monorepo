@@ -4,53 +4,48 @@ import { Theme } from '../../../../../../theme/theme';
 export const RecommendToFriendStyle = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 24px;
     width: 100%;
-    max-width: 800px;
 
-    .section-subtitle {
+    .title{
+        font: ${Theme.typography.fonts.h3};
+        color: ${Theme.colors.black};
+    }
+
+    .secondary-title{
+        font: ${Theme.typography.fonts.h4B};
+        color: ${Theme.colors.secondary};
+    }
+
+    .info-text{
+        font: ${Theme.typography.fonts.text16};
         color: ${Theme.colors.gray2};
-        font: ${Theme.typography.fonts.mediumM};
-        margin-bottom: 24px;
     }
 
-    .email-input {
-        width: 100%;
+    .input-container{
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        .input-label{
+            font: ${Theme.typography.fonts.largeB};
+            color: ${Theme.colors.black};
+        }
+
+        .input-field{
+            width: 100%;
     }
+}
 
-    .reward-info {
-        background: ${Theme.colors.primary};
-        border-radius: ${Theme.borders.radius.lg};
-        padding: 32px;
-        color: ${Theme.colors.white};
-        margin-top: 16px;
-
-        .reward-title {
-            font: ${Theme.typography.fonts.h3};
-            margin-bottom: 16px;
-        }
-
-        .reward-amount {
-            font: ${Theme.typography.fonts.h2};
-            margin-bottom: 24px;
-        }
-
-        .reward-description {
-            font: ${Theme.typography.fonts.mediumM};
-            margin-bottom: 16px;
-        }
-
-        .reward-steps {
-            font: ${Theme.typography.fonts.mediumM};
-        }
-
-        .reward-question {
-            font: ${Theme.typography.fonts.mediumM};
-            margin-top: 24px;
-        }
+    .button-container{
+        max-width: 188px;
     }
-
-    .save-button {
-        width: fit-content;
+    
+    .recommend-to-friend-image{
+        max-width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 `;
+
+

@@ -6,32 +6,28 @@ export const ChangePasswordStyle = styled.div`
     flex-direction: column;
     gap: 32px;
     width: 100%;
-    max-width: 800px;
+   
 
     .section-info {
         color: ${Theme.colors.gray2};
         font: ${Theme.typography.fonts.mediumM};
     }
 
+    .input-filed {
+        width: 48%;
+    }
+
     .password-fields {
         display: flex;
-        flex-direction: column;
+       
         gap: 24px;
         margin-top: 8px;
-
-        .field-row {
-            display: flex;
-            gap: 16px;
-
-            &.double {
-                > div {
-                    width: 50%;
-                }
-            }
-        }
+        width: 100%;
+        
+       
     }
 
     .save-button {
-        width: fit-content;
+       width: 188px;
     }
 `;

@@ -7,7 +7,7 @@ const InputBaseModel2 = styled.div`
   gap: 16px;
   align-items: flex-start;
   width: 100%;
-  max-width: 350px;
+  
 
   div {
     display: flex;

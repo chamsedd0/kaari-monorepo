@@ -17,7 +17,7 @@ export const PayoutMethodStyle = styled.div`
             color: ${Theme.colors.black};
         }
 
-        .payout-component-container {
+        .payout-complete-container {
             display: flex;
             gap: 40px;
             
@@ -109,7 +109,9 @@ export const PayoutMethodStyle = styled.div`
             color: ${Theme.colors.gray2};
         }
 
-        
+        .add-payment-method-button {
+            max-width: 188px;
+        }
         
     }
     
