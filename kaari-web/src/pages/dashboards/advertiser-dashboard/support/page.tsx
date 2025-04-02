@@ -9,7 +9,7 @@ import instagram from "../../../../components/skeletons/icons/instagram.svg"
 import linkedin from "../../../../components/skeletons/icons/linkedin.svg"
 import InputBaseModel from '../../../../components/skeletons/inputs/input-fields/input-variant';
 import TextAreaBaseModel from '../../../../components/skeletons/inputs/input-fields/textarea-variant';
-import { NavigationCard } from '../../../../components/skeletons/cards/navigation-card';
+
 const ContactsPage: React.FC = () => {
     return (
         <ContactsPageStyle>

@@ -31,6 +31,7 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
   aplliedon,
   remainingTime,
   onViewMore,
+  onDetails,
 }) => {
   return (
     <CardBaseModelStyleLatestRequestDashboard>
@@ -56,7 +57,7 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
               </div>
               
               <div className="details-container">
-                <div className="details-text">Details</div>
+                <div className="details-text" onClick={onDetails}>Details</div>
                 <svg className="details-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M4.5 9L7.5 6L4.5 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>

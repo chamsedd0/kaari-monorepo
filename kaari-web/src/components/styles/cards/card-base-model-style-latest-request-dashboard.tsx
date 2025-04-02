@@ -108,12 +108,26 @@ export const CardBaseModelStyleLatestRequestDashboard = styled.div`
                     .details-text{
                         font: ${Theme.typography.fonts.mediumM};
                         color: ${Theme.colors.gray2};
+                        transition: all 0.3s ease;
+
+                        &:hover {
+                            color: ${Theme.colors.black};
+                        }
+                        
                     }
 
                     .details-icon{
                         width: 12px;
                         height: 12px;
                         color: ${Theme.colors.gray2};
+                       
+                    }
+
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+
+                    &:hover {
+                        color: ${Theme.colors.black};
                     }
                 }
             }

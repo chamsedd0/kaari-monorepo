@@ -45,9 +45,11 @@ export const PreparePropertyCard = styled.div`
                 .number-text-container {
                     display: flex;
                     gap: 10px;
+                    align-items: center;
                 }
 
                 .number {
+                    padding: 8px 5px;
                     display: flex;
                     justify-content: center;
                     align-items: center;
@@ -57,12 +59,10 @@ export const PreparePropertyCard = styled.div`
                     background-color: ${Theme.colors.secondary};
                     color: ${Theme.colors.white};
                     font: ${Theme.typography.fonts.extraSmallB};
-                    padding: 8px;
+                   
                 }
                 
-                
-                    
-                    .item-title {
+                .item-title {
                         font: ${Theme.typography.fonts.mediumM};
                         color: ${Theme.colors.black};
                     }

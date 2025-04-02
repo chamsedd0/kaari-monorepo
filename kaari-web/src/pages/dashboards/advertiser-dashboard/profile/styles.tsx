@@ -9,7 +9,7 @@ export const ProfilePageStyle = styled.div`
     .right {
         display: flex;
         flex-direction: column;
-        flex: 0.4;
+        flex: 0.35;
         gap: 32px;
     }
 

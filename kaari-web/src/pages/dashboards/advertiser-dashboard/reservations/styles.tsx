@@ -157,10 +157,22 @@ export const ReservationsStyle = styled.div`
             
             .approve-button {
                 background-color: ${Theme.colors.success};
+                cursor: pointer;
+                transition: all 0.3s ease;
+
+                &:hover {
+                    background-color: darkgreen;
+                }
             }
             
             .reject-button {
                 background-color: ${Theme.colors.error};
+                cursor: pointer;
+                transition: all 0.3s ease;
+
+                &:hover {
+                    background-color: #600000;
+                }
             }
         }
     }

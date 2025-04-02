@@ -88,11 +88,21 @@ export const CardBaseModelStyleMessages = styled.div`
                     width: 14px;
                     height: 14px;
                     color: ${Theme.colors.black};
+                    cursor: pointer;
+                transition: all 0.3s ease;
+
+                   
                 }
 
                 .details{
                     font: ${Theme.typography.fonts.largeB};
                     color: ${Theme.colors.secondary};
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+
+                    &:hover {
+                        color: ${Theme.colors.primary};
+                    }
                 }
             }
         }

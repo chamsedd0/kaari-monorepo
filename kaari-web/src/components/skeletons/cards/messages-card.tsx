@@ -53,7 +53,7 @@ const MessagesCard: React.FC<MessagesCardProps> = ({
                                 strokeLinejoin="round"
                             />
                         </svg>
-                        <span className="details">{"details"}</span>
+                        <span className="details">{"Details"}</span>
                     </div>
                 </div>
             </div>
@@ -85,7 +85,7 @@ const MessagesCard: React.FC<MessagesCardProps> = ({
                                 strokeLinejoin="round"
                             />
                         </svg>
-                        <span className="details">{"details"}</span>
+                        <span className="details">{"Details"}</span>
                     </div>
                 </div>
             </div>
