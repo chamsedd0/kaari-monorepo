@@ -41,10 +41,63 @@ export const RecommendToFriendStyle = styled.div`
         max-width: 188px;
     }
     
-    .recommend-to-friend-image{
-        max-width: 100%;
-        height: 100%;
+    .recommend-banner{
+        margin-top: 16px;
+        width: 100%;
+        height: 385px;
         object-fit: cover;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            z-index: 1;
+        }
+
+        .banner-content{
+            position: relative;
+            z-index: 2;
+            color: white;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            height: 100%;
+            gap: 1.5rem;
+
+            *{
+                color: white;
+                line-height: 150%;
+            }
+
+            h2 {
+                font: ${Theme.typography.fonts.h4DB};
+                justify-self: start;
+                max-width: 55%;
+                flex: 1;
+            }
+
+            h3 {
+                font: ${Theme.typography.fonts.text14};
+                flex: 0.3;
+            }
+
+            p {
+                font: ${Theme.typography.fonts.text14};
+                flex: 0.5;
+                line-height: 150%;
+
+            }
+        }
     }
 `;
 
