@@ -22,75 +22,61 @@ export const PayoutMethodStyle = styled.div`
             gap: 40px;
             
            .payout-text {
+            padding: 24px 0px;
+            min-width: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             font: ${Theme.typography.fonts.extraLargeB};
             color: ${Theme.colors.black};
             position: relative;
             cursor: pointer;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
             
             &:hover {
-              color: ${Theme.colors.primary};
-              
+              color: ${Theme.colors.secondary};
               &::after {
                 content: '';
                 position: absolute;
-                bottom: -5px;
+                bottom: 0;
                 left: 0;
                 width: 100%;
-                height: 2px;
-                background-color: ${Theme.colors.primary};
+                height: 4px;
+                background-color: ${Theme.colors.secondary};
+                transform-origin: center;
+                transform: scaleX(0);
+                opacity: 0;
+                animation: fadeIn 0.3s forwards;
               }
+              
+              @keyframes fadeIn {
+                to {
+                  transform: scaleX(1);
+                  opacity: 1;
+                }
+              }
+              
+
             }
             
             &.active {
               color: ${Theme.colors.secondary};
-              
               &::after {
                 content: '';
                 position: absolute;
-                bottom: -5px;
+                bottom: 0;
                 left: 0;
                 width: 100%;
-                height: 2px;
+                height: 4px;
                 background-color: ${Theme.colors.secondary};
+                transform-origin: center;
+                transform: scaleX(1);
+                opacity: 1;
               }
-            }
+
+            } 
            }
-           .complete-text {
-            font: ${Theme.typography.fonts.extraLargeB};
-            color: ${Theme.colors.black};
-            position: relative;
-            cursor: pointer;
-            transition: color 0.3s ease;
-            
-            &:hover {
-              color: ${Theme.colors.primary};
-              
-              &::after {
-                content: '';
-                position: absolute;
-                bottom: -5px;
-                left: 0;
-                width: 100%;
-                height: 2px;
-                background-color: ${Theme.colors.primary};
-              }
-            }
-            
-            &.active {
-              color: ${Theme.colors.secondary};
-              
-              &::after {
-                content: '';
-                position: absolute;
-                bottom: -5px;
-                left: 0;
-                width: 100%;
-                height: 2px;
-                background-color: ${Theme.colors.secondary};
-              }
-            }
-           }
+           
         }
     }
 

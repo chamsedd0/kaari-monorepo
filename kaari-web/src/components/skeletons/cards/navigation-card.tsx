@@ -6,23 +6,24 @@ const NavigationCardStyle = styled.div`
     background-color: ${Theme.colors.white};
     border-radius: ${Theme.borders.radius.lg};
     border: ${Theme.borders.primary};
-    padding: 24px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
 
     .nav-item {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 12px 16px;
+        padding: 16px 24px;
         border-radius: ${Theme.borders.radius.md};
         cursor: pointer;
         transition: all 0.3s ease;
         color: ${Theme.colors.gray2};
-        font: ${Theme.typography.fonts.largeM};
+        font: ${Theme.typography.fonts.largeB};
+
 
         &:hover {
+            color: ${Theme.colors.white};
             background-color: ${Theme.colors.quaternary};
         }
 

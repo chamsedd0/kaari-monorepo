@@ -18,7 +18,7 @@ const PayoutMethodPage: React.FC = () => {
             Payout
           </div>
           <div 
-            className={`complete-text ${activeTab === 'complete' ? 'active' : ''}`}
+            className={`payout-text ${activeTab === 'complete' ? 'active' : ''}`}
             onClick={() => setActiveTab('complete')}
           >
             Completed
