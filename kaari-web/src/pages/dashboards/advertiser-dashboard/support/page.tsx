@@ -82,7 +82,7 @@ const ContactsPage: React.FC = () => {
                 </div>
             </div>
             <div className="right">
-            <NavigationCard activeSection="profile" onSectionChange={() => {}} />
+            
                 <GoogleCard title="Connect to Google" description="Connect your Google account to your Kaari account to easily sign in and access your reservations." />
             
             </div>
