@@ -1,7 +1,8 @@
 import React from 'react';
 import { WrittenReviewsCard } from '../../styles/cards/card-base-model-style-written-reviews';
-import picture from '../../../assets/images/propertyExamplePic.png'
-import avatar from '../../../assets/images/ProfilePicture.png'
+import picture from '../../../assets/images/propertyExamplePic.png';
+import avatar from '../../../assets/images/ProfilePicture.png';
+import StarIcon from '../../../assets/icons/Icon_Star.svg';
 
 interface ReviewCardProps {
   propertyImage?: string;
@@ -9,12 +10,15 @@ interface ReviewCardProps {
   postedDate?: string;
   lengthOfStay?: string;
   reviewText?: string;
-  advertiserImage?: string;
-  advertiserName?: string;
+  reviewerImage?: string;
+  reviewerName?: string;
   ratings?: {
-    category: string;
-    score: number;
-  }[];
+    landlord: number;
+    neighbourhood: number;
+    publicTransport: number;
+    accommodation: number;
+    servicesNearby: number;
+  };
 }
 
 const ReviewCard: React.FC<ReviewCardProps> = ({
@@ -23,15 +27,30 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
   postedDate = "January 1, 2023",
   lengthOfStay = "1 month",
   reviewText = "No review text provided",
-  advertiserImage = avatar,
-  advertiserName = "Advertiser Name",
-  ratings = [
-    { category: "Communication", score: 0 },
-    { category: "Accuracy", score: 0 },
-    { category: "Location", score: 0 },
-    { category: "Value", score: 0 }
-  ]
+  reviewerImage = avatar,
+  reviewerName = "Turan M.",
+  ratings = {
+    landlord: 5,
+    neighbourhood: 5,
+    publicTransport: 5,
+    accommodation: 5,
+    servicesNearby: 5
+  }
 }) => {
+  const renderStars = (rating: number) => (
+    <div className="stars">
+      {[...Array(5)].map((_, index) => (
+        <div key={index} className="star">
+          <img 
+            src={StarIcon} 
+            alt="star"
+            className={index < rating ? '' : 'empty'}
+          />
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <WrittenReviewsCard>
       <div className="property-info">
@@ -48,29 +67,39 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
       </div>
       
       <p className="property-review-text">{reviewText}</p>
-      
-      <h3 className="title">Advertiser Rating</h3>
-      
-      <div className="advertiser-rating">
-        <div className="advertiser-info">
-          <div className="advertiser-image">
-            <img src={advertiserImage} alt={advertiserName} />
+
+      <div className="reviewer-info">
+          <div className="reviewer-image">
+            <img src={reviewerImage} alt={reviewerName} />
           </div>
-          <p className="advertiser-name">{advertiserName}</p>
+          <span className="name">{reviewerName}</span>
+      </div>
+      
+      <div className="ratings-container">
+        <div className="ratings-grid">
+          <div className="rating-item">
+            <span className="label">Landlord</span>
+            {renderStars(ratings.landlord)}
+          </div>
+          <div className="rating-item">
+            <span className="label">Accommodation</span>
+            {renderStars(ratings.accommodation)}
+          </div>
+          <div className="rating-item">
+            <span className="label">Neighbourhood safety</span>
+            {renderStars(ratings.neighbourhood)}
+          </div>
+          <div className="rating-item">
+            <span className="label">Services nearby</span>
+            {renderStars(ratings.servicesNearby)}
+          </div>
+          <div className="rating-item">
+            <span className="label">Public Transport</span>
+            {renderStars(ratings.publicTransport)}
+          </div>
         </div>
-        
-        <div className="advertiser-rating-text">
-          {ratings.map((rating, index) => (
-            <div key={index} className="rating-category">
-              <span className="category-name">{rating.category}</span>
-              <div className="stars">
-                {[...Array(5)].map((_, i) => (
-                  <div className="star" key={i} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+
+       
       </div>
     </WrittenReviewsCard>
   );

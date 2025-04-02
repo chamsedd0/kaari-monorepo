@@ -97,65 +97,76 @@ export const WrittenReviewsCard = styled.div`
         width: 100%;
     }
 
-    .advertiser-rating{
+    .ratings-container {
         display: flex;
-        gap: 32px;
-        width: 100%;
         flex-direction: column;
-        justify-content: start;
-        align-items: start;
+        gap: 16px;
+        width: 100%;
 
-        .advertiser-info{
-            display: flex;
+        .ratings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
-            justify-content: start;
-            align-items: center;
+            width: 100%;
 
-            .advertiser-image{
-                width: 48px;
-                height: 48px;
-
-                img{
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                    border-radius: ${Theme.borders.radius.round};
-                }
-                
-            }
-            .advertiser-name{
-                font: ${Theme.typography.fonts.largeB};
-                color: ${Theme.colors.secondary};
-                text-align: start;
-            }
-            
-        }
-
-        .advertiser-rating-text{
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            
-            .rating-category {
+            .rating-item {
                 display: flex;
-                justify-content: space-between;
                 align-items: center;
-                width: 100%;
-                
-                .category-name {
-                    font: ${Theme.typography.fonts.mediumB};
+                justify-content: space-between;
+                gap: 8px;
+
+                .label {
+                    font: ${Theme.typography.fonts.mediumM};
                     color: ${Theme.colors.black};
-                    text-align: start;
-                    min-width: 150px;
                 }
-                
+
                 .stars {
                     display: flex;
                     gap: 2px;
+
+                    .star {
+                        width: 16px;
+                        height: 16px;
+
+                        img {
+                            width: 100%;
+                            height: 100%;
+                            filter: invert(73%) sepia(88%) saturate(1129%) hue-rotate(358deg) brightness(101%) contrast(104%);
+                            
+                            &.empty {
+                                filter: invert(83%) sepia(5%) saturate(11%) hue-rotate(314deg) brightness(86%) contrast(90%);
+                            }
+                        }
+                    }
                 }
             }
         }
-    
+
+        .reviewer-info {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+
+            .reviewer-image {
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                overflow: hidden;
+
+                img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+            }
+
+            .name {
+                font: ${Theme.typography.fonts.mediumB};
+                color: ${Theme.colors.black};
+            }
+        }
     }
     
 `;
