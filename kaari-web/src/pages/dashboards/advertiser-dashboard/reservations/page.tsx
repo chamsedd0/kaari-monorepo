@@ -3,6 +3,9 @@ import { ReservationsStyle } from './styles';
 import SelectFieldBaseModelVariant2 from '../../../../components/skeletons/inputs/select-fields/select-field-base-model-variant-2';
 import profilePlaceholder from '../../../../assets/images/kaariLogoPurplePic.png';
 import propertyPlaceholder from '../../../../assets/images/BigCityPic0.png';
+import checkIcon from '../../../../components/skeletons/icons/Check-Icon.svg';
+import crossIcon from '../../../../components/skeletons/icons/Cross-Icon.svg';
+
 const ReservationsPage: React.FC = () => {
     return (
         <ReservationsStyle>
@@ -55,8 +58,12 @@ const ReservationsPage: React.FC = () => {
                             <td className="hours-remaining">24</td>
                             <td>
                                 <div className="action-buttons">
-                                    <div className="approve-button">✓</div>
-                                    <div className="reject-button">✕</div>
+                                    <div className="approve-button">
+                                        <img src={checkIcon} alt="Check" />
+                                    </div>
+                                    <div className="reject-button">
+                                        <img src={crossIcon} alt="Cross" />
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -79,8 +86,12 @@ const ReservationsPage: React.FC = () => {
                             <td className="hours-remaining">18</td>
                             <td>
                                 <div className="action-buttons">
-                                    <div className="approve-button">✓</div>
-                                    <div className="reject-button">✕</div>
+                                    <div className="approve-button">
+                                        <img src={checkIcon} alt="Check" />
+                                    </div>
+                                    <div className="reject-button">
+                                        <img src={crossIcon} alt="Cross" />
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -103,8 +114,12 @@ const ReservationsPage: React.FC = () => {
                             <td className="hours-remaining">12</td>
                             <td>
                                 <div className="action-buttons">
-                                    <div className="approve-button">✓</div>
-                                    <div className="reject-button">✕</div>
+                                    <div className="approve-button">
+                                        <img src={checkIcon} alt="Check" />
+                                    </div>
+                                    <div className="reject-button">
+                                        <img src={crossIcon} alt="Cross" />
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -127,8 +142,12 @@ const ReservationsPage: React.FC = () => {
                             <td className="hours-remaining">8</td>
                             <td>
                                 <div className="action-buttons">
-                                    <div className="approve-button">✓</div>
-                                    <div className="reject-button">✕</div>
+                                    <div className="approve-button">
+                                        <img src={checkIcon} alt="Check" />
+                                    </div>
+                                    <div className="reject-button">
+                                        <img src={crossIcon} alt="Cross" />
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -151,8 +170,12 @@ const ReservationsPage: React.FC = () => {
                             <td className="hours-remaining">4</td>
                             <td>
                                 <div className="action-buttons">
-                                    <div className="approve-button">✓</div>
-                                    <div className="reject-button">✕</div>
+                                    <div className="approve-button">
+                                        <img src={checkIcon} alt="Check" />
+                                    </div>
+                                    <div className="reject-button">
+                                        <img src={crossIcon} alt="Cross" />
+                                    </div>
                                 </div>
                             </td>
                         </tr>

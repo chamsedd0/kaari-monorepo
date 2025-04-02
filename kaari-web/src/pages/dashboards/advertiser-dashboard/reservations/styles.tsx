@@ -136,16 +136,23 @@ export const ReservationsStyle = styled.div`
         
         .action-buttons {
             display: flex;
-            gap: 8px;
+            gap: 20px;
             
             .approve-button, .reject-button {
-                width: 24px;
-                height: 24px;
+                width: 40px;
+                height: 40px;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 cursor: pointer;
+                color: ${Theme.colors.white};
+
+                img {
+                    width: 22px;
+                    height: 22px;
+                    filter: brightness(0) invert(1); /* Makes the image white */
+                }
             }
             
             .approve-button {
