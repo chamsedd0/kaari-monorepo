@@ -59,6 +59,7 @@ export const CardBaseModelStyleMastercard = styled.div`
             width: 20px;
             height: 20px;
             object-fit: cover;
+            cursor: pointer;
         }
         
     

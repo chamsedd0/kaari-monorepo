@@ -82,10 +82,19 @@ export const ContactsPageStyle = styled.div`
                 .-content-title{
                     font: ${Theme.typography.fonts.text16};
                     color: ${Theme.colors.gray2};
+                    transition: all 0.3s ease;
+
+
+                    &:hover {
+                    color: ${Theme.colors.primary};
+                }
                 }
                 
                 
                }
+                    cursor: pointer;
+
+                
             }
             
         }

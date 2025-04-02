@@ -9,7 +9,7 @@ import instagram from "../../../../components/skeletons/icons/instagram.svg"
 import linkedin from "../../../../components/skeletons/icons/linkedin.svg"
 import InputBaseModel from '../../../../components/skeletons/inputs/input-fields/input-variant';
 import TextAreaBaseModel from '../../../../components/skeletons/inputs/input-fields/textarea-variant';
-import { NavigationCard } from '../../../../components/skeletons/cards/navigation-card';
+
 const ContactsPage: React.FC = () => {
     return (
         <ContactsPageStyle>
@@ -82,7 +82,7 @@ const ContactsPage: React.FC = () => {
                 </div>
             </div>
             <div className="right">
-            <NavigationCard activeSection="profile" onSectionChange={() => {}} />
+            
                 <GoogleCard title="Connect to Google" description="Connect your Google account to your Kaari account to easily sign in and access your reservations." />
             
             </div>

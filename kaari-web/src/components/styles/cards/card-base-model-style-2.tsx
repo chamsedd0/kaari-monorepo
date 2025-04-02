@@ -9,6 +9,7 @@ export const CardBaseModelStyle2 = styled.div`
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  max-width: 301px;
   height: 100%;
 
   position: relative;

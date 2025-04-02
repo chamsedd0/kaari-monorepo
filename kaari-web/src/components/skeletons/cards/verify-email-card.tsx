@@ -1,5 +1,5 @@
 import React from 'react';
-import { VerifyEmailCard } from '../../styles/cards/card-base-model-style-verify-emial';
+import { VerifyEmailCard } from '../../styles/cards/card-base-model-style-verify-email';
 import Picture from "../../../assets/images/Check-Icon.svg" ;
 
 interface VerifyEmailCardProps {
