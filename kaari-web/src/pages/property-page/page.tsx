@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { PropertyPage } from "./styles";
 import { WhiteHeaderUsers } from "../../components/skeletons/constructed/headers/header-users-white";
 import PhotoSlider from "../../components/skeletons/constructed/slider/photo-slider";
-
 import pictures from '../../assets/images/propertyExamplePic.png'
 import PropertyRequestCard from "../../components/skeletons/cards/send-request-card";
 import ProfilePic from '../../assets/images/ProfilePicture.png'
@@ -13,6 +12,16 @@ import Map from '../../assets/images/map2.png'
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
 import ArrowLeftIcon from "../../components/skeletons/icons/Icon_Arrow_Left.svg";
 import ArrowRightIcon from "../../components/skeletons/icons/Icon_Arrow_Right.svg";
+import people from '../../components/skeletons/icons/People-Icon.svg'
+import { BedroomIcon, BathroomIcon, FurnitureIcon, KitchenIcon } from '../../components/icons/RoomIcons';
+import size from '../../components/skeletons/icons/Area-Icon.svg'
+import wifi from '../../components/skeletons/icons/Wifi-Icon.svg'
+import furnished from '../../components/skeletons/icons/Furniture-Icon.svg'
+import check from '../../components/skeletons/icons/Check-Icon.svg'
+import cross from '../../components/skeletons/icons/Cross-Icon.svg'
+import bedroom from '../../components/skeletons/icons/Bedroom-Icon.svg'
+import bathroom from '../../components/skeletons/icons/Bathroom-Icon.svg'
+import { Theme } from "../../theme/theme";
 
 const PropertyPageComponent = () => {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -62,6 +71,57 @@ const PropertyPageComponent = () => {
                 <PhotoSlider images={images}></PhotoSlider>
             </div>
 
+            <div className="property-icons-container">
+              <div className="icon-container">
+                <div className="icon-circle">
+                  <img src={people} alt="icon" />
+                </div>
+                <div className="icon-text">
+                  <p>2 People</p>
+                </div>
+              </div>
+              <div className="icon-container">
+                <div className="icon-circle">
+                  <img src={bedroom} alt="icon" />
+                </div>
+                <div className="icon-text">
+                  <p>1 Bedroom</p>
+                </div>
+              </div>
+              <div className="icon-container">
+                <div className="icon-circle">
+                  <img src={bathroom} alt="icon" />
+                </div>
+                <div className="icon-text">
+                  <p>1 Bathroom</p>
+                </div>
+              </div>
+              <div className="icon-container">
+                <div className="icon-circle">
+                  <img src={size} alt="icon" />
+                </div>
+                <div className="icon-text">
+                  <p>40 m2</p>
+                </div>
+              </div>
+              <div className="icon-container">
+                <div className="icon-circle">
+                  <img src={wifi} alt="icon" />
+                </div>
+                <div className="icon-text">
+                  <p>Wi-fi</p>
+                </div>
+              </div>
+              <div className="icon-container">
+                <div className="icon-circle">
+                  <img src={furnished} alt="icon" />
+                </div>
+                <div className="icon-text">
+                  <p>2 Furnished</p>
+                </div>
+              </div>
+            </div>
+
             <div className="property-info">
               <div className="money-safe-banner">
                     <h3>Your money is safe up to 48 hours after you move in</h3>
@@ -74,7 +134,7 @@ const PropertyPageComponent = () => {
                     </div>
                 </div>
                 
-                <h1 className="title">Flat for rent in Agadir</h1>
+                <h1 className="title">Flat for rent - Agadir</h1>
                 
                 <p className="description">
                     Discover an exceptional building for rent in the vibrant city of Agadir, Morocco. This versatile property offers a prime location in a thriving neighborhood, making it ideal for various business ventures or residential purposes. The building boasts a modern design with spacious interiors, large windows that flood the space with natural light, and high ceilings.
@@ -91,18 +151,27 @@ const PropertyPageComponent = () => {
                         <div className="equipment-group">
                             <h3>Basic furniture</h3>
                             <ul>
-                                <li>Sofa</li>
-                                <li>Dining Table</li>
-                                <li>Wardrobe</li>
-                                <li>Cabinet</li>
+                                <li><img src={check} alt="check" />Sofabed</li>
+                                <li><img src={check} alt="check" />Sofa</li>
+                                <li className="unavailable"><img src={cross} alt="cross" />Coffee table</li>
+                                <li><img src={check} alt="check" />Dining Table</li>
+                                <li className="unavailable"><img src={cross} alt="cross" />Desk</li>
+                                <li><img src={check} alt="check" />Wardrobe</li>
+                                <li><img src={check} alt="check" />Dresser</li>
+                                <li className="unavailable"><img src={cross} alt="cross" />Mirror</li>
+                                <li><img src={check} alt="check" />Cabinet</li>
+                                <li className="unavailable"><img src={cross} alt="cross" />Walk-in closet</li>
                             </ul>
                         </div>
                         <div className="equipment-group">
-                            <h3>Kitchen Essentials</h3>
+                            <h3>Laundry Essentials</h3>
                             <ul>
-                                <li>Basic equipment</li>
-                                <li>Some equipment</li>
-                                <li>Some equipment</li>
+                                <li><img src={check} alt="check" />Some equipment</li>
+                                <li className="unavailable"><img src={cross} alt="cross" />Some equipment</li>
+                                <li><img src={check} alt="check" />Some equipment</li>
+                                <li className="unavailable"><img src={cross} alt="cross" />Some equipment</li>
+                                <li><img src={check} alt="check" />Some equipment</li>
+                                <li><img src={check} alt="check" />Some equipment</li>
                             </ul>
                         </div>
                     </div>
@@ -112,20 +181,32 @@ const PropertyPageComponent = () => {
                     <h2>Rooms and equipment</h2>
                     <div className="room-list">
                         <div className="room">
-                            <span className="room-icon">🛏️</span>
-                            <span>Bedroom</span>
+                            <BedroomIcon color={Theme.colors.secondary} />
+                            <div className="text-container">
+                                <span className="room-name">Bedroom</span>
+                                <span className="room-description">10 m2</span>
+                            </div>
                         </div>
                         <div className="room">
-                            <span className="room-icon">🚽</span>
-                            <span>Bathroom</span>
+                            <BathroomIcon color={Theme.colors.secondary} />
+                            <div className="text-container">
+                                <span className="room-name">Bathroom</span>
+                                <span className="room-description">10 m2</span>
+                            </div>
                         </div>
                         <div className="room">
-                            <span className="room-icon">🛋️</span>
-                            <span>Living Room</span>
+                            <FurnitureIcon color={Theme.colors.secondary} />
+                            <div className="text-container">
+                                <span className="room-name">Living Room</span>
+                                <span className="room-description">10 m2</span>
+                            </div>
                         </div>
                         <div className="room">
-                            <span className="room-icon">🍳</span>
-                            <span>Kitchen</span>
+                            <KitchenIcon color={Theme.colors.secondary} />
+                            <div className="text-container">
+                                <span className="room-name">Kitchen</span>
+                                <span className="room-description">10 m2</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -163,7 +244,9 @@ const PropertyPageComponent = () => {
                         <div className="advertiser-details">
                             <h3>Leonardo V.</h3>
                             <p>On Kaari since August 2024</p>
-                            <CertificationBanner text="Premium host" purple></CertificationBanner>
+                            <div className="certification-banner">
+                              <CertificationBanner text="Experienced host" purple></CertificationBanner>
+                            </div>
                         </div>
                     </div>
                     <p className="advertiser-description">
@@ -202,12 +285,12 @@ const PropertyPageComponent = () => {
             </div>
       </div>
 
-      {/* Add a separate div just for stop calculation */}
+      
       <div ref={stopRef} className="stop-reference">
         
       </div>
 
-      {/* Content that goes after the checkout box */}
+     
       <div className="bottom-content">
         <img src={Map} alt="map" className="map-image" />
         <div className="recommendations">

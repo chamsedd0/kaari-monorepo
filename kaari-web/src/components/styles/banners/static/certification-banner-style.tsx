@@ -4,13 +4,13 @@ import { Theme } from "../../../../theme/theme";
 
 
 export const CertifiedBanner = styled.div<{ variant?: boolean }>`
-    padding: 7.5px 22px;
+    padding: 7.5px 10px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 6px;
+    height: 27px;
     
-    max-width: 45%;
+    
     font: ${Theme.typography.fonts.smallB};
     border-radius: ${Theme.borders.radius.extreme};
 
@@ -23,7 +23,7 @@ export const CertifiedBanner = styled.div<{ variant?: boolean }>`
     }
 
     .text {
-        max-width: 60%;
+        
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
