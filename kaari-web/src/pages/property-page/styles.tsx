@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { Theme } from "../../theme/theme";
 
+
 interface PropertyPageProps {
     isFixed: boolean;
     isStopped: boolean;
@@ -123,38 +124,66 @@ export const PropertyPage = styled.div<PropertyPageProps>`
         h2 {
           font: ${Theme.typography.fonts.h4B};
           color: ${Theme.colors.black};
-          margin-bottom: 24px;
+          margin-bottom: 40px;
         }
 
         .equipment-list {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          display: flex;
+          flex-direction: column;
           gap: 32px;
 
           .equipment-group {
+            width: 100%;
+
             h3 {
               font: ${Theme.typography.fonts.extraLargeB};
               color: ${Theme.colors.black};
-              margin-bottom: 16px;
+              margin-bottom: 32px;
             }
 
             ul {
               list-style: none;
               padding: 0;
-              display: flex;
-              flex-direction: column;
-              gap: 12px;
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 24px;
 
               li {
                 font: ${Theme.typography.fonts.mediumM};
                 color: ${Theme.colors.gray2};
                 display: flex;
                 align-items: center;
-                gap: 8px;
+                position: relative;
+                padding-left: 28px;
 
                 &:before {
-                  content: '✓';
-                  color: ${Theme.colors.secondary};
+                  content: '';
+                  position: absolute;
+                  left: 0;
+                  width: 20px;
+                  height: 20px;
+                  border-radius: 50%;
+                  background-color: ${Theme.colors.secondary};
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                }
+
+                img {
+                  position: absolute;
+                  left: 4px;
+                  top: 50%;
+                  transform: translateY(-50%);
+                  width: 12px;
+                  height: 12px;
+                  z-index: 1;
+                  filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%);
+                }
+
+                &.unavailable {
+                  &:before {
+                    background-color: ${Theme.colors.primary};
+                  }
                 }
               }
             }
@@ -171,18 +200,42 @@ export const PropertyPage = styled.div<PropertyPageProps>`
 
         .room-list {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-          gap: 16px;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 20px;
 
           .room {
+            height: 100px;
             padding: 16px;
             border: 1px solid ${Theme.colors.tertiary};
             border-radius: ${Theme.borders.radius.md};
             display: flex;
             align-items: center;
             gap: 12px;
-            font: ${Theme.typography.fonts.largeB};
-            color: ${Theme.colors.black};
+            
+           
+            .text-container {
+              display: flex;
+              flex-direction: column;
+              gap: 6px;
+              
+              .room-name {
+                font: ${Theme.typography.fonts.largeB};
+                color: ${Theme.colors.black};
+              }
+
+              .room-description {
+                font: ${Theme.typography.fonts.smallM};
+                color: ${Theme.colors.gray2};
+              }
+            }
+
+            img {
+              width: 40px;
+              height: 40px;
+              object-fit: contain;
+              display: block;
+
+            }
           }
         }
       }
@@ -410,5 +463,44 @@ export const PropertyPage = styled.div<PropertyPageProps>`
     }
   }
 
+  .certification-banner {
+    max-width: 134px;
+  }
+
+  .property-icons-container {
+    display: flex;
+    align-items: center;
+    gap: 80px;
+    margin-bottom: 60px;
+
+    .icon-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+
+      .icon-circle {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: ${Theme.colors.secondary};
+
+        img {
+          padding: 16px;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+      }
+
+      .icon-text {
+        font: ${Theme.typography.fonts.largeB};
+        color: ${Theme.colors.black};
+      }
+      
+      
+    }
+    
+  }
 
 `;
