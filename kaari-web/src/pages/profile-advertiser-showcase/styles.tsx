@@ -95,7 +95,7 @@ export const ProfileShowcaseStyle = styled.div`
 
             .title {
                 color: ${Theme.colors.black};
-                font-size: ${Theme.typography.fonts.extraLargeB};
+                font: ${Theme.typography.fonts.extraLargeB};
 
             }
 
@@ -243,6 +243,19 @@ export const ProfileShowcaseStyle = styled.div`
             align-items: start;
             justify-content: start;
 
+            .offers-content {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                
+                .offers-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 20px;
+                    width: 100%;
+                }
+            }
         }
 
 
