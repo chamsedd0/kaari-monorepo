@@ -9,8 +9,8 @@ interface HeaderLandingPageStyleProps {
 export const HeaderLandingPageStyle = styled(HeaderBaseModel)<HeaderLandingPageStyleProps>`
     background: ${({ scrolled }) => scrolled ? Theme.colors.primary : 'transparent'};
     border: none !important;
-    padding: ${({ scrolled }) => scrolled ? '15px 6%' : '20px 6%'};
-    max-height: 80px;
+    padding: ${({ scrolled }) => scrolled ? '0 6%' : '0 6%'};
+    height: 80px;
     position: fixed;
     top: 0;
     left: 0;
@@ -18,23 +18,30 @@ export const HeaderLandingPageStyle = styled(HeaderBaseModel)<HeaderLandingPageS
     transition: all 0.3s ease;
     box-shadow: ${({ scrolled }) => scrolled ? '0 4px 20px rgba(0, 0, 0, 0.1)' : 'none'};
     z-index: 1000;
+    display: flex;
+    align-items: center;
     
     ${({ scrolled }) => scrolled && css`
-        padding: 15px 40px;
+        padding: 0 40px;
     `}
     
     .wrapper {
         max-width: 1400px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
     
     .logo {
-        height: 100%;
+        height: 40px;
         max-width: 120px;
         z-index: 10;
         
         img {
             width: 100%;
             height: 100%;
+            object-fit: contain;
         }
     }
 

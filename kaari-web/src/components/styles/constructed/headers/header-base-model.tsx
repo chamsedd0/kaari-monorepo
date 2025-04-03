@@ -8,7 +8,7 @@ export const HeaderBaseModel = styled.div`
     left: 0;
     z-index: 1000;
 
-    max-height: 80px;
+    height: 80px;
     width: 100%;
     border: ${Theme.borders.primary};
     padding: 20px;

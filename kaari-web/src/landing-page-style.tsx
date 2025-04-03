@@ -49,10 +49,10 @@ export const UsersLandingStyle = styled.div`
 
         .hero-content {
             z-index: 2;
-            max-width: 1200px;
+            max-width: 1400px;
             width: 100%;
             margin: 0 auto;
-            padding-top: 40px;
+            padding-top: 0px;
             position: relative;
             
             &::before {
@@ -358,7 +358,6 @@ export const UsersLandingStyle = styled.div`
             
             &:hover {
                 transform: translateY(-5px);
-                box-shadow: 0 10px 30px rgba(0,0,0,0.05);
             }
 
             img {
@@ -378,15 +377,30 @@ export const UsersLandingStyle = styled.div`
     /* What is Kaari Section */
     .what-is-kaari {
         width: 100%;
-        background: linear-gradient(135deg, ${Theme.colors.primary}, #6a30c7);
+        background: url('/src/assets/images/waves.svg') center center/cover no-repeat;
         padding: 100px 6%;
         display: flex;
-            justify-content: center;
+        justify-content: center;
         align-items: center;
+        position: relative;
+        overflow: hidden;
+        
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(45, 27, 78, 0.3), rgba(106, 48, 199, 0.3));
+            z-index: 0;
+        }
         
         .section-content {
             text-align: center;
             max-width: 600px;
+            position: relative;
+            z-index: 1;
 
             h2 {
                 font: ${Theme.typography.fonts.h2};
@@ -445,6 +459,7 @@ export const UsersLandingStyle = styled.div`
     /* How It Works Section */
     .how-it-works {
         padding: 100px 6%;
+        padding-bottom: 0px;
         background: ${Theme.colors.white};
         
         .steps-container {
@@ -706,7 +721,6 @@ export const UsersLandingStyle = styled.div`
                 
                 &:hover {
                     transform: translateY(-10px);
-                    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
                 }
             }
         }
@@ -866,26 +880,46 @@ export const UsersLandingStyle = styled.div`
 
     /* App Download Section */
     .app-download {
-        padding: 120px 6%;
-        background: linear-gradient(to right, ${Theme.colors.white} 0%, #f7f9fc 100%);
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-        gap: 60px;
+        padding: 120px 2%;
+        width: 100%;
+        max-width: 1400px;
         position: relative;
         overflow: hidden;
+        border-radius: 0;
         
         &::before {
             content: '';
             position: absolute;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, ${Theme.colors.primary}10 0%, transparent 70%);
+            width: 600px;
+            height: 600px;
             border-radius: 50%;
             top: -200px;
             right: -100px;
             z-index: 0;
+        }
+        
+        &::after {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, ${Theme.colors.primary}10 0%, transparent 70%);
+            border-radius: 50%;
+            bottom: -200px;
+            left: -100px;
+            z-index: 0;
+        }
+        
+        .app-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 60px;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
         
         .app-content {
@@ -894,23 +928,40 @@ export const UsersLandingStyle = styled.div`
             position: relative;
             z-index: 1;
             
+            .app-badge {
+                display: inline-block;
+                background: ${Theme.colors.primary};
+                color: white;
+                padding: 8px 16px;
+                border-radius: 30px;
+                font-weight: 600;
+                font-size: 14px;
+                margin-bottom: 20px;
+                margin-left: 20px;
+                box-shadow: 0 8px 15px ${Theme.colors.primary}30;
+            }
+            
             h2 {
                 font: ${Theme.typography.fonts.h2};
                 color: ${Theme.colors.black};
-                margin-bottom: 40px;
+                margin-bottom: 20px;
                 font-size: 44px;
                 position: relative;
                 display: inline-block;
-                
-                &::after {
-                    content: '';
-                    display: block;
-                    width: 60px;
-                    height: 6px;
-                    background: ${Theme.colors.primary};
-                    margin-top: 16px;
-                    border-radius: 3px;
-                }
+                background: linear-gradient(135deg, ${Theme.colors.primary}, #9259f3);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                text-fill-color: transparent;
+            }
+            
+            .app-description {
+                font: ${Theme.typography.fonts.mediumM};
+                color: ${Theme.colors.gray2};
+                margin-bottom: 40px;
+                font-size: 18px;
+                line-height: 1.7;
+                max-width: 90%;
             }
             
             .app-features {
@@ -922,12 +973,13 @@ export const UsersLandingStyle = styled.div`
                     align-items: center;
                     margin-bottom: 24px;
                     font: ${Theme.typography.fonts.mediumB};
-                    color: ${Theme.colors.gray};
+                    color: ${Theme.colors.gray2};
                     font-size: 18px;
-                    transition: transform 0.3s ease;
+                    transition: all 0.3s ease;
                     
                     &:hover {
                         transform: translateX(10px);
+                        color: ${Theme.colors.primary};
                     }
                     
                     .check-icon {
@@ -942,7 +994,13 @@ export const UsersLandingStyle = styled.div`
                         margin-right: 18px;
                         font-weight: 700;
                         font-size: 16px;
-                        box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+                        box-shadow: 0 6px 15px ${Theme.colors.primary}30;
+                        transform: scale(1);
+                        transition: transform 0.3s ease;
+                    }
+                    
+                    &:hover .check-icon {
+                        transform: scale(1.1);
                     }
                 }
             }
@@ -955,65 +1013,233 @@ export const UsersLandingStyle = styled.div`
                 
                 a {
                     display: block;
-                    transition: all 0.3s ease;
-                    border-radius: 12px;
-                    padding: 5px;
-                    background: rgba(0,0,0,0.02);
+                    transition: all 0.4s ease;
+                    border-radius: 16px;
+                    padding: 10px 15px;
+                    background: #000;
+                    border: 2px solid #000;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    min-width: 200px;
+                    max-width: 220px;
+                    text-decoration: none;
+                    
+                    .store-icon {
+                        font-size: 26px;
+                        color: white;
+                    }
+                    
+                    .store-text {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: flex-start;
+                        
+                        .small-text {
+                            font-size: 12px;
+                            color: #f2f2f2;
+                            margin-bottom: 2px;
+                        }
+                        
+                        .big-text {
+                            font-size: 18px;
+                            font-weight: 600;
+                            color: white;
+                        }
+                    }
                     
                     &:hover {
                         transform: translateY(-8px);
-                        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-                        background: rgba(0,0,0,0.05);
+                        background: #222;
+                        border-color: #222;
                     }
                     
-                    img {
-                        height: 60px;
-                        border-radius: 8px;
+                    &.google-play {
+                        background: white;
+                        border-color: #e6e6e6;
+                        
+                        .store-icon {
+                            color: ${Theme.colors.primary};
+                        }
+                        
+                        .store-text {
+                            .small-text {
+                                color: #666;
+                            }
+                            
+                            .big-text {
+                                color: #333;
+                            }
+                        }
+                        
+                        &:hover {
+                            background: #f9f9f9;
+                            border-color: #e0e0e0;
+                        }
                     }
                 }
             }
         }
         
         .app-image {
-            flex: 0 1 420px;
+            flex: 0 1 480px;
             position: relative;
-            padding: 20px;
+            padding: 0;
             z-index: 1;
+            display: flex;
+            justify-content: center;
             
             &::before {
                 content: '';
                 position: absolute;
-                top: 0;
-                right: 0;
-                width: 80%;
-                height: 80%;
+                width: 350px;
+                height: 350px;
                 background: radial-gradient(circle, ${Theme.colors.primary}20 0%, transparent 70%);
                 border-radius: 50%;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
                 z-index: -1;
+                animation: pulse 6s infinite ease-in-out;
             }
             
-            &::after {
-                content: '';
-                position: absolute;
-                width: 150px;
-                height: 150px;
-                background: ${Theme.colors.primary}20;
-                border-radius: 50%;
-                bottom: 60px;
-                left: 0;
-                z-index: -1;
-            }
-            
-            img {
-                width: 100%;
-                border-radius: 30px;
-                box-shadow: 0 25px 60px rgba(0,0,0,0.15);
-                transform: perspective(1000px) rotateY(-5deg);
-                transition: all 0.5s ease;
-                border: 15px solid #ffffff;
+            .phone-mockup {
+                position: relative;
+                width: 300px;
+                height: 600px;
+                perspective: 1000px;
                 
-                &:hover {
-                    transform: perspective(1000px) rotateY(0deg);
+                .phone {
+                    width: 100%;
+                    height: 100%;
+                    transform-style: preserve-3d;
+                    transform: rotateY(-20deg) rotateX(5deg);
+                    transition: all 0.5s ease;
+                    position: relative;
+                    
+                    &:hover {
+                        transform: rotateY(0deg) rotateX(0deg);
+                    }
+                    
+                    .phone-frame {
+                        position: absolute;
+                        width: 100%;
+                        height: 100%;
+                        border-radius: 40px;
+                        background: #222;
+                        box-shadow: 0 30px 60px rgba(0,0,0,0.25), 0 0 0 10px rgba(0,0,0,0.05) inset;
+                        overflow: hidden;
+                        
+                        .phone-screen {
+                            position: absolute;
+                            top: 12px;
+                            left: 12px;
+                            right: 12px;
+                            bottom: 12px;
+                            background: #fff;
+                            border-radius: 30px;
+                            overflow: hidden;
+                            
+                            img {
+                                width: 100%;
+                                height: 100%;
+                                object-fit: cover;
+                                border-radius: 30px;
+                            }
+                        }
+                        
+                        .phone-notch {
+                            position: absolute;
+                            top: 0;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            width: 150px;
+                            height: 30px;
+                            background: #222;
+                            border-bottom-left-radius: 15px;
+                            border-bottom-right-radius: 15px;
+                            z-index: 2;
+                        }
+                    }
+                }
+            }
+            
+            .phone-shadow {
+                position: absolute;
+                bottom: -30px;
+                width: 280px;
+                height: 40px;
+                background: rgba(0,0,0,0.1);
+                border-radius: 50%;
+                filter: blur(15px);
+                z-index: -1;
+            }
+            
+            @keyframes pulse {
+                0% {
+                    transform: translate(-50%, -50%) scale(0.8);
+                    opacity: 0.6;
+                }
+                50% {
+                    transform: translate(-50%, -50%) scale(1);
+                    opacity: 0.3;
+                }
+                100% {
+                    transform: translate(-50%, -50%) scale(0.8);
+                    opacity: 0.6;
+                }
+            }
+        }
+        
+        @media (max-width: 992px) {
+            padding: 80px 4%;
+            
+            .app-content {
+                h2 {
+                    font-size: 36px;
+                }
+                
+                .app-description {
+                    font-size: 16px;
+                    max-width: 100%;
+                }
+                
+                .app-features li {
+                    font-size: 16px;
+                }
+            }
+            
+            .app-image {
+                margin: 0 auto;
+                
+                .phone-mockup {
+                    width: 260px;
+                    height: 520px;
+                }
+            }
+        }
+        
+        @media (max-width: 576px) {
+            padding: 60px 4%;
+            
+            .app-content {
+                h2 {
+                    font-size: 30px;
+                }
+                
+                .app-buttons {
+                    justify-content: center;
+                    
+                    a {
+                        min-width: 180px;
+                    }
+                }
+            }
+            
+            .app-image {
+                .phone-mockup {
+                    width: 220px;
+                    height: 440px;
                 }
             }
         }
@@ -1023,16 +1249,30 @@ export const UsersLandingStyle = styled.div`
     .list-property {
         width: 100%;
         padding: 100px 6%;
-        background: linear-gradient(135deg, ${Theme.colors.primary}, #6a30c7);
-            display: flex;
+        background: url('/src/assets/images/waves.svg') center center/cover no-repeat;
+        display: flex;
         flex-wrap: wrap;
-            justify-content: space-between;
+        justify-content: space-between;
         align-items: center;
-            gap: 40px;
+        gap: 40px;
+        position: relative;
+        overflow: hidden;
+        
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
 
         .list-property-content {
             flex: 1;
             min-width: 300px;
+            position: relative;
+            z-index: 1;
             
             h2 {
                 font: ${Theme.typography.fonts.h2};
@@ -1071,11 +1311,12 @@ export const UsersLandingStyle = styled.div`
         
         .list-property-image {
             flex: 0 1 500px;
+            position: relative;
+            z-index: 1;
             
             img {
                 width: 100%;
                 border-radius: 16px;
-                box-shadow: 0 20px 50px rgba(0,0,0,0.2);
             }
         }
     }

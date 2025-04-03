@@ -1,7 +1,7 @@
 import { Theme } from "../../../theme/theme";
 import styled from "styled-components";
 
-export const CardBaseModelStyle1 = styled.div<{isRecommended: boolean}>`
+export const CardBaseModelStyle1 = styled.div<{isRecommended?: boolean}>`
 
   background-color: ${Theme.colors.white};
   border-radius: ${Theme.borders.radius.md};
@@ -47,6 +47,43 @@ export const CardBaseModelStyle1 = styled.div<{isRecommended: boolean}>`
       }
 
     }
+
+    .favorite-icon {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 36px;
+      height: 36px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      
+      svg {
+        font-size: 18px;
+        color: ${Theme.colors.gray};
+        transition: all 0.3s ease;
+        
+        &.filled {
+          color: #e74c3c;
+        }
+      }
+      
+      &:hover {
+        transform: scale(1.15);
+        background: #fff9f9;
+        
+        svg {
+          color: #e74c3c;
+          transform: scale(1.1);
+        }
+      }
+    }
   }
 
   .title {
@@ -81,52 +118,22 @@ export const CardBaseModelStyle1 = styled.div<{isRecommended: boolean}>`
   }
 
   .recommendedBanner {
-
-    display: flex;
-    flex-direction: column;
-    align-items: end;
-    justify-content: start;
-    width: 100%;
-
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 15px;
+    left: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     
     .banner {
-      
-      background-color: ${Theme.colors.secondary};
-      color: ${Theme.colors.white};
-      font: ${Theme.typography.fonts.largeB};
-      padding: 10px 0px;
-      display: ${props => props.isRecommended ? "flex" : "none"};
-      align-items: center;
-      justify-content: center;
-      border-radius: ${Theme.borders.radius.md} ${Theme.borders.radius.md} 0 0;
-      width: 100%;
-
-
+      background: ${Theme.colors.primary};
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 10px rgba(103, 58, 183, 0.3);
     }
-
-    .icon {
-      padding: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      width: 100%;
-
-      @media (max-width: 1400px) {
-        padding: 10px;
-        
-      }
-
-      img {
-        width: 52px;
-        height: 52px;
-      }
-    }
-
-
-    
   }
 
 

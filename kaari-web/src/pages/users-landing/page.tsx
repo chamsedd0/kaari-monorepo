@@ -279,34 +279,73 @@ const UsersLanding: React.FC = () => {
 
         {/* App Download Section */}
         <section className="app-download">
-          <div className="app-content">
-            <h2>Download the App</h2>
-            <ul className="app-features">
-              <li>
-                <span className="check-icon">✓</span>
-                Real-time notifications
-              </li>
-              <li>
-                <span className="check-icon">✓</span>
-                Live chat with landlords
-              </li>
-              <li>
-                <span className="check-icon">✓</span>
-                Faster booking process
-              </li>
-            </ul>
-            <div className="app-buttons">
-              <a href="#" className="app-store">
-                <img src={PropertyImage} alt="Download on App Store" />
-              </a>
-              <a href="#" className="google-play">
-                <img src={PropertyImage} alt="Get it on Google Play" />
-              </a>
-      </div>
+          <div className="app-wrapper">
+            <div className="app-content">
+              
+              <h2>Take Kaari With You</h2>
+              <div className="app-badge">Mobile Experience</div>
+              
+              <p className="app-description">
+                Find your perfect rental property on the go with our intuitive mobile app. 
+                Get instant notifications, chat with landlords in real-time, and secure your dream home faster.
+              </p>
+              <ul className="app-features">
+                <li>
+                  <span className="check-icon">✓</span>
+                  Real-time property notifications
+                </li>
+                <li>
+                  <span className="check-icon">✓</span>
+                  Seamless chat with landlords
+                </li>
+                <li>
+                  <span className="check-icon">✓</span>
+                  Quick and secure booking process
+                </li>
+                <li>
+                  <span className="check-icon">✓</span>
+                  Save favorite properties offline
+                </li>
+              </ul>
+              <div className="app-buttons">
+                <a href="#" className="app-store">
+                  <div className="store-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M17.05 20.28C16.07 21.23 15 21.08 13.97 20.63C12.88 20.17 11.88 20.15 10.73 20.63C9.29 21.25 8.53 21.07 7.67 20.28C2.79 15.25 3.51 7.59 9.09 7.31C10.5 7.38 11.43 8.05 12.24 8.11C13.43 7.89 14.57 7.2 15.9 7.3C17.47 7.42 18.68 8.1 19.49 9.33C15.76 11.44 16.52 16.13 19.95 17.34C19.31 18.41 18.54 19.47 17.05 20.29V20.28ZM12.03 7.25C11.88 5.02 13.69 3.18 15.77 3C16.06 5.58 13.43 7.5 12.03 7.25Z" fill="white"/>
+                    </svg>
+                  </div>
+                  <div className="store-text">
+                    <span className="small-text">Download on the</span>
+                    <span className="big-text">App Store</span>
+                  </div>
+                </a>
+                <a href="#" className="google-play">
+                  <div className="store-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4.42 20.1C4.15 19.89 4 19.56 4 19.2V4.8C4 4.44 4.16 4.11 4.42 3.9L12.13 12L4.42 20.1ZM13.93 13.87L6.99 17.71L14.93 13.12L16.58 12L14.93 10.88L6.99 6.29L13.93 10.13L17.17 12L13.93 13.87ZM14.42 20.6L21.18 16.4C21.7 16.08 22 15.54 22 14.95C22 14.36 21.7 13.82 21.18 13.5L14.42 9.4L12.71 11.07L16.38 12.93C16.51 13 16.51 13.2 16.38 13.27L12.71 15.13L14.42 16.8V20.6ZM4.42 3.9L6.99 6.29L16.43 12L6.99 17.71L4.42 20.1C4.74 20.33 5.16 20.35 5.5 20.12L13.93 15.13L16.19 13.17C16.27 13.11 16.33 13.01 16.33 12.91V12.09C16.33 11.99 16.27 11.89 16.19 11.83L13.93 9.87L5.5 4.88C5.16 4.65 4.73 4.67 4.42 4.9V3.9Z" fill="#673AB7"/>
+                    </svg>
+                  </div>
+                  <div className="store-text">
+                    <span className="small-text">GET IT ON</span>
+                    <span className="big-text">Google Play</span>
+                  </div>
+                </a>
+              </div>
+            </div>
+            <div className="app-image">
+              <div className="phone-mockup">
+                <div className="phone">
+                  <div className="phone-frame">
+                    <div className="phone-screen">
+                      <img src={PropertyImage} alt="Kaari App Interface" />
+                    </div>
+                    <div className="phone-notch"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="phone-shadow"></div>
+            </div>
           </div>
-          <div className="app-image">
-            <img src={PropertyImage} alt="Kaari Mobile App" />
-        </div>
         </section>
 
         {/* Property Listing Section */}
