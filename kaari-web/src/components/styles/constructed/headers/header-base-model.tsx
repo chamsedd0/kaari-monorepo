@@ -18,7 +18,7 @@ export const HeaderBaseModel = styled.div`
     .wrapper {
         
         width: 100%;
-        max-width: 1200px;
+        max-width: 1500px;
         height: 100%;
         display: flex;
         align-items: center;

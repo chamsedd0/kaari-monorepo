@@ -3,7 +3,7 @@ import { Theme } from "../../theme/theme";
 
 export const CheckoutProcessStyle = styled.div`
     width: 100%;
-    max-width: 1200px;
+    max-width: 1500px;
     margin: 50px auto;
     padding: 32px 24px;
     min-height: calc(100vh - 112px);
@@ -29,9 +29,6 @@ export const CheckoutProcessStyle = styled.div`
         }
     }
 
-    .date-of-birth-container {
-        
-    }
 
     .government-id-container {
         display: grid;
@@ -41,12 +38,6 @@ export const CheckoutProcessStyle = styled.div`
         margin: auto 0;
     }
 
-    .button-container {
-        margin-top: 32px;
-        display: flex;
-        justify-content: flex-start;
-        max-width: 188px;
-    }
 
     .checkout-process-form-title {
         font: ${Theme.typography.fonts.h4B};
@@ -64,14 +55,22 @@ export const CheckoutProcessStyle = styled.div`
         align-items: center;
         gap: 24px;
         padding: 32px 0;
-        margin-bottom: px;
 
         img {
-            height: 40px;
+            display: none;
+            
+            @media (min-width: 1750px) {
+                display: block;
+            }
         }
     }
 
     .checkout-process-progress-bar{
+
+        img {
+            height: 40px;
+            width: 40px;
+        }
     }
 
     .checkout-process-content{
@@ -86,6 +85,7 @@ export const CheckoutProcessStyle = styled.div`
             flex-direction: column;
             gap: 24px;
             flex: 1;
+
 
             .checkout-process-form-title{
                 font: ${Theme.typography.fonts.h4B};

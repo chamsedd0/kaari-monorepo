@@ -56,13 +56,13 @@ export const CardBaseModelStyleCheckout = styled.div`
         .move-in-date {
             font: ${Theme.typography.fonts.largeM};
             width: 100%;
-            color: ${Theme.colors.gray};
+            color: ${Theme.colors.gray2};
         }
 
         .length-of-stay {
             font: ${Theme.typography.fonts.largeM};
             width: 100%;
-            color: ${Theme.colors.gray};
+            color: ${Theme.colors.gray2};
         }
     }
 
@@ -125,7 +125,7 @@ export const CardBaseModelStyleCheckout = styled.div`
             color: ${Theme.colors.black}; 
             b {
                 font: ${Theme.typography.fonts.mediumM};
-                color: ${Theme.colors.gray};
+                color: ${Theme.colors.gray2};
 
             }
 

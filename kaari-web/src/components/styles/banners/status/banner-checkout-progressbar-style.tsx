@@ -29,6 +29,38 @@ export const CheckoutProgressBarStyle = styled.div`
             background-color: ${Theme.colors.secondary};
         }
     }
+
+    @media (max-width: 1500px) {
+        max-width: 500px;
+    }
+
+    @media (max-width: 1200px) {
+        max-width: 450px;
+    }
+
+    @media (max-width: 992px) {
+        max-width: 400px;
+    }
+
+    @media (max-width: 768px) {
+        max-width: 350px;
+        padding: 0 5px;
+
+        .progress-line {
+            height: 4px;
+            margin-bottom: 16px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        max-width: 300px;
+        padding: 0 2px;
+
+        .progress-line {
+            height: 3px;
+            margin-bottom: 12px;
+        }
+    }
 `;
 
 export const ProgressStep = styled.div<ProgressStepProps>`
@@ -69,5 +101,47 @@ export const ProgressStep = styled.div<ProgressStepProps>`
         ${props => props.isPassed && `
             color: ${Theme.colors.secondary};
         `}
+    }
+
+    @media (max-width: 1500px) {
+        min-width: 110px;
+    }
+
+    @media (max-width: 1200px) {
+        min-width: 100px;
+    }
+
+    @media (max-width: 992px) {
+        min-width: 95px;
+    }
+
+    @media (max-width: 768px) {
+        min-width: 90px;
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 8px;
+            font: ${Theme.typography.fonts.mediumB};
+        }
+
+        .step-label {
+            font: ${Theme.typography.fonts.smallB};
+        }
+    }
+
+    @media (max-width: 480px) {
+        min-width: 70px;
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            margin-bottom: 6px;
+            font: ${Theme.typography.fonts.smallB};
+        }
+
+        .step-label {
+            font: ${Theme.typography.fonts.xsmallB};
+        }
     }
 `;

@@ -8,7 +8,8 @@ interface CheckoutProgressBarProps {
 const steps = [
     { number: 1, label: 'Rental Application' },
     { number: 2, label: 'Payment Method' },
-    { number: 3, label: 'Confirmation' }
+    { number: 3, label: 'Confirmation' },
+    { number: 4, label: 'Complete' }
 ];
 
 export const CheckoutProgressBar: React.FC<CheckoutProgressBarProps> = ({ currentStep }) => {
