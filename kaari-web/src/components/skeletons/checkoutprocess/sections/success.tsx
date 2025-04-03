@@ -3,6 +3,7 @@ import { PurpleButtonMB48 } from '../../buttons/purple_MB48';
 import { SuccessMessage } from '../../../styles/checkoutprocess/checkout-process-sections-style';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
+import { useNavigate } from 'react-router-dom';
 
 interface SuccessProps {
   onDone: () => void;
@@ -148,6 +149,48 @@ const CardInfo = styled.div`
 `;
 
 const Success: React.FC<SuccessProps> = ({ onDone, status = 'success' }) => {
+  const navigate = useNavigate();
+  
+  const handleDone = () => {
+    onDone();
+    // Navigate to the user dashboard
+    navigate('/dashboard/user');
+  };
+  
+  const handleFindOtherHousing = () => {
+    // Navigate to the property list page
+    navigate('/properties');
+  };
+  
+  const handleContactSupport = () => {
+    // Navigate to the support page or open a support modal
+    window.location.href = 'mailto:customercare@kaari.com';
+  };
+  
+  const handleTryAgain = () => {
+    // Go back to the payment method step
+    // This would typically be handled by the parent component's state
+    onDone();
+    // Redirect to payment method step
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('step', '2');
+    navigate(`/checkout-process?${urlParams.toString()}`);
+  };
+  
+  const handleConfirm = () => {
+    // Simulate a booking confirmation
+    onDone();
+    // Navigate to the success status
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('status', 'success');
+    navigate(`/checkout-process?${urlParams.toString()}`);
+  };
+  
+  const handleCancel = () => {
+    // Navigate to the property page or dashboard
+    navigate('/dashboard/user');
+  };
+
   // Helper function to render content based on status
   const renderStatusContent = () => {
     switch (status) {
@@ -159,7 +202,7 @@ const Success: React.FC<SuccessProps> = ({ onDone, status = 'success' }) => {
                 <h2 className="status-title">Congratulations, the place is Yours!</h2>
                 <p className="status-description">You have 24 hours to confirm your reservation. Confirmation will result in your payment being processed. You can also cancel your reservation.</p>
                 <div className="status-action">
-                  <ActionButton onClick={onDone}>Confirm</ActionButton>
+                  <ActionButton onClick={handleConfirm}>Confirm</ActionButton>
                 </div>
               </div>
             </StatusContainer>
@@ -203,7 +246,7 @@ const Success: React.FC<SuccessProps> = ({ onDone, status = 'success' }) => {
                 <h2 className="status-title">Your Reservation Request has been sent!</h2>
                 <p className="status-description">We will keep you updated on your request. Make sure to check emails regularly.</p>
                 <div className="status-action">
-                  <ActionButton onClick={onDone}>Cancel without charge</ActionButton>
+                  <ActionButton onClick={handleCancel}>Cancel without charge</ActionButton>
                 </div>
               </div>
             </StatusContainer>
@@ -258,7 +301,7 @@ const Success: React.FC<SuccessProps> = ({ onDone, status = 'success' }) => {
                 <h2 className="status-title">Your Request has been rejected</h2>
                 <p className="status-description">We hate to inform you that your reservation request (ID 208297) for the offer Apartment in Agadir has been rejected by the advertiser. We are truly sorry for that.</p>
                 <div className="status-action">
-                  <ActionButton onClick={onDone}>Find other housing</ActionButton>
+                  <ActionButton onClick={handleFindOtherHousing}>Find other housing</ActionButton>
                 </div>
               </div>
             </StatusContainer>
@@ -310,7 +353,7 @@ const Success: React.FC<SuccessProps> = ({ onDone, status = 'success' }) => {
             </CardInfo>
             
             <div style={{ marginTop: '24px' }}>
-              <PurpleButtonMB48 text="Try Again" onClick={onDone} />
+              <PurpleButtonMB48 text="Try Again" onClick={handleTryAgain} />
             </div>
           </>
         );
@@ -323,7 +366,7 @@ const Success: React.FC<SuccessProps> = ({ onDone, status = 'success' }) => {
                 <h2 className="status-title">The refund is being processed</h2>
                 <p className="status-description">You'll receive the refund within 7 business days. We apologize once again for any inconvenience caused. If you have any issues related to your refund, please contact us at customercare@kaari.ma or give us a call at 05XXXXXXX.</p>
                 <div className="status-action">
-                  <ActionButton onClick={onDone}>Contact Support</ActionButton>
+                  <ActionButton onClick={handleContactSupport}>Contact Support</ActionButton>
                 </div>
               </div>
             </StatusContainer>
@@ -372,6 +415,10 @@ const Success: React.FC<SuccessProps> = ({ onDone, status = 'success' }) => {
                 <li>Download your booking receipt</li>
                 <li>Contact the property manager to arrange key collection</li>
               </ul>
+            </div>
+            
+            <div style={{ marginTop: '24px' }}>
+              <PurpleButtonMB48 text="Go to Dashboard" onClick={handleDone} />
             </div>
           </SuccessMessage>
         );

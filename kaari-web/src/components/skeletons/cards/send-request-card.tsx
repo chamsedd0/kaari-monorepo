@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { PropertyRequestCardStyle } from "../../styles/cards/card-send-request-style";
 import { CertificationBanner } from "../banners/static/certification-banner";
 import { PurpleButtonLB60 } from "../buttons/purple_LB60";
@@ -15,6 +16,7 @@ interface PropertyRequestCardProps {
     priceFor30Days: number;
     serviceFee: number;
     totalPrice: number;
+    propertyId?: string;
   }
   
   const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({ 
@@ -25,8 +27,27 @@ interface PropertyRequestCardProps {
     moveInDate, 
     priceFor30Days, 
     serviceFee, 
-    totalPrice 
+    totalPrice,
+    propertyId = '123' // Default value for demo
   }) => {
+  const navigate = useNavigate();
+
+  const handleSendRequest = () => {
+    // Store property details in localStorage or sessionStorage for checkout process
+    sessionStorage.setItem('checkoutPropertyDetails', JSON.stringify({
+      propertyId,
+      title,
+      advertiserName,
+      moveInDate,
+      priceFor30Days,
+      serviceFee,
+      totalPrice
+    }));
+    
+    // Navigate to the checkout process
+    navigate('/checkout-process');
+  };
+
   return (
     <PropertyRequestCardStyle>
       <div className="title">
@@ -41,7 +62,7 @@ interface PropertyRequestCardProps {
             <img src={advertiserImage} alt="Profile" />
             <div className="name">{advertiserName}</div>
           </div>
-          <div className="view-profile">View Profile</div>
+          <div className="view-profile" onClick={() => navigate(`/advertiser-profile/${advertiserName}`)}>View Profile</div>
         </div>
       </div>
       
@@ -73,7 +94,7 @@ interface PropertyRequestCardProps {
         </div>
       </div>
       
-      <PurpleButtonLB60 text='Send A Request'></PurpleButtonLB60>
+      <PurpleButtonLB60 text='Send A Request' onClick={handleSendRequest} />
       <div className="disclaimer">
             You will not pay anything yet
       </div>
