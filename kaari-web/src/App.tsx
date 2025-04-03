@@ -1,13 +1,13 @@
 import { BrowserRouter as Router } from 'react-router-dom';
 import Footer from './components/skeletons/constructed/footer/footer';
-import PropertyPageComponent from './pages/property-page/page';
+import CheckoutProcess from './pages/checkout-process/page';
 
 function App() {
   return (
     <Router>
       <div className="app">
         <main>
-          <PropertyPageComponent />
+          <CheckoutProcess />
         </main>
         <Footer />
       </div>

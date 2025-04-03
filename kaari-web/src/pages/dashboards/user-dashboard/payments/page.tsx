@@ -3,7 +3,8 @@ import { PaymentsPageStyle } from './styles';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import SecureIcon from '../../../../components/skeletons/icons/secure-payments.svg';
 import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-help-card';
-
+import Mastercard from '../../../../components/skeletons/cards/mastercard';
+import { CompletedPaymentCard } from '../../../../components/skeletons/cards/completed-payment-card';
 const PaymentsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'payments' | 'completed'>('payments');
 
@@ -33,6 +34,12 @@ const PaymentsPage: React.FC = () => {
                             <h2 className="title">Payment Methods</h2>
                             <p className="subtitle">Manage your payment methods using our secure payment system</p>
                             <div className="payment-info-saved">
+                                <Mastercard
+                                    cardNumber="1234567890123456"
+                                    expirationDate="01/2025"
+                                    title="Mastercard"
+                                    onClick={() => {}}
+                                />
                                 
                             </div>
                             <div className="advanced-filtering-button">
@@ -42,8 +49,28 @@ const PaymentsPage: React.FC = () => {
                     )}
                     {activeTab === 'completed' && (
                         <>
-                            <h2 className="title">Completed Payments</h2>
-                            
+                            <h2 className="title">Completed</h2>
+                            <CompletedPaymentCard
+                                paymentDate="Sep 2024"
+                                cardType="Master Card"
+                                cardNumber="1234"
+                                propertyLocation="Agadir"
+                                moveInDate="05.09.2024"
+                            />
+                            <CompletedPaymentCard
+                                paymentDate="Sep 2024"
+                                cardType="Master Card"
+                                cardNumber="1234"
+                                propertyLocation="Agadir"
+                                moveInDate="05.09.2024"
+                            />
+                            <CompletedPaymentCard
+                                paymentDate="Sep 2024"
+                                cardType="Master Card"
+                                cardNumber="1234"
+                                propertyLocation="Agadir"
+                                moveInDate="05.09.2024"
+                            />
                         </>
                     )}
                 </div>

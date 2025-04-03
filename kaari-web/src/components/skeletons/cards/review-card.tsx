@@ -2,7 +2,8 @@ import React from 'react';
 import { WrittenReviewsCard } from '../../styles/cards/card-base-model-style-written-reviews';
 import picture from '../../../assets/images/propertyExamplePic.png';
 import avatar from '../../../assets/images/ProfilePicture.png';
-import StarIcon from '../../../assets/icons/Icon_Star.svg';
+import StarIcon from '../icons/Icon-Star.svg';
+
 
 interface ReviewCardProps {
   propertyImage?: string;
@@ -44,7 +45,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({
           <img 
             src={StarIcon} 
             alt="star"
-            className={index < rating ? '' : 'empty'}
+            className={index < rating ? 'filled' : 'empty'}
           />
         </div>
       ))}

@@ -3,7 +3,9 @@ import { ProfileShowcaseStyle } from "./styles";
 import ProfilePic from "../../assets/images/advertiser.png";
 import { CertificationBanner } from "../../components/skeletons/banners/static/certification-banner";
 import { useState } from "react";
-
+import ReviewCard from "../../components/skeletons/cards/review-card";
+import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
+import PropertyPic from "../../assets/images/propertyExamplePic.png";
 export const ProfileShowcasePage = () => {
     const [activeTab, setActiveTab] = useState<'ratings' | 'offers'>('ratings');
 
@@ -70,15 +72,63 @@ export const ProfileShowcasePage = () => {
 
                 <div className="display-section">
                     {activeTab === 'ratings' && (
-                        <div className="ratings-content">
-                            <h3>Ratings and References</h3>
-                            {/* Add your ratings content here */}
-                        </div>
+                       
+                            <div>
+                                <ReviewCard
+                                    reviewText="Living in this house has been a wonderful experience. The space is bright, open, and perfect for both family time and entertaining. The modern kitchen, spacious bedrooms, and the relaxing backyard with a covered patio are all highlights. The neighborhood is quiet and convenient, with easy access to schools, parks, and shops.
+                                        The landlord is responsive and keeps the property well-maintained, which has made living here stress-free. Overall, it's been a great place to call home, and I would highly recommend it to anyone looking for a comfortable, well-cared-for space."
+                                    reviewerName="John Doe"
+                                />
+                                <ReviewCard
+                                    reviewerName="John Doe"
+                                />
+                            </div>
+                       
                     )}
                     {activeTab === 'offers' && (
                         <div className="offers-content">
-                            <h3>Offers</h3>
-                            {/* Add your offers content here */}
+                            <div className="offers-grid">
+                                <PropertyCard
+                                    image={PropertyPic}
+                                    title="Property 1"
+                                    subtitle="Property 1 description"
+                                    price="1000"
+                                    priceType="USD"
+                                    minstay="1 month"
+                                    description="Property 1 description"
+                                    isRecommended={false}
+                                    />
+                                <PropertyCard
+                                    image={PropertyPic}
+                                    title="Property 1"
+                                    subtitle="Property 1 description"
+                                    price="1000"
+                                    priceType="USD"
+                                    minstay="1 month"
+                                    description="Property 1 description"
+                                    isRecommended={false}
+                                />
+                                <PropertyCard
+                                    image={PropertyPic}
+                                    title="Property 1"
+                                    subtitle="Property 1 description"
+                                    price="1000"
+                                    priceType="USD"
+                                    minstay="1 month"
+                                    description="Property 1 description"
+                                    isRecommended={false}
+                                />
+                                <PropertyCard
+                                    image={PropertyPic}
+                                    title="Property 1"
+                                    subtitle="Property 1 description"
+                                    price="1000"
+                                    priceType="USD"
+                                    minstay="1 month"
+                                    description="Property 1 description"
+                                    isRecommended={false}
+                                />
+                            </div>
                         </div>
                     )}
                 </div>
