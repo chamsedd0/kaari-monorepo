@@ -378,7 +378,7 @@ export const UsersLandingStyle = styled.div`
     .what-is-kaari {
         width: 100%;
         background: url('/src/assets/images/waves.svg') center center/cover no-repeat;
-        padding: 100px 6%;
+        padding: 250px 6%;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -392,7 +392,6 @@ export const UsersLandingStyle = styled.div`
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(45, 27, 78, 0.3), rgba(106, 48, 199, 0.3));
             z-index: 0;
         }
         
@@ -418,6 +417,7 @@ export const UsersLandingStyle = styled.div`
                 display: flex;
                 gap: 16px;
                 justify-content: center;
+                align-items: center;
                 flex-wrap: wrap;
                 
                 button {
@@ -425,6 +425,7 @@ export const UsersLandingStyle = styled.div`
                     border-radius: 30px;
                     font-weight: 600;
                     font-size: 16px;
+                    max-width: 200px;
                     cursor: pointer;
                     transition: all 0.3s ease;
                     
@@ -441,6 +442,7 @@ export const UsersLandingStyle = styled.div`
                     }
                     
                     &.secondary-button {
+                        padding: 14px 32px;
                         background: transparent;
                         color: ${Theme.colors.white};
                         border: 2px solid ${Theme.colors.white};

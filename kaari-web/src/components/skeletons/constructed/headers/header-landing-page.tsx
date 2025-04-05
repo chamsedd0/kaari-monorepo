@@ -56,7 +56,7 @@ export const HeaderLandingPage: React.FC<HeaderLandingPageProps> = ({ onLanguage
           </div>
           
           <div className="language-container" onClick={handleLanguageChange}>
-            ENG
+            <p>ENG</p>
           </div>
           
           <div className="heart-icon">

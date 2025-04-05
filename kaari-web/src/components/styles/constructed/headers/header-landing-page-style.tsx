@@ -69,12 +69,22 @@ export const HeaderLandingPageStyle = styled(HeaderBaseModel)<HeaderLandingPageS
         color: ${({ scrolled }) => scrolled ? Theme.colors.primary : Theme.colors.white};
         font-weight: 600;
         font-size: 14px;
-        padding: 4px 16px;
+        padding: 0px 16px;
+        height: 28px;
         background-color: ${({ scrolled }) => scrolled ? Theme.colors.white : 'rgba(255, 255, 255, 0.3)'};
         border-radius: 16px;
         transition: all 0.3s;
         cursor: pointer;
-        
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        p {
+            margin: 0;
+            margin-top: 2px;
+        }
+
         &:hover {
             background-color: ${({ scrolled }) => scrolled ? Theme.colors.white : 'rgba(255, 255, 255, 0.5)'};
             transform: scale(1.05);
@@ -107,10 +117,12 @@ export const HeaderLandingPageStyle = styled(HeaderBaseModel)<HeaderLandingPageS
         font-size: 15px;
         transition: all 0.3s;
         cursor: pointer;
+        padding: 10px 20px;
+        border-radius: 10px;
         
         &:hover {
-            text-decoration: underline;
-            opacity: 0.8;
+            background-color: ${Theme.colors.white};
+            color: ${Theme.colors.primary};
         }
     }
 `; 
