@@ -1,7 +1,7 @@
 import { Theme } from "../../../theme/theme";
 import styled from "styled-components";
 
-export const CardBaseModelStyle1 = styled.div<{isRecommended?: boolean}>`
+export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
 
   background-color: ${Theme.colors.white};
   border-radius: ${Theme.borders.radius.md};

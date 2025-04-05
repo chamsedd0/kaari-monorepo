@@ -1,47 +1,118 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { ReviewsPageStyle } from './styles';
 import ReviewsWriteSkeleton from '../../../../components/skeletons/cards/reviews-write';
 import ReviewCard from '../../../../components/skeletons/cards/review-card';
+import { getReviewsToWrite, getUserReviews } from '../../../../backend/server-actions/ReviewServerActions';
+import { useStore } from '../../../../backend/store';
+import { Review, Property, User } from '../../../../backend/entities';
+
+interface ReviewToWrite {
+  property: Property;
+  advertiser: User;
+  moveInDate: Date;
+}
+
+interface UserReview {
+  review: Review;
+  property: Property;
+}
+
 const ReviewsPage: React.FC = () => {
+    const { user } = useStore();
+    const [loading, setLoading] = useState(true);
+    const [reviewsToWrite, setReviewsToWrite] = useState<ReviewToWrite[]>([]);
+    const [userReviews, setUserReviews] = useState<UserReview[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    
+    useEffect(() => {
+        const loadReviewsData = async () => {
+            setLoading(true);
+            try {
+                // Fetch reviews to write and written reviews in parallel
+                const [toWriteData, writtenData] = await Promise.all([
+                    getReviewsToWrite(),
+                    getUserReviews()
+                ]);
+                
+                setReviewsToWrite(toWriteData);
+                setUserReviews(writtenData);
+                setError(null);
+            } catch (err) {
+                console.error('Error loading reviews data:', err);
+                setError('Failed to load reviews. Please try again later.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        loadReviewsData();
+    }, [user?.id]);
+    
+    // Format date nicely
+    const formatDate = (date: Date): string => {
+        return new Date(date).toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+        });
+    };
+    
     return (
         <ReviewsPageStyle>
             <h1 className="section-title">Your reviews</h1>
-            <div className="reviews-content">
-                <div className="reviews-to-write">Reviews to write <span className="count-reviews"><b>1</b></span></div>
-                <ReviewsWriteSkeleton />
-            </div>
-            <div className="post-reviews-content">
-                <h2 className="post-reviews-content-title">Past Reviews You’ve Written</h2>
-                <div className="post-reviews-content-form">
-                    <ReviewCard 
-                        propertyTitle="Luxury Apartment in Downtown"
-                        postedDate="May 15, 2023"
-                        lengthOfStay="3 months"
-                        reviewText="This was an amazing place to stay. The location was perfect, close to restaurants and public transportation. The apartment was clean and well-maintained. The host was very responsive and helpful throughout my stay."
-                        advertiserName="John Smith"
-                        ratings={[
-                            { category: "Communication", score: 4 },
-                            { category: "Accuracy", score: 5 },
-                            { category: "Location", score: 5 },
-                            { category: "Value", score: 4 }
-                        ]}
-                    />
-                    <ReviewCard 
-                        propertyTitle="Cozy Studio near the Beach"
-                        postedDate="January 10, 2023"
-                        lengthOfStay="1 month"
-                        reviewText="I had a wonderful experience staying at this studio. It was exactly as described in the listing. The beach was just a short walk away, and there were plenty of shops and cafes nearby. The host provided excellent recommendations for local attractions."
-                        advertiserName="Sarah Johnson"
-                        ratings={[
-                            { category: "Communication", score: 5 },
-                            { category: "Accuracy", score: 4 },
-                            { category: "Location", score: 5 },
-                            { category: "Value", score: 4 }
-                        ]}
-                    />
-                </div>
-            </div>
-                </ReviewsPageStyle>
+            
+            {loading ? (
+                <div className="loading">Loading your reviews...</div>
+            ) : error ? (
+                <div className="error">{error}</div>
+            ) : (
+                <>
+                    <div className="reviews-content">
+                        <div className="reviews-to-write">
+                            Reviews to write <span className="count-reviews"><b>{reviewsToWrite.length}</b></span>
+                        </div>
+                        
+                        {reviewsToWrite.length > 0 ? (
+                            reviewsToWrite.map((item) => (
+                                <ReviewsWriteSkeleton 
+                                    key={item.property.id}
+                                    title={item.property.title}
+                                    moveInDate={formatDate(item.moveInDate)}
+                                    advertiserName={item.advertiser.name}
+                                    propertyImage={item.property.images?.[0] || undefined}
+                                    propertyId={item.property.id}
+                                />
+                            ))
+                        ) : (
+                            <div className="no-reviews-to-write">
+                                <p>You don't have any properties to review at this time.</p>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {userReviews.length > 0 && (
+                        <div className="post-reviews-content">
+                            <h2 className="post-reviews-content-title">Past Reviews You've Written</h2>
+                            <div className="post-reviews-content-form">
+                                {userReviews.map((item) => (
+                                    <ReviewCard 
+                                        key={item.review.id}
+                                        propertyTitle={item.property.title}
+                                        propertyImage={item.property.images?.[0]}
+                                        postedDate={formatDate(item.review.createdAt)}
+                                        lengthOfStay={item.review.stayDuration}
+                                        reviewText={item.review.reviewText}
+                                        reviewerImage={user?.profilePicture}
+                                        reviewerName={user?.name}
+                                        ratings={item.review.ratings}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </>
+            )}
+        </ReviewsPageStyle>
     );
 };
 

@@ -2,6 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HeaderLandingPageStyle } from '../../../styles/constructed/headers/header-landing-page-style';
 import Logo from '../../icons/LogoWhite.svg';
+import { HeartIcon } from "../../icons/heartIcon";
+import { Theme } from "../../../../theme/theme";
+import { useStore } from '../../../../backend/store';
+import { AuthModal } from '../modals/auth-modal';
+import { SignOutConfirmationModal } from '../modals/signout-confirmation-modal';
+import { ProfileDropdown } from '../profile-dropdown/profile-dropdown';
+import ProfilePic from '../../../../assets/images/ProfilePicture.png';
+import { signOut } from '../../../../backend/firebase/auth';
 
 interface HeaderLandingPageProps {
   onLanguageChange?: (lang: string) => void;
@@ -10,6 +18,18 @@ interface HeaderLandingPageProps {
 export const HeaderLandingPage: React.FC<HeaderLandingPageProps> = ({ onLanguageChange }) => {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
+  
+  // Use individual selectors to avoid unnecessary re-renders
+  const isAuthenticated = useStore(state => state.isAuthenticated);
+  const userName = useStore(state => state.user?.name || 'User');
+  const userEmail = useStore(state => state.user?.email);
+  const userProfilePic = useStore(state => state.user?.profilePicture);
+  const setUser = useStore(state => state.setUser);
+  const setIsAuthenticated = useStore(state => state.setIsAuthenticated);
+  
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,7 +46,11 @@ export const HeaderLandingPage: React.FC<HeaderLandingPageProps> = ({ onLanguage
   }, [scrolled]);
 
   const handleSignIn = () => {
-    navigate('/login');
+    if (isAuthenticated) {
+      setShowProfileDropdown(!showProfileDropdown);
+    } else {
+      setShowAuthModal(true);
+    }
   };
 
   const handleLandlordClick = () => {
@@ -43,38 +67,111 @@ export const HeaderLandingPage: React.FC<HeaderLandingPageProps> = ({ onLanguage
     }
   };
 
+  const handleFavoritesClick = () => {
+    if (isAuthenticated) {
+      navigate('/favourites');
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      // Close the modal
+      setShowSignOutModal(false);
+      
+      // Using the direct Firebase approach
+      await signOut();
+      
+      // Manually update the store state
+      setUser(null);
+      setIsAuthenticated(false);
+      
+      // Navigate to home page
+      navigate('/');
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
+  const displayName = isAuthenticated ? `Hi, ${userName.split(' ')[0]}` : 'Sign in';
+
   return (
-    <HeaderLandingPageStyle scrolled={scrolled}>
-      <div className="wrapper">
-        <div className="logo">
-          <img src={Logo} alt="Kaari Logo" />
+    <>
+      <HeaderLandingPageStyle scrolled={scrolled}>
+        <div className="wrapper">
+          <div className="logo">
+            <img src={Logo} alt="Kaari Logo" onClick={() => navigate('/')} />
+          </div>
+          
+          <div className="nav-links">
+            <div className="link" onClick={handleLandlordClick}>
+              Are you a landlord?
+            </div>
+            
+            <div className="language-container" onClick={handleLanguageChange}>
+              <p>ENG</p>
+            </div>
+            
+            <div className="heart-icon" onClick={handleFavoritesClick}>
+              <HeartIcon bgColor={Theme.colors.white} />
+            </div>
+            
+            <div className="link" onClick={handleHelpClick}>
+              Help
+            </div>
+            
+            <div className="sign-in" onClick={handleSignIn} style={{ position: 'relative' }}>
+              {isAuthenticated ? (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>{displayName}</span>
+                    <img 
+                      src={userProfilePic || ProfilePic} 
+                      alt={userName}
+                      style={{ 
+                        width: '32px', 
+                        height: '32px', 
+                        borderRadius: '50%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  </div>
+                  
+                  <ProfileDropdown
+                    isOpen={showProfileDropdown}
+                    onClose={() => setShowProfileDropdown(false)}
+                    userName={userName}
+                    userEmail={userEmail || "user@example.com"}
+                    userImage={userProfilePic || ProfilePic}
+                    onLogout={() => {
+                      setShowProfileDropdown(false);
+                      setShowSignOutModal(true);
+                    }}
+                  />
+                </>
+              ) : (
+                'Sign in'
+              )}
+            </div>
+          </div>
         </div>
-        
-        <div className="nav-links">
-          <div className="link" onClick={handleLandlordClick}>
-            Are you a landlord?
-          </div>
-          
-          <div className="language-container" onClick={handleLanguageChange}>
-            <p>ENG</p>
-          </div>
-          
-          <div className="heart-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="white" />
-            </svg>
-          </div>
-          
-          <div className="link" onClick={handleHelpClick}>
-            Help
-          </div>
-          
-          <div className="sign-in" onClick={handleSignIn}>
-            Sign in
-          </div>
-        </div>
-      </div>
-    </HeaderLandingPageStyle>
+      </HeaderLandingPageStyle>
+
+      {/* Authentication Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+        initialMode="signin"
+      />
+
+      {/* Sign Out Confirmation Modal */}
+      <SignOutConfirmationModal
+        isOpen={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        onConfirm={handleSignOut}
+      />
+    </>
   );
 };
 

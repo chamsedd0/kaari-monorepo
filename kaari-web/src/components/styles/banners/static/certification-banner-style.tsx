@@ -3,7 +3,7 @@ import { Theme } from "../../../../theme/theme";
 
 
 
-export const CertifiedBanner = styled.div<{ variant?: boolean }>`
+export const CertifiedBanner = styled.div<{ $variant?: boolean }>`
     padding: 7.5px 10px;
     display: flex;
     align-items: center;
@@ -14,8 +14,8 @@ export const CertifiedBanner = styled.div<{ variant?: boolean }>`
     font: ${Theme.typography.fonts.smallB};
     border-radius: ${Theme.borders.radius.extreme};
 
-    background-color: ${props => props.variant ? Theme.colors.secondary : Theme.colors.white};
-    color: ${props => props.variant ? Theme.colors.white : Theme.colors.secondary};;
+    background-color: ${props => props.$variant ? Theme.colors.secondary : Theme.colors.white};
+    color: ${props => props.$variant ? Theme.colors.white : Theme.colors.secondary};;
 
     img {
         width: 12px;

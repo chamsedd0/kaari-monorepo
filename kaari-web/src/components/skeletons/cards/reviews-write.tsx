@@ -2,20 +2,25 @@ import { WriteReviewCard } from "../../styles/cards/card-base-model-style-review
 import Picture from "../../../assets/images/propertyExamplePic.png" ;
 import { PurpleButtonMB48 } from "../buttons/purple_MB48";
 
-
 interface ReviewsWriteSkeletonProps {
     title?: string;
     moveInDate?: string;
     advertiserName?: string;
     propertyImage?: string;
+    propertyId: string;
 }
 
 const ReviewsWriteSkeleton = ({ 
     title, 
     moveInDate, 
     advertiserName, 
-    propertyImage 
+    propertyImage,
+    propertyId
 }: ReviewsWriteSkeletonProps) => {
+    const handleWriteReview = () => {
+        window.location.href = `/dashboards/user-dashboard/reviews/write?propertyId=${propertyId}`;
+    };
+
     return (
         <WriteReviewCard>
             <div className="info-text">Reviews are written after maximum 1 month after move-in date</div>
@@ -43,7 +48,10 @@ const ReviewsWriteSkeleton = ({
                     </button>
 
                     <div className="write-review-button">
-                        <PurpleButtonMB48 text="Write Feedback" onClick={() => window.location.href = '/dashboards/user-dashboard/reviews/my-reviews/page'} />
+                        <PurpleButtonMB48 
+                            text="Write Feedback" 
+                            onClick={handleWriteReview}
+                        />
                     </div>
 
                 </div>

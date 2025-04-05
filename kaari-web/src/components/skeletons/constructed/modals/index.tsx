@@ -1,0 +1,8 @@
+// Export all modal components for easy imports
+export { default as AuthModal } from './auth-modal';
+export { default as ConfirmationModal } from './confirmation-modal';
+export { default as CardDetailsModal } from './card-details-modal';
+export { default as SpokenLanguagesModal } from './spoken-languages-modal';
+export { default as MessagingModal } from './messaging-modal';
+export { default as SignOutConfirmationModal } from './signout-confirmation-modal';
+export { default as ForgotPasswordModal } from './forgot-password-modal'; 
