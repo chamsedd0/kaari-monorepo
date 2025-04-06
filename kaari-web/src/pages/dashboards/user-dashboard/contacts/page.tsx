@@ -8,7 +8,7 @@ import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-h
 import facebook from "../../../../components/skeletons/icons/facebook.svg"
 import twitter from "../../../../components/skeletons/icons/twitter.svg"
 import instagram from "../../../../components/skeletons/icons/instagram.svg"
-import linkedin from "../../../../components/skeletons/icons/linkedin.svg"
+import linkedIn from "../../../../components/skeletons/icons/linkedIn.svg"
 import InputBaseModel from '../../../../components/skeletons/inputs/input-fields/input-variant';
 import TextAreaBaseModel from '../../../../components/skeletons/inputs/input-fields/textarea-variant';
 const ContactsPage: React.FC = () => {
@@ -37,7 +37,7 @@ const ContactsPage: React.FC = () => {
                             <p className="-content-title">facebook.com/kaariofficial</p>
                         </div>
                         <div className="facebook-content">
-                            <img src={linkedin} alt="Linkedin" className="contact-icon" />
+                            <img src={linkedIn} alt="Linkedin" className="contact-icon" />
                             <p className="-content-title">linkedin.com/kaariofficial</p>
                         </div>
                         <div className="facebook-content">

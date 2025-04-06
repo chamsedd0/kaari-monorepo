@@ -6,7 +6,7 @@ import { GoogleCard } from '../../../../components/skeletons/cards/google-card';
 import facebook from "../../../../components/skeletons/icons/facebook.svg"
 import twitter from "../../../../components/skeletons/icons/twitter.svg"
 import instagram from "../../../../components/skeletons/icons/instagram.svg"
-import linkedin from "../../../../components/skeletons/icons/linkedin.svg"
+import linkedin from "../../../../components/skeletons/icons/linkedIn.svg"
 import InputBaseModel from '../../../../components/skeletons/inputs/input-fields/input-variant';
 import TextAreaBaseModel from '../../../../components/skeletons/inputs/input-fields/textarea-variant';
 
