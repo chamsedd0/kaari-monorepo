@@ -5,16 +5,16 @@ import HeaderAdvertisersLanding from '../../components/skeletons/constructed/hea
 import { PhotoshootCardEnum } from '../../components/skeletons/cards/photoshoot-card-enum';
 
 // Import images
-import Photoshoot1 from '../../assets/images/Photoshoot1.png';
+import Photoshoot1 from '../../assets/images/photoshoot1.png';
 import Photoshoot2 from '../../assets/images/Photoshoot2.png';
 import Photoshoot3 from '../../assets/images/Photoshoot3.png';
 import Photoshoot4 from '../../assets/images/Photoshoot4.png';
 
-import HouseInMountains from '../../assets/images/HouseInMountain.png';
+import HouseInMountain from '../../assets/images/HouseInMountain.png';
 import CelebrationImage from '../../assets/images/CelebrationImage.png';
 import CheckingTime from '../../assets/images/CheckingTime.png';
 import CameraMan from '../../assets/images/CameraMan.png';
-import Building from '../../assets/images/BuildingWindows.png';
+import BuildingWindows from '../../assets/images/BuildingWindows.png';
 
 import { PurpleButtonLB60 } from '../../components/skeletons/buttons/purple_LB60';
 
@@ -95,7 +95,7 @@ const AdvertisersLanding: React.FC = () => {
               <p>Pay the first month's rent to confirm your booking. Congratulations, you found your next home. We'll protect your money until you've moved in and checked the place out.</p>
             </div>
             <div className="benefit-image">
-              <img src={HouseInMountains} alt="Hassle-free Management" />
+              <img src={HouseInMountain} alt="Hassle-free Management" />
             </div>
           </div>
           
@@ -129,7 +129,7 @@ const AdvertisersLanding: React.FC = () => {
         {/* Pricing Section */}
         <section className="pricing-section">
             <div className="pricing-image">
-                <img src={Building} alt="Building" />
+                <img src={BuildingWindows} alt="Building" />
             </div>
 
             <div className="pricing-content">
