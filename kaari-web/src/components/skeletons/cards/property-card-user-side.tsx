@@ -48,7 +48,7 @@ export const PropertyCard = ({
   };
 
   return (
-    <CardBaseModelStyle1 isRecommended={isRecommended}>
+    <CardBaseModelStyle1 $isRecommended={isRecommended}>
         <div className="image">
             <img src={image} alt="Property" />
             <div className="certifications">

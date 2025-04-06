@@ -12,7 +12,6 @@ import IdentityIcon from '../../components/skeletons/icons/Identity.svg';
 import QualityIcon from '../../components/skeletons/icons/Quality.svg';
 import PriceIcon from '../../components/skeletons/icons/Price.svg';
 import PropertyImage from '../../assets/images/propertyExamplePic.png';
-import RenterProtectionBg from '../../assets/images/renterProtection.svg';
 
 // Import city images
 import TangierImage from '../../assets/images/BigCityPic0.png';

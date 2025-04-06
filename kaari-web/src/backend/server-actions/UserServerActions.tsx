@@ -10,6 +10,13 @@ import {
   getDocumentsByField
 } from '../firebase/firestore';
 import { getCurrentUserProfile } from '../firebase/auth';
+import { 
+  uploadFile, 
+  getUserProfileImagePath,
+  deleteFile
+} from '../firebase/storage';
+import { User as FirebaseUser, updateProfile } from 'firebase/auth';
+import { auth } from '../firebase/config';
 
 // Collection name for users
 const USERS_COLLECTION = 'users';
@@ -27,34 +34,22 @@ export async function getUserById(userId: string): Promise<User | null> {
 }
 
 /**
- * Create a new user
+ * Get the current authenticated user's profile
  */
-export async function createUser(
-  userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>, 
-  userId?: string
-): Promise<User> {
+export async function getCurrentUser(): Promise<User | null> {
   try {
-    if (userId) {
-      // Create user data with timestamps
-      const fullUserData = {
-        ...userData,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
-      
-      // If a userId is provided, create a document with that ID
-      return await createDocumentWithId<User>(
-        USERS_COLLECTION, 
-        userId, 
-        fullUserData as Omit<User, 'id'>
-      );
-    } else {
-      throw new Error('User ID is required to create a user document');
-    }
+    return await getCurrentUserProfile();
   } catch (error) {
-    console.error('Error creating user:', error);
-    throw new Error('Failed to create user');
+    console.error('Error getting current user:', error);
+    throw new Error('Failed to get current user');
   }
+}
+
+/**
+ * Get current Firebase user
+ */
+export async function getFirebaseUser(): Promise<FirebaseUser | null> {
+  return auth.currentUser;
 }
 
 /**
@@ -70,90 +65,164 @@ export async function updateUser(userId: string, userData: Partial<User>): Promi
 }
 
 /**
- * Delete a user
+ * Update user profile with profile picture
  */
-export async function deleteUser(userId: string): Promise<boolean> {
+export async function updateUserProfile(
+  userId: string, 
+  profileData: {
+    name?: string;
+    surname?: string;
+    phoneNumber?: string;
+    dateOfBirth?: string;
+    gender?: string;
+    nationality?: string;
+    languages?: string[];
+    aboutMe?: string;
+    profilePicture?: File | null;
+  }
+): Promise<User> {
   try {
-    return await deleteDocument(USERS_COLLECTION, userId);
+    // Get current user
+    const currentUser = await getCurrentUser();
+    const firebaseUser = await getFirebaseUser();
+    
+    if (!currentUser || currentUser.id !== userId || !firebaseUser) {
+      throw new Error('User not authenticated or unauthorized');
+    }
+
+    // Upload profile picture if provided
+    let profilePictureUrl: string | undefined;
+    if (profileData.profilePicture) {
+      const fileName = `profile_${Date.now()}_${profileData.profilePicture.name}`;
+      const storagePath = getUserProfileImagePath(userId, fileName);
+      profilePictureUrl = await uploadFile(storagePath, profileData.profilePicture);
+      
+      // Update Firebase Auth profile
+      await updateProfile(firebaseUser, {
+        displayName: profileData.name || firebaseUser.displayName,
+        photoURL: profilePictureUrl
+      });
+    }
+
+    // Create updated user data
+    const updatedUserData: Partial<User> = {
+      ...(profileData.name && { name: profileData.name }),
+      ...(profileData.surname && { surname: profileData.surname }),
+      ...(profileData.phoneNumber && { phoneNumber: profileData.phoneNumber }),
+      ...(profileData.dateOfBirth && { dateOfBirth: profileData.dateOfBirth }),
+      ...(profileData.gender && { gender: profileData.gender }),
+      ...(profileData.nationality && { nationality: profileData.nationality }),
+      ...(profileData.languages && { languages: profileData.languages }),
+      ...(profileData.aboutMe && { aboutMe: profileData.aboutMe }),
+      ...(profilePictureUrl && { profilePicture: profilePictureUrl }),
+    };
+
+    // Update user in Firestore
+    return await updateDocument<User>(USERS_COLLECTION, userId, updatedUserData);
   } catch (error) {
-    console.error('Error deleting user:', error);
-    throw new Error('Failed to delete user');
+    console.error('Error updating user profile:', error);
+    throw new Error('Failed to update user profile');
   }
 }
 
 /**
- * Get all users (with optional pagination and filtering)
+ * Upload government ID documents
  */
-export async function getUsers(options?: { 
-  limit?: number; 
-  page?: number; 
-  role?: User['role'];
-}): Promise<User[]> {
+export async function uploadGovernmentID(
+  userId: string,
+  idFront: File,
+  idBack?: File
+): Promise<{ frontUrl: string; backUrl?: string }> {
   try {
-    const filters: Array<{
-      field: string;
-      operator: '==' | '!=' | '>' | '>=' | '<' | '<=';
-      value: any;
-    }> = [];
-    
-    if (options?.role) {
-      filters.push({
-        field: 'role',
-        operator: '==',
-        value: options.role
-      });
+    // Get current user for authorization
+    const currentUser = await getCurrentUser();
+    if (!currentUser || currentUser.id !== userId) {
+      throw new Error('User not authenticated or unauthorized');
     }
-    
-    // Calculate startAfterId based on pagination
-    let startAfterId;
-    if (options?.page && options.page > 1 && options.limit) {
-      // This is a simplified approach - in a real app you'd use cursor-based pagination
-      // by storing the last document ID from the previous page
-      const skipCount = (options.page - 1) * options.limit;
-      const allUsers = await getDocuments<User>(USERS_COLLECTION, {
-        filters,
-        orderByField: 'createdAt',
-        orderDirection: 'desc'
-      });
-      
-      if (allUsers.length > skipCount) {
-        startAfterId = allUsers[skipCount - 1].id;
+
+    // Upload front of ID
+    const frontFileName = `id_front_${Date.now()}_${idFront.name}`;
+    const frontPath = `users/${userId}/documents/${frontFileName}`;
+    const frontUrl = await uploadFile(frontPath, idFront);
+
+    // Upload back of ID if provided
+    let backUrl: string | undefined;
+    if (idBack) {
+      const backFileName = `id_back_${Date.now()}_${idBack.name}`;
+      const backPath = `users/${userId}/documents/${backFileName}`;
+      backUrl = await uploadFile(backPath, idBack);
+    }
+
+    // Update user document with ID information
+    await updateDocument<User>(USERS_COLLECTION, userId, {
+      identificationDocuments: {
+        frontId: frontUrl,
+        backId: backUrl,
+        verified: false, // Admin needs to verify these documents
+        uploadDate: new Date()
       }
-    }
-    
-    return await getDocuments<User>(USERS_COLLECTION, {
-      filters,
-      orderByField: 'createdAt',
-      orderDirection: 'desc',
-      limit: options?.limit,
-      startAfterId
+    });
+
+    return { frontUrl, backUrl };
+  } catch (error) {
+    console.error('Error uploading government ID:', error);
+    throw new Error('Failed to upload government ID');
+  }
+}
+
+/**
+ * Verify user's email (to be called after email verification flow)
+ */
+export async function verifyUserEmail(userId: string): Promise<User> {
+  try {
+    return await updateDocument<User>(USERS_COLLECTION, userId, {
+      emailVerified: true
     });
   } catch (error) {
-    console.error('Error fetching users:', error);
-    throw new Error('Failed to fetch users');
+    console.error('Error verifying user email:', error);
+    throw new Error('Failed to verify user email');
   }
 }
 
 /**
- * Get the current authenticated user's profile
+ * Connect user account with Google
  */
-export async function getCurrentUser(): Promise<User | null> {
+export async function connectWithGoogle(userId: string, googleData: {
+  googleId: string;
+  googleEmail: string;
+}): Promise<User> {
   try {
-    return await getCurrentUserProfile();
+    return await updateDocument<User>(USERS_COLLECTION, userId, {
+      googleConnected: true,
+      googleId: googleData.googleId,
+      googleEmail: googleData.googleEmail
+    });
   } catch (error) {
-    console.error('Error getting current user:', error);
-    throw new Error('Failed to get current user');
+    console.error('Error connecting with Google:', error);
+    throw new Error('Failed to connect with Google');
   }
 }
 
 /**
- * Get users by role
+ * Get user statistics (for dashboard)
  */
-export async function getUsersByRole(role: User['role']): Promise<User[]> {
+export async function getUserStatistics(userId: string): Promise<{
+  reservationsCount: number;
+  savedPropertiesCount: number;
+  reviewsCount: number;
+  messagesCount: number;
+}> {
   try {
-    return await getDocumentsByField<User>(USERS_COLLECTION, 'role', role);
+    // Implement detailed stats collection from various collections
+    // For now, returning placeholder data
+    return {
+      reservationsCount: 0,
+      savedPropertiesCount: 0,
+      reviewsCount: 0,
+      messagesCount: 0,
+    };
   } catch (error) {
-    console.error('Error fetching users by role:', error);
-    throw new Error('Failed to fetch users by role');
+    console.error('Error getting user statistics:', error);
+    throw new Error('Failed to get user statistics');
   }
 } 

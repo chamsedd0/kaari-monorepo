@@ -4,11 +4,27 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  surname?: string;
   phoneNumber?: string;
   profilePicture?: string;
-  role: 'admin' | 'agent' | 'client';
+  role: 'admin' | 'advertiser' | 'client';
   createdAt: Date;
   updatedAt: Date;
+  dateOfBirth?: string;
+  gender?: string;
+  nationality?: string;
+  languages?: string[];
+  aboutMe?: string;
+  emailVerified?: boolean;
+  googleConnected?: boolean;
+  googleId?: string;
+  googleEmail?: string;
+  identificationDocuments?: {
+    frontId?: string;
+    backId?: string;
+    verified: boolean;
+    uploadDate: Date;
+  };
   properties?: string[]; // References to property IDs owned by this user
   listings?: string[]; // References to listing IDs created by this user
   requests?: string[]; // References to request IDs made by this user
@@ -71,4 +87,26 @@ export interface Request {
   createdAt: Date;
   updatedAt: Date;
   scheduledDate?: Date; // For viewings
+}
+
+export interface Review {
+  id: string;
+  userId: string; // Reference to the User ID who wrote the review
+  propertyId: string; // Reference to the Property ID
+  listingId?: string; // Reference to the Listing ID, if applicable
+  advertiserId: string; // Reference to the User ID (advertiser)
+  stayDuration: string; // How long the client stayed (e.g., "3 months")
+  reviewText: string; // The main review content
+  createdAt: Date;
+  updatedAt: Date;
+  ratings: {
+    landlord: number;
+    neighbourhood: number;
+    publicTransport: number;
+    accommodation: number;
+    servicesNearby: number;
+  };
+  published: boolean; // Whether the review is published or still in draft
+  moveInDate: Date; // When the client moved in
+  responseId?: string; // Reference to a response from the advertiser, if any
 } 
