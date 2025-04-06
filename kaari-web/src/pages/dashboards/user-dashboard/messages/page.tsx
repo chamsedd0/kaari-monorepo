@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { MessagesPageStyle } from './styles';
 import { MessageBanner } from '../../../../components/skeletons/banners/messages/message-banner';
 import EditIcon from '../../../../components/skeletons/icons/New-Chat-Icon.svg';
-import DeleteIcon from '../../../../components/skeletons/icons/BlackDots.svg';
+import DeleteIcon from '../../../../components/skeletons/icons/blackDots.svg';
 import profileImage from '../../../../assets/images/ProfilePicture.png';
 import { ConversationHeader } from '../../../../components/skeletons/banners/static/conversation-header';
 import MessageField from '../../../../components/skeletons/inputs/input-fields/message-field';
