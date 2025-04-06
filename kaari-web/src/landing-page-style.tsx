@@ -1,5 +1,8 @@
 import styled from "styled-components";
 import { Theme } from "./theme/theme";
+import HeroImageBg from './assets/images/HeroImage.png';
+import WavesBg from './assets/images/waves.svg';
+import RenterProtectionBg from './assets/images/renterProtection.svg';
 
 export const UsersLandingStyle = styled.div`
     display: flex;
@@ -19,7 +22,7 @@ export const UsersLandingStyle = styled.div`
         flex-direction: column;
         justify-content: center;
         position: relative;
-        background: url('/src/assets/images/HeroImage.png') center center/cover no-repeat;
+        background: url(${HeroImageBg}) center center/cover no-repeat;
         padding: 0 6%;
         padding-top: 100px;
         overflow: hidden;
@@ -377,7 +380,7 @@ export const UsersLandingStyle = styled.div`
     /* What is Kaari Section */
     .what-is-kaari {
         width: 100%;
-        background: url('/src/assets/images/waves.svg') center center/cover no-repeat;
+        background: url(${WavesBg}) center center/cover no-repeat;
         padding: 250px 6%;
         display: flex;
         justify-content: center;
@@ -545,7 +548,7 @@ export const UsersLandingStyle = styled.div`
     /* Renter Protection Section */
     .renter-protection {
         padding: 60px 6%;
-        background: url('/src/assets/images/renterProtection.svg') center center/cover no-repeat;
+        background: url(${RenterProtectionBg}) center center/cover no-repeat;
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
@@ -1251,7 +1254,7 @@ export const UsersLandingStyle = styled.div`
     .list-property {
         width: 100%;
         padding: 100px 6%;
-        background: url('/src/assets/images/waves.svg') center center/cover no-repeat;
+        background: url(${WavesBg}) center center/cover no-repeat;
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
@@ -1353,6 +1356,20 @@ export const UsersLandingStyle = styled.div`
                 line-height: 1.6;
             }
         }
+    }
+
+    /* CTA Section */
+    .cta-section {
+        width: 100%;
+        background: url(${WavesBg}) center center/cover no-repeat;
+        padding: 200px 6%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        
+        // ... existing code ...
     }
 
     @media (max-width: 768px) {

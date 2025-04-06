@@ -1,5 +1,8 @@
 import styled from "styled-components";
 import { Theme } from "../../theme/theme";
+import HeroImageAdvertiserBg from '../../assets/images/HeroImageAdvertiser.png';
+import CtaBg from '../../assets/images/ctaBg.png';
+import PurpleLogo from '../../assets/images/purpleLogo.svg';
 
 export const AdvertisersLandingStyle = styled.div`
     display: flex;
@@ -19,7 +22,7 @@ export const AdvertisersLandingStyle = styled.div`
         flex-direction: column;
         justify-content: center;
         position: relative;
-        background: url('/src/assets/images/HeroImageAdvertiser.png') center center/cover no-repeat;
+        background: url(${HeroImageAdvertiserBg}) center center/cover no-repeat;
         padding: 0 6%;
         padding-top: 80px;
         overflow: hidden;
@@ -412,7 +415,7 @@ export const AdvertisersLandingStyle = styled.div`
                     position: absolute;
                     width: 40px;
                     height: 40px;
-                    background-image: url('/src/assets/images/purpleLogo.svg');
+                    background-image: url(${PurpleLogo});
                     background-size: contain;
                     background-repeat: no-repeat;
                     right: -20px;
@@ -478,7 +481,7 @@ export const AdvertisersLandingStyle = styled.div`
     .get-started {
         padding: 220px 6%;
         width: 100%;
-        background: linear-gradient(rgba(16, 5, 30, 0.75), rgba(16, 5, 30, 0.75)), url('/src/assets/images/ctaBg.png') center center/cover no-repeat;
+        background: linear-gradient(rgba(16, 5, 30, 0.75), rgba(16, 5, 30, 0.75)), url(${CtaBg}) center center/cover no-repeat;
         background-attachment: fixed;
         text-align: center;
         color: ${Theme.colors.white};
@@ -543,5 +546,24 @@ export const AdvertisersLandingStyle = styled.div`
         .get-started h2 {
             font-size: 36px;
         }
+    }
+
+    .benefit-number-special {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background-image: url(${PurpleLogo});
+        background-size: 30px;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-color: ${Theme.colors.white};
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: 700;
+        margin-right: 18px;
+        border: 2px solid ${Theme.colors.primary};
     }
 `;
