@@ -8,7 +8,7 @@ import { Notifications } from "../../icons/NotificationsIcon";
 import { MessageBubble } from "../../icons/messageBubbleIcon";
 import { House } from "../../icons/HouseIcon";
 
-export const WhiteHeaderUsers = ({user}: {user: boolean}) => {
+export const WhiteHeaderUsers = ({user = false}: {user?: boolean}) => {
     return(
         <div>
             {user ? (

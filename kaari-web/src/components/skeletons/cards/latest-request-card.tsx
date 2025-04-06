@@ -24,8 +24,7 @@ const LatestRequestCard: React.FC<CardBaseProps> = ({
     timer, 
     date, 
     price, 
-    image,
-    id = '123' // Default ID for demo
+    image
 }) => {
     const navigate = useNavigate();
     

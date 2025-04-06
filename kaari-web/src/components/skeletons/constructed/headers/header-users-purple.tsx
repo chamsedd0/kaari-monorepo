@@ -10,7 +10,7 @@ import { Notifications } from '../../icons/NotificationsIcon';
 import { MessageBubble } from '../../icons/messageBubbleIcon';
 
 
-export const PurpleHeaderUsers = ({user}: {user: boolean}) => {
+export const PurpleHeaderUsers = ({user = false}: {user?: boolean}) => {
     return(
         <div>
             {user ? (

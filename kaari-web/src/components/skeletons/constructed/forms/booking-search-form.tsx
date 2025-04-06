@@ -29,9 +29,7 @@ const BookingSearchForm: React.FC<BookingSearchFormProps> = ({ onSubmit }) => {
         onChange={console.log}
       />
       
-      <PurpleButtonH4B70
-        text="GO!"
-      />    
+      <PurpleButtonH4B70 />    
     </FormBaseModelVariant1>
   );
 };

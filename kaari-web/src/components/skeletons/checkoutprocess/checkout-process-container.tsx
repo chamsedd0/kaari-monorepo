@@ -70,7 +70,7 @@ const CheckoutProcessContainer: React.FC<CheckoutProcessContainerProps> = ({
       <CheckoutProcessStyle>
         <div className="checkout-process-header">
           <img src={Logo} alt="Logo" />
-          <CheckoutProgressBar activeStep={currentStep === 4 ? 3 : currentStep} />
+          <CheckoutProgressBar currentStep={currentStep === 4 ? 3 : currentStep} />
         </div>
         
         <div className="checkout-process-content">
@@ -78,15 +78,16 @@ const CheckoutProcessContainer: React.FC<CheckoutProcessContainerProps> = ({
           
           <div className="checkout-process-property-card">
             <CheckoutCard
-              propertyImage={PropertyImage}
+              image={PropertyImage}
               title="Modern Apartment in Agadir"
               moveInDate="05.09.2024"
-              stayDuration="1 month"
+              lengthOfStay="1 month"
               profileImage={ProfileImage}
-              ownerName="Leonardo V."
-              price={2000}
-              serviceCharge={400}
-              totalPrice={2400}
+              profileName="Leonardo V."
+              monthlyRent="2000€"
+              securityDeposit="0€"
+              serviceFee="400€"
+              total="2400€"
             />
           </div>
         </div>

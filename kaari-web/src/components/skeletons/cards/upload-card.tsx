@@ -29,7 +29,7 @@ export const UploadCard: React.FC<UploadCardProps> = ({
           <div className="size-text">{acceptedFormats}</div>
         </div>
         <div className="upload-button">
-          <PurpleButtonLB40 text="Upload" />
+          <PurpleButtonLB40 text="Upload" onClick={onUpload} />
         </div>
         
       </div>

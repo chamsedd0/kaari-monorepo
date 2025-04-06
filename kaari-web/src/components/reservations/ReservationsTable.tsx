@@ -28,7 +28,7 @@ const ReservationsTableStyle = styled.div`
         display: grid;
         grid-template-columns: 2fr 1.5fr 1fr 1fr 0.5fr 0.5fr;
         padding: 12px 16px;
-        border-bottom: 1px solid ${Theme.colors.gray5};
+        border-bottom: 1px solid ${Theme.colors.gray};
 
         span {
             font: ${Theme.typography.fonts.text14};
@@ -41,7 +41,7 @@ const ReservationsTableStyle = styled.div`
         grid-template-columns: 2fr 1.5fr 1fr 1fr 0.5fr 0.5fr;
         padding: 16px;
         align-items: center;
-        border-bottom: 1px solid ${Theme.colors.gray5};
+        border-bottom: 1px solid ${Theme.colors.gray};
 
         .property-name {
             font: ${Theme.typography.fonts.text16};
@@ -78,7 +78,7 @@ const ReservationsTableStyle = styled.div`
             width: fit-content;
 
             &.pending {
-                background: ${Theme.colors.info};
+                background: ${Theme.colors.blue};
                 color: ${Theme.colors.white};
             }
 
@@ -100,7 +100,7 @@ const ReservationsTableStyle = styled.div`
 
         .details-button {
             padding: 6px 12px;
-            border: 1px solid ${Theme.colors.gray5};
+            border: 1px solid ${Theme.colors.gray};
             border-radius: ${Theme.borders.radius.md};
             background: transparent;
             font: ${Theme.typography.fonts.text14};
@@ -109,7 +109,7 @@ const ReservationsTableStyle = styled.div`
             transition: all 0.2s ease;
 
             &:hover {
-                background: ${Theme.colors.gray6};
+                background: ${Theme.colors.gray2};
             }
         }
     }
