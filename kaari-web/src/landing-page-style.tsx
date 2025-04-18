@@ -236,8 +236,8 @@ export const UsersLandingStyle = styled.div`
                     }
                     
                     .stat-label {
-            font-size: 16px;
-            font-weight: 500;
+                        font-size: 16px;
+                        font-weight: 500;
                         color: rgba(255, 255, 255, 0.9);
                         letter-spacing: 0.5px;
                     }
@@ -262,12 +262,12 @@ export const UsersLandingStyle = styled.div`
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
             z-index: 3;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 600;
-            font-size: 18px;
+            font-size: 14px;
             animation: fadeInRight 1s ease-out 0.8s backwards;
 
             &:hover {
@@ -281,14 +281,14 @@ export const UsersLandingStyle = styled.div`
                 transition: transform 0.2s ease;
                 
                 img {
-                    width: 22px;
-                    height: 22px;
+                    width: 18px;
+                    height: 18px;
                     filter: brightness(0) invert(1);
                 }
             }
             
             &:hover .arrow-icon {
-                transform: translateX(3px);
+                transform: translateX(2px);
             }
         }
         
@@ -370,7 +370,7 @@ export const UsersLandingStyle = styled.div`
             }
 
             p {
-                font: ${Theme.typography.fonts.mediumB};
+                font: ${Theme.typography.fonts.mediumM};
                 color: ${Theme.colors.gray2};
                 line-height: 1.6;
             }
@@ -381,10 +381,11 @@ export const UsersLandingStyle = styled.div`
     .what-is-kaari {
         width: 100%;
         background: url(${WavesBg}) center center/cover no-repeat;
-        padding: 250px 6%;
+        padding: 180px 6%;
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-direction: column;
         position: relative;
         overflow: hidden;
         
@@ -405,7 +406,7 @@ export const UsersLandingStyle = styled.div`
             z-index: 1;
 
             h2 {
-                font: ${Theme.typography.fonts.h2};
+                font: ${Theme.typography.fonts.h1};
                 color: ${Theme.colors.white};
                 margin-bottom: 16px;
             }
@@ -463,17 +464,20 @@ export const UsersLandingStyle = styled.div`
 
     /* How It Works Section */
     .how-it-works {
-        padding: 100px 6%;
         padding-bottom: 0px;
-        background: ${Theme.colors.white};
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-top: 100px;
         
         .steps-container {
             display: flex;
-            flex-wrap: wrap;
+            gap: 100px;
+            color: ${Theme.colors.white};
+            align-items: center;
             justify-content: center;
-            gap: 40px;
-            max-width: 1200px;
-            margin: 0 auto;
+            width: 100%;
             
             .step {
                 flex: 1;
@@ -489,14 +493,12 @@ export const UsersLandingStyle = styled.div`
                 .step-number {
                     font-size: 180px;
                     font-weight: 700;
-                    color: ${Theme.colors.primary};
                     margin-bottom: 20px;
                     line-height: 1;
                 }
                 
                 h3 {
                     font: ${Theme.typography.fonts.h3};
-                    color: ${Theme.colors.black};
                     margin-bottom: 16px;
                     text-align: center;
                     font-weight: 700;
@@ -505,7 +507,6 @@ export const UsersLandingStyle = styled.div`
                 
                 p {
                     font: ${Theme.typography.fonts.mediumM};
-                    color: ${Theme.colors.gray2};
                     line-height: 1.6;
                     text-align: center;
                 }

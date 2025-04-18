@@ -153,9 +153,6 @@ const UsersLanding: React.FC = () => {
               <button className="primary-button" onClick={() => window.location.href = '/properties'}>For Guests</button>
               <button className="secondary-button" onClick={() => window.location.href = '/for-advertisers'}>For Hosts</button>
         </div>
-      </div>
-        </section>
-
         {/* How It Works Section */}
         <section className="how-it-works">
           <div className="steps-container">
@@ -176,6 +173,10 @@ const UsersLanding: React.FC = () => {
             </div>
           </div>
         </section>
+      </div>
+        </section>
+
+        
 
         {/* Top Picks Section */}
         <section className="top-picks">
