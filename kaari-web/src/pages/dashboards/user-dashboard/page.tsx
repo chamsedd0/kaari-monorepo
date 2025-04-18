@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationPannel } from '../../../components/skeletons/constructed/dashboard-navigation-pannel/navigation-pannel';
-import { WhiteHeaderUsers } from '../../../components/skeletons/constructed/headers/header-users-white';
+import UnifiedHeader from '../../../components/skeletons/constructed/headers/unified-header';
 import { UserDashboardStyle } from './styles';
 import LoadingScreen from '../../../components/loading/LoadingScreen';
 
@@ -82,7 +82,12 @@ const UserDashboard: React.FC = () => {
         <>
             <LoadingScreen isLoading={isLoading || isSectionLoading} />
             <div style={{ display: 'flex', maxWidth: '1500px', margin: '0 auto' }}>
-                <WhiteHeaderUsers user={true} />
+                <UnifiedHeader 
+                    variant="white" 
+                    userType="user" 
+                    isAuthenticated={true}
+                    showSearchBar={true} 
+                />
                 <NavigationPannel 
                     activeSection={activeSection}
                     onSectionChange={setActiveSection}

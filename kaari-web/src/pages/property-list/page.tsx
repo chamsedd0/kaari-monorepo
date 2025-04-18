@@ -10,7 +10,7 @@ import { PropertyList } from "./styles"
 import { FilterModal } from "../../components/skeletons/constructed/modals/filter-modal";
 
 import ExamplePic from '../../assets/images/propertyExamplePic.png'
-import { WhiteHeaderUsers } from "../../components/skeletons/constructed/headers/header-users-white";
+import UnifiedHeader from "../../components/skeletons/constructed/headers/unified-header";
 
 // Define property type
 interface PropertyType {
@@ -395,7 +395,7 @@ export default function PropertyListPage() {
 
   return (
     <PropertyList>
-      <WhiteHeaderUsers user></WhiteHeaderUsers>
+      <UnifiedHeader variant="white" userType="user" />
       <div className="main-content" ref={scrollRef}>
             <div className="search-form">
           <div className="search-input-wrapper">

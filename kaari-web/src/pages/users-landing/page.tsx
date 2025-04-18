@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import BookingSearchForm from "../../components/skeletons/constructed/forms/booking-search-form";
 import { UsersLandingStyle } from "../../landing-page-style";
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
-import HeaderLandingPage from "../../components/skeletons/constructed/headers/header-landing-page";
+import UnifiedHeader from "../../components/skeletons/constructed/headers/unified-header";
 
 // Import icons and images
 import ArrowRight from '../../components/skeletons/icons/ArrowRightThick.svg';
@@ -86,7 +86,10 @@ const UsersLanding: React.FC = () => {
 
   return (
     <>
-      <HeaderLandingPage />
+      <UnifiedHeader 
+        variant="landing" 
+        userType="user" 
+      />
       <UsersLandingStyle>
         {/* Hero Section */}
         <section className="hero-section">

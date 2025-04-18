@@ -1,5 +1,5 @@
 import { FavouritesStyle } from "./styles";
-import { WhiteHeaderUsers } from "../../components/skeletons/constructed/headers/header-users-white";
+import UnifiedHeader from "../../components/skeletons/constructed/headers/unified-header";
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
 import PropertyPic from "../../assets/images/propertyExamplePic.png";
 import { useRef } from "react";
@@ -25,7 +25,7 @@ export const FavouritesPage = () => {
 
     return (
         <FavouritesStyle>
-            <WhiteHeaderUsers user></WhiteHeaderUsers>
+            <UnifiedHeader variant="white" userType="user" />
 
             <div className="favourites-container">
                 <div className="section-header">

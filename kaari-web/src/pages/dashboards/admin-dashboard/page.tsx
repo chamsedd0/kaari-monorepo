@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationPannel } from '../../../components/skeletons/constructed/dashboard-navigation-pannel/navigation-pannel';
-import { WhiteHeaderUsers } from '../../../components/skeletons/constructed/headers/header-users-white';
+import UnifiedHeader from '../../../components/skeletons/constructed/headers/unified-header';
 import { AdminDashboardStyle } from './styles';
 import { ReservationsTable } from '../../../components/reservations/ReservationsTable';
 import LatestRequestCard from '../../../components/skeletons/cards/latest-request-card';
@@ -164,7 +164,7 @@ const AdminDashboard: React.FC = () => {
         <>
             <LoadingScreen isLoading={isLoading || isSectionLoading} />
             <div style={{ display: 'flex', maxWidth: '1500px', margin: '0 auto' }}>
-                <WhiteHeaderUsers user={true} />
+                <UnifiedHeader variant="white" userType="admin" isAuthenticated={true} />
                 <NavigationPannel 
                     activeSection={activeSection}
                     onSectionChange={setActiveSection}

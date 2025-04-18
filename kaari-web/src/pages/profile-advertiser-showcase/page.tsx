@@ -3,13 +3,14 @@ import { ProfileShowcaseStyle } from "./styles";
 import ProfilePic from "../../assets/images/advertiser.png";
 import { CertificationBanner } from "../../components/skeletons/banners/static/certification-banner";
 import { useState } from "react";
+import UnifiedHeader from "../../components/skeletons/constructed/headers/unified-header";
 
 export default function ProfileShowcasePage() {
     const [activeTab, setActiveTab] = useState<'ratings' | 'offers'>('ratings');
 
     return(
         <ProfileShowcaseStyle>
-            <WhiteHeaderUsers user></WhiteHeaderUsers>
+            <UnifiedHeader variant="white" userType="user" />
             <div className="info-section">
                 <img className="image" src={ProfilePic} alt="Profile" />
                 

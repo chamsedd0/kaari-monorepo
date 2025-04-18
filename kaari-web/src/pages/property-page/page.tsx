@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { PropertyPage } from "./styles";
-import { WhiteHeaderUsers } from "../../components/skeletons/constructed/headers/header-users-white";
+import UnifiedHeader from "../../components/skeletons/constructed/headers/unified-header";
 import PhotoSlider from "../../components/skeletons/constructed/slider/photo-slider";
 import pictures from '../../assets/images/propertyExamplePic.png'
 import PropertyRequestCard from "../../components/skeletons/cards/send-request-card";
@@ -64,7 +64,7 @@ const PropertyPageComponent = () => {
 
   return (
     <PropertyPage total_Height={totalHeight} isFixed={isFixed} isStopped={isStopped} stopPosition={stopPosition}>
-      <WhiteHeaderUsers user></WhiteHeaderUsers>
+      <UnifiedHeader variant="white" userType="user" />
       
       <div className="main-content">
             <div className="photo-slider">

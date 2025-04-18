@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationPannelAdviser } from '../../../components/skeletons/constructed/dashboard-navigation-pannel/navigation-pannel-adviser';
-import { WhiteHeaderAdviser } from '../../../components/skeletons/constructed/headers/header-user-white-adviser';
+import UnifiedHeader from '../../../components/skeletons/constructed/headers/unified-header';
 import { AdvertiserDashboardStyle } from './styles';
 import LoadingScreen from '../../../components/loading/LoadingScreen';
 
@@ -86,7 +86,12 @@ const AdvertiserDashboard: React.FC = () => {
         <>
             <LoadingScreen isLoading={isLoading || isSectionLoading} />
             <div style={{ display: 'flex', maxWidth: '1500px', margin: '0 auto' }}>
-                <WhiteHeaderAdviser advertiser={true} />
+                <UnifiedHeader 
+                    variant="white" 
+                    userType="advertiser" 
+                    isAuthenticated={true}
+                    showSearchBar={true} 
+                />
                 <NavigationPannelAdviser 
                     activeSection={activeSection}
                     onSectionChange={setActiveSection}

@@ -11,12 +11,14 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: 'signin' | 'register';
+  onSuccess?: () => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
-  initialMode = 'signin'
+  initialMode = 'signin',
+  onSuccess
 }) => {
   const [mode, setMode] = useState<'signin' | 'register'>(initialMode);
   const [email, setEmail] = useState('');
@@ -58,6 +60,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGooglePopup();
+      if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
       // Error is handled in auth context and passed via the error state
@@ -71,6 +74,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     try {
       if (mode === 'signin') {
         await signIn(email, password);
+        if (onSuccess) onSuccess();
         onClose();
       } else {
         if (!name.trim()) {
@@ -78,6 +82,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           return;
         }
         await signUp(email, password, name);
+        if (onSuccess) onSuccess();
         onClose();
       }
     } catch (err) {
