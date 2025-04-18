@@ -69,8 +69,7 @@ export const PropertiesPageStyle = styled.div`
                 overflow-y: hidden;
                 
                 > * {
-                    min-width: 300px;
-                    width: 300px;
+                    min-width: 301px;
                     height: 100%;
                 }
 

@@ -9,7 +9,6 @@ export const CardBaseModelStyle2 = styled.div`
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  max-width: 301px;
   height: 100%;
 
   position: relative;
@@ -54,6 +53,11 @@ export const CardBaseModelStyle2 = styled.div`
     align-items: center;
     justify-content: center;
     gap: 12px;
+
+    .button {
+      width: 100%;
+      min-width: 150px;
+    }
   }
 
 
