@@ -13,6 +13,7 @@ import ThankYouPage from './pages/photoshoot-booking/thank-you';
 import { useStore } from './backend/store';
 import { useMemo } from 'react';
 import Footer from './components/skeletons/constructed/footer/footer';
+import UnifiedHeader from './components/skeletons/constructed/headers/unified-header';
 function App() {
   // Use the global store for authentication
   const isAuthenticated = useStore(state => state.isAuthenticated);
@@ -63,6 +64,7 @@ function App() {
     <Router>
       <div className="app">
         <main>
+          
           {routes}
         </main>
         <Footer />

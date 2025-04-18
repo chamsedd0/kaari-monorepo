@@ -5,10 +5,11 @@ import { PurpleButtonWhiteText } from "./interfaces/purple_button_white_text";
 
 export const PurpleMB48 = styled(PurpleButtonWhiteText)`
     font: ${Theme.typography.fonts.mediumB};
-    padding: 17px 22px;
+    padding: 0px 22px;
 
-    max-height: 48px;
+    height: 48px;
     width: 100%;
+    max-width: 250px;
 
     &:disabled {
         opacity: 0.5;

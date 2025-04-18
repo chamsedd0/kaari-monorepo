@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import CheckoutProcessContainer from '../../components/skeletons/checkoutprocess/checkout-process-container';
 import { useSearchParams } from 'react-router-dom';
+import UnifiedHeader from '../../components/skeletons/constructed/headers/unified-header';
+import Footer from '../../components/skeletons/constructed/footer/footer';
 
 // Define valid status types
 type StatusType = 'success' | 'pending' | 'rejected' | 'payment_failed' | 'refund_processing';
@@ -18,7 +20,7 @@ const CheckoutProcess: React.FC = () => {
             const validStatus = ['success', 'pending', 'rejected', 'payment_failed', 'refund_processing'];
             if (validStatus.includes(statusParam)) {
                 setStatus(statusParam as StatusType);
-                setInitialStep(4); // Move to the last step if status is provided
+                setInitialStep(3); // Move to the last step if status is provided
             }
         }
 
@@ -26,13 +28,19 @@ const CheckoutProcess: React.FC = () => {
         const stepParam = searchParams.get('step');
         if (stepParam) {
             const step = parseInt(stepParam, 10);
-            if (!isNaN(step) && step >= 1 && step <= 4) {
+            if (!isNaN(step) && step >= 1 && step <= 3) {
                 setInitialStep(step);
             }
         }
     }, [searchParams]);
 
-    return <CheckoutProcessContainer initialStep={initialStep} successStatus={status} />;
+    return (
+        <>
+            <UnifiedHeader variant="white" userType="user" showSearchBar={true} />
+            <CheckoutProcessContainer initialStep={initialStep} successStatus={status} />
+            <Footer />
+        </>
+    );
 };
 
 export default CheckoutProcess;

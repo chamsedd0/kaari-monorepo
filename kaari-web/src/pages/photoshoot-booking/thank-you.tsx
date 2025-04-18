@@ -58,7 +58,6 @@ const ThankYouPage: React.FC = () => {
   return (
     <>
       <UnifiedHeader variant="white" userType="advertiser" showSearchBar={true} />
-      
       <ThankYouPageStyle>
         <div className="celebration-confetti top-left"></div>
         <div className="celebration-confetti top-right"></div>

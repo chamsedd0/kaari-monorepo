@@ -4,13 +4,13 @@ import { PurpleBorderButton } from "./interfaces/purple_border_button";
 
 export const BpurpleMB48 = styled(PurpleBorderButton)`
     font: ${Theme.typography.fonts.mediumB};
-    padding: 12px 43.5px;
+    padding: 0px 43.5px;
 
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 10px;
-    max-height: 48px;
+    height: 48px;
     max-width: 100%;
 
     svg {

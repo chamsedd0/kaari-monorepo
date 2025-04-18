@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { DEFAULT_TIME_SLOTS } from '../config/constants';
 import firebaseBookings from '../firebase/firestore/photoshoot-bookings';
 import { getAuth } from 'firebase/auth';

@@ -239,25 +239,25 @@ const CalendarComponent: React.FC<CalendarProps> = ({
       <div className="control-date">
         <div className="month-select">
           <span>{months[currentMonth]}</span>
-          <div className="controls">
+            <div className="controls">
             <button className="up" onClick={incrementMonth}>
               <FaChevronUp />
-            </button>
+                </button>
             <button className="down" onClick={decrementMonth}>
               <FaChevronDown />
-            </button>
-          </div>
+                </button>
+            </div>
         </div>
         <div className="year-select">
           <span>{currentYear}</span>
-          <div className="controls">
+            <div className="controls">
             <button className="up" onClick={incrementYear}>
               <FaChevronUp />
-            </button>
+                </button>
             <button className="down" onClick={decrementYear}>
               <FaChevronDown />
-            </button>
-          </div>
+                </button>
+            </div>
         </div>
       </div>
 
@@ -288,7 +288,7 @@ const CalendarComponent: React.FC<CalendarProps> = ({
               >
                 {dayInfo.day}
                 {isLoading && <span className="loading-indicator">...</span>}
-              </div>
+            </div>
             );
           })}
         </div>

@@ -77,6 +77,7 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ onContinue }) => 
       
       <div className="government-id-container">
         <UploadFieldModel 
+          
           label="ID Type" 
         />
         <UploadFieldModel 

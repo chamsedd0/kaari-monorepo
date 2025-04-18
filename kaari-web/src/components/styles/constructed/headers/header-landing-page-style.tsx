@@ -82,7 +82,7 @@ export const HeaderLandingPageStyle = styled(HeaderBaseModel)<HeaderLandingPageS
 
         p {
             margin: 0;
-            margin-top: 2px;
+            margin-top: -4px;
         }
 
         &:hover {

@@ -29,7 +29,7 @@ export const Option2 = styled(Option)`
 
 export const Label2 = styled(Label)`
   //same as select-field-base-model-style
-
+  margin-bottom: 16px;
 `;
 
 export const ChevronIcon2 = styled(ChevronIcon)<{ isOpen: boolean }>`
