@@ -2,6 +2,7 @@ import React from 'react';
 import { BookAPhotoshootCard } from '../../styles/cards/card-base-model-style-book-a-photoshoot';
 import { PurpleButtonMB48 } from '../buttons/purple_MB48';
 import cameraIcon from '../../../assets/icons/camera-girl.svg';
+import { useNavigate } from 'react-router-dom';
 
 interface BookAPhotoshootCardProps {
   hostText?: string;
@@ -17,6 +18,16 @@ const BookAPhotoshootComponent: React.FC<BookAPhotoshootCardProps> = ({
   buttonText = "Book a Photoshoot",
   onClick
 }) => {
+  const navigate = useNavigate();
+  
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      navigate('/photoshoot-booking');
+    }
+  };
+
   return (
     <BookAPhotoshootCard>
       <div className="text-picture-container">
@@ -29,7 +40,7 @@ const BookAPhotoshootComponent: React.FC<BookAPhotoshootCardProps> = ({
           <img src={cameraIcon} alt="Camera" />
         </div>
       </div>
-      <PurpleButtonMB48 text={buttonText} onClick={onClick} />
+      <PurpleButtonMB48 text={buttonText} onClick={handleClick} />
     </BookAPhotoshootCard>
   );
 };

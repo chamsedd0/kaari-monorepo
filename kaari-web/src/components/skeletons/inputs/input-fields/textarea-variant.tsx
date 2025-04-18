@@ -5,13 +5,14 @@ interface InputBaseProps {
   placeholder?: string;
   value?: string;
   title?: string;
+  onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
 }
 
-const TextAreaBaseModel: React.FC<InputBaseProps> = ({ placeholder, value, title }) => {
+const TextAreaBaseModel: React.FC<InputBaseProps> = ({ placeholder, value, title, onChange }) => {
   return (
     <TextAreaBaseModel1>
       <span>{title}</span>
-      <textarea placeholder={placeholder} value={value} />
+      <textarea placeholder={placeholder} value={value} onChange={onChange} />
     </TextAreaBaseModel1>
   );
 };

@@ -24,5 +24,11 @@ export default defineConfig({
     port: 3000,
     strictPort: false,
     host: true,
+    fs: {
+      strict: false,
+    },
+    headers: {
+      'Cache-Control': 'no-store',
+    }
   },
 })

@@ -31,7 +31,6 @@ export const PhotoshootsPageStyle = styled.div`
 
             .button-container {
                 display: flex;
-               min-width: 260px;
             }
         }
 
@@ -68,7 +67,7 @@ export const PhotoshootsPageStyle = styled.div`
                 
                 .date-time {
                     font: ${Theme.typography.fonts.smallM};
-                    color: ${Theme.colors.gray};
+                    color: ${Theme.colors.gray2};
                 }
             }
         }

@@ -11,7 +11,6 @@ import { MessageBubble } from "../../icons/messageBubbleIcon";
 import { House } from "../../icons/HouseIcon";
 import { FaSearch, FaCamera } from 'react-icons/fa';
 import ProfilePic from '../../../../assets/images/ProfilePicture.png';
-import LanguageBanner from "../../banners/status/banner-base-model-language";
 import { useStore } from '../../../../backend/store';
 import { AuthModal } from '../modals/auth-modal';
 import { SignOutConfirmationModal } from '../modals/signout-confirmation-modal';
@@ -298,7 +297,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       setShowAuthModal(true);
     }
   };
-  const handleCameraClick = () => navigate('/upload-listing');
+  const handleCameraClick = () => navigate('/photoshoot-booking');
 
   // Auth handlers
   const handleSignIn = () => {

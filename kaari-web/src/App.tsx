@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Footer from './components/skeletons/constructed/footer/footer';
 import PropertyPageComponent from './pages/property-page/page';
 import CheckoutProcess from './pages/checkout-process/page';
 import UsersLanding from './pages/users-landing/page';
@@ -9,9 +8,11 @@ import { FavouritesPage } from './pages/favourites/page';
 import UserDashboard from './pages/dashboards/user-dashboard/page';
 import AdvertiserDashboard from './pages/dashboards/advertiser-dashboard/page';
 import ProfileShowcasePage from './pages/profile-advertiser-showcase/page';
+import PhotoshootBookingPage from './pages/photoshoot-booking/page';
+import ThankYouPage from './pages/photoshoot-booking/thank-you';
 import { useStore } from './backend/store';
 import { useMemo } from 'react';
-
+import Footer from './components/skeletons/constructed/footer/footer';
 function App() {
   // Use the global store for authentication
   const isAuthenticated = useStore(state => state.isAuthenticated);
@@ -27,6 +28,8 @@ function App() {
       {/* Public Routes */}
       <Route path="/" element={<UsersLanding />} />
       <Route path="/for-advertisers" element={<AdvertisersLanding />} />
+      <Route path="/photoshoot-booking" element={<PhotoshootBookingPage />} />
+      <Route path="/photoshoot-booking/thank-you" element={<ThankYouPage />} />
 
       <Route path="/properties" element={<PropertyList />} />
       <Route path="/property/:id" element={<PropertyPageComponent />} />

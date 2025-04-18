@@ -355,8 +355,13 @@ const UsersLanding: React.FC = () => {
         <section className="list-property">
           <div className="list-property-content">
             <h2>List your property at no cost by arranging a free photoshoot!</h2>
-            <p>That's right, list a quality property and showcase your property to millions of users for free. We'll help you create quality photographs and verification.</p>
-            <button className="photoshoot-button">Book A Free Photoshoot</button>
+            <p>Publish your property on our platform and stand out from the competition.</p>
+            <button 
+              className="photoshoot-button"
+              onClick={() => navigate('/photoshoot-booking')}
+            >
+              Book A Free Photoshoot
+            </button>
           </div>
           <div className="list-property-image">
             <img src={PropertyImage} alt="Property Listing" />

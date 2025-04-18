@@ -7,15 +7,25 @@ import UpcomingPhotoshoot from '../../../../components/skeletons/cards/upcoming-
 import UnassignedPhotoshoot from '../../../../components/skeletons/cards/unassigned-upcoming-photopshoot';
 import profile from '../../../../assets/images/HeroImage.png' 
 import loading from '../../../../components/skeletons/icons/Loading.svg'
+import { useNavigate } from 'react-router-dom';
 
 const PhotoshootPage: React.FC = () => {
+  const navigate = useNavigate();
+  
+  const handleBookPhotoshoot = () => {
+    navigate('/photoshoot-booking');
+  };
+  
   return (
     <PhotoshootsPageStyle>
       <div className="left">
         <div className="section-title-container">
           <h2 className="section-title">Book a Photoshoot</h2>
           <div className="button-container">
-            <PurpleButtonMB48 text="Book a free Photoshoot" />
+            <PurpleButtonMB48 
+              text="Book a free Photoshoot" 
+              onClick={handleBookPhotoshoot}
+            />
           </div>
         </div>
         <UpcomingPhotoshoot 

@@ -114,7 +114,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   const setUser = useStore(state => state.setUser);
   const setIsAuthenticated = useStore(state => state.setIsAuthenticated);
   const isAuthenticated = useStore(state => state.isAuthenticated);
-  const isAdvertiser = userRole === 'agent' || userRole === 'owner';
+  const isAdvertiser = userRole === 'advertiser';
   
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -134,7 +134,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   const handleDashboardClick = () => {
     onClose();
-    if (userRole === 'agent' || userRole === 'owner') {
+    if (userRole === 'advertiser') {
       navigate('/dashboard/advertiser');
     } else {
       navigate('/dashboard/user');
@@ -143,7 +143,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   const handleReservationsClick = () => {
     onClose();
-    if (userRole === 'agent' || userRole === 'owner') {
+    if (userRole === 'advertiser') {
       navigate('/dashboard/advertiser/reservations');
     } else {
       navigate('/dashboard/user/reservations');
@@ -223,7 +223,10 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
       <SignOutConfirmationModal
         isOpen={showSignOutModal}
         onClose={() => setShowSignOutModal(false)}
-        onConfirm={handleLogOut}
+        onConfirm={async () => {
+          await handleLogOut();
+          setShowSignOutModal(false);
+        }}
       />
     </>
   );

@@ -69,7 +69,7 @@ const AdvertisersLanding: React.FC = () => {
             <div className="button-container" style={{ maxWidth: '250px' }}>  
                 <PurpleButtonLB60
                     text="Book a Photoshoot"
-                    onClick={handleGetStarted}
+                    onClick={() => navigate('/photoshoot-booking')}
                 />
             </div>
           </div>
@@ -164,7 +164,7 @@ const AdvertisersLanding: React.FC = () => {
               <PhotoshootCardEnum
                 title="Book a photoshoot"
                 description="Schedule a free photoshoot with our professional photographers who will capture quality images of your property for an accurate showcase."
-                number={1}
+                onClick={() => navigate('/photoshoot-booking')}
                 image={Photoshoot1}
               />
             </div>
