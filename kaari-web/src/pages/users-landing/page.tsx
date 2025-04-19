@@ -12,6 +12,9 @@ import IdentityIcon from '../../components/skeletons/icons/Identity.svg';
 import QualityIcon from '../../components/skeletons/icons/Quality.svg';
 import PriceIcon from '../../components/skeletons/icons/Price.svg';
 import PropertyImage from '../../assets/images/propertyExamplePic.png';
+import Mockup from './mockup.png';
+import CameraGirl from '../../assets/icons/camera-girl.svg';
+import KaariLogo from '../../assets/images/purpleLogo.svg';
 
 // Import city images
 import TangierImage from '../../assets/images/BigCityPic0.png';
@@ -22,8 +25,45 @@ import RabatImage from '../../assets/images/BigCityPic1.png';
 import OujdaImage from '../../assets/images/BigCityPic2.png';
 import AgadirImage from '../../assets/images/BigCityPic1.png';
 
+// Import slider SVGs
+import DoorSvg from '../../assets/images/doorsvg.svg';
+import GirlGlobeSvg from '../../assets/images/girlGlobesvg.svg';
+import GuyLettersSvg from '../../assets/images/guyLetterssvg.svg';
+import GirlHouseSvg from '../../assets/images/girlHousesvg.svg';
+import MoneyShieldSvg from '../../assets/images/moneyShieldsvg.svg';
+
 const UsersLanding: React.FC = () => {
   const navigate = useNavigate();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const sliderTrackRef = useRef<HTMLDivElement>(null);
+  
+  // Total number of slides
+  const totalSlides = 5;
+  
+  // Function to move to a specific slide
+  const goToSlide = (slideIndex: number) => {
+    if (slideIndex < 0) {
+      slideIndex = totalSlides - 1;
+    } else if (slideIndex >= totalSlides) {
+      slideIndex = 0;
+    }
+    
+    setCurrentSlide(slideIndex);
+    
+    // Move the slider track
+    if (sliderTrackRef.current) {
+      sliderTrackRef.current.style.transform = `translateX(-${slideIndex * 100}%)`;
+    }
+  };
+  
+  // Auto-rotate slides
+  useEffect(() => {
+    const interval = setInterval(() => {
+      goToSlide(currentSlide + 1);
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [currentSlide]);
 
   // Mock data for property listings
   const topProperties = [
@@ -147,39 +187,158 @@ const UsersLanding: React.FC = () => {
           </div>
         </section>
 
-        {/* What is Kaari Section */}
+        {/* What is Kaari Section - Slider */}
         <section className="what-is-kaari">
-          <div className="section-content">
-            <h2>What is Kaari?</h2>
-            <p>Choose your type, based on your needs</p>
-            <div className="button-group">
-              <button className="primary-button" onClick={() => window.location.href = '/properties'}>For Guests</button>
-              <button className="secondary-button" onClick={() => window.location.href = '/for-advertisers'}>For Hosts</button>
-        </div>
-        {/* How It Works Section */}
-        <section className="how-it-works">
-          <div className="steps-container">
-            <div className="step">
-              <div className="step-number">1</div>
-              <h3>Pick a few places</h3>
-              <p>Explore hundreds of high-quality rooms, studios, and apartments. Save your favorites and get alerts. Finding your dream home could not be easier.</p>
+          <div className="slider-container">
+            <div className="slider-track" ref={sliderTrackRef}>
+              {/* Slide 1 - Welcome */}
+              <div className="slide welcome-slide">
+                <div className="kaari-logo">
+                  <img src={KaariLogo} alt="Kaari" />
+                </div>
+                <div className="slide-content">
+                  <div className="text-content">
+                    <h2>Welcome to Kaari!</h2>
+                    <p>Your top assistant in finding the perfect place is here!</p>
+                    <div className="slide-question">Which one of these are you?</div>
+                    <div className="buttons-container">
+                      <button className="primary-button" onClick={() => navigate('/tenant-signup')}>
+                        I am a Tenant
+                      </button>
+                      <button className="secondary-button" onClick={() => navigate('/advertiser-signup')}>
+                        I am an Advertiser
+                      </button>
+                    </div>
+                  </div>
+                  <div className="image-content">
+                    <img src={DoorSvg} alt="Welcome to Kaari" />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Slide 2 - Search */}
+              <div className="slide search-slide">
+                <div className="kaari-logo">
+                  <img src={KaariLogo} alt="Kaari" />
+                </div>
+                <div className="slide-content">
+                  <div className="text-content">
+                    <h2>Search for a place</h2>
+                    <p>Find your next home with ease using our advanced search features</p>
+                    <div className="buttons-container">
+                      <button className="primary-button" onClick={() => navigate('/properties')}>
+                        Browse Properties
+                      </button>
+                      <button className="secondary-button" onClick={() => navigate('/how-it-works')}>
+                        How It Works
+                      </button>
+                    </div>
+                  </div>
+                  <div className="image-content">
+                    <img src={GirlGlobeSvg} alt="Search for a place" />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Slide 3 - Request */}
+              <div className="slide request-slide">
+                <div className="kaari-logo">
+                  <img src={KaariLogo} alt="Kaari" />
+                </div>
+                <div className="slide-content">
+                  <div className="text-content">
+                    <h2>Send your request</h2>
+                    <p>Connect directly with property owners and get responses fast</p>
+                    <div className="buttons-container">
+                      <button className="primary-button" onClick={() => navigate('/properties')}>
+                        Find Properties
+                      </button>
+                      <button className="secondary-button" onClick={() => navigate('/contact')}>
+                        Contact Us
+                      </button>
+                    </div>
+                  </div>
+                  <div className="image-content">
+                    <img src={GuyLettersSvg} alt="Send your request" />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Slide 4 - Enjoy */}
+              <div className="slide enjoy-slide">
+                <div className="kaari-logo">
+                  <img src={KaariLogo} alt="Kaari" />
+                </div>
+                <div className="slide-content">
+                  <div className="text-content">
+                    <h2>Enjoy your place!</h2>
+                    <p>Move in with confidence. Your satisfaction is our priority</p>
+                    <div className="buttons-container">
+                      <button className="primary-button" onClick={() => navigate('/properties')}>
+                        Start Searching
+                      </button>
+                      <button className="secondary-button" onClick={() => navigate('/testimonials')}>
+                        Read Testimonials
+                      </button>
+                    </div>
+                  </div>
+                  <div className="image-content">
+                    <img src={GirlHouseSvg} alt="Enjoy your place" />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Slide 5 - Payment Protection */}
+              <div className="slide payment-slide">
+                <div className="kaari-logo">
+                  <img src={KaariLogo} alt="Kaari" />
+                </div>
+                <div className="slide-content">
+                  <div className="text-content">
+                    <h2>Your payment is protected</h2>
+                    <p>We ensure your payment is secure with our 24-hour move-in protection guarantee</p>
+                    <div className="buttons-container">
+                      <button className="primary-button" onClick={() => navigate('/protection')}>
+                        Learn More
+                      </button>
+                      <button className="secondary-button" onClick={() => navigate('/faqs')}>
+                        View FAQs
+                      </button>
+                    </div>
+                  </div>
+                  <div className="image-content">
+                    <img src={MoneyShieldSvg} alt="Payment Protection" />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="step">
-              <div className="step-number">2</div>
-              <h3>Send a booking request</h3>
-              <p>Like a place and want to call it home? Send a booking request. You'll know if it's accepted or not within 24 hours.</p>
+          </div>
+          
+          {/* Slider Controls */}
+          <div className="slider-controls">
+            {Array.from({ length: totalSlides }).map((_, index) => (
+              <div
+                key={index}
+                className={`slider-dot ${index === currentSlide ? 'active' : ''}`}
+                onClick={() => goToSlide(index)}
+              />
+            ))}
+          </div>
+          
+          {/* Slider Arrows */}
+          <div className="slider-arrows">
+            <div className="slider-arrow prev" onClick={() => goToSlide(currentSlide - 1)}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
             </div>
-            <div className="step">
-              <div className="step-number">3</div>
-              <h3>Pay, and it's yours</h3>
-              <p>Pay the first month's rent to confirm your booking. Congratulations, you found your next home. We'll protect your money until you've moved in and checked the place out.</p>
+            <div className="slider-arrow next" onClick={() => goToSlide(currentSlide + 1)}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
             </div>
           </div>
         </section>
-      </div>
-        </section>
-
-        
 
         {/* Top Picks Section */}
         <section className="top-picks">
@@ -274,7 +433,7 @@ const UsersLanding: React.FC = () => {
             {cities.map((city, index) => (
               <div key={index} className="city-card" onClick={() => navigate(`/properties?city=${city.name}`)}>
                 <img src={city.image} alt={city.name} />
-                <h3>{city.name}</h3>
+                <div className="city-label">{city.name}</div>
               </div>
             ))}
           </div>
@@ -337,34 +496,35 @@ const UsersLanding: React.FC = () => {
             </div>
             <div className="app-image">
               <div className="phone-mockup">
-                <div className="phone">
-                  <div className="phone-frame">
-                    <div className="phone-screen">
-                      <img src={PropertyImage} alt="Kaari App Interface" />
-                    </div>
-                    <div className="phone-notch"></div>
-                  </div>
-                </div>
+                <img src={Mockup} alt="Property" />
               </div>
-              <div className="phone-shadow"></div>
             </div>
           </div>
         </section>
 
         {/* Property Listing Section */}
         <section className="list-property">
+          <div className="list-property-image">
+            <img src={CameraGirl} alt="Property Photoshoot" />
+          </div>
           <div className="list-property-content">
-            <h2>List your property at no cost by arranging a free photoshoot!</h2>
-            <p>Publish your property on our platform and stand out from the competition.</p>
+            <h3>List your Property on Kaari</h3>
+            <h2>Free Photoshoot!</h2>
+            <p>Indeed, there's no cost to list your apartment on Kaari. We collect a commission only after your flat is rented. <b>Plus, we provide a free photoshoot and ensure your property is verified, all on the house.</b></p>
+            <div className="buttons-container">
             <button 
               className="photoshoot-button"
               onClick={() => navigate('/photoshoot-booking')}
             >
-              Book A Free Photoshoot
+                Book a Photoshoot
+              </button>
+              <button 
+                className="read-more-button"
+                onClick={() => navigate('/about-photoshoots')}
+              >
+                Read More
             </button>
           </div>
-          <div className="list-property-image">
-            <img src={PropertyImage} alt="Property Listing" />
           </div>
         </section>
 
