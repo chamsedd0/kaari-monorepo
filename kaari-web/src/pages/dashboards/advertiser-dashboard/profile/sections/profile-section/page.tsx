@@ -121,13 +121,12 @@ const ProfileSection: React.FC = () => {
                     value={dateOfBirth}
                     onChange={(value) => setDateOfBirth(value)}
                 /> 
-                <div className="profile-inbut-group">
-                    <div className="profile-inbut-label">Government ID</div>
-                    <UploadFieldVariant 
-                        label="Passport or Front of ID" 
-                        onFileSelect={(file) => setIdFront(file)}
-                    />
-                </div>
+                <UploadFieldVariant 
+                    label="Passport or Front of ID" 
+                    hlabel="Government ID"
+                    onFileSelect={(file) => setIdFront(file)}
+                    showIllustration={true}
+                />
                 <UploadFieldVariant 
                     label="Back of ID" 
                     onFileSelect={(file) => setIdBack(file)}

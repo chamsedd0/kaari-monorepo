@@ -17,7 +17,7 @@ export const NavigationPannelDashboardStyle = styled.div`
     align-items: start;
     justify-content: start;
     padding: 60px 20px;
-    padding-right: 55px;
+    padding-right: 50px;
 
     .nav-link {
         display: flex;

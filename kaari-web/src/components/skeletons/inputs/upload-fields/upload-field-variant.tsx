@@ -1,67 +1,77 @@
-import React, { useState, useRef, ChangeEvent } from 'react';
-import { UploadFieldContainer, UploadFieldTitle, UploadFieldBaseModel } from '../../../styles/inputs/upload-fields/upload-field-base-model-style';
-import { FaPaperclip } from 'react-icons/fa';
+import React from 'react';
+import UploadFieldBaseModel from '../../../styles/inputs/upload-fields/upload-field-base-model-style';
+import icon from '../../icons/Icon-Attach.svg';
+import generativeObject from '../../icons/Generative-Object.svg';
+import styled from 'styled-components';
+import { Theme } from '../../../../theme/theme';
 
 interface UploadFieldProps {
-  title?: string;
-  placeholder?: string;
-  accept?: string;
-  multiple?: boolean;
-  onChange?: (files: FileList | null) => void;
-  purpleIcon?: boolean;
+  label?: string;
+  hlabel?: string;
+  onClick?: () => void;
+  onFileSelect?: (file: File) => void;
+  showIllustration?: boolean;
 }
 
+const UploadFieldContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  
+  .head-label {
+    margin-bottom: 12px;
+    font: ${Theme.typography.fonts.mediumM};
+    color: ${Theme.colors.black};
+  }
+
+  .illustration {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+    
+    img {
+      width: 120px;
+      height: auto;
+    }
+  }
+`;
+
 const UploadFieldModel: React.FC<UploadFieldProps> = ({ 
-  title,
-  placeholder = "Select file",
-  accept = "*/*",
-  multiple = false,
-  onChange,
-  purpleIcon = false
+  label, 
+  hlabel, 
+  onClick, 
+  onFileSelect,
+  showIllustration = false
 }) => {
-  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0] && onFileSelect) {
+      onFileSelect(e.target.files[0]);
+    }
+  };
 
   const handleClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    setSelectedFiles(files);
-    if (onChange) {
-      onChange(files);
-    }
-  };
-
-  const getFileText = () => {
-    if (!selectedFiles || selectedFiles.length === 0) {
-      return placeholder;
-    }
-    
-    return selectedFiles[0].name;
+    document.getElementById('file-upload')?.click();
+    if (onClick) onClick();
   };
 
   return (
     <UploadFieldContainer>
-      {title && <UploadFieldTitle>{title}</UploadFieldTitle>}
-      <UploadFieldBaseModel 
-        onClick={handleClick}
-        className={`${selectedFiles && selectedFiles.length > 0 ? 'has-files' : ''} ${purpleIcon ? 'purple-icon' : ''}`}
-      >
-        <span className="file-text">{getFileText()}</span>
-        <FaPaperclip />
+      {hlabel && <div className="head-label">{hlabel}</div>}
+      {showIllustration && (
+        <div className="illustration">
+          <img src={generativeObject} alt="Upload illustration" />
+        </div>
+      )}
+      <UploadFieldBaseModel onClick={handleClick}>
+        <span>{label}</span>
+        <img src={icon} alt="upload" />
+        <input 
+          type="file" 
+          id="file-upload" 
+          style={{ display: 'none' }} 
+          onChange={handleFileChange}
+        />
       </UploadFieldBaseModel>
-      <input
-        type="file"
-        ref={fileInputRef}
-        style={{ display: 'none' }}
-        onChange={handleFileChange}
-        accept={accept}
-        multiple={multiple}
-      />
     </UploadFieldContainer>
   );
 };

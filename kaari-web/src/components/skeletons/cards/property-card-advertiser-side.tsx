@@ -60,8 +60,12 @@ const PropertyCardAdvertiserSide: React.FC<PropertyCardProps> = ({
         )}
 
         <div className="control">
-            <BpurpleButtonLB40 text="Unlist" />
-            <PurpleButtonLB40 text="Ask for Edit" />
+            <div className="button">
+              <BpurpleButtonLB40 text="Unlist" />
+            </div>
+            <div className="button">
+              <PurpleButtonLB40 text="Ask for Edit" />
+            </div>
         </div>
     </CardBaseModelStyle2>
   );
