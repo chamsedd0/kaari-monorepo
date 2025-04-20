@@ -376,14 +376,32 @@ export const UsersLandingStyle = styled.div`
         }
     }
 
+    .what-is-kaari-container {
+        max-width: 1400px;
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
     /* What is Kaari Section - Slider */
     .what-is-kaari {
         width: calc(100% - 40px);
         max-width: 1400px;
         margin: 60px auto;
         position: relative;
-        overflow: hidden;
         border-radius: 16px;
+
+        .kaari-logo {
+            position: absolute;
+            top: 32px;
+            left: 32px;
+            z-index: 10;
+            img {
+                height: 48px;
+                width: auto;
+                filter: brightness(0) invert(1);
+            }
+        }
 
         
         
@@ -391,61 +409,70 @@ export const UsersLandingStyle = styled.div`
             width: 100%;
             height: 100%;
             position: relative;
-            overflow: visible;
+            max-width: 1400px;
             overflow-x: hidden;
             border-radius: 16px;
+            overflow: visible;
+            background: linear-gradient(to right, #8F27CE, #7624C3);
+            
+
         }
         
         .slider-track {
             display: flex;
-            transition: transform 0.5s ease;
+            transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
             overflow: visible;
         }
+        
         
         .slide {
             width: 100%;
             flex-shrink: 0;
-            padding: 140px 120px;
-        background-color: ${Theme.colors.secondary};
+            padding: 0px 125px;
+            min-height: 520px;
             border-radius: 16px;
             margin-bottom: 20px;
             position: relative;
             overflow: visible;
+            margin-right: 20px;
+            opacity: 0;
+            transition: opacity 0.8s ease, transform 0.8s ease;
             
+            &.active {
+                opacity: 1;
+                transform: scale(1);
+                transition-delay: 0.1s;
+            }
             
-            .kaari-logo {
-
-                position: absolute;
-                top: 32px;
-                left: 32px;
-                
-                img {
-                    height: 48px;
-                    width: auto;
-                    filter: brightness(0) invert(1);
-                }
+            &.next, &.prev {
+                opacity: 0;
+                transform: scale(0.95);
             }
             
             .slide-content {
-        display: flex;
+                display: flex;
                 justify-content: space-between;
-        align-items: center;
-        position: relative;
-                z-index: 2;
+                align-items: center;
+                position: relative;
+                overflow: visible;
+                z-index: 5;
+                width: 100%;
+                height: 100%;
+                
                 
                 .text-content {
                     flex: 1;
                     max-width: 50%;
                     
                     h2 {
-                        font: ${Theme.typography.fonts.h2};
+                        font: ${Theme.typography.fonts.h1};
                         color: ${Theme.colors.white};
                         margin-bottom: 15px;
-                        font-size: 42px;
+                        font-size: 50px;
                     }
                     
                     p {
-                        font: ${Theme.typography.fonts.mediumM};
+                        font: ${Theme.typography.fonts.extraLargeM};
                         color: rgba(255, 255, 255, 0.9);
                         margin-bottom: 30px;
                         line-height: 1.5;
@@ -453,12 +480,7 @@ export const UsersLandingStyle = styled.div`
                         max-width: 400px;
                     }
                     
-                    .slide-question {
-                        font: ${Theme.typography.fonts.mediumB};
-                        color: ${Theme.colors.white};
-                        margin-bottom: 20px;
-                        font-size: 16px;
-                    }
+
                     
                     .buttons-container {
                         display: flex;
@@ -470,8 +492,7 @@ export const UsersLandingStyle = styled.div`
                         display: inline-block;
                         padding: 12px 24px;
                         border-radius: 30px;
-                        font-weight: 500;
-                        font-size: 14px;
+                        font: ${Theme.typography.fonts.largeB};
                         border: none;
                         cursor: pointer;
                         transition: all 0.3s ease;
@@ -492,7 +513,7 @@ export const UsersLandingStyle = styled.div`
                     .secondary-button {
                         background-color: transparent;
                         color: ${Theme.colors.white};
-                        border: 1px solid ${Theme.colors.white};
+                        border: 3px solid ${Theme.colors.white};
                         
                         &:hover {
                             background-color: rgba(255, 255, 255, 0.1);
@@ -513,9 +534,53 @@ export const UsersLandingStyle = styled.div`
                         height: auto;
                         object-fit: cover;
                         position: absolute;
-                        right: 60px;
-                        bottom: -180px;
+                        right: 0px;
+                        bottom: 70px;
+                        transform: translateX(10%);
                     }
+                }
+            }
+        }
+
+        .welcome-slide{
+            .image-content {
+                img {
+                    bottom: 50px !important;
+                    transform: translateX(0%) !important;
+                    
+                }
+            }
+        }
+
+        .search-slide {
+            .image-content {
+                img {
+                    bottom: 30px !important;
+                    
+                }
+            }
+        }
+
+        .enjoy-slide {
+            .image-content {
+                img {
+                    bottom: 30px !important;
+                }
+            }
+        }
+
+        .request-slide {
+            .image-content {
+                img {
+                    bottom: -65px !important;
+                }
+            }
+        }
+
+        .payment-slide {
+            .image-content {
+                img {
+                    transform: translateX(0%) !important;
                 }
             }
         }
@@ -1300,8 +1365,7 @@ export const UsersLandingStyle = styled.div`
                 border-radius: 30px;
                 background-color: ${Theme.colors.white};
                 color: ${Theme.colors.secondary};
-                font-weight: 600;
-                font-size: 16px;
+                font: ${Theme.typography.fonts.largeB};
                 border: none;
                 cursor: pointer;
                 transition: all 0.3s ease;
@@ -1320,9 +1384,8 @@ export const UsersLandingStyle = styled.div`
                 border-radius: 30px;
                 background-color: transparent;
                 color: ${Theme.colors.white};
-                font-weight: 600;
-                font-size: 16px;
-                border: 1px solid ${Theme.colors.white};
+                font: ${Theme.typography.fonts.largeB};
+                border: 3px solid ${Theme.colors.white};
                 cursor: pointer;
                 transition: all 0.3s ease;
                 min-width: 180px;

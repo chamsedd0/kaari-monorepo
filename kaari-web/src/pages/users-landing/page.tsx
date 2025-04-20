@@ -52,7 +52,22 @@ const UsersLanding: React.FC = () => {
     
     // Move the slider track
     if (sliderTrackRef.current) {
-      sliderTrackRef.current.style.transform = `translateX(-${slideIndex * 100}%)`;
+      sliderTrackRef.current.style.transform = `translateX(-${slideIndex * 100}%) translateX(-${slideIndex * 20}px)`;
+      
+      // Add classes for fade effect
+      const slides = sliderTrackRef.current.children;
+      Array.from(slides).forEach((slide, index) => {
+        const slideElement = slide as HTMLElement;
+        slideElement.classList.remove('active', 'next', 'prev');
+        
+        if (index === slideIndex) {
+          slideElement.classList.add('active');
+        } else if (index === (slideIndex + 1) % totalSlides) {
+          slideElement.classList.add('next');
+        } else if (index === (slideIndex - 1 + totalSlides) % totalSlides) {
+          slideElement.classList.add('prev');
+        }
+      });
     }
   };
   
@@ -60,10 +75,27 @@ const UsersLanding: React.FC = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       goToSlide(currentSlide + 1);
-    }, 5000);
+    }, 8000);
     
     return () => clearInterval(interval);
   }, [currentSlide]);
+
+  // Initialize slide classes on first render
+  useEffect(() => {
+    if (sliderTrackRef.current) {
+      const slides = sliderTrackRef.current.children;
+      Array.from(slides).forEach((slide, index) => {
+        const slideElement = slide as HTMLElement;
+        if (index === 0) {
+          slideElement.classList.add('active');
+        } else if (index === 1) {
+          slideElement.classList.add('next');
+        } else if (index === totalSlides - 1) {
+          slideElement.classList.add('prev');
+        }
+      });
+    }
+  }, []);
 
   // Mock data for property listings
   const topProperties = [
@@ -188,157 +220,156 @@ const UsersLanding: React.FC = () => {
         </section>
 
         {/* What is Kaari Section - Slider */}
-        <section className="what-is-kaari">
-          <div className="slider-container">
-            <div className="slider-track" ref={sliderTrackRef}>
-              {/* Slide 1 - Welcome */}
-              <div className="slide welcome-slide">
-                <div className="kaari-logo">
-                  <img src={KaariLogo} alt="Kaari" />
-                </div>
-                <div className="slide-content">
-                  <div className="text-content">
-                    <h2>Welcome to Kaari!</h2>
-                    <p>Your top assistant in finding the perfect place is here!</p>
-                    <div className="slide-question">Which one of these are you?</div>
-                    <div className="buttons-container">
-                      <button className="primary-button" onClick={() => navigate('/tenant-signup')}>
-                        I am a Tenant
-                      </button>
-                      <button className="secondary-button" onClick={() => navigate('/advertiser-signup')}>
-                        I am an Advertiser
-                      </button>
-                    </div>
+        <div className="what-is-kaari-container">
+          <section className="what-is-kaari">
+            <div className="kaari-logo">
+                    <img src={KaariLogo} alt="Kaari" />
                   </div>
-                  <div className="image-content">
-                    <img src={DoorSvg} alt="Welcome to Kaari" />
-                  </div>
-                </div>
-              </div>
+            <div className="slider-container">
               
-              {/* Slide 2 - Search */}
-              <div className="slide search-slide">
-                <div className="kaari-logo">
-                  <img src={KaariLogo} alt="Kaari" />
-                </div>
-                <div className="slide-content">
-                  <div className="text-content">
-                    <h2>Search for a place</h2>
-                    <p>Find your next home with ease using our advanced search features</p>
-                    <div className="buttons-container">
-                      <button className="primary-button" onClick={() => navigate('/properties')}>
-                        Browse Properties
-                      </button>
-                      <button className="secondary-button" onClick={() => navigate('/how-it-works')}>
-                        How It Works
-                      </button>
+              <div className="slider-track" ref={sliderTrackRef}>
+                  
+                {/* Slide 1 - Welcome */}
+                <div className="slide welcome-slide">
+
+                  <div className="slide-content">
+                    <div className="text-content">
+                      <h2>Welcome to Kaari!</h2>
+                      <p>Your top assistant in finding the perfect place is here! 
+                      Which one of these are you?</p>
+                      <div className="buttons-container">
+                        <button className="primary-button" onClick={() => navigate('/tenant-signup')}>
+                          I am a Tenant
+                        </button>
+                        <button className="secondary-button" onClick={() => navigate('/advertiser-signup')}>
+                          I am an Advertiser
+                        </button>
+                      </div>
+                    </div>
+                    <div className="image-content">
+                      <img src={DoorSvg} alt="Welcome to Kaari" />
                     </div>
                   </div>
-                  <div className="image-content">
-                    <img src={GirlGlobeSvg} alt="Search for a place" />
-                  </div>
                 </div>
-              </div>
-              
-              {/* Slide 3 - Request */}
-              <div className="slide request-slide">
-                <div className="kaari-logo">
-                  <img src={KaariLogo} alt="Kaari" />
-                </div>
-                <div className="slide-content">
-                  <div className="text-content">
-                    <h2>Send your request</h2>
-                    <p>Connect directly with property owners and get responses fast</p>
-                    <div className="buttons-container">
-                      <button className="primary-button" onClick={() => navigate('/properties')}>
-                        Find Properties
-                      </button>
-                      <button className="secondary-button" onClick={() => navigate('/contact')}>
-                        Contact Us
-                      </button>
+                
+                {/* Slide 2 - Search */}
+                <div className="slide search-slide">
+
+                  <div className="slide-content">
+                    <div className="text-content">
+                      <h2>Search for a place</h2>
+                      <p>Search for the best place you can and get prepared 
+                      to get it first! Are you ready for the next step?</p>
+                      <div className="buttons-container">
+                        <button className="primary-button" onClick={() => navigate('/properties')}>
+                          Browse Properties
+                        </button>
+                        <button className="secondary-button" onClick={() => navigate('/how-it-works')}>
+                          How It Works
+                        </button>
+                      </div>
+                    </div>
+                    <div className="image-content">
+                      <img src={GirlGlobeSvg} alt="Search for a place" />
                     </div>
                   </div>
-                  <div className="image-content">
-                    <img src={GuyLettersSvg} alt="Send your request" />
-                  </div>
                 </div>
-              </div>
-              
-              {/* Slide 4 - Enjoy */}
-              <div className="slide enjoy-slide">
-                <div className="kaari-logo">
-                  <img src={KaariLogo} alt="Kaari" />
-                </div>
-                <div className="slide-content">
-                  <div className="text-content">
-                    <h2>Enjoy your place!</h2>
-                    <p>Move in with confidence. Your satisfaction is our priority</p>
-                    <div className="buttons-container">
-                      <button className="primary-button" onClick={() => navigate('/properties')}>
-                        Start Searching
-                      </button>
-                      <button className="secondary-button" onClick={() => navigate('/testimonials')}>
-                        Read Testimonials
-                      </button>
+                
+                {/* Slide 3 - Request */}
+                <div className="slide request-slide">
+
+                  <div className="slide-content">
+                    <div className="text-content">
+                      <h2>Send your request</h2>
+                      <p>Already found the place? Amazing! Well, let’s get it now! 
+                      Just fill out your information  and we are good to go!</p>
+                      <div className="buttons-container">
+                        <button className="primary-button" onClick={() => navigate('/properties')}>
+                          Find Properties
+                        </button>
+                        <button className="secondary-button" onClick={() => navigate('/contact')}>
+                          Contact Us
+                        </button>
+                      </div>
+                    </div>
+                    <div className="image-content">
+                      <img src={GuyLettersSvg} alt="Send your request" />
                     </div>
                   </div>
-                  <div className="image-content">
-                    <img src={GirlHouseSvg} alt="Enjoy your place" />
-                  </div>
                 </div>
-              </div>
-              
-              {/* Slide 5 - Payment Protection */}
-              <div className="slide payment-slide">
-                <div className="kaari-logo">
-                  <img src={KaariLogo} alt="Kaari" />
-                </div>
-                <div className="slide-content">
-                  <div className="text-content">
-                    <h2>Your payment is protected</h2>
-                    <p>We ensure your payment is secure with our 24-hour move-in protection guarantee</p>
-                    <div className="buttons-container">
-                      <button className="primary-button" onClick={() => navigate('/protection')}>
-                        Learn More
-                      </button>
-                      <button className="secondary-button" onClick={() => navigate('/faqs')}>
-                        View FAQs
-                      </button>
+                
+                {/* Slide 4 - Enjoy */}
+                <div className="slide enjoy-slide">
+
+                  <div className="slide-content">
+                    <div className="text-content">
+                      <h2>Enjoy your place!</h2>
+                      <p>Congratulations on your new place! Only thing to do is confirm your payment and you can get your keys!</p>
+                      <div className="buttons-container">
+                        <button className="primary-button" onClick={() => navigate('/properties')}>
+                          Start Searching
+                        </button>
+                        <button className="secondary-button" onClick={() => navigate('/testimonials')}>
+                          Read Testimonials
+                        </button>
+                      </div>
+                    </div>
+                    <div className="image-content">
+                      <img src={GirlHouseSvg} alt="Enjoy your place" />
                     </div>
                   </div>
-                  <div className="image-content">
-                    <img src={MoneyShieldSvg} alt="Payment Protection" />
+                </div>
+                
+                {/* Slide 5 - Payment Protection */}
+                <div className="slide payment-slide">
+
+                  <div className="slide-content">
+                    <div className="text-content">
+                      <h2>Your payment is protected</h2>
+                      <p>Your payment is secure with us. It will only be processed 24 hours after your move-in. Enjoy your new place without worrying about your money!</p>
+                      <div className="buttons-container">
+                        <button className="primary-button" onClick={() => navigate('/protection')}>
+                          Learn More
+                        </button>
+                        <button className="secondary-button" onClick={() => navigate('/faqs')}>
+                          View FAQs
+                        </button>
+                      </div>
+                    </div>
+                    <div className="image-content">
+                      <img src={MoneyShieldSvg} alt="Payment Protection" />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          
-          {/* Slider Controls */}
-          <div className="slider-controls">
-            {Array.from({ length: totalSlides }).map((_, index) => (
-              <div
-                key={index}
-                className={`slider-dot ${index === currentSlide ? 'active' : ''}`}
-                onClick={() => goToSlide(index)}
-              />
-            ))}
-          </div>
-          
-          {/* Slider Arrows */}
-          <div className="slider-arrows">
-            <div className="slider-arrow prev" onClick={() => goToSlide(currentSlide - 1)}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6"></polyline>
-              </svg>
+            
+            {/* Slider Controls */}
+            <div className="slider-controls">
+              {Array.from({ length: totalSlides }).map((_, index) => (
+                <div
+                  key={index}
+                  className={`slider-dot ${index === currentSlide ? 'active' : ''}`}
+                  onClick={() => goToSlide(index)}
+                />
+              ))}
             </div>
-            <div className="slider-arrow next" onClick={() => goToSlide(currentSlide + 1)}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9 18 15 12 9 6"></polyline>
-              </svg>
+            
+            {/* Slider Arrows */}
+            <div className="slider-arrows">
+              <div className="slider-arrow prev" onClick={() => goToSlide(currentSlide - 1)}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </div>
+              <div className="slider-arrow next" onClick={() => goToSlide(currentSlide + 1)}>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
         {/* Top Picks Section */}
         <section className="top-picks">
@@ -356,6 +387,20 @@ const UsersLanding: React.FC = () => {
                   description={property.description}
                   isRecommended={property.isRecommended}
                 />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* City Selection Section */}
+        <section className="city-selection">
+          <h2>Where will your next stay be?</h2>
+          <div className="view-all">Show all destinations</div>
+          <div className="city-grid">
+            {cities.map((city, index) => (
+              <div key={index} className="city-card" onClick={() => navigate(`/properties?city=${city.name}`)}>
+                <img src={city.image} alt={city.name} />
+                <div className="city-label">{city.name}</div>
               </div>
             ))}
           </div>
@@ -425,19 +470,7 @@ const UsersLanding: React.FC = () => {
           </div>
         </section>
 
-        {/* City Selection Section */}
-        <section className="city-selection">
-          <h2>Where will your next stay be?</h2>
-          <div className="view-all">Show all destinations</div>
-          <div className="city-grid">
-            {cities.map((city, index) => (
-              <div key={index} className="city-card" onClick={() => navigate(`/properties?city=${city.name}`)}>
-                <img src={city.image} alt={city.name} />
-                <div className="city-label">{city.name}</div>
-              </div>
-            ))}
-          </div>
-        </section>
+        
 
         {/* App Download Section */}
         <section className="app-download">
