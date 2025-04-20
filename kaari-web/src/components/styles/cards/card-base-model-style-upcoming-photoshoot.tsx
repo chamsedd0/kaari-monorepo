@@ -78,6 +78,13 @@ export const CardBaseModelStyleUpcomingPhotoshoot = styled.div`
                     color: ${Theme.colors.gray2};
                 }
 
+                .description2 {
+                    font: ${Theme.typography.fonts.text16};
+                    color: ${Theme.colors.black};
+                    max-width: 352px;
+                    line-height: 1.7;
+                }
+
                 
 
             }

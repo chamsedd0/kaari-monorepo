@@ -20,7 +20,7 @@ const UploadFieldContainer = styled.div`
   
   .head-label {
     margin-bottom: 12px;
-    font: ${Theme.typography.fonts.mediumM};
+    font: ${Theme.typography.fonts.largeB};
     color: ${Theme.colors.black};
   }
 

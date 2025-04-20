@@ -96,7 +96,7 @@ export const PayoutMethodStyle = styled.div`
         }
 
         .add-payment-method-button {
-            max-width: 188px;
+            max-width: 200px;
         }
         
     }

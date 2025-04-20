@@ -137,8 +137,8 @@ const ProfilePage: React.FC = () => {
                         onChange={(e) => setPhoneNumber(e.target.value)}
                     />
                     <SelectFieldDatePicker 
-                        value={dateOfBirth}
-                        onChange={(value) => setDateOfBirth(value)}
+                        label="Date of Birth"
+                        onChange={(value) => setDateOfBirth(`${value.year}-${value.month}-${value.day}`)}
                     /> 
                     <div className="profile-inbut-group">
                         <div className="profile-inbut-label">Government ID</div>
@@ -154,7 +154,7 @@ const ProfilePage: React.FC = () => {
                     <div className="profile-inbut-group">
                         <div className="profile-inbut-label">Gender</div>
                         <GenderCheckBox 
-                            selectedValue={gender}
+                            defaultValue={gender}
                             onChange={(value) => setGender(value)}
                         />
                     </div>
@@ -164,8 +164,9 @@ const ProfilePage: React.FC = () => {
                     </div>
                 </div>
                 
-                <div className="profile-inbut-label">Nationality</div>
+                
                 <SelectFieldBaseModel 
+                    label="Nationality"
                     options={['English', 'French', 'Spanish', 'German', 'Italian', 'Portuguese', 'Russian', 'Arabic', 'Chinese', 'Japanese', 'Korean', 'Vietnamese', 'Other']} 
                     value={nationality}
                     onChange={(value) => setNationality(value)}
@@ -199,14 +200,13 @@ const ProfilePage: React.FC = () => {
             </div>
             <div className="right">
                 <VerifyEmailCardComponent 
-                    verified={user?.emailVerified || false}
-                    email={user?.email || ''}
+                    title="Verify Email"
+                    infoText="By taking this straightforward step, you will significantly enhance your chances of having your reservations accepted, ensuring a smoother experience for your upcoming plans."
+                    verifyEmailText={user?.emailVerified ? "Your email is verified" : "Please verify your email"}
                 />
                 <GoogleCard 
                     title="Connect to Google" 
                     description="Connect your Google account to your Kaari account to easily sign in and access your reservations." 
-                    connected={user?.googleConnected || false}
-                    onConnect={handleConnectGoogle}
                 />
                 <NeedHelpCardComponent 
                     title="Need Help?" 

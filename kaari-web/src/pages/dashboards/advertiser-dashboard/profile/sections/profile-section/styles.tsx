@@ -5,7 +5,7 @@ export const ProfileSectionStyle = styled.div`
     display: flex;
     flex-direction: column;
     align-items: start;
-    gap: 32px;
+    gap: 40px;
     width: 100%;
 
     .section-title {
@@ -16,7 +16,6 @@ export const ProfileSectionStyle = styled.div`
     .profile-image-container {
         display: flex;
         align-items: center;
-        
         gap: 16px;
 
         .profile-image {
@@ -47,18 +46,40 @@ export const ProfileSectionStyle = styled.div`
     .profile-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 24px;
         width: 100%;
     }
+
+    
 
     .profile-inbut-group {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        justify-content: center;
+        align-items: start;
+        
+        
+        
+        
 
         .profile-inbut-label {
-            font: ${Theme.typography.fonts.mediumB};
+            font: ${Theme.typography.fonts.largeB};
             color: ${Theme.colors.black};
+           margin-bottom: 32px;
+            
+        }
+        .profile-inbut-label2 {
+            font: ${Theme.typography.fonts.largeB};
+            color: ${Theme.colors.black};
+            margin-bottom: 27px;
+            
+        }
+
+        .text-button {
+            font: ${Theme.typography.fonts.mediumB};
+            color: ${Theme.colors.secondary};
+            cursor: pointer;
+            transition: all 0.3s ease;
+            
         }
     }
 

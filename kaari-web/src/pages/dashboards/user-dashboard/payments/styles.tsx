@@ -180,7 +180,7 @@ export const PaymentsPageStyle = styled.div`
                justify-content: start;
                
                button {
-                max-width: 188px;
+                max-width: 200px;
                }
             }
         }

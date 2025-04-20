@@ -118,14 +118,18 @@ const ProfileSection: React.FC = () => {
                     onChange={(e) => setPhoneNumber(e.target.value)}
                 />
                 <SelectFieldDatePicker 
-                    value={dateOfBirth}
-                    onChange={(value) => setDateOfBirth(value)}
+                    onChange={(date) => {
+                        // Convert date object to string format (YYYY-MM-DD)
+                        if (date.year && date.month && date.day) {
+                            setDateOfBirth(`${date.year}-${date.month}-${date.day}`);
+                        }
+                    }}
                 /> 
                 <UploadFieldVariant 
                     label="Passport or Front of ID" 
                     hlabel="Government ID"
                     onFileSelect={(file) => setIdFront(file)}
-                    showIllustration={true}
+                    
                 />
                 <UploadFieldVariant 
                     label="Back of ID" 
@@ -134,23 +138,23 @@ const ProfileSection: React.FC = () => {
                 <div className="profile-inbut-group">
                     <div className="profile-inbut-label">Gender</div>
                     <GenderCheckBox 
-                        selectedValue={gender}
+                        defaultValue={gender}
                         onChange={(value) => setGender(value)}
                     />
                 </div>
                 <div className="profile-inbut-group">
-                    <div className="profile-inbut-label">Languages</div>
+                    <div className="profile-inbut-label2">Languages</div>
                     <div className="text-button">Add A Language+</div>
                 </div>
             </div>
-            <div className="profile-inbut-group">
-                <div className="profile-inbut-label">Nationality</div>
+           
                 <SelectFieldBaseModel 
+                    label="Nationality"
                     options={['English', 'French', 'Spanish', 'German', 'Italian', 'Portuguese', 'Russian', 'Arabic', 'Chinese', 'Japanese', 'Korean', 'Vietnamese', 'Other']} 
                     value={nationality}
                     onChange={(value) => setNationality(value)}
                 />  
-            </div>
+           
             <TextareaVariant 
                 title="About Me" 
                 value={aboutMe}

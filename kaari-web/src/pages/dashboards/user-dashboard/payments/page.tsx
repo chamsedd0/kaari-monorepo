@@ -43,7 +43,7 @@ const PaymentsPage: React.FC = () => {
                                 
                             </div>
                             <div className="advanced-filtering-button">
-                                <PurpleButtonMB48 text="Advanced filtering" />
+                                <PurpleButtonMB48 text="Add payment method" />
                             </div>
                         </>
                     )}

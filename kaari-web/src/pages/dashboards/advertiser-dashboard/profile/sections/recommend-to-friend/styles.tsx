@@ -20,6 +20,7 @@ export const RecommendToFriendStyle = styled.div`
     .info-text{
         font: ${Theme.typography.fonts.text16};
         color: ${Theme.colors.gray2};
+        max-width: 353px;
     }
 
     .input-container{

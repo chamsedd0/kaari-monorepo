@@ -68,7 +68,6 @@ export const ReviewsPageStyle = styled.div`
                 margin-bottom: 2px;
 
                 b {
-                    margin-top: 4px;
                     margin-right: 1.5px;
                 }
             }

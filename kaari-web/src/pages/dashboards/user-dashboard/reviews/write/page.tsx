@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { WriteReviewPageStyle } from './styles';
-import { useStore } from '../../../../../backend/store';
 import { createReview } from '../../../../../backend/server-actions/ReviewServerActions';
 import { getDocumentById } from '../../../../../backend/firebase/firestore';
 import { Property, User } from '../../../../../backend/entities';
@@ -16,7 +15,6 @@ const WriteReviewPage: React.FC = () => {
         return urlParams.get('propertyId');
     };
     
-    const { user } = useStore();
     const propertyId = getPropertyIdFromUrl();
     
     const [loading, setLoading] = useState(true);
@@ -101,7 +99,7 @@ const WriteReviewPage: React.FC = () => {
         }
         
         // Check if all ratings are provided
-        const missingRatings = Object.entries(ratings).some(([_, value]) => value === 0);
+        const missingRatings = Object.entries(ratings).some(([, value]) => value === 0);
         if (missingRatings) {
             setError('Please provide all ratings.');
             return;

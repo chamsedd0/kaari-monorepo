@@ -13,7 +13,7 @@ const TextAreaBaseModel1 = styled.div`
     height 0.01s ease;
 
   span {
-    font: ${Theme.typography.fonts.extraLargeB};
+    font: ${Theme.typography.fonts.largeB};
     color: ${Theme.colors.black};
   }
 

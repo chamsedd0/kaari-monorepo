@@ -41,6 +41,7 @@ export const CardBaseModelStylePhotoshoot = styled.div`
         border-radius: ${Theme.borders.radius.lg} ${Theme.borders.radius.lg} 0 0;
         transition: transform 0.5s ease;
     }
+    
 
     .text {
         display: flex;

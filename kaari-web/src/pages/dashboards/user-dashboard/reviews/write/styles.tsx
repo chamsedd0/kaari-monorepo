@@ -18,8 +18,8 @@ export const WriteReviewPageStyle = styled.div`
             }
             
             .property-title {
-                font: ${Theme.typography.fonts.h4};
-                color: ${Theme.colors.gray1};
+                font: ${Theme.typography.fonts.h3};
+                color: ${Theme.colors.gray};
                 margin-bottom: 16px;
             }
         }
@@ -62,7 +62,7 @@ export const WriteReviewPageStyle = styled.div`
                 
                 label {
                     display: block;
-                    font: ${Theme.typography.fonts.text16B};
+                    font: ${Theme.typography.fonts.text16};
                     color: ${Theme.colors.black};
                     margin-bottom: 8px;
                 }
@@ -70,7 +70,7 @@ export const WriteReviewPageStyle = styled.div`
                 .text-input {
                     width: 100%;
                     padding: 12px 16px;
-                    border: 1px solid ${Theme.colors.gray5};
+                    border: 1px solid ${Theme.colors.gray};
                     border-radius: ${Theme.borders.radius.sm};
                     font: ${Theme.typography.fonts.text16};
                     color: ${Theme.colors.black};
@@ -84,7 +84,7 @@ export const WriteReviewPageStyle = styled.div`
                 .text-area {
                     width: 100%;
                     padding: 12px 16px;
-                    border: 1px solid ${Theme.colors.gray5};
+                    border: 1px solid ${Theme.colors.gray};
                     border-radius: ${Theme.borders.radius.sm};
                     font: ${Theme.typography.fonts.text16};
                     color: ${Theme.colors.black};
@@ -100,7 +100,7 @@ export const WriteReviewPageStyle = styled.div`
             
             .ratings-section {
                 h3 {
-                    font: ${Theme.typography.fonts.h5B};
+                    font: ${Theme.typography.fonts.h3};
                     color: ${Theme.colors.black};
                     margin-bottom: 16px;
                 }
@@ -120,7 +120,7 @@ export const WriteReviewPageStyle = styled.div`
             
             .form-error {
                 padding: 12px 16px;
-                background: ${Theme.colors.errorLight};
+                background: ${Theme.colors.error};
                 color: ${Theme.colors.error};
                 border-radius: ${Theme.borders.radius.sm};
                 font: ${Theme.typography.fonts.text14};
@@ -155,20 +155,20 @@ export const WriteReviewPageStyle = styled.div`
             
             .property-info {
                 h3 {
-                    font: ${Theme.typography.fonts.h5B};
+                    font: ${Theme.typography.fonts.h3};
                     color: ${Theme.colors.black};
                     margin-bottom: 8px;
                 }
                 
                 p {
                     font: ${Theme.typography.fonts.text14};
-                    color: ${Theme.colors.gray2};
+                    color: ${Theme.colors.gray};
                     margin-bottom: 12px;
                 }
                 
                 .advertiser-info {
                     font: ${Theme.typography.fonts.text14};
-                    color: ${Theme.colors.gray2};
+                    color: ${Theme.colors.gray};
                     
                     strong {
                         color: ${Theme.colors.primary};
