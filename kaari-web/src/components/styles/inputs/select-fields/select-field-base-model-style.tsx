@@ -56,7 +56,7 @@ export const Option = styled.div`
 `;
 
 export const Label = styled.div`
-  margin-bottom: 8px;
+  margin-bottom: 16px;
   font: ${Theme.typography.fonts.largeB};
   color: ${Theme.colors.black};
 `;

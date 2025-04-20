@@ -12,6 +12,7 @@ import {
   Confirmation, 
   Success 
 } from './sections';
+import { CheckoutProvider } from '../../../contexts/checkout-process';
 
 // Define the possible status types for the Success component
 type SuccessStatusType = 'success' | 'pending' | 'rejected' | 'payment_failed' | 'refund_processing';
@@ -54,7 +55,7 @@ const CheckoutProcessContainer: React.FC<CheckoutProcessContainerProps> = ({
       case 1:
         return <RentalApplication onContinue={handleNext} />;
       case 2:
-        return <PaymentMethod onContinue={handleNext} onBack={handleBack} />;
+        return <PaymentMethod />;
       case 3:
         return <Confirmation onContinue={handleNext} onBack={handleBack} />;
       case 4:
@@ -73,24 +74,26 @@ const CheckoutProcessContainer: React.FC<CheckoutProcessContainerProps> = ({
           <CheckoutProgressBar currentStep={currentStep === 4 ? 3 : currentStep} />
         </div>
         
-        <div className="checkout-process-content">
-          {renderCurrentStep()}
-          
-          <div className="checkout-process-property-card">
-            <CheckoutCard
-              image={PropertyImage}
-              title="Modern Apartment in Agadir"
-              moveInDate="05.09.2024"
-              lengthOfStay="1 month"
-              profileImage={ProfileImage}
-              profileName="Leonardo V."
-              monthlyRent="2000€"
-              securityDeposit="0€"
-              serviceFee="400€"
-              total="2400€"
-            />
+        <CheckoutProvider onNavigate={(step) => setCurrentStep(step)}>
+          <div className="checkout-process-content">
+            {renderCurrentStep()}
+            
+            <div className="checkout-process-property-card">
+              <CheckoutCard
+                image={PropertyImage}
+                title="Modern Apartment in Agadir"
+                moveInDate="05.09.2024"
+                lengthOfStay="1 month"
+                profileImage={ProfileImage}
+                profileName="Leonardo V."
+                monthlyRent="2000€"
+                securityDeposit="0€"
+                serviceFee="400€"
+                total="2400€"
+              />
+            </div>
           </div>
-        </div>
+        </CheckoutProvider>
         
         {/* Demo controls for changing status - REMOVE IN PRODUCTION */}
         {process.env.NODE_ENV === 'development' && (

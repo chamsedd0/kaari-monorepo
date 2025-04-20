@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import InputBaseModel from '../../inputs/input-fields/input-variant';
 import SelectFieldDatePicker from '../../inputs/select-fields/select-field-date-picker';
-import UploadFieldModel from '../../inputs/upload-fields/upload-field-variant';
 import SelectFieldBaseModelVariant1 from '../../inputs/select-fields/select-field-base-model';
 import TextAreaBaseModel from '../../inputs/input-fields/textarea-variant';
 import { PurpleButtonMB48 } from '../../buttons/purple_MB48';
 import { BackButton } from '../../buttons/back_button';
 import { FormContainer } from '../../../styles/checkoutprocess/checkout-process-sections-style';
+import UploadIDField from '../../inputs/upload-fields/upload-id-field';
 
 interface RentalApplicationProps {
   onContinue: () => void;
@@ -16,6 +16,10 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ onContinue }) => 
   const [currentFormStep, setCurrentFormStep] = useState(1);
   const [occupationType, setOccupationType] = useState<'work' | 'study'>('work');
   const [numPeople, setNumPeople] = useState('2');
+  const [idDocument, setIdDocument] = useState<{
+    files: FileList | null;
+    type: string;
+  } | null>(null);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -38,6 +42,10 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ onContinue }) => 
 
   const handleOccupationTypeChange = (value: 'work' | 'study') => {
     setOccupationType(value);
+  };
+
+  const handleIdUpload = (files: FileList | null, type: string) => {
+    setIdDocument({ files, type });
   };
 
   const renderFirstStep = () => (
@@ -75,20 +83,13 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ onContinue }) => 
         />
       </div>
       
-      <div className="government-id-container">
-        <UploadFieldModel 
-          
-          label="ID Type" 
-        />
-        <UploadFieldModel 
-          label="ID Number" 
-        />
-      </div>
+      <UploadIDField onUploadComplete={handleIdUpload} />
 
-      <div className="date-of-birth-container">
-        <SelectFieldBaseModelVariant1
-          label="ID Type"
-          options={["Passport", "Driver's License", "National ID"]}
+      <div className="next-button-container">
+        <PurpleButtonMB48 
+          text="Next Step" 
+          onClick={handleNextFormStep} 
+          disabled={!idDocument} 
         />
       </div>
     </FormContainer>
@@ -184,16 +185,12 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ onContinue }) => 
       
       {currentFormStep === 1 ? renderFirstStep() : renderSecondStep()}
       
-      <div className="button-container">
-        {currentFormStep === 1 ? (
-          <PurpleButtonMB48 text="Next Step" onClick={handleNextFormStep} />
-        ) : (
-          <>
-            <BackButton onClick={handleBackStep} />
-            <PurpleButtonMB48 text="Continue to Payment" onClick={handleContinue} />
-          </>
-        )}
-      </div>
+      {currentFormStep === 2 && (
+        <div className="button-container">
+          <BackButton onClick={handleBackStep} />
+          <PurpleButtonMB48 text="Continue to Payment" onClick={handleContinue} />
+        </div>
+      )}
     </div>
   );
 };
