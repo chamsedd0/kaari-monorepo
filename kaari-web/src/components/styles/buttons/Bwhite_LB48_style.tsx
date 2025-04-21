@@ -8,7 +8,7 @@ export const BwhiteLB48 = styled.button`
     border-radius: ${Theme.borders.radius.extreme};
 
     font: ${Theme.typography.fonts.largeB};
-    padding: 12px 70px;
+    padding: 12px 20px;
     max-height: 48px;
     cursor: pointer;
     transition: all 0.3s ease;
