@@ -16,7 +16,7 @@ export const CardBaseModelStyleRejected = styled.div`
         align-items: start;
         justify-content: start;
         gap: 25px;
-        width: 55%;
+        width: 60%;
         padding: 20px;
         
         .confirmation-status-text {
@@ -33,7 +33,7 @@ export const CardBaseModelStyleRejected = styled.div`
             .h3-text {
                 font: ${Theme.typography.fonts.h3};
                 color: ${Theme.colors.white};
-                max-width: 285px;
+                max-width: 280px;
             }
 
             img {
