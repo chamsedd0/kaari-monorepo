@@ -4,39 +4,54 @@ import { PurpleButtonMB48 } from '../buttons/purple_MB48';
 import { BpurpleButtonMB48 } from '../buttons/border_purple_MB48';
 
 interface LatestRequestDashboardCardProps {
-  title: string;
+  title?: string;
   viewMoreText?: string;
-  requestImage: string;
-  requestTitle: string;
-  photographerName: string;
-  photographerInfo: string;
-  photographerImage: string;
-  moveInDate: string;
-  aplliedon: string;
-  remainingTime: string;
+  requestImage?: string;
+  requestTitle?: string;
+  photographerName?: string;
+  photographerInfo?: string;
+  photographerImage?: string;
+  moveInDate?: string;
+  aplliedon?: string;
+  remainingTime?: string;
+  name?: string;
+  img?: string;
+  date?: string;
+  time?: string;
+  requestCount?: number;
   onViewMore?: () => void;
   onDetails?: () => void;
   onAccept?: () => void;
 }
 
 const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
-  title,
+  title = "Latest Request",
   viewMoreText = 'View more',
-  requestImage,
-  requestTitle,
-  photographerName,
-  photographerInfo,
-  photographerImage,
-  moveInDate,
-  aplliedon,
-  remainingTime,
+  requestImage = '',
+  requestTitle = '',
+  photographerName = '',
+  photographerInfo = '',
+  photographerImage = '',
+  moveInDate = '',
+  aplliedon = '',
+  remainingTime = '',
+  name = '',
+  img = '',
+  date = '',
+  time = '',
+  requestCount = 0,
   onViewMore,
   onDetails,
 }) => {
+  // Use either traditional props or the newer dashboard props
+  const displayName = name || photographerName;
+  const displayImage = img || photographerImage;
+  const displayTitle = title || "Latest Request";
+  
   return (
     <CardBaseModelStyleLatestRequestDashboard>
       <div className="title-viewmore-container">
-        <div className="title">{title}</div>
+        <div className="title">{displayTitle}</div>
         <div className="viewmore" onClick={onViewMore}>{viewMoreText}</div>
       </div>
       
@@ -44,15 +59,15 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
         <img src={requestImage} alt="Property" className="latest-request-image" />
         
         <div className="latest-request-info-container">
-          <div className="latest-request-title">{requestTitle}</div>
+          <div className="latest-request-title">{requestTitle || name}</div>
           
           <div className="latest-request-info">
             <div className="latest-request-picture-name-details">
               <div className="latest-request-picture-name-container">
-                <img src={photographerImage} alt="Photographer" className="latest-request-picture" />
+                <img src={displayImage} alt="Requester" className="latest-request-picture" />
                 <div className="latest-request-name-container">
-                  <div className="latest-request-name">{photographerName}</div>
-                  <div className="latest-request-info">{photographerInfo}</div>
+                  <div className="latest-request-name">{displayName}</div>
+                  <div className="latest-request-info">{photographerInfo || `Request ${requestCount || ''}`}</div>
                 </div>
               </div>
               
@@ -64,10 +79,10 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
               </div>
             </div>
             
-            <div className="move-in-date">Move-in date: {moveInDate}</div>
+            <div className="move-in-date">{moveInDate ? `Move-in date: ${moveInDate}` : `Request time: ${time || ''}`}</div>
             
             <div className="text-container">
-              <div className="text-container-text">Applied on: {aplliedon}</div>
+              <div className="text-container-text">{aplliedon ? `Applied on: ${aplliedon}` : `Received on: ${date || ''}`}</div>
               <div className="text-remaining-time">{remainingTime}</div>
             </div>
           </div>

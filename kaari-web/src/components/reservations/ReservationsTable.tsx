@@ -176,7 +176,7 @@ export const ReservationsTable: React.FC = () => {
                 <div key={index} className="table-row">
                     <div className="property-name">{reservation.propertyName}</div>
                     <div className="advertiser">
-                        <img src="https://via.placeholder.com/32" alt={reservation.advertiser} />
+                        <img src="data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3e%3crect width='32' height='32' fill='%23cccccc'/%3e%3ctext x='50%25' y='50%25' font-family='sans-serif' font-size='8' text-anchor='middle' dominant-baseline='middle' fill='%23666666'%3eUser%3c/text%3e%3c/svg%3e" alt={reservation.advertiser} />
                         <span>{reservation.advertiser}</span>
                     </div>
                     <div className="check-in">{reservation.checkIn}</div>

@@ -141,7 +141,7 @@ export async function updateDocument<T extends { id: string }>(
       ...currentData, 
       ...data,
       updatedAt: new Date()
-    } as T;
+    } as unknown as T;
   } catch (error) {
     console.error(`Error updating document in ${collectionName}:`, error);
     throw error;

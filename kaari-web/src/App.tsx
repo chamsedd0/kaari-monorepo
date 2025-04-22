@@ -7,6 +7,7 @@ import PropertyList from './pages/property-list/page';
 import { FavouritesPage } from './pages/favourites/page';
 import UserDashboard from './pages/dashboards/user-dashboard/page';
 import AdvertiserDashboard from './pages/dashboards/advertiser-dashboard/page';
+import AdminDashboard from './pages/dashboards/admin-dashboard/page';
 import ProfileShowcasePage from './pages/profile-advertiser-showcase/page';
 import PhotoshootBookingPage from './pages/photoshoot-booking/page';
 import ThankYouPage from './pages/photoshoot-booking/thank-you';
@@ -22,6 +23,7 @@ function App() {
   // Map roles to user types for routing
   const isAdvertiser = user?.role === 'advertiser';
   const isClient = user?.role === 'client';
+  const isAdmin = user?.role === 'admin';
   
   // Memoize routes to prevent unnecessary re-renders
   const routes = useMemo(() => (
@@ -54,11 +56,15 @@ function App() {
         path="/dashboard/advertiser/*" 
         element={isAuthenticated && isAdvertiser ? <AdvertiserDashboard /> : <Navigate to="/" replace />} 
       />
+      <Route 
+        path="/dashboard/admin/*" 
+        element={isAuthenticated && isAdmin ? <AdminDashboard /> : <Navigate to="/" replace />} 
+      />
       
       {/* Fallback route for 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-  ), [isAuthenticated, isAdvertiser, isClient]);
+  ), [isAuthenticated, isAdvertiser, isClient, isAdmin]);
   
   return (
     <Router>

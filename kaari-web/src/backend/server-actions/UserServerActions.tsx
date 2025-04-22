@@ -3,17 +3,12 @@
 import { User } from '../entities';
 import { 
   getDocumentById, 
-  createDocumentWithId, 
-  updateDocument, 
-  deleteDocument, 
-  getDocuments,
-  getDocumentsByField
+  updateDocument
 } from '../firebase/firestore';
 import { getCurrentUserProfile } from '../firebase/auth';
 import { 
   uploadFile, 
-  getUserProfileImagePath,
-  deleteFile
+  getUserProfileImagePath
 } from '../firebase/storage';
 import { User as FirebaseUser, updateProfile } from 'firebase/auth';
 import { auth } from '../firebase/config';
@@ -204,22 +199,32 @@ export async function connectWithGoogle(userId: string, googleData: {
 }
 
 /**
- * Get user statistics (for dashboard)
+ * Get user statistics
  */
-export async function getUserStatistics(userId: string): Promise<{
+export async function getUserStatistics(): Promise<{
   reservationsCount: number;
   savedPropertiesCount: number;
   reviewsCount: number;
   messagesCount: number;
 }> {
   try {
-    // Implement detailed stats collection from various collections
-    // For now, returning placeholder data
+    // Get current user
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Count user's reservations, saved properties, reviews, and messages
+    const reservationsCount = currentUser.requests?.length || 0;
+    const savedPropertiesCount = currentUser.properties?.length || 0;
+    const reviewsCount = 0; // No reviews property yet
+    const messagesCount = 0; // No messages property yet
+    
     return {
-      reservationsCount: 0,
-      savedPropertiesCount: 0,
-      reviewsCount: 0,
-      messagesCount: 0,
+      reservationsCount,
+      savedPropertiesCount,
+      reviewsCount,
+      messagesCount
     };
   } catch (error) {
     console.error('Error getting user statistics:', error);

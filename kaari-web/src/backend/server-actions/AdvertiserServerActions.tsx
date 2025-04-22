@@ -3,17 +3,12 @@
 import { User, Property, Listing } from '../entities';
 import { 
   getDocumentById, 
-  createDocumentWithId, 
+  createDocument,
   updateDocument, 
-  deleteDocument, 
-  getDocuments,
   getDocumentsByField
 } from '../firebase/firestore';
 import { getCurrentUserProfile } from '../firebase/auth';
 import {
-  uploadFile,
-  getPropertyImagePath,
-  deleteFile,
   uploadMultipleFiles
 } from '../firebase/storage';
 
@@ -45,10 +40,9 @@ export async function createProperty(propertyData: Omit<Property, 'id' | 'create
       updatedAt: new Date()
     };
     
-    // Create the property
-    const property = await createDocumentWithId<Property>(
+    // Create the property using createDocument instead of createDocumentWithId
+    const property = await createDocument<Property>(
       PROPERTIES_COLLECTION,
-      undefined, // Let Firestore generate ID
       propertyWithOwner as Omit<Property, 'id'>
     );
     
@@ -148,10 +142,9 @@ export async function createListing(
       contactCount: 0
     };
     
-    // Create the listing
-    const listing = await createDocumentWithId<Listing>(
+    // Create the listing using createDocument instead of createDocumentWithId
+    const listing = await createDocument<Listing>(
       LISTINGS_COLLECTION,
-      undefined, // Let Firestore generate ID
       fullListingData as Omit<Listing, 'id'>
     );
     

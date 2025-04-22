@@ -4,10 +4,7 @@ import { User, Request, Listing, Property } from '../entities';
 import { 
   getDocumentById, 
   createDocument, 
-  updateDocument, 
-  deleteDocument, 
-  getDocuments,
-  getDocumentsByField
+  updateDocument
 } from '../firebase/firestore';
 import { getCurrentUserProfile } from '../firebase/auth';
 import { getRequestsByUser } from './RequestServerActions';
@@ -204,7 +201,7 @@ export async function getClientStatistics(): Promise<{
     const rejectedReservations = viewingRequests.filter(req => req.status === 'rejected').length;
     
     // Get saved properties count (stored in user document)
-    const savedPropertiesCount = currentUser.savedProperties?.length || 0;
+    const savedPropertiesCount = currentUser.properties?.length || 0;
     
     return {
       reservationsCount: viewingRequests.length,

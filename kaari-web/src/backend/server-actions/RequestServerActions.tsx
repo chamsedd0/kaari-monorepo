@@ -90,7 +90,7 @@ export async function getRequests(options?: {
     const filters: Array<{
       field: string;
       operator: '==' | '!=' | '>' | '>=' | '<' | '<=';
-      value: any;
+      value: unknown;
     }> = [];
     
     // Add filters based on options
