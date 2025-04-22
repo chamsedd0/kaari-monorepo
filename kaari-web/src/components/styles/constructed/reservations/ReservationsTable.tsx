@@ -174,7 +174,7 @@ export const ReservationsTable: React.FC<ReservationsTableProps> = ({ reservatio
                             </div>
                             <div className="advertiser">
                                 <img 
-                                    src={res.advertiser?.profilePicture || "https://via.placeholder.com/32"} 
+                                    src={res.advertiser?.profilePicture || "data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3e%3crect width='32' height='32' fill='%23cccccc'/%3e%3ctext x='50%25' y='50%25' font-family='sans-serif' font-size='8' text-anchor='middle' dominant-baseline='middle' fill='%23666666'%3eUser%3c/text%3e%3c/svg%3e"} 
                                     alt={res.advertiser?.name || 'Advertiser'} 
                                 />
                                 <span>{res.advertiser?.name || 'Unknown'}</span>

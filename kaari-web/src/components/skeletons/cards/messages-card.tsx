@@ -4,18 +4,20 @@ import { Theme } from '../../../theme/theme';
 
 interface MessagesCardProps {
     title?: string;
-    messages: string;
-    profilePicture?: string;
+    message?: string;
+    img?: string;
     name?: string;
+    messageCount?: number;
     isRead?: boolean;
     onViewMore?: () => void;
 }
 
 const MessagesCard: React.FC<MessagesCardProps> = ({
     title = "Messages",
-    messages,
-    profilePicture = "",
+    message = "",
+    img = "",
     name = "User",
+    messageCount = 0,
     isRead = false,
     onViewMore
 }) => {
@@ -28,13 +30,13 @@ const MessagesCard: React.FC<MessagesCardProps> = ({
             <div className="chat-container">
                 <div className="chat-box">
                     <img 
-                        src={profilePicture} 
+                        src={img} 
                         alt={`${name}'s profile`} 
                         className="profile-picture"
                     />
                     <div className="text-container">
                         <span className="name">{name}</span>
-                        <span className="message">{messages}</span>
+                        <span className="message">{message}</span>
                     </div>
                     <div className="end-container">
                         <svg 
@@ -60,13 +62,13 @@ const MessagesCard: React.FC<MessagesCardProps> = ({
             <div className="chat-container">
                 <div className="chat-box">
                     <img 
-                        src={profilePicture} 
+                        src={img} 
                         alt={`${name}'s profile`} 
                         className="profile-picture"
                     />
                     <div className="text-container">
                         <span className="name">{name}</span>
-                        <span className="message">{messages}</span>
+                        <span className="message">{message}</span>
                     </div>
                     <div className="end-container">
                         <svg 

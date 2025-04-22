@@ -10,6 +10,14 @@ interface DataPoint {
   bookings: number;
 }
 
+interface PerformanceChartProps {
+  title?: string;
+  viewCount?: number;
+  inquiryCount?: number;
+  bookingCount?: number;
+  loading?: boolean;
+}
+
 const data: DataPoint[] = [
   { date: '1 Apr', views: 1200, clicks: 800, bookings: 60 },
   { date: '8 Apr', views: 600, clicks: 1300, bookings: 275 },
@@ -32,12 +40,18 @@ const CustomDot = (props: any) => {
   return null;
 };
 
-export const PerformanceChart: React.FC = () => {
+export const PerformanceChart: React.FC<PerformanceChartProps> = ({
+  title = "Listing Performance",
+  viewCount = 1500,
+  inquiryCount = 1200,
+  bookingCount = 85,
+  loading = false
+}) => {
   return (
     <PerformanceChartStyling>
       <div className="chart-info">
         <div className="header">
-            <h2 className="title">Listing Performance</h2>
+            <h2 className="title">{title}</h2>
             <div className="date">April 2025</div>
         </div>
 
@@ -45,7 +59,7 @@ export const PerformanceChart: React.FC = () => {
             <div className="metric">
             <div className="value views">
               <FiArrowUp className="trend-icon up" />
-                <span className="value-number">1500</span>
+                <span className="value-number">{viewCount}</span>
                 
             </div>
             <div className="label">Views</div>
@@ -53,7 +67,7 @@ export const PerformanceChart: React.FC = () => {
             <div className="metric">
             <div className="value clicks">
               <FiArrowDown className="trend-icon down" />
-                  <span className="value-number">1200</span>
+                  <span className="value-number">{inquiryCount}</span>
                 
             </div>
             <div className="label">Clicks</div>
@@ -61,7 +75,7 @@ export const PerformanceChart: React.FC = () => {
             <div className="metric">
             <div className="value bookings">
               <FiArrowUp className="trend-icon up" />
-                <span className="value-number">85</span>
+                <span className="value-number">{bookingCount}</span>
                 
             </div>
             <div className="label">Booking Requests</div>

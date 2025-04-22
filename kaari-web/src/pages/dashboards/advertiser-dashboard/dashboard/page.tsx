@@ -141,6 +141,7 @@ const DashboardPage: React.FC = () => {
                 />
                 {latestRequest && (
                     <LatestRequestDashboardCard 
+                        title="Latest Request"
                         name={latestRequest.message.substring(0, 20) + (latestRequest.message.length > 20 ? '...' : '')}
                         img={user?.profilePicture || ''}
                         date={new Date(latestRequest.createdAt).toLocaleDateString('en-US', {
@@ -156,6 +157,7 @@ const DashboardPage: React.FC = () => {
                     />
                 )}
                 <MessagesCard 
+                    title="Messages"
                     name={user?.name || 'User'}
                     img={user?.profilePicture || ''}
                     messageCount={requests.length}
@@ -163,18 +165,7 @@ const DashboardPage: React.FC = () => {
                 />
             </div>
             <div className="right">
-                {properties.length > 0 ? (
-                    <PropertiesGraphCardComponent 
-                        title="Properties Overview"
-                        total={statistics.totalProperties.toString()}
-                        properties={propertyDataForChart}
-                    />
-                ) : (
-                    <div className="no-data-message">
-                        <h3>No properties found</h3>
-                        <p>Add properties to see them in your dashboard</p>
-                    </div>
-                )}
+
                 
                 {upcomingPhotoshoot && photoshootProperty ? (
                     <UpcomingPhotoshoot 

@@ -1,182 +1,160 @@
 import React, { useState, useEffect } from 'react';
-import { NavigationPannel } from '../../../components/skeletons/constructed/dashboard-navigation-pannel/navigation-pannel';
-import UnifiedHeader from '../../../components/skeletons/constructed/headers/unified-header';
-import { AdminDashboardStyle } from './styles';
-import { ReservationsTable } from '../../../components/reservations/ReservationsTable';
-import LatestRequestCard from '../../../components/skeletons/cards/latest-request-card';
-import LoadingScreen from '../../../components/loading/LoadingScreen';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { FaHome, FaCalendarAlt, FaUsers, FaCameraRetro, FaBuilding, FaCog, FaSignOutAlt } from 'react-icons/fa';
 
-type Section = 'profile' | 'messages' | 'reservations' | 'reviews' | 'payments' | 'perks' | 'settings' | 'contacts' | 'faq';
+import {
+  AdminDashboardContainer,
+  Sidebar,
+  SidebarHeader,
+  Logo,
+  NavItem,
+  MainContent,
+  Header,
+  PageTitle,
+  UserInfo,
+  Avatar,
+  UserName,
+} from './styles';
+
+import { useStore } from '../../../backend/store';
+import PhotoshootBookingsPage from './photoshoot-bookings';
+import TeamsPage from './teams';
+import OverviewPage from './overview';
+import AdminControls from './admin-controls';
 
 const AdminDashboard: React.FC = () => {
-    const [activeSection, setActiveSection] = useState<Section>('reservations');
-    const [isAnimating, setIsAnimating] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isSectionLoading, setIsSectionLoading] = useState(false);
-
-    // Initial loading when the dashboard first loads
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 1500); // Show loading screen for 1.5 seconds
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [activePage, setActivePage] = useState<string>('overview');
+  
+  const user = useStore(state => state.user);
+  const logout = useStore(state => state.logout);
+  
+  // Helper function to get user initials for avatar
+  const getUserInitials = (): string => {
+    if (!user) return '';
+    
+    const firstName = user.name.charAt(0).toUpperCase();
+    const lastName = user.surname ? user.surname.charAt(0).toUpperCase() : '';
+    
+    return `${firstName}${lastName}`;
+  };
+  
+  // Update active page based on route
+  useEffect(() => {
+    const path = location.pathname.split('/').pop() || 'overview';
+    setActivePage(path);
+  }, [location]);
+  
+  // Navigation handler
+  const handleNavigation = (page: string) => {
+    navigate(`/dashboard/admin/${page}`);
+  };
+  
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login'); // Redirect to login page after logout
+    } catch (error) {
+      console.error('Logout failed:', error);
+      alert('Logout failed. Please try again.');
+    }
+  };
+  
+  return (
+    <AdminDashboardContainer>
+      <Sidebar>
+        <SidebarHeader>
+          <Logo>Admin Panel</Logo>
+        </SidebarHeader>
         
-        return () => clearTimeout(timer);
-    }, []);
-
-    // Loading when switching between sections
-    useEffect(() => {
-        if (isLoading) return; // Skip if initial loading is still happening
+        <NavItem 
+          active={activePage === 'overview'} 
+          onClick={() => handleNavigation('overview')}
+        >
+          <FaHome /> Overview
+        </NavItem>
         
-        setIsSectionLoading(true);
-        setIsAnimating(true);
+        <NavItem 
+          active={activePage === 'photoshoot-bookings'} 
+          onClick={() => handleNavigation('photoshoot-bookings')}
+        >
+          <FaCalendarAlt /> Photoshoot Bookings
+        </NavItem>
         
-        const animationTimer = setTimeout(() => {
-            setIsAnimating(false);
-        }, 300);
+        <NavItem 
+          active={activePage === 'teams'} 
+          onClick={() => handleNavigation('teams')}
+        >
+          <FaUsers /> Teams
+        </NavItem>
         
-        const loadingTimer = setTimeout(() => {
-            setIsSectionLoading(false);
-        }, 800); // Show section loading for 800ms
+        <NavItem 
+          active={activePage === 'properties'} 
+          onClick={() => handleNavigation('properties')}
+        >
+          <FaBuilding /> Properties
+        </NavItem>
         
-        return () => {
-            clearTimeout(animationTimer);
-            clearTimeout(loadingTimer);
-        };
-    }, [activeSection, isLoading]);
-
-    const renderSection = () => {
-        switch (activeSection) {
-            case 'profile':
-                return (
-                    <div>
-                        <h1 className="section-title">Admin Profile</h1>
-                        <div className="profile-content">
-                            <p>Admin profile information will appear here.</p>
-                        </div>
-                    </div>
-                );
-            case 'messages':
-                return (
-                    <div>
-                        <h1 className="section-title">Messages</h1>
-                        <div className="messages-content">
-                            <p>Admin messages will appear here.</p>
-                        </div>
-                    </div>
-                );
-            case 'reservations':
-                return (
-                    <div>
-                        <h1 className="section-title">Reservations</h1>
-                        <div className="pending-requests">
-                            <div className="request-card">
-                                <LatestRequestCard  
-                                    title="Apartment - " 
-                                    price="1000 per Night" 
-                                    date='11.12.2024'  
-                                    timer={true} 
-                                    details="flat in the center of Agadir" 
-                                    status="Pending" 
-                                    image="https://via.placeholder.com/150" 
-                                />
-                            </div>
-                            <div className="request-card">
-                                <LatestRequestCard 
-                                    title="Latest Request 2" 
-                                    status="Approved" 
-                                    price="1000 per Night" 
-                                    date='11.12.2024'  
-                                    details="flat in the center of Agadir" 
-                                    image="https://via.placeholder.com/150" 
-                                />
-                            </div>
-                        </div>
-                        <ReservationsTable />
-                    </div>
-                );
-            case 'reviews':
-                return (
-                    <div>
-                        <h1 className="section-title">Reviews</h1>
-                        <div className="reviews-content">
-                            <p>Admin reviews will appear here.</p>
-                        </div>
-                    </div>
-                );
-            case 'payments':
-                return (
-                    <div>
-                        <h1 className="section-title">Payments</h1>
-                        <div className="payments-content">
-                            <p>Admin payment information will appear here.</p>
-                        </div>
-                    </div>
-                );
-            case 'perks':
-                return (
-                    <div>
-                        <h1 className="section-title">Perks Program</h1>
-                        <div className="perks-content">
-                            <p>Admin perks program will appear here.</p>
-                        </div>
-                    </div>
-                );
-            case 'settings':
-                return (
-                    <div>
-                        <h1 className="section-title">Settings</h1>
-                        <div className="settings-content">
-                            <p>Admin settings will appear here.</p>
-                        </div>
-                    </div>
-                );
-            case 'contacts':
-                return (
-                    <div>
-                        <h1 className="section-title">Contacts</h1>
-                        <div className="contacts-content">
-                            <p>Admin contacts will appear here.</p>
-                        </div>
-                    </div>
-                );
-            case 'faq':
-                return (
-                    <div>
-                        <h1 className="section-title">FAQ</h1>
-                        <div className="faq-content">
-                            <p>Admin FAQ will appear here.</p>
-                        </div>
-                    </div>
-                );
-            default:
-                return (
-                    <div>
-                        <h1 className="section-title">Reservations</h1>
-                        <div className="reservations-content">
-                            <p>Admin reservations will appear here.</p>
-                        </div>
-                    </div>
-                );
-        }
-    };
-
-    return (
-        <>
-            <LoadingScreen isLoading={isLoading || isSectionLoading} />
-            <div style={{ display: 'flex', maxWidth: '1500px', margin: '0 auto' }}>
-                <UnifiedHeader variant="white" userType="admin" isAuthenticated={true} />
-                <NavigationPannel 
-                    activeSection={activeSection}
-                    onSectionChange={setActiveSection}
-                />
-                <AdminDashboardStyle>
-                    <div className={`section-container ${isAnimating ? 'animating' : ''}`}>
-                        {renderSection()}
-                    </div>
-                </AdminDashboardStyle>
-            </div>
-        </>
-    );
+        <NavItem 
+          active={activePage === 'settings'} 
+          onClick={() => handleNavigation('settings')}
+        >
+          <FaCog /> Settings
+        </NavItem>
+        
+        <div style={{ marginTop: 'auto' }}>
+          <NavItem onClick={handleLogout}>
+            <FaSignOutAlt /> Logout
+          </NavItem>
+        </div>
+      </Sidebar>
+      
+      <MainContent>
+        <Header>
+          <PageTitle>
+            {activePage === 'overview' && 'Dashboard Overview'}
+            {activePage === 'photoshoot-bookings' && 'Photoshoot Bookings'}
+            {activePage === 'teams' && 'Manage Teams'}
+            {activePage === 'properties' && 'Properties'}
+            {activePage === 'settings' && 'Admin Controls'}
+          </PageTitle>
+          
+          <UserInfo>
+            <UserName>{user?.name} {user?.surname}</UserName>
+            <Avatar>{getUserInitials()}</Avatar>
+            <button 
+              onClick={handleLogout}
+              style={{
+                marginLeft: '10px',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                color: '#333',
+                fontSize: '14px',
+              }}
+              title="Logout"
+            >
+              <FaSignOutAlt />
+            </button>
+          </UserInfo>
+        </Header>
+        
+        <Routes>
+          <Route path="/" element={<OverviewPage />} />
+          <Route path="/overview" element={<OverviewPage />} />
+          <Route path="/photoshoot-bookings/*" element={<PhotoshootBookingsPage />} />
+          <Route path="/teams/*" element={<TeamsPage />} />
+          <Route path="/settings" element={<AdminControls />} />
+          {/* Additional routes to be implemented */}
+          <Route path="*" element={<OverviewPage />} />
+        </Routes>
+      </MainContent>
+    </AdminDashboardContainer>
+  );
 };
 
-export default AdminDashboard; 
+export default AdminDashboard;

@@ -30,7 +30,7 @@ const convertToFirestoreBooking = (booking: PhotoshootBookingData, userId?: stri
     ...booking,
     date: Timestamp.fromDate(new Date(booking.date)),
     createdAt: serverTimestamp() as Timestamp,
-    userId: userId || null,
+    userId: userId || undefined,
     status: 'pending'
   };
 };

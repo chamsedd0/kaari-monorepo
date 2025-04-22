@@ -75,7 +75,6 @@ const ThankYouPage: React.FC = () => {
         </div>
       </ThankYouPageStyle>
       
-      <Footer />
     </>
   );
 };
@@ -83,6 +82,7 @@ const ThankYouPage: React.FC = () => {
 const ThankYouPageStyle = styled.div`
   position: relative;
   padding: 100px 20px 80px;
+  margin-top: 60px;
   min-height: calc(100vh - 300px);
   overflow: hidden;
   
