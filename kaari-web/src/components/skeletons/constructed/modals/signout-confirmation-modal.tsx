@@ -1,12 +1,11 @@
 import React, { useRef, useEffect } from 'react';
-import { FaTimes, FaSignOutAlt } from 'react-icons/fa';
+import { FaTimes, FaSignOutAlt, FaSpinner } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../../../backend/store';
-import { signOut } from '../../../../backend/firebase/auth';
+import { useAuth } from '../../../../contexts/auth';
 import { ModalOverlayStyle, ConfirmationModalStyle } from '../../../styles/constructed/modals/auth-modal-style';
 import { PurpleButtonLB60 } from '../../buttons/purple_LB60';
 import { WhiteButtonLB60 } from '../../buttons/white_LB60';
-import { Theme } from '../../../../theme/theme';
 
 interface SignOutConfirmationModalProps {
   isOpen: boolean;
@@ -21,13 +20,14 @@ export const SignOutConfirmationModal: React.FC<SignOutConfirmationModalProps> =
 }) => {
   const navigate = useNavigate();
   const modalRef = useRef<HTMLDivElement>(null);
-  const setUser = useStore(state => state.setUser);
-  const setIsAuthenticated = useStore(state => state.setIsAuthenticated);
-  const loading = useStore(state => state.loading);
+  const { signOutUser, status } = useAuth();
+  const isLoading = status === 'loading';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+      // Only close if clicking on the overlay, not when clicking inside the modal
+      const target = event.target as HTMLElement;
+      if (target && target.classList.contains('modal-overlay')) {
         onClose();
       }
     };
@@ -46,31 +46,30 @@ export const SignOutConfirmationModal: React.FC<SignOutConfirmationModalProps> =
       if (onConfirm) {
         await onConfirm();
       } else {
-        // Default logout process
-        await signOut();
-        
-        // Manually update the store state
-        setUser(null);
-        setIsAuthenticated(false);
+        // Use the centralized auth context for logout
+        await signOutUser();
         
         // Navigate to home page
-        navigate('/');
+        navigate('/', { replace: true });
       }
       
       // Close the modal
       onClose();
     } catch (error) {
       console.error("Error signing out:", error);
+      // We still want to close the modal and navigate away
+      onClose();
+      navigate('/', { replace: true });
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <ModalOverlayStyle>
+    <ModalOverlayStyle className="modal-overlay">
       <ConfirmationModalStyle ref={modalRef}>
         <div className="modal-header">
-          <button className="close-button" onClick={onClose}>
+          <button className="close-button" onClick={onClose} disabled={isLoading}>
             <FaTimes />
           </button>
         </div>
@@ -89,11 +88,20 @@ export const SignOutConfirmationModal: React.FC<SignOutConfirmationModalProps> =
           </p>
           
           <div className="button-container">
-            <WhiteButtonLB60 text="Cancel" onClick={onClose} />
+            <WhiteButtonLB60 
+              text="Cancel" 
+              onClick={onClose} 
+              disabled={isLoading}
+            />
+            
             <PurpleButtonLB60 
-              text="Sign Out" 
+              text={isLoading ? (
+                <div className="loading-indicator">
+                  <FaSpinner className="spinner" /> Signing Out...
+                </div>
+              ) : "Sign Out"}
               onClick={handleSignOut} 
-              disabled={loading}
+              disabled={isLoading}
             />
           </div>
         </div>

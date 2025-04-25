@@ -5,7 +5,8 @@ import {
   signInWithEmail, 
   signInWithGoogle, 
   signOut, 
-  getCurrentUserProfile 
+  getCurrentUserProfile,
+  signUpWithEmail
 } from './firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase/config';
@@ -43,6 +44,7 @@ interface StoreState {
   setSelectedRequest: (request: Request | null) => void;
   
   // User actions
+  signUp: (email: string, password: string, name: string) => Promise<User>;
   login: (email: string, password: string) => Promise<User>;
   loginWithGoogle: () => Promise<User>;
   logout: () => Promise<void>;
@@ -79,6 +81,18 @@ export const useStore = create<StoreState>()(
         setSelectedRequest: (request) => set({ selectedRequest: request }),
         
         // User actions
+        signUp: async (email, password, name) => {
+          try {
+            set({ authLoading: true });
+            const user = await signUpWithEmail(email, password, name);
+            set({ user, isAuthenticated: true, authLoading: false });
+            return user;
+          } catch (error) {
+            set({ authLoading: false });
+            throw error;
+          }
+        },
+        
         login: async (email, password) => {
           try {
             set({ authLoading: true });
@@ -106,11 +120,11 @@ export const useStore = create<StoreState>()(
         logout: async () => {
           try {
             set({ authLoading: true });
-            await signOut();
+            
+            // Immediately update the local state to ensure UI updates right away
             set({ 
               user: null, 
               isAuthenticated: false, 
-              authLoading: false,
               // Clear user-specific data
               properties: [],
               selectedProperty: null,
@@ -119,8 +133,26 @@ export const useStore = create<StoreState>()(
               requests: [],
               selectedRequest: null
             });
-          } catch (error) {
+            
+            // Then perform the Firebase signout operation
+            await signOut();
+            
+            // Complete the process
             set({ authLoading: false });
+          } catch (error) {
+            console.error('Logout error:', error);
+            // Even if there's an error, ensure we've cleared the local state
+            set({ 
+              user: null, 
+              isAuthenticated: false, 
+              authLoading: false,
+              properties: [],
+              selectedProperty: null,
+              listings: [],
+              selectedListing: null,
+              requests: [],
+              selectedRequest: null
+            });
             throw error;
           }
         },

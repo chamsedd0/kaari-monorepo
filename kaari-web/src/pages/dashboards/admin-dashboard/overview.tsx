@@ -142,7 +142,7 @@ const OverviewPage: React.FC = () => {
                     </TableCell>
                     <TableCell>{booking.propertyType || 'N/A'}</TableCell>
                     <TableCell>
-                      <StatusBadge status={booking.status}>
+                      <StatusBadge $status={booking.status}>
                         {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                       </StatusBadge>
                     </TableCell>

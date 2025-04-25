@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import BookingSearchForm from "../../components/skeletons/constructed/forms/booking-search-form";
 import { UsersLandingStyle } from "../../landing-page-style";
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
-import UnifiedHeader from "../../components/skeletons/constructed/headers/unified-header";
 
 // Import icons and images
 import ArrowRight from '../../components/skeletons/icons/ArrowRightThick.svg';
@@ -158,10 +157,6 @@ const UsersLanding: React.FC = () => {
 
   return (
     <>
-      <UnifiedHeader 
-        variant="landing" 
-        userType="user" 
-      />
       <UsersLandingStyle>
         {/* Hero Section */}
         <section className="hero-section">
@@ -281,7 +276,7 @@ const UsersLanding: React.FC = () => {
                   <div className="slide-content">
                     <div className="text-content">
                       <h2>Send your request</h2>
-                      <p>Already found the place? Amazing! Well, let’s get it now! 
+                      <p>Already found the place? Amazing! Well, let's get it now! 
                       Just fill out your information  and we are good to go!</p>
                       <div className="buttons-container">
                         <button className="primary-button" onClick={() => navigate('/properties')}>

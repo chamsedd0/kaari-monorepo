@@ -6,10 +6,9 @@ import { HeartIcon } from "../../icons/heartIcon";
 import { Theme } from "../../../../theme/theme";
 import { useStore } from '../../../../backend/store';
 import { AuthModal } from '../modals/auth-modal';
-import { SignOutConfirmationModal } from '../modals/signout-confirmation-modal';
+import { LogoutConfirmationModal } from '../modals/logout-confirmation-modal';
 import { ProfileDropdown } from '../profile-dropdown/profile-dropdown';
 import ProfilePic from '../../../../assets/images/ProfilePicture.png';
-import { signOut } from '../../../../backend/firebase/auth';
 
 interface HeaderLandingPageProps {
   onLanguageChange?: (lang: string) => void;
@@ -24,11 +23,9 @@ export const HeaderLandingPage: React.FC<HeaderLandingPageProps> = ({ onLanguage
   const userName = useStore(state => state.user?.name || 'User');
   const userEmail = useStore(state => state.user?.email);
   const userProfilePic = useStore(state => state.user?.profilePicture);
-  const setUser = useStore(state => state.setUser);
-  const setIsAuthenticated = useStore(state => state.setIsAuthenticated);
   
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
 
   useEffect(() => {
@@ -44,6 +41,12 @@ export const HeaderLandingPage: React.FC<HeaderLandingPageProps> = ({ onLanguage
       window.removeEventListener('scroll', handleScroll);
     };
   }, [scrolled]);
+  
+  // Re-render component when authentication state changes
+  useEffect(() => {
+    // This empty dependency array effect will make the component 
+    // re-render when isAuthenticated changes
+  }, [isAuthenticated]);
 
   const handleSignIn = () => {
     if (isAuthenticated) {
@@ -72,25 +75,6 @@ export const HeaderLandingPage: React.FC<HeaderLandingPageProps> = ({ onLanguage
       navigate('/favourites');
     } else {
       setShowAuthModal(true);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      // Close the modal
-      setShowSignOutModal(false);
-      
-      // Using the direct Firebase approach
-      await signOut();
-      
-      // Manually update the store state
-      setUser(null);
-      setIsAuthenticated(false);
-      
-      // Navigate to home page
-      navigate('/');
-    } catch (error) {
-      console.error("Error signing out:", error);
     }
   };
 
@@ -146,7 +130,7 @@ export const HeaderLandingPage: React.FC<HeaderLandingPageProps> = ({ onLanguage
                     userImage={userProfilePic || ProfilePic}
                     onLogout={() => {
                       setShowProfileDropdown(false);
-                      setShowSignOutModal(true);
+                      setShowLogoutModal(true);
                     }}
                   />
                 </>
@@ -163,13 +147,16 @@ export const HeaderLandingPage: React.FC<HeaderLandingPageProps> = ({ onLanguage
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 
         initialMode="signin"
+        onSuccess={() => {
+          // Force re-render of component after successful login
+          setTimeout(() => window.location.reload(), 100);
+        }}
       />
 
-      {/* Sign Out Confirmation Modal */}
-      <SignOutConfirmationModal
-        isOpen={showSignOutModal}
-        onClose={() => setShowSignOutModal(false)}
-        onConfirm={handleSignOut}
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
       />
     </>
   );

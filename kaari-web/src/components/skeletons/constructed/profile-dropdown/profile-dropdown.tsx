@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useStore } from '../../../../backend/store';
 import { Theme } from '../../../../theme/theme';
-import { SignOutConfirmationModal } from '../modals/signout-confirmation-modal';
-import { signOut } from '../../../../backend/firebase/auth';
+import { LogoutConfirmationModal } from '../modals/logout-confirmation-modal';
+import { useAuth } from '../../../../contexts/auth';
+import { FaUser, FaSignOutAlt, FaTachometerAlt, FaHome, FaWallet, FaQuestionCircle } from 'react-icons/fa';
+import { isAdmin, isAdvertiser, isRegularUser } from '../../../../utils/user-roles';
+import eventBus, { EventType } from '../../../../utils/event-bus';
 
 export interface ProfileDropdownProps {
   isOpen: boolean;
@@ -17,28 +20,40 @@ export interface ProfileDropdownProps {
 
 const DropdownContainer = styled.div`
   position: absolute;
-  top: 45px;
+  top: 40px;
   right: 0;
-  width: 280px;
+  width: 250px;
   background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 8px 0;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  
+  @media (max-width: 768px) {
+    right: -20px;
+    width: 240px;
+  }
+  
+  @media (max-width: 480px) {
+    right: -10px;
+    width: 230px;
+  }
 `;
 
 const UserInfoSection = styled.div`
   display: flex;
   align-items: center;
   padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
 `;
 
 const UserAvatar = styled.img`
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   object-fit: cover;
   margin-right: 12px;
@@ -58,42 +73,48 @@ const UserName = styled.span`
 
 const UserEmail = styled.span`
   font-size: 14px;
-  color: #666;
-`;
-
-const Divider = styled.div`
-  height: 1px;
-  background-color: #e0e0e0;
-  margin: 8px 0;
+  color: #777;
 `;
 
 const MenuItems = styled.div`
   display: flex;
   flex-direction: column;
+  padding: 8px 0 4px;
 `;
 
 const MenuItem = styled.div`
-  padding: 12px 16px;
-  font-size: 14px;
+  padding: 10px 16px;
+  font-size: 15px;
   color: #333;
   cursor: pointer;
   transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  svg {
+    color: ${Theme.colors.primary};
+    font-size: 18px;
+    min-width: 20px;
+    display: flex;
+    justify-content: center;
+  }
 
   &:hover {
-    background-color: #f5f5f5;
+    background-color: rgba(103, 58, 183, 0.05);
   }
 `;
 
-const LogoutButton = styled.div`
-  padding: 12px 16px;
-  font-size: 14px;
-  color: #ff3b30;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  font-weight: 600;
+const LogoutButton = styled(MenuItem)`
+  color: ${Theme.colors.primary};
+  margin-top: 4px;
+
+  svg {
+    color: ${Theme.colors.primary};
+  }
 
   &:hover {
-    background-color: #fff1f0;
+    background-color: rgba(103, 58, 183, 0.05);
   }
 `;
 
@@ -107,14 +128,37 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 }) => {
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { forceUpdate } = useAuth();
+  const [forceRender, setForceRender] = useState(0);
   
-  // Get user role and logout function from store
-  const userRole = useStore(state => state.user?.role);
-  const setUser = useStore(state => state.setUser);
-  const setIsAuthenticated = useStore(state => state.setIsAuthenticated);
-  const isAuthenticated = useStore(state => state.isAuthenticated);
-  const isAdvertiser = userRole === 'advertiser';
+  // Get user from store
+  const user = useStore(state => state.user);
+  
+  // Determine user roles using utility functions
+  const userIsAdmin = isAdmin(user);
+  const userIsAdvertiser = isAdvertiser(user);
+  const userIsRegular = isRegularUser(user);
+  
+  // Use effect to listen for auth state changes
+  useEffect(() => {
+    // Listen for auth state changes through event bus
+    const unsubscribe = eventBus.on(EventType.AUTH_STATE_CHANGED, () => {
+      // Force component to re-render when auth state changes
+      setForceRender(prev => prev + 1);
+    });
+    
+    return unsubscribe;
+  }, []);
+  
+  // Also listen for sign out events to close dropdown
+  useEffect(() => {
+    const unsubscribe = eventBus.on(EventType.AUTH_SIGNED_OUT, () => {
+      onClose(); // Close the dropdown when user signs out
+    });
+    
+    return unsubscribe;
+  }, [onClose]);
   
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -134,44 +178,61 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   const handleDashboardClick = () => {
     onClose();
-    if (userRole === 'advertiser') {
-      navigate('/dashboard/advertiser');
+    if (userIsAdmin) {
+      navigate('/dashboard/admin');
+    } else if (userIsAdvertiser) {
+      navigate('/dashboard/advertiser/dashboard');
     } else {
-      navigate('/dashboard/user');
+      navigate('/dashboard/user/profile');
     }
   };
 
   const handleReservationsClick = () => {
     onClose();
-    if (userRole === 'advertiser') {
-      navigate('/dashboard/advertiser/reservations');
-    } else {
-      navigate('/dashboard/user/reservations');
-    }
+    navigate('/dashboard/user/reservations');
   };
 
   const handleAccountSettingsClick = () => {
     onClose();
-    navigate('/account/settings');
+    if (userIsAdvertiser) {
+      navigate('/dashboard/advertiser/profile');
+    } else {
+      navigate('/dashboard/user/profile');
+    }
   };
 
   const handlePaymentsClick = () => {
     onClose();
-    navigate('/account/payments');
+    if (userIsAdvertiser) {
+      navigate('/dashboard/advertiser/payments');
+    } else {
+      navigate('/dashboard/user/payments');
+    }
   };
 
   const handleHelpClick = () => {
     onClose();
-    navigate('/help');
+    if (userIsAdvertiser) {
+      navigate('/dashboard/advertiser/support');
+    } else {
+      navigate('/dashboard/user/faq');
+    }
   };
 
   const handleLogOut = () => {
     onClose();
+    // Emit UI toast notification for better user feedback
+    eventBus.emit(EventType.UI_TOAST_NOTIFICATION, {
+      type: 'info',
+      message: 'Signing you out...',
+      duration: 3000
+    });
+    
     // If an onLogout prop was provided, use that instead
     if (onLogout) {
       onLogout();
     } else {
-      setShowSignOutModal(true);
+      setShowLogoutModal(true);
     }
   };
 
@@ -188,45 +249,65 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           </UserDetails>
         </UserInfoSection>
         
-        <Divider />
-        
         <MenuItems>
-          <MenuItem onClick={handleDashboardClick}>
-            Dashboard
-          </MenuItem>
+          {/* Admin menu items */}
+          {userIsAdmin && (
+            <>
+              <MenuItem onClick={handleDashboardClick}>
+                <FaTachometerAlt /> Dashboard
+              </MenuItem>
+              <MenuItem onClick={handleAccountSettingsClick}>
+                <FaUser /> Account
+              </MenuItem>
+            </>
+          )}
           
-          <MenuItem onClick={handleReservationsClick}>
-            {isAdvertiser ? 'My Properties' : 'My Reservations'}
-          </MenuItem>
+          {/* Advertiser menu items */}
+          {userIsAdvertiser && (
+            <>
+              <MenuItem onClick={handleDashboardClick}>
+                <FaTachometerAlt /> Dashboard
+              </MenuItem>
+              <MenuItem onClick={handleAccountSettingsClick}>
+                <FaUser /> Account
+              </MenuItem>
+              <MenuItem onClick={handlePaymentsClick}>
+                <FaWallet /> Payments
+              </MenuItem>
+              <MenuItem onClick={handleHelpClick}>
+                <FaQuestionCircle /> Help
+              </MenuItem>
+            </>
+          )}
           
-          <MenuItem onClick={handleAccountSettingsClick}>
-            Account Settings
-          </MenuItem>
+          {/* Regular user menu items */}
+          {userIsRegular && (
+            <>
+              <MenuItem onClick={handleReservationsClick}>
+                <FaHome /> Reservation
+              </MenuItem>
+              <MenuItem onClick={handleAccountSettingsClick}>
+                <FaUser /> Account
+              </MenuItem>
+              <MenuItem onClick={handlePaymentsClick}>
+                <FaWallet /> Payments
+              </MenuItem>
+              <MenuItem onClick={handleHelpClick}>
+                <FaQuestionCircle /> Help
+              </MenuItem>
+            </>
+          )}
           
-          <MenuItem onClick={handlePaymentsClick}>
-            Payments
-          </MenuItem>
-          
-          <MenuItem onClick={handleHelpClick}>
-            Help
-          </MenuItem>
+          <LogoutButton onClick={handleLogOut}>
+            <FaSignOutAlt /> Log Out
+          </LogoutButton>
         </MenuItems>
-        
-        <Divider />
-        
-        <LogoutButton onClick={handleLogOut}>
-          Log Out
-        </LogoutButton>
       </DropdownContainer>
       
-      {/* Sign Out Confirmation Modal - rendered outside the dropdown */}
-      <SignOutConfirmationModal
-        isOpen={showSignOutModal}
-        onClose={() => setShowSignOutModal(false)}
-        onConfirm={async () => {
-          await handleLogOut();
-          setShowSignOutModal(false);
-        }}
+      {/* Logout Confirmation Modal - rendered outside the dropdown */}
+      <LogoutConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
       />
     </>
   );

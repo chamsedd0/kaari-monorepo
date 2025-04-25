@@ -13,6 +13,7 @@ export const ModalOverlayStyle = styled.div`
   align-items: center;
   z-index: 1000;
   animation: fadeIn 0.3s ease;
+  padding: 20px;
 
   @keyframes fadeIn {
     from { opacity: 0; }
@@ -22,10 +23,10 @@ export const ModalOverlayStyle = styled.div`
 
 export const ModalStyle = styled.div`
   background-color: ${Theme.colors.white};
-  border-radius: 16px;
+  border-radius: 24px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   width: 100%;
-  max-width: 450px;
+  max-width: 480px;
   position: relative;
   animation: slideIn 0.3s ease;
   overflow: hidden;
@@ -40,29 +41,23 @@ export const ModalStyle = styled.div`
     justify-content: space-between;
     align-items: center;
     padding: 20px 24px;
-    border-bottom: 1px solid ${Theme.colors.fifth};
+    position: relative;
 
-    .logo-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      position: relative;
-
-      img {
-        height: 36px;
-      }
+    .logo {
+      width: auto;
+      height: 32px;
+      margin: 0 auto;
     }
 
     .close-button {
       position: absolute;
-      right: 20px;
+      left: 20px;
       top: 20px;
       background: none;
       border: none;
       cursor: pointer;
       font-size: 24px;
-      color: ${Theme.colors.gray2};
+      color: ${Theme.colors.black};
       display: flex;
       align-items: center;
       justify-content: center;
@@ -72,7 +67,7 @@ export const ModalStyle = styled.div`
       transition: color 0.2s;
 
       &:hover {
-        color: ${Theme.colors.black};
+        color: ${Theme.colors.primary};
       }
     }
   }
@@ -199,44 +194,173 @@ export const ModalStyle = styled.div`
 `;
 
 export const AuthModalStyle = styled(ModalStyle)`
-  .auth-header {
-    text-align: center;
-    margin-bottom: 24px;
+  padding: 24px;
+  
+  .modal-header {
+    padding: 0;
+    margin-bottom: 30px;
     
-    h2 {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      color: ${Theme.colors.black};
+    .logo {
+      display: block;
+      margin: 0 auto;
     }
     
-    p {
-      color: ${Theme.colors.gray2};
-      font-size: 16px;
+    .close-button {
+      left: 0;
+      top: 0;
     }
   }
-
-  .social-login-button {
+  
+  h2 {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: ${Theme.colors.black};
+  }
+  
+  .error-message {
+    background-color: #FFF0F0;
+    color: #E53935;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  
+  .success-message {
+    background-color: #F0FFF4;
+    color: #2E7D32;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  form {
+    .form-group {
+      margin-bottom: 16px;
+      
+      label {
+        display: block;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: ${Theme.colors.gray3};
+      }
+      
+      input {
+        width: 100%;
+        padding: 16px;
+        border: 1px solid #E0E0E0;
+        border-radius: 100px;
+        font-size: 16px;
+        
+        &:focus {
+          outline: none;
+          border-color: ${Theme.colors.primary};
+        }
+        
+        &::placeholder {
+          color: #BDBDBD;
+        }
+      }
+    }
+  }
+  
+  .form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 16px 0 24px;
+    
+    .remember-me {
+      display: flex;
+      align-items: center;
+      
+      input[type="checkbox"] {
+        margin-right: 8px;
+        accent-color: ${Theme.colors.primary};
+      }
+      
+      label {
+        font-size: 14px;
+        color: ${Theme.colors.gray2};
+      }
+    }
+    
+    .forgot-password {
+      .forgot-link {
+        color: ${Theme.colors.primary};
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+  
+  .separator {
+    display: flex;
+    align-items: center;
+    margin: 24px 0;
+    
+    &::before, &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background-color: #E0E0E0;
+    }
+    
+    span {
+      padding: 0 16px;
+      color: #757575;
+      font-size: 14px;
+    }
+  }
+  
+  .google-button-content {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     width: 100%;
-    padding: 12px;
-    background-color: ${Theme.colors.white};
-    border: 1px solid ${Theme.colors.fifth};
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.2s;
-    gap: 12px;
-    margin-bottom: 16px;
+  }
+  
+  .advertiser-link {
+    text-align: center;
+    margin-top: 24px;
     
-    svg {
-      font-size: 20px;
+    a {
+      color: ${Theme.colors.primary};
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
     }
+  }
+  
+  .loading-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     
-    &:hover {
-      background-color: ${Theme.colors.fifth}50;
+    .spinner {
+      animation: spin 1s linear infinite;
+      
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
     }
   }
 `;
@@ -246,34 +370,29 @@ export const ConfirmationModalStyle = styled(ModalStyle)`
     display: flex;
     justify-content: center;
     margin-bottom: 16px;
-    
-    .warning-icon {
-      background-color: ${Theme.colors.secondary}20;
-      color: ${Theme.colors.primary};
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-    }
   }
   
   .confirmation-title {
-    font-size: 24px;
-    font-weight: 700;
+    font-size: 20px;
+    font-weight: 600;
     text-align: center;
-    margin-bottom: 16px;
-    color: ${Theme.colors.black};
+    margin-bottom: 12px;
   }
   
   .confirmation-message {
     text-align: center;
     color: ${Theme.colors.gray2};
-    font-size: 16px;
-    line-height: 1.6;
     margin-bottom: 24px;
+  }
+  
+  .confirmation-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    
+    button {
+      flex: 1;
+    }
   }
 `;
 

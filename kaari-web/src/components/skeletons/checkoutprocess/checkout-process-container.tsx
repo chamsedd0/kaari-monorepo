@@ -5,7 +5,6 @@ import CheckoutProgressBar from '../banners/status/banner-checkout-progressbar';
 import { CheckoutCard } from '../cards/checkout-card';
 import PropertyImage from '../../../assets/images/livingRoomExample.png';
 import ProfileImage from '../../../assets/images/ProfilePicture.png';
-import { WhiteHeaderUsers } from '../constructed/headers/header-users-white';
 import { 
   RentalApplication, 
   PaymentMethod, 
@@ -67,7 +66,6 @@ const CheckoutProcessContainer: React.FC<CheckoutProcessContainerProps> = ({
   
   return (
     <>
-      <WhiteHeaderUsers />
       <CheckoutProcessStyle>
         <div className="checkout-process-header">
           <img src={Logo} alt="Logo" />

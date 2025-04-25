@@ -236,7 +236,7 @@ const TeamsPage: React.FC = () => {
                     <TableCell>{team.members.length} members</TableCell>
                     <TableCell>{formatDate(team.createdAt)}</TableCell>
                     <TableCell>
-                      <StatusBadge status={team.active ? 'completed' : 'cancelled'}>
+                      <StatusBadge $status={team.active ? 'completed' : 'cancelled'}>
                         {team.active ? 'Active' : 'Inactive'}
                       </StatusBadge>
                     </TableCell>

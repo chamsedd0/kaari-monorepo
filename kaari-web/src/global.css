@@ -67,3 +67,65 @@ body {
   scrollbar-width: thin;
   scrollbar-color: #511B72 transparent;
 }
+
+/* Accessibility Styles */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus visible - better focus states for keyboard users */
+:focus-visible {
+  outline: 2px solid #673AB7;
+  outline-offset: 2px;
+}
+
+/* Skip to content link */
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  z-index: 9999;
+  padding: 1rem;
+  background-color: white;
+  color: #673AB7;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.skip-to-content:focus {
+  left: 0;
+  top: 0;
+}
+
+/* Button reset for semantic buttons that need no styles */
+.btn-reset {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+  button:not(.btn-reset), 
+  [role="button"],
+  a,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"],
+  select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

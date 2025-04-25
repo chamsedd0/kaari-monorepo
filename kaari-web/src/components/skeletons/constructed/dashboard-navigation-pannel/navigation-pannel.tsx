@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavigationPannelDashboardStyle } from "../../../styles/constructed/dashboard-navigation-pannel/navigation-pannel-dashboard-style";
+import { Link } from 'react-router-dom';
 
 import ProfileIcon from "../../icons/Icon-Profile.svg";
 import MessagesIcon from "../../icons/Icon-Messages.svg";
@@ -24,6 +25,7 @@ export const NavigationPannel: React.FC<NavigationPannelProps> = ({ activeSectio
             <button 
                 onClick={() => onSectionChange('profile')} 
                 className={`nav-link ${activeSection === 'profile' ? 'active' : ''}`}
+                aria-current={activeSection === 'profile' ? 'page' : undefined}
             >
                 <img src={ProfileIcon} alt="Profile" className="nav-link-icon" />
                 <span className="nav-link-text">My Profile</span>
@@ -31,6 +33,7 @@ export const NavigationPannel: React.FC<NavigationPannelProps> = ({ activeSectio
             <button 
                 onClick={() => onSectionChange('messages')} 
                 className={`nav-link ${activeSection === 'messages' ? 'active' : ''}`}
+                aria-current={activeSection === 'messages' ? 'page' : undefined}
             >
                 <img src={MessagesIcon} alt="Messages" className="nav-link-icon" />
                 <span className="nav-link-text">Messages</span>
@@ -38,6 +41,7 @@ export const NavigationPannel: React.FC<NavigationPannelProps> = ({ activeSectio
             <button 
                 onClick={() => onSectionChange('reservations')} 
                 className={`nav-link ${activeSection === 'reservations' ? 'active' : ''}`}
+                aria-current={activeSection === 'reservations' ? 'page' : undefined}
             >
                 <img src={ReservationsIcon} alt="Reservations" className="nav-link-icon" />
                 <span className="nav-link-text">Reservations</span>
@@ -45,6 +49,7 @@ export const NavigationPannel: React.FC<NavigationPannelProps> = ({ activeSectio
             <button 
                 onClick={() => onSectionChange('reviews')} 
                 className={`nav-link ${activeSection === 'reviews' ? 'active' : ''}`}
+                aria-current={activeSection === 'reviews' ? 'page' : undefined}
             >
                 <img src={ReviewsIcon} alt="Reviews" className="nav-link-icon" />
                 <span className="nav-link-text">Reviews</span>
@@ -52,6 +57,7 @@ export const NavigationPannel: React.FC<NavigationPannelProps> = ({ activeSectio
             <button 
                 onClick={() => onSectionChange('payments')} 
                 className={`nav-link ${activeSection === 'payments' ? 'active' : ''}`}
+                aria-current={activeSection === 'payments' ? 'page' : undefined}
             >
                 <img src={PaymentsIcon} alt="Payments" className="nav-link-icon" />
                 <span className="nav-link-text">Payments</span>
@@ -59,6 +65,7 @@ export const NavigationPannel: React.FC<NavigationPannelProps> = ({ activeSectio
             <button 
                 onClick={() => onSectionChange('perks')} 
                 className={`nav-link ${activeSection === 'perks' ? 'active' : ''}`}
+                aria-current={activeSection === 'perks' ? 'page' : undefined}
             >
                 <img src={PerksIcon} alt="Perks" className="nav-link-icon" />
                 <span className="nav-link-text">Perks program</span>
@@ -66,6 +73,7 @@ export const NavigationPannel: React.FC<NavigationPannelProps> = ({ activeSectio
             <button 
                 onClick={() => onSectionChange('settings')} 
                 className={`nav-link ${activeSection === 'settings' ? 'active' : ''}`}
+                aria-current={activeSection === 'settings' ? 'page' : undefined}
             >
                 <img src={SettingsIcon} alt="Settings" className="nav-link-icon" />
                 <span className="nav-link-text">Settings</span>
@@ -73,6 +81,7 @@ export const NavigationPannel: React.FC<NavigationPannelProps> = ({ activeSectio
             <button 
                 onClick={() => onSectionChange('contacts')} 
                 className={`nav-link ${activeSection === 'contacts' ? 'active' : ''}`}
+                aria-current={activeSection === 'contacts' ? 'page' : undefined}
             >
                 <img src={ContactsIcon} alt="Contacts" className="nav-link-icon" />
                 <span className="nav-link-text">Contacts</span>
@@ -80,6 +89,7 @@ export const NavigationPannel: React.FC<NavigationPannelProps> = ({ activeSectio
             <button 
                 onClick={() => onSectionChange('faq')} 
                 className={`nav-link ${activeSection === 'faq' ? 'active' : ''}`}
+                aria-current={activeSection === 'faq' ? 'page' : undefined}
             >
                 <img src={FaqIcon} alt="FAQ" className="nav-link-icon" />
                 <span className="nav-link-text">FAQ</span>

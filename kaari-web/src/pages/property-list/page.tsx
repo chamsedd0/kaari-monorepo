@@ -1,4 +1,5 @@
-import React, { useState, useEffect, ChangeEvent, useRef } from 'react';
+import React, { useState, useEffect, ChangeEvent, useRef, useCallback, memo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { IoFilter, IoMap, IoHome, IoSearch, IoClose, IoHeartOutline, IoHeart } from 'react-icons/io5';
 import { FaBed, FaBath, FaRulerCombined, FaStar } from 'react-icons/fa';
 import { AppliedFilterBannerComponent } from "../../components/skeletons/banners/static/applied-filter-banner";
@@ -10,7 +11,6 @@ import { PropertyList } from "./styles"
 import { FilterModal } from "../../components/skeletons/constructed/modals/filter-modal";
 
 import ExamplePic from '../../assets/images/propertyExamplePic.png'
-import UnifiedHeader from "../../components/skeletons/constructed/headers/unified-header";
 
 // Define property type
 interface PropertyType {
@@ -204,6 +204,53 @@ const sortOptions: SortOptionType[] = [
   'Newest First'
 ];
 
+// Create a separate component for the map with property popup
+const PropertyMap = memo(({ selectedProperty, showMap, properties }: { 
+  selectedProperty: PropertyType | null, 
+  showMap: boolean,
+  properties: PropertyType[] 
+}) => {
+  return (
+    <div className={`map ${showMap ? 'active' : ''}`}>
+      {/* Map placeholder - would be replaced with an actual map component */}
+      <div className="map-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="currentColor"/>
+        </svg>
+        <span>Interactive map would be displayed here - with {properties.length} properties</span>
+      </div>
+      
+      <div className="map-controls">
+        <button className="map-button" title="Zoom In">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
+          </svg>
+        </button>
+        <button className="map-button" title="Zoom Out">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 13H5V11H19V13Z" fill="currentColor"/>
+          </svg>
+        </button>
+        <button className="map-button" title="My Location">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8ZM20.94 11C20.48 6.83 17.17 3.52 13 3.06V1H11V3.06C6.83 3.52 3.52 6.83 3.06 11H1V13H3.06C3.52 17.17 6.83 20.48 11 20.94V23H13V20.94C17.17 20.48 20.48 17.17 20.94 13H23V11H20.94ZM12 19C8.13 19 5 15.87 5 12C5 8.13 8.13 5 12 5C15.87 5 19 8.13 19 12C19 15.87 15.87 19 12 19Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* We're not using selectedProperty for hover anymore, so this is redundant */}
+      {/* {selectedProperty && (
+        <div className="property-popup" style={{ 
+          left: `50%`, 
+          top: `50%` 
+        }}>
+          ... property popup content ...
+        </div>
+      )} */}
+    </div>
+  );
+});
+
 export default function PropertyListPage() {
   // Refs
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -217,10 +264,46 @@ export default function PropertyListPage() {
   const [sortOption, setSortOption] = useState<string>('Recommended');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [showMap, setShowMap] = useState<boolean>(window.innerWidth > 992);
-  const [selectedProperty, setSelectedProperty] = useState<PropertyType | null>(null);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const propertiesPerPage = 6;
+
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Parse URL search parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const locationParam = params.get('location');
+    const dateParam = params.get('date');
+    
+    // Initialize with a flag to avoid unnecessary re-filtering
+    let filtersChanged = false;
+    
+    // Set search query if location parameter exists
+    if (locationParam && locationParam !== searchQuery) {
+      setSearchQuery(locationParam);
+      filtersChanged = true;
+    }
+    
+    // Apply date filter if date parameter exists
+    if (dateParam) {
+      const formattedDate = new Date(dateParam).toLocaleDateString();
+      const dateFilter = `Available: ${formattedDate}`;
+      if (!activeFilters.includes(dateFilter)) {
+        setActiveFilters(prev => [...prev, dateFilter]);
+        filtersChanged = true;
+      }
+    }
+    
+    // Apply filters if they changed
+    if (filtersChanged) {
+      // We need to use setTimeout to ensure state updates have happened
+      setTimeout(() => {
+        handleAdvancedFiltering();
+      }, 0);
+    }
+  }, [location.search]);
 
   // Filter properties based on search query and filters
   useEffect(() => {
@@ -264,7 +347,7 @@ export default function PropertyListPage() {
     }, 500);
     
     return () => clearTimeout(filterTimer);
-  }, [searchQuery, properties, sortOption]);
+  }, [searchQuery, properties, sortOption, activeFilters]);
 
   // Handle clicks outside filter modal
   useEffect(() => {
@@ -283,6 +366,17 @@ export default function PropertyListPage() {
   // Handle search input
   const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+    
+    // Update URL with the search parameters
+    const params = new URLSearchParams(location.search);
+    if (e.target.value) {
+      params.set('location', e.target.value);
+    } else {
+      params.delete('location');
+    }
+    
+    // Replace the URL without causing a full page reload
+    navigate(`/properties?${params.toString()}`, { replace: true });
   };
 
   // Handle sort option change
@@ -301,12 +395,90 @@ export default function PropertyListPage() {
 
   // Handle advanced filtering button click
   const handleAdvancedFiltering = () => {
-    setIsFilterModalOpen(!isFilterModalOpen);
-  };
-
-  // Handle property selection on the map
-  const handlePropertySelect = (property: PropertyType) => {
-    setSelectedProperty(property);
+    // Reset to first page whenever filters change
+    setCurrentPage(1);
+    
+    // Apply the filters to properties
+    let filtered = [...properties];
+    
+    // Apply search query filter
+    if (searchQuery) {
+      filtered = filtered.filter(
+        property => 
+          property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          property.subtitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          property.type.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Apply other active filters 
+    if (activeFilters.length > 0) {
+      filtered = filtered.filter(property => {
+        // Check each filter
+        return activeFilters.every(filter => {
+          // Bedroom filters
+          if (filter.includes('Bedroom')) {
+            const bedroomCount = property.bedrooms;
+            const filterValue = parseInt(filter.split(' ')[0]);
+            
+            if (filter.includes('+')) {
+              return bedroomCount >= filterValue;
+            } else {
+              return bedroomCount === filterValue;
+            }
+          }
+          
+          // People filter
+          if (filter.includes('People')) {
+            // For now, assume any property with enough bedrooms can accommodate the people
+            const peopleCount = parseInt(filter.split(' ')[0]);
+            return property.bedrooms >= Math.ceil(peopleCount / 2); // Assume 2 people per bedroom max
+          }
+          
+          // Price range filter
+          if (filter.includes('to')) {
+            const [min, max] = filter.split('to').map(s => parseInt(s.trim()));
+            const propertyPrice = parseInt(property.price.replace(/[^0-9]/g, ''));
+            return propertyPrice >= min && propertyPrice <= max;
+          }
+          
+          // Amenities filters
+          if (filter === 'Furnished') {
+            // In a real app, you would have a property.amenities array to check
+            return true; // For this example, assume all properties match
+          }
+          
+          // Date availability filter
+          if (filter.includes('Available:')) {
+            // In a real app, you would check property availability dates
+            return true; // For this example, assume all properties are available
+          }
+          
+          return true; // Default to including if filter is not recognized
+        });
+      });
+    }
+    
+    // Apply sorting after filtering
+    switch(sortOption) {
+      case 'Price: Low to High':
+        filtered.sort((a, b) => parseFloat(a.price.replace(/[^0-9.]/g, '')) - parseFloat(b.price.replace(/[^0-9.]/g, '')));
+        break;
+      case 'Price: High to Low':
+        filtered.sort((a, b) => parseFloat(b.price.replace(/[^0-9.]/g, '')) - parseFloat(a.price.replace(/[^0-9.]/g, '')));
+        break;
+      case 'Newest First':
+        // In a real app, you would sort by listing date
+        break;
+      case 'Recommended':
+      default:
+        // Sort recommended properties first
+        filtered.sort((a, b) => (b.isRecommended ? 1 : 0) - (a.isRecommended ? 1 : 0));
+        break;
+    }
+    
+    setFilteredProperties(filtered);
+    setIsLoading(false);
   };
 
   // Toggle map visibility on mobile
@@ -315,13 +487,13 @@ export default function PropertyListPage() {
   };
 
   // Toggle favorite status
-  const toggleFavorite = (id: number) => {
+  const toggleFavorite = useCallback((id: number) => {
     setProperties(properties.map(property => 
       property.id === id 
         ? { ...property, isFavorite: !property.isFavorite } 
         : property
     ));
-  };
+  }, [properties]);
 
   // Scroll to top when changing page
   useEffect(() => {
@@ -351,8 +523,8 @@ export default function PropertyListPage() {
     );
   };
 
-  // Enhanced property card with additional features
-  const EnhancedPropertyCard = (property: PropertyType) => {
+  // Memoize the EnhancedPropertyCard to prevent unnecessary renders
+  const EnhancedPropertyCard = memo(({ property }: { property: PropertyType }) => {
     return (
       <div className="property-card-wrapper">
         {property.isRecommended && (
@@ -386,16 +558,20 @@ export default function PropertyListPage() {
         </div>
       </div>
     );
-  };
+  });
 
   // Clear all filters
   const clearAllFilters = () => {
     setActiveFilters([]);
   };
 
+  // Toggle the filter modal
+  const toggleFilterModal = () => {
+    setIsFilterModalOpen(!isFilterModalOpen);
+  };
+
   return (
     <PropertyList>
-      <UnifiedHeader variant="white" userType="user" />
       <div className="main-content" ref={scrollRef}>
             <div className="search-form">
           <div className="search-input-wrapper">
@@ -413,9 +589,9 @@ export default function PropertyListPage() {
           </div>
           <PurpleButtonMB48 
             text="Advanced filtering"
-            onClick={handleAdvancedFiltering}
+            onClick={toggleFilterModal}
           />
-          <button className="filter-icon-button" onClick={handleAdvancedFiltering}>
+          <button className="filter-icon-button" onClick={toggleFilterModal}>
             <IoFilter />
           </button>
             </div>
@@ -475,11 +651,9 @@ export default function PropertyListPage() {
                   <div 
                     className="result" 
                     key={property.id}
-                    onMouseEnter={() => handlePropertySelect(property)}
-                    onMouseLeave={() => setSelectedProperty(null)}
                   >
-                    <EnhancedPropertyCard {...property} />
-                    </div>
+                    <EnhancedPropertyCard property={property} />
+                  </div>
                 ))}
               </div>
 
@@ -526,66 +700,11 @@ export default function PropertyListPage() {
                 </div>
             </div>
 
-      <div className={`map ${showMap ? 'active' : ''}`}>
-        {/* Map placeholder - would be replaced with an actual map component */}
-        <div className="map-placeholder">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="currentColor"/>
-          </svg>
-          <span>Interactive map would be displayed here</span>
-        </div>
-        
-        <div className="map-controls">
-          <button className="map-button" title="Zoom In">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
-            </svg>
-          </button>
-          <button className="map-button" title="Zoom Out">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19 13H5V11H19V13Z" fill="currentColor"/>
-            </svg>
-          </button>
-          <button className="map-button" title="My Location">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8ZM20.94 11C20.48 6.83 17.17 3.52 13 3.06V1H11V3.06C6.83 3.52 3.52 6.83 3.06 11H1V13H3.06C3.52 17.17 6.83 20.48 11 20.94V23H13V20.94C17.17 20.48 20.48 17.17 20.94 13H23V11H20.94ZM12 19C8.13 19 5 15.87 5 12C5 8.13 8.13 5 12 5C15.87 5 19 8.13 19 12C19 15.87 15.87 19 12 19Z" fill="currentColor"/>
-            </svg>
-          </button>
-        </div>
-
-        {selectedProperty && (
-          <div className="property-popup" style={{ 
-            left: `50%`, 
-            top: `50%` 
-          }}>
-            <img 
-              src={selectedProperty.image} 
-              alt={selectedProperty.title} 
-              className="popup-image" 
-            />
-            <div className="popup-content">
-              <div className="popup-title">{selectedProperty.title}</div>
-              <div className="popup-price">
-                {selectedProperty.price}<span style={{ fontSize: '12px', fontWeight: 'normal' }}>{selectedProperty.priceType}</span>
-              </div>
-              <div className="popup-details">
-                <div className="detail-item">
-                  <FaBed />
-                  {selectedProperty.bedrooms} bd
-                </div>
-                <div className="detail-item">
-                  <FaBath />
-                  {selectedProperty.bathrooms} ba
-                </div>
-                <div className="detail-item">
-                  <FaRulerCombined />
-                  {selectedProperty.area}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      <PropertyMap 
+        selectedProperty={null} 
+        showMap={showMap}
+        properties={filteredProperties} 
+      />
 
       <button className="toggle-map-button" onClick={toggleMap}>
         <IoMap />

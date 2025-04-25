@@ -334,33 +334,13 @@ export const PropertyList = styled.div`
                 padding-bottom: 40px;
                 
                 .result {
-                    transform: translateY(0);
-                    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                     position: relative;
-                    
-                    &:hover {
-                        transform: translateY(-8px) scale(1.02);
-                        z-index: 1;
-                        
-                        &::after {
-                            opacity: 1;
-                            transform: translateY(0);
-                        }
-                    }
-                    
+                    transform: none !important;
+                    transition: none !important;
+                    box-shadow: none !important;
+
                     &::after {
-                        content: ''; 
-                        position: absolute;
-                        bottom: -10px;
-                        left: 10px;
-                        right: 10px;
-                        height: 10px;
-                        filter: blur(10px);
-                        border-radius: 50%;
-                        z-index: -1;
-                        opacity: 0;
-                        transform: translateY(-10px);
-                        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                        display: none;
                     }
                     
                     &:nth-child(3n+1) {
@@ -382,10 +362,8 @@ export const PropertyList = styled.div`
                     height: 100%;
                     border-radius: 16px;
                     background: white;
-                    transition: all 0.3s ease;
-                    
-                    &:hover {
-                    }
+                    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+                    transition: none !important;
                     
                     .favorite-button {
                         position: absolute;
@@ -401,12 +379,12 @@ export const PropertyList = styled.div`
                         cursor: pointer;
                         z-index: 10;
                         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-                        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                        transition: background-color 0.2s ease;
                         
                         svg {
                             font-size: 18px;
                             color: ${Theme.colors.gray};
-                            transition: all 0.3s ease;
+                            transition: color 0.2s ease;
                             
                             &.filled {
                                 color: #e74c3c;
@@ -414,12 +392,10 @@ export const PropertyList = styled.div`
                         }
                         
                         &:hover {
-                            transform: scale(1.15);
                             background: #fff9f9;
                             
                             svg {
                                 color: #e74c3c;
-                                transform: scale(1.1);
                             }
                         }
                     }

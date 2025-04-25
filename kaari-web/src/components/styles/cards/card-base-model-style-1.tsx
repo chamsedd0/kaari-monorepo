@@ -2,7 +2,6 @@ import { Theme } from "../../../theme/theme";
 import styled from "styled-components";
 
 export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
-
   background-color: ${Theme.colors.white};
   border-radius: ${Theme.borders.radius.md};
   display: flex;
@@ -10,8 +9,6 @@ export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
   gap: 8px;
   width: 100%;
   height: 100%;
-  
-
   position: relative;
 
   img {
@@ -28,12 +25,10 @@ export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
     position: relative;
 
     .certifications {
-
       position: absolute;
       bottom: 0;
       left: 0;
       width: 100%;
-
       display: flex;
       align-items: center;
       justify-content: start;
@@ -43,9 +38,7 @@ export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
       @media (max-width: 1400px) {
         gap: 6px;
         padding: 10px;
-        
       }
-
     }
 
     .favorite-icon {
@@ -62,12 +55,12 @@ export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
       cursor: pointer;
       z-index: 10;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: none;
       
       svg {
         font-size: 18px;
         color: ${Theme.colors.gray};
-        transition: all 0.3s ease;
+        transition: none;
         
         &.filled {
           color: #e74c3c;
@@ -75,12 +68,10 @@ export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
       }
       
       &:hover {
-        transform: scale(1.15);
         background: #fff9f9;
         
         svg {
           color: #e74c3c;
-          transform: scale(1.1);
         }
       }
     }
@@ -88,9 +79,6 @@ export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
 
   .title {
     color: ${Theme.colors.black};
-  }
-
-  .title {
     font: ${Theme.typography.fonts.extraLargeDB};
 
     b {
@@ -135,6 +123,4 @@ export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
       box-shadow: 0 4px 10px rgba(103, 58, 183, 0.3);
     }
   }
-
-
 `;

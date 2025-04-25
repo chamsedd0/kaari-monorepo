@@ -70,35 +70,35 @@ const AdminDashboard: React.FC = () => {
         </SidebarHeader>
         
         <NavItem 
-          active={activePage === 'overview'} 
+          $active={activePage === 'overview'} 
           onClick={() => handleNavigation('overview')}
         >
           <FaHome /> Overview
         </NavItem>
         
         <NavItem 
-          active={activePage === 'photoshoot-bookings'} 
+          $active={activePage === 'photoshoot-bookings'} 
           onClick={() => handleNavigation('photoshoot-bookings')}
         >
           <FaCalendarAlt /> Photoshoot Bookings
         </NavItem>
         
         <NavItem 
-          active={activePage === 'teams'} 
+          $active={activePage === 'teams'} 
           onClick={() => handleNavigation('teams')}
         >
           <FaUsers /> Teams
         </NavItem>
         
         <NavItem 
-          active={activePage === 'properties'} 
+          $active={activePage === 'properties'} 
           onClick={() => handleNavigation('properties')}
         >
           <FaBuilding /> Properties
         </NavItem>
         
         <NavItem 
-          active={activePage === 'settings'} 
+          $active={activePage === 'settings'} 
           onClick={() => handleNavigation('settings')}
         >
           <FaCog /> Settings

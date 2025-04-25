@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationPannel } from '../../../components/skeletons/constructed/dashboard-navigation-pannel/navigation-pannel';
-import UnifiedHeader from '../../../components/skeletons/constructed/headers/unified-header';
 import { UserDashboardStyle } from './styles';
 import LoadingScreen from '../../../components/loading/LoadingScreen';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // Import all section pages
 import ProfilePage from './profile/page';
@@ -17,11 +17,68 @@ import FAQsPage from './FAQs/page';
 
 type Section = 'profile' | 'messages' | 'reservations' | 'reviews' | 'payments' | 'perks' | 'settings' | 'contacts' | 'faq';
 
+// Map URL segments to section names for better readability in the URL
+const URL_TO_SECTION: Record<string, Section> = {
+    '': 'profile',
+    'profile': 'profile',
+    'messages': 'messages',
+    'reservations': 'reservations',
+    'reviews': 'reviews',
+    'payments': 'payments',
+    'perks': 'perks',
+    'settings': 'settings',
+    'contacts': 'contacts',
+    'faq': 'faq'
+};
+
 const UserDashboard: React.FC = () => {
-    const [activeSection, setActiveSection] = useState<Section>('profile');
+    const navigate = useNavigate();
+    const location = useLocation();
+    
+    // Get the current section from the URL
+    const getInitialSection = (): Section => {
+        const path = location.pathname.split('/');
+        const sectionFromUrl = path[path.length - 1];
+        
+        // Special case for the /account, /payments, and /reservations routes
+        if (location.pathname.startsWith('/account')) {
+            return 'profile';
+        }
+        if (location.pathname.startsWith('/payments')) {
+            return 'payments';
+        }
+        if (location.pathname.startsWith('/reservations')) {
+            return 'reservations';
+        }
+        
+        return URL_TO_SECTION[sectionFromUrl] || 'profile';
+    };
+    
+    const [activeSection, setActiveSection] = useState<Section>(getInitialSection());
     const [isAnimating, setIsAnimating] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isSectionLoading, setIsSectionLoading] = useState(false);
+
+    // Update URL when section changes
+    const handleSectionChange = (section: Section) => {
+        // Handle direct routes
+        if (location.pathname.startsWith('/account') ||
+            location.pathname.startsWith('/payments') ||
+            location.pathname.startsWith('/reservations')) {
+            navigate(`/dashboard/user/${section}`);
+        } else {
+            navigate(`/dashboard/user/${section}`);
+        }
+        setActiveSection(section);
+    };
+
+    // Update active section when URL changes
+    useEffect(() => {
+        const newSection = getInitialSection();
+        if (newSection !== activeSection) {
+            setActiveSection(newSection);
+        }
+    }, [location.pathname]);
 
     // Initial loading when the dashboard first loads
     useEffect(() => {
@@ -74,7 +131,7 @@ const UserDashboard: React.FC = () => {
             case 'faq':
                 return <FAQsPage />;
             default:
-               
+                return <ProfilePage />;
         }
     };
 
@@ -82,15 +139,9 @@ const UserDashboard: React.FC = () => {
         <>
             <LoadingScreen isLoading={isLoading || isSectionLoading} />
             <div style={{ display: 'flex', maxWidth: '1500px', margin: '0 auto' }}>
-                <UnifiedHeader 
-                    variant="white" 
-                    userType="user" 
-                    isAuthenticated={true}
-                    showSearchBar={true} 
-                />
                 <NavigationPannel 
                     activeSection={activeSection}
-                    onSectionChange={setActiveSection}
+                    onSectionChange={handleSectionChange}
                 />
                 <UserDashboardStyle>
                     <div className={`section-container ${isAnimating ? 'animating' : ''}`}>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationPannelAdviser } from '../../../components/skeletons/constructed/dashboard-navigation-pannel/navigation-pannel-adviser';
-import UnifiedHeader from '../../../components/skeletons/constructed/headers/unified-header';
 import { AdvertiserDashboardStyle } from './styles';
 import LoadingScreen from '../../../components/loading/LoadingScreen';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // Import all section pages
 import DashboardPage from './dashboard/page';
@@ -18,14 +18,67 @@ import SupprotPage from './support/page';
 
 
 
-
 type Section = 'Dashboard' | 'MyProfile' | 'Messages' | 'Properties' | 'Reservations' | 'Reviews' | 'Payments' | 'Tenants' | 'Photoshoot' | 'Support';
 
+// Map URL segments to section names for better readability in the URL
+const URL_TO_SECTION: Record<string, Section> = {
+    '': 'Dashboard',
+    'dashboard': 'Dashboard',
+    'profile': 'MyProfile',
+    'messages': 'Messages',
+    'properties': 'Properties',
+    'reservations': 'Reservations',
+    'reviews': 'Reviews',
+    'payments': 'Payments',
+    'tenants': 'Tenants',
+    'photoshoot': 'Photoshoot',
+    'support': 'Support'
+};
+
+// Map section names to URL segments for navigation
+const SECTION_TO_URL: Record<Section, string> = {
+    'Dashboard': 'dashboard',
+    'MyProfile': 'profile',
+    'Messages': 'messages',
+    'Properties': 'properties',
+    'Reservations': 'reservations',
+    'Reviews': 'reviews',
+    'Payments': 'payments',
+    'Tenants': 'tenants',
+    'Photoshoot': 'photoshoot',
+    'Support': 'support'
+};
+
 const AdvertiserDashboard: React.FC = () => {
-    const [activeSection, setActiveSection] = useState<Section>('Dashboard');
+    const navigate = useNavigate();
+    const location = useLocation();
+    
+    // Get the current section from the URL
+    const getInitialSection = (): Section => {
+        const path = location.pathname.split('/');
+        const sectionFromUrl = path[path.length - 1];
+        return URL_TO_SECTION[sectionFromUrl] || 'Dashboard';
+    };
+    
+    const [activeSection, setActiveSection] = useState<Section>(getInitialSection());
     const [isAnimating, setIsAnimating] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isSectionLoading, setIsSectionLoading] = useState(false);
+
+    // Update URL when section changes
+    const handleSectionChange = (section: Section) => {
+        const url = SECTION_TO_URL[section];
+        navigate(`/dashboard/advertiser/${url}`);
+        setActiveSection(section);
+    };
+
+    // Update active section when URL changes
+    useEffect(() => {
+        const newSection = getInitialSection();
+        if (newSection !== activeSection) {
+            setActiveSection(newSection);
+        }
+    }, [location.pathname]);
 
     // Initial loading when the dashboard first loads
     useEffect(() => {
@@ -86,15 +139,9 @@ const AdvertiserDashboard: React.FC = () => {
         <>
             <LoadingScreen isLoading={isLoading || isSectionLoading} />
             <div style={{ display: 'flex', maxWidth: '1500px', margin: '0 auto' }}>
-                <UnifiedHeader 
-                    variant="white" 
-                    userType="advertiser" 
-                    isAuthenticated={true}
-                    showSearchBar={true} 
-                />
                 <NavigationPannelAdviser 
                     activeSection={activeSection}
-                    onSectionChange={setActiveSection}
+                    onSectionChange={handleSectionChange}
                 />
                 <AdvertiserDashboardStyle>
                     <div className={`section-container ${isAnimating ? 'animating' : ''}`}>

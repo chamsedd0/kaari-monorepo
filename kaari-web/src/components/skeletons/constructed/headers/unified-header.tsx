@@ -16,6 +16,7 @@ import { AuthModal } from '../modals/auth-modal';
 import { SignOutConfirmationModal } from '../modals/signout-confirmation-modal';
 import { ProfileDropdown } from '../profile-dropdown/profile-dropdown';
 import { signOut } from '../../../../backend/firebase/auth';
+import eventBus, { AUTH_EVENTS } from '../../../../utils/event-bus';
 
 // Define the styled components for different header styles
 const HeaderContainer = styled(HeaderBaseModel)<{
@@ -272,6 +273,25 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     }
   }, [scrolled, isTransparent]);
 
+  // Add event listener to document body for auth changes
+  useEffect(() => {
+    function checkAuth() {
+      // Force re-render
+      setIsUserAuthenticated(authOverride !== undefined ? authOverride : storeIsAuthenticated);
+    }
+    
+    // Check every 500ms
+    const interval = setInterval(checkAuth, 500);
+    
+    // Add global auth change event listener
+    document.body.addEventListener('auth-change', checkAuth);
+    
+    return () => {
+      clearInterval(interval);
+      document.body.removeEventListener('auth-change', checkAuth);
+    };
+  }, [storeIsAuthenticated, authOverride]);
+
   // Navigation handlers
   const handleHomeClick = () => navigate('/');
   const handleLandlordClick = () => navigate('/for-advertisers');
@@ -311,18 +331,26 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const handleSignOut = async () => {
     try {
       setShowSignOutModal(false);
+      
+      // Execute logout directly
       await signOut();
+      
+      // Update local state immediately
       setUser(null);
       setIsAuthenticated(false);
+      setIsUserAuthenticated(false);
       
-      // Only update local state if we're not using an override
-      if (authOverride === undefined) {
-        setIsUserAuthenticated(false);
-      }
+      // Dispatch event for other components
+      document.body.dispatchEvent(new Event('auth-change'));
       
-      navigate('/');
+      // Wait a moment, then redirect to homepage using client-side navigation
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 100);
     } catch (error) {
       console.error("Error signing out:", error);
+      // Navigate to home page even if there's an error
+      navigate('/', { replace: true });
     }
   };
 
@@ -348,7 +376,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     }
   };
 
-  // Content based on variant and user type
+  // Determine content based on variant and user type
   const getLogo = () => {
     return isWhite ? LogoPurple : LogoWhite;
   };
@@ -362,7 +390,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     // If we have a custom link, use that instead
     if (customLink) {
       return (
-        <div className="link" onClick={customLink.onClick}>
+        <div className="link" onClick={() => {
+          if (customLink.onClick) customLink.onClick();
+        }}>
           {customLink.text}
         </div>
       );
@@ -528,6 +558,24 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       </div>
     );
   };
+
+  // Force re-render when authentication state changes
+  const [, forceUpdate] = useState({});
+  
+  // Listen for authentication events
+  useEffect(() => {
+    const handleAuthChange = () => {
+      // This will trigger a re-render
+      forceUpdate({});
+    };
+    
+    // Listen for authentication events
+    const unsubscribe = eventBus.on(AUTH_EVENTS.AUTH_STATE_CHANGED, handleAuthChange);
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   return (
     <>

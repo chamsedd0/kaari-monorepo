@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdvertisersLandingStyle } from './styles';
-import UnifiedHeader from '../../components/skeletons/constructed/headers/unified-header';
 import { PhotoshootCardEnum } from '../../components/skeletons/cards/photoshoot-card-enum';
 
 // Import images
@@ -51,14 +50,6 @@ const AdvertisersLanding: React.FC = () => {
 
   return (
     <>
-      <UnifiedHeader 
-        variant="advertiser-landing" 
-        userType="advertiser" 
-        customLink={{
-          text: "Looking for a place?",
-          onClick: () => navigate('/')
-        }}
-      />
       <AdvertisersLandingStyle>
         {/* Hero Section */}
         <section className="hero-section">

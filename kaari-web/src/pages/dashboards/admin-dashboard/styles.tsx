@@ -25,13 +25,13 @@ export const Logo = styled.h1`
   margin: 0;
 `;
 
-export const NavItem = styled.div<{ active?: boolean }>`
+export const NavItem = styled.div<{ $active?: boolean }>`
   padding: 12px 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 10px;
-  background-color: ${props => props.active ? '#333' : 'transparent'};
+  background-color: ${props => props.$active ? '#333' : 'transparent'};
   
   &:hover {
     background-color: #333;
@@ -166,7 +166,7 @@ export const Button = styled.button`
   }
 `;
 
-export const StatusBadge = styled.span<{ status: string }>`
+export const StatusBadge = styled.span<{ $status: string }>`
   display: inline-block;
   padding: 4px 8px;
   border-radius: 4px;
@@ -174,7 +174,7 @@ export const StatusBadge = styled.span<{ status: string }>`
   font-weight: 500;
   
   background-color: ${props => {
-    switch (props.status) {
+    switch (props.$status) {
       case 'pending':
         return '#ffeeba';
       case 'assigned':
@@ -189,7 +189,7 @@ export const StatusBadge = styled.span<{ status: string }>`
   }};
   
   color: ${props => {
-    switch (props.status) {
+    switch (props.$status) {
       case 'pending':
         return '#856404';
       case 'assigned':

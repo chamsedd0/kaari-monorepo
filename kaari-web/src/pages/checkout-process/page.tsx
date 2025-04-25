@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import CheckoutProcessContainer from '../../components/skeletons/checkoutprocess/checkout-process-container';
 import { useSearchParams } from 'react-router-dom';
-import UnifiedHeader from '../../components/skeletons/constructed/headers/unified-header';
-import Footer from '../../components/skeletons/constructed/footer/footer';
 
 // Define valid status types
 type StatusType = 'success' | 'pending' | 'rejected' | 'payment_failed' | 'refund_processing';
@@ -36,9 +34,7 @@ const CheckoutProcess: React.FC = () => {
 
     return (
         <>
-            <UnifiedHeader variant="white" userType="user" showSearchBar={true} />
             <CheckoutProcessContainer initialStep={initialStep} successStatus={status} />
-            <Footer />
         </>
     );
 };
