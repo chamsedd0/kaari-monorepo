@@ -88,7 +88,7 @@ export const ProfilePageStyle = styled.div`
         .profile-inbut-label {
             font: ${Theme.typography.fonts.largeB};
             color: ${Theme.colors.black};
-            margin-bottom: 32px;
+          
         }
         .text-button {
             display: flex;

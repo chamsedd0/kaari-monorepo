@@ -5,7 +5,7 @@ import Picture from "../../../../../../assets/images/ProfilePicture.png";
 import { PurpleButtonMB48 } from '../../../../../../components/skeletons/buttons/purple_MB48';
 import InputVariant from '../../../../../../components/skeletons/inputs/input-fields/input-variant';
 import SelectFieldDatePicker from '../../../../../../components/skeletons/inputs/select-fields/select-field-date-picker';
-import UploadFieldVariant from '../../../../../../components/skeletons/inputs/upload-fields/upload-field-variant';
+import UploadFieldModel from '../../../../../../components/skeletons/inputs/upload-fields/upload-field-variant';
 import TextareaVariant from '../../../../../../components/skeletons/inputs/input-fields/textarea-variant';
 import GenderCheckBox from '../../../../../../components/skeletons/inputs/check-box/gander-check-box';
 import SelectFieldBaseModel from '../../../../../../components/skeletons/inputs/select-fields/select-field-base-model';
@@ -125,27 +125,25 @@ const ProfileSection: React.FC = () => {
                         }
                     }}
                 /> 
-                <UploadFieldVariant 
+                <UploadFieldModel 
                     label="Passport or Front of ID" 
                     hlabel="Government ID"
                     onFileSelect={(file) => setIdFront(file)}
                     
                 />
-                <UploadFieldVariant 
+                <UploadFieldModel 
                     label="Back of ID" 
                     onFileSelect={(file) => setIdBack(file)}
                 />
-                <div className="profile-inbut-group">
+               
                     <div className="profile-inbut-label">Gender</div>
+                    <div className="profile-inbut-label">Languages</div>
                     <GenderCheckBox 
                         defaultValue={gender}
                         onChange={(value) => setGender(value)}
                     />
-                </div>
-                <div className="profile-inbut-group">
-                    <div className="profile-inbut-label2">Languages</div>
                     <div className="text-button">Add A Language+</div>
-                </div>
+                
             </div>
            
                 <SelectFieldBaseModel 

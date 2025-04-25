@@ -3,6 +3,8 @@ import { CardBaseModelStyleUpcomingPhotoshoot } from '../../styles/cards/card-ba
 import { BpurpleButtonMB48 } from '../buttons/border_purple_MB48';
 import {PurpleButtonMB48} from '../buttons/purple_MB48'
 import cancel from '../icons/Cross-Icon.svg'
+import upload from '../icons/icon_download.svg'
+
 interface UpcomingPhotoshootProps {
   date: string;
   time: string;
@@ -48,12 +50,16 @@ const UpcomingPhotoshoot: React.FC<UpcomingPhotoshootProps> = ({
       </div>
       
       <div className="bottom-container">
+        <div className="button-container">
+      <PurpleButtonMB48 text= "Reschedule"/>
         <BpurpleButtonMB48 
           text="Cancel Photoshoot" 
           icon={<img src={cancel} alt="cancel" />} 
         />
-        <BpurpleButtonMB48 text= "Reschedule"/>
-        <PurpleButtonMB48 text= "Download Summary"/>
+        </div>
+        <div className="upload-Icon">
+          <img src={upload} alt="upload" />
+        </div>
       </div>
     </CardBaseModelStyleUpcomingPhotoshoot>
   );

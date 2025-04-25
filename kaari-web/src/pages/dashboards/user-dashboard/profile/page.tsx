@@ -140,28 +140,24 @@ const ProfilePage: React.FC = () => {
                         label="Date of Birth"
                         onChange={(value) => setDateOfBirth(`${value.year}-${value.month}-${value.day}`)}
                     /> 
-                    <div className="profile-inbut-group">
-                        <div className="profile-inbut-label">Government ID</div>
-                        <UploadFieldModel 
-                            label="Passport or Front of ID" 
-                            onFileSelect={(file) => setIdFront(file)}
-                        />
-                    </div>
-                    <UploadFieldModel 
-                        label="Back of ID" 
-                        onFileSelect={(file) => setIdBack(file)}
+                   <UploadFieldModel 
+                    label="Passport or Front of ID" 
+                    hlabel="Government ID"
+                    onFileSelect={(file) => setIdFront(file)}
+                    
+                />
+                <UploadFieldModel 
+                    label="Back of ID" 
+                    onFileSelect={(file) => setIdBack(file)}
+                />
+               
+                    <div className="profile-inbut-label">Gender</div>
+                    <div className="profile-inbut-label">Languages</div>
+                    <GenderCheckBox 
+                        defaultValue={gender}
+                        onChange={(value) => setGender(value)}
                     />
-                    <div className="profile-inbut-group">
-                        <div className="profile-inbut-label">Gender</div>
-                        <GenderCheckBox 
-                            defaultValue={gender}
-                            onChange={(value) => setGender(value)}
-                        />
-                    </div>
-                    <div className="profile-inbut-group">
-                        <div className="profile-inbut-label">Languages</div>
-                        <div className="text-button">Add A Language+</div>
-                    </div>
+                    <div className="text-button">Add A Language+</div>
                 </div>
                 
                 

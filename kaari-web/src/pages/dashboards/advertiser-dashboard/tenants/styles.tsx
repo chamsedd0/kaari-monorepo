@@ -11,11 +11,14 @@ export const TenantsPageStyle = styled.div`
     font: ${Theme.typography.fonts.h3};
     color: ${Theme.colors.black};
   }
+  .group-title {
+        font: ${Theme.typography.fonts.largeB};
+        color: ${Theme.colors.black};
+    }
 
   .tenants-group {
     display: flex;
     flex-direction: column;
-    gap: 20px;
     width: 100%;
 
     .group-title {
