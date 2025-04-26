@@ -17,6 +17,7 @@ export const ProfileSectionStyle = styled.div`
         display: flex;
         align-items: center;
         gap: 16px;
+        
 
         .profile-image {
             width: 120px;
@@ -32,7 +33,7 @@ export const ProfileSectionStyle = styled.div`
         }
 
         .text-button {
-            font: ${Theme.typography.fonts.mediumB};
+            font: ${Theme.typography.fonts.link16};
             color: ${Theme.colors.secondary};
             cursor: pointer;
             transition: all 0.3s ease;
@@ -47,41 +48,34 @@ export const ProfileSectionStyle = styled.div`
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         width: 100%;
+   
+    .profile-inbut-label {
+        font: ${Theme.typography.fonts.largeB};
+        color: ${Theme.colors.black}; 
     }
-
-    
-
-    .profile-inbut-group {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: start;
-        
-        
-        
-        
-
-        .profile-inbut-label {
-            font: ${Theme.typography.fonts.largeB};
-            color: ${Theme.colors.black};
-           margin-bottom: 32px;
-            
-        }
-        .profile-inbut-label2 {
-            font: ${Theme.typography.fonts.largeB};
-            color: ${Theme.colors.black};
-            margin-bottom: 27px;
-            
-        }
-
-        .text-button {
-            font: ${Theme.typography.fonts.mediumB};
+    .text-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: ${Theme.colors.secondary};
+            font: ${Theme.typography.fonts.link16};
+            background: transparent;
+            border: none;
             cursor: pointer;
-            transition: all 0.3s ease;
+            padding: 8px 0;
+            text-decoration: underline;
+            width: fit-content;
             
+            &:hover {
+                opacity: 0.8;
+            }
+            
+            &:active {
+                opacity: 0.6;
+            }
         }
-    }
+}
+    
 
     .profile-actions {
         display: flex;

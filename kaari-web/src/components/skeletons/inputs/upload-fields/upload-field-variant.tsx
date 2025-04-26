@@ -18,6 +18,7 @@ const UploadFieldContainer = styled.div`
   flex-direction: column;
   width: 100%;
   
+  
   .head-label {
     margin-bottom: 12px;
     font: ${Theme.typography.fonts.largeB};
@@ -27,7 +28,6 @@ const UploadFieldContainer = styled.div`
   .illustration {
     display: flex;
     justify-content: center;
-    margin-bottom: 16px;
     
     img {
       width: 120px;

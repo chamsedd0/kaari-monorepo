@@ -16,6 +16,7 @@ const UploadFieldTitle = styled.div`
 
 const UploadFieldBaseModel = styled.div`
   display: flex;
+  min-height: 60px;
   align-items: center;
   justify-content: space-between;
   width: 100%;
@@ -26,7 +27,7 @@ const UploadFieldBaseModel = styled.div`
   transition: all 0.2s ease;
   color: ${Theme.colors.black};
   cursor: pointer;
-  font: ${Theme.typography.fonts.mediumM};
+  font: ${Theme.typography.fonts.largeM};
   
   &:hover {
     border-color: ${Theme.colors.secondary};

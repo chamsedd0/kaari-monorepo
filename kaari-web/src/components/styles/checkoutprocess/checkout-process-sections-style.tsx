@@ -91,60 +91,58 @@ export const PropertyImageContainer = styled.div`
 `;
 
 export const PaymentMethodContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   width: 100%;
-  padding: 1.5rem;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 20px 0;
 
   h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    color: #333;
+    font: ${Theme.typography.fonts.h4B};
+    color: ${Theme.colors.black};
+  }
+
+  .subtitle {
+    font: ${Theme.typography.fonts.largeM};
+    color: ${Theme.colors.gray2};
   }
 
   .error-message {
-    background-color: #fff2f2;
-    color: #e53935;
-    padding: 0.75rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    border-left: 4px solid #e53935;
-    font-size: 0.9rem;
+    color: red;
+    font: ${Theme.typography.fonts.text14};
+    margin-bottom: 10px;
   }
 
   .payment-methods-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    gap: 12px;
+    width: 100%;
   }
 
   .card-item {
     display: flex;
     align-items: center;
-    padding: 1rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    padding: 16px;
+    border: ${Theme.borders.primary};
+    border-radius: ${Theme.borders.radius.md};
     cursor: pointer;
     transition: all 0.2s ease;
 
-    &:hover {
-      border-color: #a0a0a0;
-      background-color: #f9f9f9;
+    &.selected {
+      border-color: ${Theme.colors.secondary};
+      background-color: ${Theme.colors.lightPurple};
     }
 
-    &.selected {
-      border: 2px solid #6200ea;
-      background-color: #f4f0ff;
+    &:hover {
+      border-color: ${Theme.colors.secondary};
     }
   }
 
   .card-icon {
-    font-size: 1.5rem;
-    color: #6200ea;
-    margin-right: 1rem;
+    font-size: 24px;
+    margin-right: 16px;
+    color: ${Theme.colors.gray2};
   }
 
   .card-details {
@@ -152,113 +150,90 @@ export const PaymentMethodContainer = styled.div`
   }
 
   .card-number {
-    font-size: 1.1rem;
-    font-weight: 500;
-    margin-bottom: 0.25rem;
+    font: ${Theme.typography.fonts.largeB};
+    margin-bottom: 4px;
   }
 
   .card-info {
     display: flex;
-    gap: 1.5rem;
-    font-size: 0.9rem;
-    color: #666;
+    gap: 16px;
+    font: ${Theme.typography.fonts.text14};
+    color: ${Theme.colors.gray2};
   }
 
   .default-badge {
-    display: inline-flex;
-    align-items: center;
-    background-color: #e1f5fe;
-    color: #0277bd;
-    padding: 0.3rem 0.6rem;
+    background-color: ${Theme.colors.secondary};
+    color: white;
+    padding: 2px 8px;
     border-radius: 4px;
-    font-size: 0.8rem;
-    margin-top: 0.5rem;
+    font: ${Theme.typography.fonts.smallB};
+    margin-left: 12px;
   }
 
   .card-actions {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    gap: 12px;
   }
 
   .set-default-btn, .remove-btn {
     background: none;
     border: none;
-    font-size: 0.85rem;
+    font: ${Theme.typography.fonts.text14};
+    color: ${Theme.colors.secondary};
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.5rem;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    gap: 4px;
 
-    svg {
-      font-size: 0.9rem;
-    }
-  }
-
-  .set-default-btn {
-    color: #4caf50;
     &:hover {
-      background-color: #e8f5e9;
+      text-decoration: underline;
     }
   }
 
   .remove-btn {
-    color: #f44336;
-    &:hover {
-      background-color: #ffebee;
-    }
+    color: ${Theme.colors.error};
   }
 
-  .add-payment-method-btn {
+  .add-payment-section {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 20px;
+    align-items: start;
+    justify-content: start;
     width: 100%;
-    padding: 0.9rem;
-    margin-bottom: 1.5rem;
-    background-color: #f5f5f5;
-    border: 1px dashed #bdbdbd;
-    border-radius: 8px;
-    color: #6200ea;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
 
-    &:hover {
-      background-color: #ede7f6;
-      border-color: #6200ea;
+    .title {
+      font: ${Theme.typography.fonts.h4B};
+      color: ${Theme.colors.black};
     }
 
-    svg {
-      font-size: 1.1rem;
+    .subtitle {
+      font: ${Theme.typography.fonts.largeM};
+      color: ${Theme.colors.gray2};
+    }
+
+    .payment-info-saved {
+      width: 100%;
+      max-height: 90px;
+    }
+    
+    .advanced-filtering-button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      
+      button {
+        max-width: 200px;
+      }
     }
   }
-
-  .continue-btn {
+  
+  .payment-form-container {
     width: 100%;
-    padding: 1rem;
-    background: linear-gradient(to right, #6200ea, #9c27b0);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: linear-gradient(to right, #5000c9, #8c239e);
-      box-shadow: 0 4px 8px rgba(98, 0, 234, 0.2);
-    }
-
-    &:disabled {
-      background: linear-gradient(to right, #9e9e9e, #bdbdbd);
-      cursor: not-allowed;
-      box-shadow: none;
-    }
+    padding: 20px;
+    border: ${Theme.borders.primary};
+    border-radius: ${Theme.borders.radius.md};
   }
 `;
 

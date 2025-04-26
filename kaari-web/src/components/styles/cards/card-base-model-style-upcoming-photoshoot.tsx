@@ -110,8 +110,23 @@ export const CardBaseModelStyleUpcomingPhotoshoot = styled.div`
 
     .bottom-container {
         display: flex;
+        width: 100%;    
+        justify-content: space-between;
         align-items: center;
-        gap: 12px;
+
+        .button-container{
+            width: 60%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .upload-Icon{
+            width: 32px;
+            height: 32px;
+            align-self: end;
+            
+        }
 
     }
 `;
