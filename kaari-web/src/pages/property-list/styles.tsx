@@ -95,21 +95,7 @@ export const PropertyList = styled.div<PropertyListProps>`
                         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
                         letter-spacing: 0.5px;
                     }
-                    
-                    .recommended-badge {
-                        position: absolute;
-                        bottom: 12px;
-                        left: 12px;
-                        background-color: rgba(0, 0, 0, 0.7);
-                        color: white;
-                        padding: 5px 10px;
-                        border-radius: 50px;
-                        font-size: 12px;
-                        font-weight: 600;
-                        letter-spacing: 0.5px;
-                        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-                        backdrop-filter: blur(4px);
-                    }
+
 
                     .custom-close-button {
                         position: absolute;
@@ -295,7 +281,7 @@ export const PropertyList = styled.div<PropertyListProps>`
             display: none;
             width: 24px;
             height: 80px;
-            background-color: ${Theme.colors.primary};
+            background-color: ${Theme.colors.secondary};
             color: white;
             border: none;
             border-radius: 4px 0 0 4px;
@@ -335,7 +321,7 @@ export const PropertyList = styled.div<PropertyListProps>`
             input {
                 width: 100%;
                 padding: 12px 12px 12px 40px;
-                border: 1px solid ${Theme.colors.fifth};
+                border: 1px solid ${Theme.colors.secondary};
                 border-radius: 8px;
                 
                 &:focus {
@@ -364,7 +350,7 @@ export const PropertyList = styled.div<PropertyListProps>`
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background-color: ${Theme.colors.primary};
+            background-color: ${Theme.colors.secondary};
             color: white;
             border: none;
             border-radius: 50%;
@@ -375,7 +361,7 @@ export const PropertyList = styled.div<PropertyListProps>`
             transition: background-color 0.2s;
             
             &:hover {
-                background-color: ${Theme.colors.secondary};
+                background-color: ${Theme.colors.primary};
             }
             
             @media (min-width: 768px) {
@@ -524,16 +510,16 @@ export const PropertyList = styled.div<PropertyListProps>`
             }
             
             button {
-                background-color: ${Theme.colors.primary};
+                background-color: ${Theme.colors.secondary};
                 color: white;
                 border: none;
                 padding: 8px 16px;
-                border-radius: 4px;
+                border-radius: 100px;
                 cursor: pointer;
                 transition: background-color 0.2s;
                 
                 &:hover {
-                    background-color: ${Theme.colors.secondary};
+                    background-color: ${Theme.colors.primary};
                 }
             }
         }

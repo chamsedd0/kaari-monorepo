@@ -10,32 +10,33 @@ const LanguageSwitcherStyle = styled.div`
   
   .language-toggle {
     display: flex;
-    border: 1px solid ${Theme.colors.fifth};
     border-radius: 20px;
     overflow: hidden;
-    height: 32px;
+    height: 36px;
     position: relative;
-    background: white;
+    background: ${Theme.colors.quaternary}50;
     min-width: 80px; /* Ensure minimum width to prevent layout shift */
     
     button {
       background: none;
       border: none;
-      padding: 0 12px;
+      padding: 0 13px;
       cursor: pointer;
       font-size: 14px;
       position: relative;
       z-index: 1;
       transition: color 0.3s ease;
-      min-width: 40px; /* Ensure minimum width */
+      min-width: 41px; /* Ensure minimum width */
+      color: ${Theme.colors.white};
+      font-weight: bold;
+
       
       &.active {
         color: white;
-        font-weight: bold;
       }
       
       &:hover:not(.active) {
-        color: ${Theme.colors.primary};
+        color: ${Theme.colors.white};
       }
     }
     
@@ -43,7 +44,7 @@ const LanguageSwitcherStyle = styled.div`
       position: absolute;
       height: 100%;
       width: 50%;
-      background-color: ${Theme.colors.primary};
+      background-color: ${Theme.colors.quaternary}50;
       transition: transform 0.3s ease;
       border-radius: 20px;
       

@@ -173,8 +173,8 @@ const UsersLanding: React.FC = () => {
           <div className="hero-content">
             <h1>{t('home.hero_title')}</h1>
             <div className="search-container">
-              <BookingSearchForm />
-            </div>
+          <BookingSearchForm />
+        </div>
             <div className="explore-link" onClick={() => navigate('/properties')}>
               <span>{t('home.explore_places')}</span>
               <span className="arrow-icon">

@@ -338,18 +338,14 @@ const PropertyMap = memo(({
                     <div className="property-type-badge">
                       {t(`property_list.property_type.${selectedProperty.propertyType}`)}
                     </div>
-                    {selectedProperty.isRecommended && (
-                      <div className="recommended-badge">
-                        {t('property_list.recommended')}
-                      </div>
-                    )}
+
                     <button 
                       className="custom-close-button"
                       onClick={() => setSelectedProperty(null)}
                       aria-label="Close"
                     >
                       <img src={closeIcon} alt="Close" />
-                    </button>
+        </button>
                   </div>
                 )}
                 <div className="info-window-content">
@@ -396,9 +392,9 @@ const PropertyMap = memo(({
                       onClick={() => handleViewProperty(selectedProperty.id)}
                     >
                       {t('property_list.view_property')}
-                    </button>
+        </button>
 
-                  </div>
+      </div>
                 </div>
               </div>
             </InfoWindow>
@@ -709,190 +705,125 @@ export default function PropertyListPage() {
 
   // Toggle a filter (add or remove)
   const toggleFilter = (filter: string) => {
-    // Show loading state for visual feedback
-    setIsLoading(true);
-    
     // Use functional update pattern to ensure we have the latest state
     setActiveFilters(prevFilters => {
       const newFilters = prevFilters.includes(filter)
         ? prevFilters.filter(f => f !== filter)
         : [...prevFilters, filter];
-        
-      // Apply filters immediately with the new filters array
-      applyFiltersImmediately(newFilters);
       
+      // Return the new filters without immediately applying them
         return newFilters;
       });
+    // No automatic application of filters
   };
   
-  // Apply filters immediately without waiting for state updates
-  const applyFiltersImmediately = useCallback((activeFiltersArray: string[]) => {
-    // Start with all properties
-    let filtered = [...properties];
+  // Apply current filters based on the activeFilters state
+  const applyCurrentFilters = useCallback((filtersToApply?: string[]) => {
+    // Always hide filtering section and show search view when applying filters
+    const filtersToUse = filtersToApply || activeFilters;
+    console.log("Current active filters:", filtersToUse);
     
-    // Apply location filter if present
-    if (locationInput) {
-      filtered = filtered.filter(property => {
-        const location = property.address.city + ', ' + property.address.state;
-        return location.toLowerCase().includes(locationInput.toLowerCase());
-      });
+    // Update active filters if we were provided with filters
+    if (filtersToApply) {
+      setActiveFilters(filtersToApply);
     }
     
-    // Apply other active filters
-    if (activeFiltersArray.length > 0) {
-      filtered = filtered.filter(property => {
-        // Check each filter
-        for (const filter of activeFiltersArray) {
-          // Bedroom filters
-          if (filter === t('property_list.studio')) {
-            if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms !== 0) {
-              return false;
-            }
-          } else if (filter === "0 " + t('property_list.bedrooms')) {
-            if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms !== 0) {
-              return false;
-            }
-          } else if (filter === "1 " + t('property_list.bedroom')) {
-            if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms !== 1) {
-              return false;
-            }
-          } else if (filter === "2 " + t('property_list.bedrooms')) {
-            if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms !== 2) {
-              return false;
-            }
-          } else if (filter === "3 " + t('property_list.bedrooms')) {
-            if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms !== 3) {
-              return false;
-            }
-          } else if (filter === "3+ " + t('property_list.bedrooms')) {
-            // Check if bedrooms property exists and is a number before comparing
-            if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms < 3) {
-              return false;
-            }
-          }
-          
-          // Property Type filters - normalize case for comparison
-          const normalizedPropertyType = property.propertyType.toLowerCase();
-          if (filter === "Apartment" && normalizedPropertyType !== 'apartment') {
-            return false;
-          } else if (filter === "House" && normalizedPropertyType !== 'house') {
-            return false;
-          } else if (filter === "Condo" && normalizedPropertyType !== 'condo') {
-            return false;
-          } else if (filter === "Commercial" && normalizedPropertyType !== 'commercial') {
+    // Directly apply filtering here
+    const filtered = properties.filter(property => {
+      // Check each filter
+      for (const filter of filtersToUse) {
+        // Skip if we don't have a filter
+        if (!filter) continue;
+        
+        // Bedroom filters
+        if (filter === t('property_list.studio')) {
+          if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms !== 0) {
             return false;
           }
-          
-          // Price filters
-          if (filter === "$0-$1000") {
-            if (property.price > 1000) {
+        } else if (filter.includes(t('property_list.bedroom')) || filter.includes(t('property_list.bedrooms'))) {
+          const bedroomMatch = filter.match(/^(\d+)\+?\s/);
+          if (bedroomMatch) {
+            const filterBedrooms = parseInt(bedroomMatch[1], 10);
+            const isPlus = filter.includes('+');
+            
+            if (property.bedrooms === undefined || typeof property.bedrooms !== 'number') {
               return false;
             }
-          } else if (filter === "$1000-$2000") {
-            if (property.price < 1000 || property.price > 2000) {
+            
+            if (isPlus && property.bedrooms < filterBedrooms) {
+              return false;
+            } else if (!isPlus && property.bedrooms !== filterBedrooms) {
               return false;
             }
-          } else if (filter === "$2000-$3000") {
-            if (property.price < 2000 || property.price > 3000) {
-              return false;
-            }
-          } else if (filter === "$3000+") {
-            if (property.price < 3000) {
-              return false;
-            }
-          }
-          
-          // Custom price range
-          if (filter.includes(" to ")) {
-            const [min, max] = filter.split(" to ").map(part => parseInt(part.replace(/\D/g, '')));
-            if (property.price < min || property.price > max) {
-              return false;
-            }
-          }
-          
-          // Amenity filters - case insensitive comparison
-          if (filter === t('property_list.parking') || filter === 'Parking') {
-            const hasParking = property.amenities.some(a => a.toLowerCase() === 'parking');
-            if (!hasParking) {
-              return false;
-            }
-          } else if (filter === t('property_list.pool') || filter === 'Pool') {
-            const hasPool = property.amenities.some(a => a.toLowerCase() === 'pool');
-            if (!hasPool) {
-              return false;
-            }
-          } else if (filter === t('property_list.fitness_center') || filter === 'Fitness Center') {
-            const hasFitness = property.amenities.some(a => a.toLowerCase() === 'fitness center');
-            if (!hasFitness) {
-              return false;
-            }
-          } else if (filter === t('property_list.pets_allowed') || filter === 'Pets Allowed') {
-            const allowsPets = property.amenities.some(a => a.toLowerCase() === 'pets allowed');
-            if (!allowsPets) {
-              return false;
-            }
-          }
-          
-          // Additional amenities from the FilteringSection
-          if (filter === 'Furnished') {
-            const isFurnished = property.amenities.some(a => a.toLowerCase() === 'furnished');
-            if (!isFurnished) {
-              return false;
-            }
-          } else if (filter === 'WiFi') {
-            const hasWifi = property.amenities.some(a => a.toLowerCase() === 'wifi' || a.toLowerCase() === 'wi-fi');
-            if (!hasWifi) {
-              return false;
-            }
-          }
-          
-          // Included fees
-          if (filter === 'water') {
-            const includesWater = property.features.some(f => f.toLowerCase().includes('water'));
-            if (!includesWater) {
-              return false;
-            }
-          } else if (filter === 'electricity') {
-            const includesElectricity = property.features.some(f => f.toLowerCase().includes('electric'));
-            if (!includesElectricity) {
-              return false;
-            }
-          } else if (filter === 'wifi') {
-            const includesWifi = property.features.some(f => f.toLowerCase().includes('wifi') || f.toLowerCase().includes('internet'));
-            if (!includesWifi) {
-              return false;
-            }
-          }
-          
-          // Location filter (already handled above)
-          if (filter.startsWith('Location:')) {
-            // Skip as this is handled by the locationInput filter above
-            continue;
           }
         }
         
-        // If passed all filters
-        return true;
-      });
-    }
+        // Property Type filters - normalize case for comparison
+        const normalizedPropertyType = property.propertyType.toLowerCase();
+        if (filter === "Apartment" && normalizedPropertyType !== 'apartment') {
+          return false;
+        } else if (filter === "House" && normalizedPropertyType !== 'house') {
+          return false;
+        } else if (filter === "Condo" && normalizedPropertyType !== 'condo') {
+          return false;
+        } else if (filter === "Commercial" && normalizedPropertyType !== 'commercial') {
+          return false;
+        }
+        
+        // Price range filter
+        if (filter.includes(" to ")) {
+          const [min, max] = filter.split(" to ").map(part => parseInt(part.replace(/\D/g, '')));
+          if (property.price < min || property.price > max) {
+            return false;
+          }
+        }
+        
+        // Amenity filters
+        const amenityFilters = ['Furnished', 'WiFi', 'Parking', 'Pool', 'Fitness Center', 'Pets Allowed'];
+        if (amenityFilters.includes(filter)) {
+          const hasAmenity = property.amenities.some(a => 
+            a.toLowerCase() === filter.toLowerCase() ||
+            (filter === 'WiFi' && a.toLowerCase() === 'wi-fi')
+          );
+          if (!hasAmenity) {
+            return false;
+          }
+        }
+        
+        // Included fees
+        if (filter === 'water' || filter === 'electricity' || filter === 'wifi') {
+          const hasFeature = property.features.some(f => 
+            f.toLowerCase().includes(filter.toLowerCase())
+          );
+          if (!hasFeature) {
+            return false;
+          }
+        }
+        
+        // Location filter
+        if (filter.startsWith('Location:')) {
+          const locationQuery = filter.replace('Location:', '').trim().toLowerCase();
+          const propertyLocation = (property.address.city + ', ' + property.address.state).toLowerCase();
+          if (!propertyLocation.includes(locationQuery)) {
+            return false;
+          }
+        }
+      }
+      
+      return true;
+    });
     
-    // Apply sorting to the filtered properties
+    console.log("Filtered properties count:", filtered.length);
+    
+    // Apply sorting
     const sortedProperties = applySort(filtered);
     
-    // Update filtered properties directly
+    // Update the state
     setFilteredProperties(sortedProperties);
-    // Reset pagination
     setCurrentPage(1);
-    // Hide the filtering section
     setIsFilteringSectionVisible(false);
-    // Turn off loading state
     setIsLoading(false);
-  }, [properties, locationInput, t, applySort]);
-
-  // Apply current filters based on the activeFilters state
-  const applyCurrentFilters = useCallback(() => {
-    applyFiltersImmediately(activeFilters);
-  }, [activeFilters, applyFiltersImmediately]);
+  }, [activeFilters, properties, t, applySort]);
 
   // Clear all filters
   const clearAllFilters = () => {
@@ -922,6 +853,8 @@ export default function PropertyListPage() {
 
   // Handle search
   const handleSearch = () => {
+    // Apply current filters and decide whether to hide filtering section
+    // Only hide filtering section if we're currently in search view
     applyCurrentFilters();
   };
 
@@ -954,20 +887,18 @@ export default function PropertyListPage() {
           const newLocationFilter = `Location: ${location}`;
           newFilters = [...newFilters, newLocationFilter];
           
-          // Apply filters immediately with the updated filters
-          applyFiltersImmediately(newFilters);
-          
+          // Return the updated filters without applying immediately
           return newFilters;
         });
       } else {
         // If location is empty, remove any location filters
         setActiveFilters(prevFilters => {
           const newFilters = prevFilters.filter(f => !f.startsWith('Location:'));
-          // Apply filters immediately with the updated filters
-          applyFiltersImmediately(newFilters);
+          // Return the updated filters without applying immediately
           return newFilters;
         });
       }
+      // No automatic apply of filters
     }, 300); // Reduced debounce time for better responsiveness
     
     // Save the timeout ID
@@ -1043,6 +974,7 @@ export default function PropertyListPage() {
               onLocationChange={handleSearchInputChange}
               onDateChange={handleDateChange}
               onGenderChange={handleGenderChange}
+              setActiveFilters={setActiveFilters}
             />
           </div>
         ) : (
@@ -1094,7 +1026,15 @@ export default function PropertyListPage() {
                         <AppliedFilterBannerComponent label={filter} />
                         <button 
                           className="remove-icon" 
-                          onClick={() => toggleFilter(filter)}
+                          onClick={() => {
+                            // First remove the filter
+                            setActiveFilters(prevFilters => {
+                              const newFilters = prevFilters.filter(f => f !== filter);
+                              // Then immediately apply the updated filters
+                              setTimeout(() => applyCurrentFilters(newFilters), 0);
+                              return newFilters;
+                            });
+                          }}
                           aria-label={`Remove ${filter} filter`}
                         >
                           ×

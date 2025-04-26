@@ -9,7 +9,6 @@ const FilteringSectionContainer = styled.div`
   background-color: white;
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 `;
 
 const FilteringRow = styled.div`
@@ -152,7 +151,7 @@ const ClearAllButton = styled.button`
 `;
 
 interface FilteringSectionProps {
-  onApplyFilters: () => void;
+  onApplyFilters: (filters?: string[]) => void;
   activeFilters: string[];
   onToggleFilter: (filter: string) => void;
   onClearFilters?: () => void;
@@ -162,6 +161,7 @@ interface FilteringSectionProps {
   onLocationChange?: (location: string) => void;
   onDateChange?: (date: string) => void;
   onGenderChange?: (gender: string) => void;
+  setActiveFilters?: (filters: string[]) => void;
 }
 
 const FilteringSection: React.FC<FilteringSectionProps> = ({
@@ -174,7 +174,8 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
   gender = '',
   onLocationChange = () => {},
   onDateChange = () => {},
-  onGenderChange = () => {}
+  onGenderChange = () => {},
+  setActiveFilters
 }) => {
   const { t } = useTranslation();
   const [numPeople, setNumPeople] = useState('2');
@@ -185,13 +186,15 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
   const [localLocation, setLocalLocation] = useState(location);
   const [localDate, setLocalDate] = useState(date);
   const [localGender, setLocalGender] = useState(gender);
+  const [localActiveFilters, setLocalActiveFilters] = useState<string[]>([]);
 
   // Update local state when props change
   useEffect(() => {
     setLocalLocation(location);
     setLocalDate(date);
     setLocalGender(gender);
-  }, [location, date, gender]);
+    setLocalActiveFilters(activeFilters);
+  }, [location, date, gender, activeFilters]);
 
   // Handle bedrooms - create the filter string expected by the page component
   const handleBedroomChange = (value: string) => {
@@ -200,33 +203,34 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
 
   // Apply local state to parent component when the apply button is clicked
   const handleApply = () => {
-    // First, update parent component's state with local values
+    console.log("Applying filters in FilteringSection");
+    // Update parent component's state with local values
     onLocationChange(localLocation);
     onDateChange(localDate);
     onGenderChange(localGender);
     
     // Collect all filter changes we need to make
-    const filterChanges = [];
+    let finalFilters = [...activeFilters]; // Start with current filters
     
     // Handle price range
     if (minPrice && maxPrice) {
       const priceRangeFilter = `${minPrice} to ${maxPrice}`;
-      const existingPriceFilter = activeFilters.find(f => 
+      const existingPriceFilter = finalFilters.find(f => 
         f.includes('$0-$1000') || f.includes('$1000-$2000') || f.includes('$2000-$3000') || 
         f.includes('$3000+') || f.includes(' to '));
       
-      if (existingPriceFilter && existingPriceFilter !== priceRangeFilter) {
-        // Add to removal list
-        filterChanges.push({ action: 'remove', filter: existingPriceFilter });
+      if (existingPriceFilter) {
+        // Remove existing price filter
+        finalFilters = finalFilters.filter(f => f !== existingPriceFilter);
       }
       
-      if (!activeFilters.includes(priceRangeFilter)) {
-        // Add to addition list
-        filterChanges.push({ action: 'add', filter: priceRangeFilter });
+      // Add new price filter
+      if (!finalFilters.includes(priceRangeFilter)) {
+        finalFilters.push(priceRangeFilter);
       }
     }
     
-    // Handle bedrooms - create the filter string that will be checked in the main page
+    // Handle bedrooms
     let bedroomFilter;
     if (bedrooms === '0') {
       bedroomFilter = t('property_list.studio');
@@ -236,58 +240,61 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
       bedroomFilter = `${bedrooms} ${t('property_list.bedrooms')}`;
     }
     
-    // Find any existing bedroom filter that is different from the one we want to apply
-    const existingBedroomFilter = activeFilters.find(f => 
+    // Find any existing bedroom filter
+    const existingBedroomFilter = finalFilters.find(f => 
       f === t('property_list.studio') || 
       f.includes(t('property_list.bedroom')) || 
       f.includes(t('property_list.bedrooms')));
     
-    if (existingBedroomFilter && existingBedroomFilter !== bedroomFilter) {
-      // Add to removal list
-      filterChanges.push({ action: 'remove', filter: existingBedroomFilter });
+    // Remove existing bedroom filter if any
+    if (existingBedroomFilter) {
+      finalFilters = finalFilters.filter(f => f !== existingBedroomFilter);
     }
     
-    if (!activeFilters.includes(bedroomFilter)) {
-      // Add to addition list
-      filterChanges.push({ action: 'add', filter: bedroomFilter });
-    }
+    // Add new bedroom filter
+    finalFilters.push(bedroomFilter);
     
     // Handle property type
     if (propertyType) {
-      const existingTypeFilter = activeFilters.find(f => 
-        (f === 'Apartment' || f === 'House' || f === 'Condo' || f === 'Commercial') && f !== propertyType);
+      const existingTypeFilter = finalFilters.find(f => 
+        (f === 'Apartment' || f === 'House' || f === 'Condo' || f === 'Commercial'));
       
+      // Remove existing property type filter if any
       if (existingTypeFilter) {
-        // Add to removal list
-        filterChanges.push({ action: 'remove', filter: existingTypeFilter });
+        finalFilters = finalFilters.filter(f => f !== existingTypeFilter);
       }
       
-      if (!activeFilters.includes(propertyType)) {
-        // Add to addition list
-        filterChanges.push({ action: 'add', filter: propertyType });
-      }
+      // Add new property type filter
+      finalFilters.push(propertyType);
     }
     
-    // Execute all filter changes first (removals then additions)
-    // This is important so we don't add and then accidentally remove a filter
+    // Handle amenities - replace with the current local state
+    // First remove any existing amenity filters
+    const allAmenityIds = [...amenities, ...includedFees].map(item => item.id);
+    finalFilters = finalFilters.filter(filter => !allAmenityIds.includes(filter));
     
-    // First, process all removals
-    filterChanges
-      .filter(change => change.action === 'remove')
-      .forEach(change => onToggleFilter(change.filter));
+    // Then add the ones that are checked in the local state
+    localActiveFilters.forEach(filter => {
+      if (allAmenityIds.includes(filter) && !finalFilters.includes(filter)) {
+        finalFilters.push(filter);
+      }
+    });
     
-    // Then process all additions
-    filterChanges
-      .filter(change => change.action === 'add')
-      .forEach(change => onToggleFilter(change.filter));
+    console.log("Final filters to apply:", finalFilters);
     
-    // Call parent's apply function after all filter changes are applied
-    onApplyFilters();
+    // Set the final filters list directly in the parent component
+    if (setActiveFilters) {
+      setActiveFilters(finalFilters);
+    }
+    
+    // Call parent's apply function with the final filters directly
+    console.log("Calling parent's onApplyFilters with filters");
+    onApplyFilters(finalFilters);
   };
 
   const amenities = [
-    { id: 'Furnished', label: 'Furnished', icon: '🪑' },
-    { id: 'WiFi', label: 'Wi-Fi', icon: '📶' },
+    { id: 'Furnished', label: t('common.furnished'), icon: '🪑' },
+    { id: 'WiFi', label: t('common.wifi'), icon: '📶' },
     { id: t('property_list.parking'), label: t('property_list.parking'), icon: '🚗' },
     { id: t('property_list.pets_allowed'), label: t('property_list.pets_allowed'), icon: '🐾' },
     { id: t('property_list.pool'), label: t('property_list.pool'), icon: '🏊' },
@@ -295,17 +302,23 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
   ];
 
   const includedFees = [
-    { id: 'water', label: 'Water', icon: '💧' },
-    { id: 'electricity', label: 'Electricity', icon: '⚡' },
-    { id: 'wifi', label: 'Wi-fi', icon: '📶' }
+    { id: 'water', label: t('common.water'), icon: '💧' },
+    { id: 'electricity', label: t('common.electricity'), icon: '⚡' },
+    { id: 'wifi', label: t('common.wifi'), icon: '📶' }
   ];
 
   const isAmenityChecked = (id: string) => {
-    return activeFilters.includes(id);
+    return localActiveFilters.includes(id);
   };
 
   const handleAmenityToggle = (id: string) => {
-    onToggleFilter(id);
+    // Update local state instead of calling parent's toggle function immediately
+    setLocalActiveFilters(prevFilters => {
+      const newLocalFilters = prevFilters.includes(id)
+        ? prevFilters.filter(f => f !== id)
+        : [...prevFilters, id];
+      return newLocalFilters;
+    });
   };
 
   const handlePropertyTypeChange = (value: string) => {
@@ -336,7 +349,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
       )}
       
       <FilteringRow>
-        <FilteringTitle>Number of People</FilteringTitle>
+        <FilteringTitle>{t('common.number_of_people')}</FilteringTitle>
         <DropdownSelector>
           <select 
             value={numPeople} 
@@ -372,14 +385,14 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
         <PriceInputsContainer>
           <PriceInput 
             type="number" 
-            placeholder="Min" 
+            placeholder={t('common.min')}
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
           />
           <span>→</span>
           <PriceInput 
             type="number" 
-            placeholder="Max" 
+            placeholder={t('common.max')}
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
           />
@@ -387,16 +400,16 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
       </FilteringRow>
       
       <FilteringRow>
-        <FilteringTitle>Property Type</FilteringTitle>
+        <FilteringTitle>{t('common.property_type')}</FilteringTitle>
         <DropdownSelector>
           <select 
             value={propertyType} 
             onChange={(e) => handlePropertyTypeChange(e.target.value)}
           >
-            <option value="Apartment">Apartment</option>
-            <option value="House">House</option>
-            <option value="Condo">Condo</option>
-            <option value="Commercial">Commercial</option>
+            <option value="Apartment">{t('property_list.property_type.apartment')}</option>
+            <option value="House">{t('property_list.property_type.house')}</option>
+            <option value="Condo">{t('property_list.property_type.condo')}</option>
+            <option value="Commercial">{t('property_list.property_type.commercial')}</option>
           </select>
         </DropdownSelector>
       </FilteringRow>
@@ -419,7 +432,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
       </FilteringRow>
       
       <FilteringRow>
-        <FilteringTitle>Includes</FilteringTitle>
+        <FilteringTitle>{t('common.includes')}</FilteringTitle>
         <AmenitiesGrid>
           {includedFees.map(fee => (
             <AmenityItem key={fee.id}>
