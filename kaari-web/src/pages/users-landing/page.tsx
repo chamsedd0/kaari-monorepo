@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import BookingSearchForm from "../../components/skeletons/constructed/forms/booking-search-form";
 import { UsersLandingStyle } from "../../landing-page-style";
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
@@ -33,6 +34,7 @@ import MoneyShieldSvg from '../../assets/images/moneyShieldsvg.svg';
 
 const UsersLanding: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
   const sliderTrackRef = useRef<HTMLDivElement>(null);
   
@@ -169,12 +171,12 @@ const UsersLanding: React.FC = () => {
         {/* Hero Section */}
         <section className="hero-section">
           <div className="hero-content">
-            <h1>Trustworthy, verified rentals</h1>
+            <h1>{t('home.hero_title')}</h1>
             <div className="search-container">
-          <BookingSearchForm />
-        </div>
+              <BookingSearchForm />
+            </div>
             <div className="explore-link" onClick={() => navigate('/properties')}>
-              <span>Explore Places</span>
+              <span>{t('home.explore_places')}</span>
               <span className="arrow-icon">
                 <img src={ArrowRight} alt="Arrow" />
               </span>
@@ -182,20 +184,20 @@ const UsersLanding: React.FC = () => {
             <div className="hero-stats">
               <div className="stat-item">
                 <span className="stat-number">10K+</span>
-                <span className="stat-label">Verified Listings</span>
+                <span className="stat-label">{t('home.verified_listings')}</span>
               </div>
               <div className="stat-item">
                 <span className="stat-number">98%</span>
-                <span className="stat-label">Satisfaction Rate</span>
+                <span className="stat-label">{t('home.satisfaction_rate')}</span>
               </div>
               <div className="stat-item">
                 <span className="stat-number">24/7</span>
-                <span className="stat-label">Customer Support</span>
+                <span className="stat-label">{t('home.customer_support')}</span>
               </div>
             </div>
           </div>
           <div className="hosting-button" onClick={() => navigate('/for-advertisers')}>
-            <span>Own a place? Try Hosting</span>
+            <span>{t('home.try_hosting')}</span>
             <span className="arrow-icon">
               <img src={ArrowRight} alt="Arrow" />
             </span>
@@ -206,19 +208,19 @@ const UsersLanding: React.FC = () => {
         <section className="features-section">
           <div className="feature-item">
             <img src={VerifiedIcon} alt="Security" />
-            <p>Experience enhanced tenant security with our comprehensive Renter Protection policy.</p>
+            <p>{t('home.features.security')}</p>
           </div>
           <div className="feature-item">
             <img src={IdentityIcon} alt="Identity" />
-            <p>Each property listed on our site undergoes thorough in-person inspections to ensure accuracy.</p>
+            <p>{t('home.features.identity')}</p>
           </div>
           <div className="feature-item">
             <img src={QualityIcon} alt="Quality" />
-            <p>We offer top-notch photos, videos, floor plans, and more to help you make informed decisions.</p>
+            <p>{t('home.features.quality')}</p>
           </div>
           <div className="feature-item">
             <img src={PriceIcon} alt="Price" />
-            <p>The prices you see are final - no hidden charges. Everything is clearly communicated upfront.</p>
+            <p>{t('home.features.price')}</p>
           </div>
         </section>
 
@@ -237,15 +239,14 @@ const UsersLanding: React.FC = () => {
 
                   <div className="slide-content">
                     <div className="text-content">
-                      <h2>Welcome to Kaari!</h2>
-                      <p>Your top assistant in finding the perfect place is here! 
-                      Which one of these are you?</p>
+                      <h2>{t('home.slider.welcome_title')}</h2>
+                      <p>{t('home.slider.welcome_description')}</p>
                       <div className="buttons-container">
                         <button className="primary-button" onClick={() => navigate('/tenant-signup')}>
-                          I am a Tenant
+                          {t('home.slider.tenant_button')}
                         </button>
                         <button className="secondary-button" onClick={() => navigate('/advertiser-signup')}>
-                          I am an Advertiser
+                          {t('home.slider.advertiser_button')}
                         </button>
                       </div>
                     </div>
@@ -260,15 +261,14 @@ const UsersLanding: React.FC = () => {
 
                   <div className="slide-content">
                     <div className="text-content">
-                      <h2>Search for a place</h2>
-                      <p>Search for the best place you can and get prepared 
-                      to get it first! Are you ready for the next step?</p>
+                      <h2>{t('home.slider.search_title')}</h2>
+                      <p>{t('home.slider.search_description')}</p>
                       <div className="buttons-container">
                         <button className="primary-button" onClick={() => navigate('/properties')}>
-                          Browse Properties
+                          {t('home.slider.browse_button')}
                         </button>
                         <button className="secondary-button" onClick={() => navigate('/how-it-works')}>
-                          How It Works
+                          {t('home.slider.how_works_button')}
                         </button>
                       </div>
                     </div>
@@ -283,15 +283,14 @@ const UsersLanding: React.FC = () => {
 
                   <div className="slide-content">
                     <div className="text-content">
-                      <h2>Send your request</h2>
-                      <p>Already found the place? Amazing! Well, let's get it now! 
-                      Just fill out your information  and we are good to go!</p>
+                      <h2>{t('home.slider.request_title')}</h2>
+                      <p>{t('home.slider.request_description')}</p>
                       <div className="buttons-container">
                         <button className="primary-button" onClick={() => navigate('/properties')}>
-                          Find Properties
+                          {t('home.slider.find_properties_button')}
                         </button>
                         <button className="secondary-button" onClick={() => navigate('/contact')}>
-                          Contact Us
+                          {t('home.slider.contact_button')}
                         </button>
                       </div>
                     </div>
@@ -306,14 +305,14 @@ const UsersLanding: React.FC = () => {
 
                   <div className="slide-content">
                     <div className="text-content">
-                      <h2>Enjoy your place!</h2>
-                      <p>Congratulations on your new place! Only thing to do is confirm your payment and you can get your keys!</p>
+                      <h2>{t('home.slider.enjoy_title')}</h2>
+                      <p>{t('home.slider.enjoy_description')}</p>
                       <div className="buttons-container">
                         <button className="primary-button" onClick={() => navigate('/properties')}>
-                          Start Searching
+                          {t('home.slider.search_button')}
                         </button>
                         <button className="secondary-button" onClick={() => navigate('/testimonials')}>
-                          Read Testimonials
+                          {t('home.slider.testimonials_button')}
                         </button>
                       </div>
                     </div>
@@ -328,14 +327,14 @@ const UsersLanding: React.FC = () => {
 
                   <div className="slide-content">
                     <div className="text-content">
-                      <h2>Your payment is protected</h2>
-                      <p>Your payment is secure with us. It will only be processed 24 hours after your move-in. Enjoy your new place without worrying about your money!</p>
+                      <h2>{t('home.slider.payment_title')}</h2>
+                      <p>{t('home.slider.payment_description')}</p>
                       <div className="buttons-container">
                         <button className="primary-button" onClick={() => navigate('/protection')}>
-                          Learn More
+                          {t('home.slider.learn_more_button')}
                         </button>
                         <button className="secondary-button" onClick={() => navigate('/faqs')}>
-                          View FAQs
+                          {t('home.slider.faq_button')}
                         </button>
                       </div>
                     </div>
@@ -376,7 +375,7 @@ const UsersLanding: React.FC = () => {
 
         {/* Top Picks Section */}
         <section className="top-picks">
-          <h2>Top Picks on Kaari</h2>
+          <h2>{t('home.top_picks')}</h2>
           <div className="property-grid">
             {topProperties.map((property) => (
               <div key={property.id} className="property-card" onClick={() => navigate(`/property/${property.id}`)}>
@@ -401,8 +400,8 @@ const UsersLanding: React.FC = () => {
 
         {/* City Selection Section */}
         <section className="city-selection">
-          <h2>Where will your next stay be?</h2>
-          <div className="view-all">Show all destinations</div>
+          <h2>{t('home.city_selection.title')}</h2>
+          <div className="view-all">{t('home.city_selection.show_all')}</div>
           <div className="city-grid">
             {cities.map((city, index) => (
               <div key={index} className="city-card" onClick={() => navigate(`/properties?city=${city.name}`)}>
@@ -416,7 +415,7 @@ const UsersLanding: React.FC = () => {
         {/* Renter Protection Section */}
         <section className="renter-protection">
           <div className="protection-content">
-            <h2>Renter Protection</h2>
+            <h2>{t('home.renter_protection.title')}</h2>
             <div className="protection-feature">
               <h3>
                 <span className="icon-circle">
@@ -424,9 +423,9 @@ const UsersLanding: React.FC = () => {
                     <path d="M12 2L4 5V11.09C4 16.14 7.41 20.85 12 22C16.59 20.85 20 16.14 20 11.09V5L12 2Z" fill="currentColor"/>
                   </svg>
                 </span>
-                Stress-Free Move-In
+                {t('home.renter_protection.stress_free_title')}
               </h3>
-              <p>For 48 hours after you've moved into your new place, we will work to resolve any issues. If they cannot be resolved, we will issue you a full refund.</p>
+              <p>{t('home.renter_protection.stress_free_description')}</p>
             </div>
             <div className="protection-feature">
               <h3>
@@ -435,9 +434,9 @@ const UsersLanding: React.FC = () => {
                     <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"/>
                   </svg>
                 </span>
-                Prompt Support
+                {t('home.renter_protection.support_title')}
               </h3>
-              <p>Our dedicated support team is available anytime during office hours to promptly resolve issues.</p>
+              <p>{t('home.renter_protection.support_description')}</p>
             </div>
             <div className="protection-feature">
               <h3>
@@ -446,9 +445,9 @@ const UsersLanding: React.FC = () => {
                     <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13.41 18.09L11.27 15.95C10.5 15.18 10 14.14 10 13.06V8H14V13.06C14 13.57 14.2 14.08 14.59 14.47L16.73 16.61L13.41 18.09Z" fill="currentColor"/>
                   </svg>
                 </span>
-                Hassle-free Refund
+                {t('home.renter_protection.refund_title')}
               </h3>
-              <p>If you have a bad experience and the property doesn't match, we'll give you a refund to make the process worry-free.</p>
+              <p>{t('home.renter_protection.refund_description')}</p>
             </div>
           </div>
           <div className="protection-image">
@@ -458,7 +457,7 @@ const UsersLanding: React.FC = () => {
 
         {/* Recommended Properties Section */}
         <section className="recommended-properties">
-          <h2>Recommended furnished apartments for your stay</h2>
+          <h2>{t('home.recommended')}</h2>
           <div className="property-grid">
             {topProperties.map((property) => (
               <div key={property.id} className="property-card" onClick={() => navigate(`/property/${property.id}`)}>
@@ -488,29 +487,28 @@ const UsersLanding: React.FC = () => {
           <div className="app-wrapper">
             <div className="app-content">
               
-              <h2>Take Kaari With You</h2>
-              <div className="app-badge">Mobile Experience</div>
+              <h2>{t('home.app.title')}</h2>
+              <div className="app-badge">{t('home.app.badge')}</div>
               
               <p className="app-description">
-                Find your perfect rental property on the go with our intuitive mobile app. 
-                Get instant notifications, chat with landlords in real-time, and secure your dream home faster.
+                {t('home.app.description')}
               </p>
               <ul className="app-features">
                 <li>
                   <span className="check-icon">✓</span>
-                  Real-time property notifications
+                  {t('home.app.feature1')}
                 </li>
                 <li>
                   <span className="check-icon">✓</span>
-                  Seamless chat with landlords
+                  {t('home.app.feature2')}
                 </li>
                 <li>
                   <span className="check-icon">✓</span>
-                  Quick and secure booking process
+                  {t('home.app.feature3')}
                 </li>
                 <li>
                   <span className="check-icon">✓</span>
-                  Save favorite properties offline
+                  {t('home.app.feature4')}
                 </li>
               </ul>
               <div className="app-buttons">
@@ -521,8 +519,8 @@ const UsersLanding: React.FC = () => {
                     </svg>
                   </div>
                   <div className="store-text">
-                    <span className="small-text">Download on the</span>
-                    <span className="big-text">App Store</span>
+                    <span className="small-text">{t('home.app.app_store')}</span>
+                    <span className="big-text">{t('home.app.app_store_name')}</span>
                   </div>
                 </a>
                 <a href="#" className="google-play">
@@ -532,8 +530,8 @@ const UsersLanding: React.FC = () => {
                     </svg>
                   </div>
                   <div className="store-text">
-                    <span className="small-text">GET IT ON</span>
-                    <span className="big-text">Google Play</span>
+                    <span className="small-text">{t('home.app.google_play')}</span>
+                    <span className="big-text">{t('home.app.google_play_name')}</span>
                   </div>
                 </a>
               </div>
@@ -552,21 +550,21 @@ const UsersLanding: React.FC = () => {
             <img src={CameraGirl} alt="Property Photoshoot" />
           </div>
           <div className="list-property-content">
-            <h3>List your Property on Kaari</h3>
-            <h2>Free Photoshoot!</h2>
-            <p>Indeed, there's no cost to list your apartment on Kaari. We collect a commission only after your flat is rented. <b>Plus, we provide a free photoshoot and ensure your property is verified, all on the house.</b></p>
+            <h3>{t('home.list_property.title')}</h3>
+            <h2>{t('home.list_property.subtitle')}</h2>
+            <p>{t('home.list_property.description')}</p>
             <div className="buttons-container">
             <button 
               className="photoshoot-button"
               onClick={() => navigate('/photoshoot-booking')}
             >
-                Book a Photoshoot
+                {t('home.list_property.book_button')}
               </button>
               <button 
                 className="read-more-button"
                 onClick={() => navigate('/about-photoshoots')}
               >
-                Read More
+                {t('home.list_property.read_more')}
             </button>
           </div>
           </div>
@@ -576,19 +574,19 @@ const UsersLanding: React.FC = () => {
         <section className="features-footer">
           <div className="feature-item">
             <img src={VerifiedIcon} alt="Security" />
-            <p>Experience enhanced tenant security with our Renter Protection policy.</p>
+            <p>{t('home.features.security')}</p>
           </div>
           <div className="feature-item">
             <img src={IdentityIcon} alt="Identity" />
-            <p>Each property undergoes thorough in-person inspections to ensure accuracy.</p>
+            <p>{t('home.features.identity')}</p>
           </div>
           <div className="feature-item">
             <img src={QualityIcon} alt="Quality" />
-            <p>We offer top-notch photos, videos, and floor plans to help you decide.</p>
+            <p>{t('home.features.quality')}</p>
           </div>
           <div className="feature-item">
             <img src={PriceIcon} alt="Price" />
-            <p>The prices you see are final - no hidden charges or fees.</p>
+            <p>{t('home.features.price')}</p>
           </div>
         </section>
       </UsersLandingStyle>

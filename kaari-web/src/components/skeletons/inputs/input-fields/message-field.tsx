@@ -2,6 +2,7 @@ import MessageFieldBaseModel from "../../../styles/inputs/input-fields/message-f
 import React from "react";
 import MoreIcon from '../../icons/more-icon.svg'
 import SendIcon from '../../icons/send-icon.svg'
+import { useTranslation } from 'react-i18next';
 
 interface MessageFieldProps {
   value?: string;
@@ -12,6 +13,8 @@ const MessageField: React.FC<MessageFieldProps> = ({
   value,
   onChange,
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <MessageFieldBaseModel isEmpty={value === '' || value === undefined}>
         <div className="plus-button">
@@ -19,7 +22,7 @@ const MessageField: React.FC<MessageFieldProps> = ({
         </div>
         <input className="messeging-input"
             type='text'
-            placeholder='Type your message here....'
+            placeholder={t('messages.type_message')}
             value={value}
             onChange={onChange}
         />

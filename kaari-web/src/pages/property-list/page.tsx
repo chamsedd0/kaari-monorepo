@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useCallback, memo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { IoMap} from 'react-icons/io5';
+import { IoMap, IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import { AppliedFilterBannerComponent } from "../../components/skeletons/banners/static/applied-filter-banner";
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
 import SelectFieldBaseModelVariant2 from "../../components/skeletons/inputs/select-fields/select-field-base-model-variant-2"
@@ -10,8 +11,10 @@ import SearchFilterBar from "../../components/skeletons/inputs/search-bars/searc
 import FilteringSection from "../../components/skeletons/constructed/filtering/filtering-section";
 import defaultImage from "../../assets/images/propertyExamplePic.png";
 import { useAuth } from "../../contexts/auth";
-import { toast } from 'react-toastify';
-
+import { useTranslation } from 'react-i18next';
+import { Theme } from "../../theme/theme";
+import { AuthModal } from '../../components/skeletons/constructed/modals/auth-modal';
+import closeIcon from '../../components/skeletons/icons/Cross-Icon.svg';
 // Updated PropertyType interface to match Firestore data model
 interface PropertyType {
   id: string | number;
@@ -43,62 +46,365 @@ interface PropertyType {
   subtitle?: string;
   priceType?: string;
   minstay?: string;
-  location?: { lat: number; lng: number };
+  location?: { lat: number; lng: number } | null;
   image?: string;
 }
 
 // Define sort option type 
 type SortOptionType = string;
 
-// Filter type definition
-interface FilterType {
-  id: string;
-  label: string;
-  category: 'bedrooms' | 'price' | 'amenities' | 'other';
+// Add constants for the Google Maps integration
+const GOOGLE_MAPS_API_KEY = 'AIzaSyCqhbPAiPspwgshgE9lzbtkpFZwVMfJoww'; // Temporary hardcoded key - move to .env file for production
+const DEFAULT_MAP_CENTER = { lat: 34.020882, lng: -6.841650 }; // Rabat, Morocco as default center
+const DEFAULT_MAP_ZOOM = 12;
+
+// Define the map container style
+const mapContainerStyle = {
+  width: '100%',
+  height: '100%',
+};
+
+// Declare google namespace to fix type errors
+declare global {
+  interface Window {
+    google: any;
+  }
 }
 
-
-// Sort options
-const sortOptions: SortOptionType[] = [
-  'Recommended',
-  'Price: Low to High',
-  'Price: High to Low',
-  'Newest First'
-];
-
-// Create a separate component for the map with property popup
-const PropertyMap = memo(({ selectedProperty, showMap, properties }: { 
-  selectedProperty: PropertyType | null, 
-  showMap: boolean,
-  properties: PropertyType[] 
+// Enhanced property marker component
+const PropertyMarkers = memo(({ properties, onPropertyClick, selectedPropertyId }: { 
+  properties: PropertyType[], 
+  onPropertyClick: (property: PropertyType) => void,
+  selectedPropertyId: string | number | null
 }) => {
+  // Format price for marker labels with proper locale
+  const { t } = useTranslation();
+  
+  const formatPrice = (price: number): string => {
+    return new Intl.NumberFormat('fr-MA', {
+      style: 'currency',
+      currency: 'MAD',
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0
+    }).format(price).replace(/\s/g, '');
+  };
+
   return (
-    <div className={`map ${showMap ? 'active' : ''}`}>
-      {/* Map placeholder - would be replaced with an actual map component */}
-      <div className="map-placeholder">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="currentColor"/>
-        </svg>
-        <span>Interactive map would be displayed here - with {properties.length} properties</span>
-      </div>
+    <>
+      {properties.map(property => {
+        if (property.location) {
+          const isSelected = selectedPropertyId === property.id;
+
+          return (
+            <Marker
+              key={property.id}
+              position={property.location}
+              onClick={() => onPropertyClick(property)}
+
+              // Simple label-style marker with extreme border radius
+              icon={{
+                path: window.google.maps.SymbolPath.CIRCLE,
+                scale: 0, // Invisible circle, we'll just use the label
+                labelOrigin: new window.google.maps.Point(0, 0)
+              }}
+              label={{
+                text: formatPrice(property.price),
+                color: Theme.colors.black,
+                fontWeight: 'bold',
+                fontSize: '14px',
+                className: `property-price-label ${isSelected ? 'selected' : ''}`
+              }}
+              animation={isSelected ? window.google.maps.Animation.BOUNCE : null}
+              zIndex={isSelected ? 1000 : 1}
+            />
+          );
+        }
+        return null;
+      })}
+    </>
+  );
+});
+
+// Create a separate component for the map with property popup and markers
+const PropertyMap = memo(({ 
+  showMap, 
+  properties, 
+  isCollapsed, 
+  setProperties, 
+  toggleFavorite 
+}: { 
+  showMap: boolean,
+  properties: PropertyType[],
+  isCollapsed: boolean,
+  setProperties: React.Dispatch<React.SetStateAction<PropertyType[]>>,
+  toggleFavorite: (id: string | number) => void
+}) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [selectedProperty, setSelectedProperty] = useState<PropertyType | null>(null);
+  const [mapCenter, setMapCenter] = useState(DEFAULT_MAP_CENTER);
+  const [mapZoom, setMapZoom] = useState(DEFAULT_MAP_ZOOM);
+  const mapRef = useRef<google.maps.Map>();
+  const geocoderRef = useRef<google.maps.Geocoder>();
+  const { isAuthenticated } = useAuth();
+
+  // Load the Google Maps JavaScript API
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: ['places', 'geometry']
+  });
+
+  // Create geocoder instance when maps are loaded
+  useEffect(() => {
+    if (isLoaded && window.google && window.google.maps) {
+      geocoderRef.current = new window.google.maps.Geocoder();
+    }
+  }, [isLoaded]);
+
+  // Handle property click
+  const handlePropertyClick = useCallback((property: PropertyType) => {
+    setSelectedProperty(property);
+    if (property.location) {
+      setMapCenter(property.location);
+      setMapZoom(15); // Zoom in when a property is selected
+    }
+  }, []);
+
+  // Handle view property button click
+  const handleViewProperty = useCallback((propertyId: string | number) => {
+    // Navigate to property details page
+    navigate(`/property/${propertyId}`);
+  }, [navigate]);
+
+  // Geocode properties without location data
+  useEffect(() => {
+    const geocodeProperties = async () => {
+      if (!isLoaded || !geocoderRef.current) return;
+
+      const propertiesWithoutLocation = properties.filter(
+        p => (!p.location || typeof p.location?.lat !== 'number' || typeof p.location?.lng !== 'number') && 
+             p.address && p.address.street && p.address.city
+      );
+
+      if (propertiesWithoutLocation.length === 0) return;
+
+      // Make a copy of properties to update
+      const updatedProperties = [...properties];
+
+      // Process geocoding for each property without location
+      for (const property of propertiesWithoutLocation) {
+        try {
+          const fullAddress = `${property.address.street}, ${property.address.city}, ${property.address.country}`;
+          
+          // Add a small delay between geocoding requests to respect API limits
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          const result = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
+            geocoderRef.current?.geocode({ address: fullAddress }, (results, status) => {
+              if (status === google.maps.GeocoderStatus.OK && results && results.length > 0) {
+                resolve(results);
+              } else {
+                reject(new Error(`Geocoding failed for address: ${fullAddress}, status: ${status}`));
+              }
+            });
+          });
+
+          // Update property location
+          const propertyIndex = updatedProperties.findIndex(p => p.id === property.id);
+          if (propertyIndex !== -1 && result[0].geometry.location) {
+            updatedProperties[propertyIndex] = {
+              ...updatedProperties[propertyIndex],
+              location: {
+                lat: result[0].geometry.location.lat(),
+                lng: result[0].geometry.location.lng()
+              }
+            };
+          }
+        } catch (error) {
+          console.error(`Error geocoding property ${property.id}:`, error);
+        }
+      }
+
+      // Update properties with geocoded locations
+      setProperties(updatedProperties);
+    };
+
+    geocodeProperties();
+  }, [isLoaded, properties, setProperties]);
+
+  // Update map center and bounds when properties change
+  useEffect(() => {
+    if (mapRef.current && properties.length > 0) {
+      // Filter out properties without valid location data
+      const validProperties = properties.filter(
+        p => p.location && typeof p.location?.lat === 'number' && typeof p.location?.lng === 'number'
+      );
       
-      <div className="map-controls">
-        <button className="map-button" title="Zoom In">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
-          </svg>
-        </button>
-        <button className="map-button" title="Zoom Out">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 13H5V11H19V13Z" fill="currentColor"/>
-          </svg>
-        </button>
-        <button className="map-button" title="My Location">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8ZM20.94 11C20.48 6.83 17.17 3.52 13 3.06V1H11V3.06C6.83 3.52 3.52 6.83 3.06 11H1V13H3.06C3.52 17.17 6.83 20.48 11 20.94V23H13V20.94C17.17 20.48 20.48 17.17 20.94 13H23V11H20.94ZM12 19C8.13 19 5 15.87 5 12C5 8.13 8.13 5 12 5C15.87 5 19 8.13 19 12C19 15.87 15.87 19 12 19Z" fill="currentColor"/>
-          </svg>
-        </button>
+      if (validProperties.length > 0) {
+        const bounds = new window.google.maps.LatLngBounds();
+        
+        validProperties.forEach(property => {
+          if (property.location) {
+            bounds.extend(new window.google.maps.LatLng(property.location.lat, property.location.lng));
+          }
+        });
+        
+        // Center the map on the bounds
+        mapRef.current.fitBounds(bounds);
+        
+        // If we only have one property, set an appropriate zoom level
+        if (validProperties.length === 1) {
+          setMapZoom(15);
+          if (validProperties[0].location) {
+            setMapCenter(validProperties[0].location);
+          }
+        } else {
+          // Get the zoom after fitting bounds
+          const newZoom = mapRef.current.getZoom();
+          // Adjust zoom if needed
+          if (newZoom && newZoom > 15) {
+            setMapZoom(15);
+          }
+        }
+      } else {
+        // If no valid properties, center on Rabat
+        setMapCenter(DEFAULT_MAP_CENTER);
+        setMapZoom(DEFAULT_MAP_ZOOM);
+      }
+    }
+  }, [properties]);
+  
+  // Handle map load
+  const onMapLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
+  }, []);
+
+  return (
+    <div className={`map ${showMap ? 'active' : ''} ${isCollapsed ? 'expanded' : ''}`}>
+      {!isLoaded ? (
+      <div className="map-placeholder">
+          <div className="loading-spinner"></div>
+          <p>{t('property_list.loading_map')}</p>
       </div>
+      ) : loadError ? (
+        <div className="map-placeholder">
+          <div className="error-icon">⚠️</div>
+          <p>{t('property_list.map_error')}</p>
+      </div>
+      ) : (
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          center={mapCenter}
+          zoom={mapZoom}
+          onLoad={onMapLoad}
+          options={{
+            disableDefaultUI: false,
+            zoomControl: true,
+            streetViewControl: false,
+            mapTypeControl: false,
+            fullscreenControl: true,
+            styles: [
+              {
+                featureType: "poi",
+                elementType: "labels",
+                stylers: [{ visibility: "off" }]
+              }
+            ]
+          }}
+        >
+          <PropertyMarkers 
+            properties={properties} 
+            onPropertyClick={handlePropertyClick} 
+            selectedPropertyId={selectedProperty?.id || null} 
+          />
+
+          {selectedProperty && selectedProperty.location && (
+            <InfoWindow
+              position={selectedProperty.location}
+              onCloseClick={() => setSelectedProperty(null)}
+              options={{
+                pixelOffset: new window.google.maps.Size(0, -40)
+              }}
+            >
+              <div className="property-info-window">
+                {selectedProperty.image && (
+                  <div className="info-window-image-container">
+                    <img 
+                      src={selectedProperty.image} 
+                      alt={selectedProperty.title} 
+                      className="info-window-image"
+                    />
+                    <div className="property-type-badge">
+                      {t(`property_list.property_type.${selectedProperty.propertyType}`)}
+                    </div>
+                    {selectedProperty.isRecommended && (
+                      <div className="recommended-badge">
+                        {t('property_list.recommended')}
+                      </div>
+                    )}
+                    <button 
+                      className="custom-close-button"
+                      onClick={() => setSelectedProperty(null)}
+                      aria-label="Close"
+                    >
+                      <img src={closeIcon} alt="Close" />
+                    </button>
+                  </div>
+                )}
+                <div className="info-window-content">
+                  <h3 className="info-window-title">{selectedProperty.title}</h3>
+                  <div className="info-window-details">
+                    <div className="info-window-price">
+                      {new Intl.NumberFormat('fr-MA', {
+                        style: 'currency',
+                        currency: 'MAD',
+                        maximumFractionDigits: 0,
+                        minimumFractionDigits: 0
+                      }).format(selectedProperty.price)} 
+                      <span className="price-type">{t('property_list.per_month')}</span>
+                    </div>
+                    <div className="info-window-address">
+                      {selectedProperty.address.street}, {selectedProperty.address.city}
+                    </div>
+                    <div className="info-window-features">
+                      <span className="feature">
+                        {selectedProperty.bedrooms === 0 ? t('property_list.studio') : 
+                         `${selectedProperty.bedrooms} ${selectedProperty.bedrooms === 1 ? t('property_list.bedroom') : t('property_list.bedrooms')}`}
+                      </span>
+                      <span className="feature-divider">•</span>
+                      <span className="feature">
+                        {selectedProperty.bathrooms} {selectedProperty.bathrooms === 1 ? t('property_list.bathroom') : t('property_list.bathrooms')}
+                      </span>
+                      <span className="feature-divider">•</span>
+                      <span className="feature">{selectedProperty.area} m²</span>
+                    </div>
+                    {selectedProperty.amenities.length > 0 && (
+                      <div className="info-window-amenities">
+                        {selectedProperty.amenities.slice(0, 2).map((amenity, index) => (
+                          <span key={index} className="amenity-tag">{t(`property_list.amenities.${amenity.toLowerCase().replace(/\s+/g, '_')}`, amenity)}</span>
+                        ))}
+                        {selectedProperty.amenities.length > 2 && (
+                          <span className="more-amenities">+{selectedProperty.amenities.length - 2}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="info-window-actions">
+                    <button 
+                      className="view-property-button"
+                      onClick={() => handleViewProperty(selectedProperty.id)}
+                    >
+                      {t('property_list.view_property')}
+                    </button>
+
+                  </div>
+                </div>
+              </div>
+            </InfoWindow>
+          )}
+        </GoogleMap>
+      )}
     </div>
   );
 });
@@ -150,560 +456,533 @@ const EnhancedPropertyCard = memo(EnhancedPropertyCardComponent, (prevProps, nex
 });
 
 export default function PropertyListPage() {
-  // Refs
-  const scrollRef = useRef<HTMLDivElement>(null);
+  // Hooks
+  const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   
-  // State management
+  // Auth state
+  const { isAuthenticated } = useAuth();
+  
+  // State for properties and filtering
   const [properties, setProperties] = useState<PropertyType[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<PropertyType[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortOption, setSortOption] = useState<string>(t('property_list.recommended'));
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | undefined>(undefined);
+  const [showMap, setShowMap] = useState<boolean>(false);
+  const [isFilteringSectionVisible, setIsFilteringSectionVisible] = useState<boolean>(false);
   const [locationInput, setLocationInput] = useState<string>('');
   const [dateInput, setDateInput] = useState<string>('');
   const [genderInput, setGenderInput] = useState<string>('');
-  const [sortOption, setSortOption] = useState<string>('Recommended');
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [showMap, setShowMap] = useState<boolean>(false);
-  const [isFilteringSectionVisible, setIsFilteringSectionVisible] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const propertiesPerPage = 6;
+  // Add state for collapsing the main content
+  const [isMainContentCollapsed, setIsMainContentCollapsed] = useState<boolean>(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
-  const { isAuthenticated } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-  
-  // Handle advanced filtering button click - defined early to avoid reference errors
-  const handleAdvancedFiltering = () => {
-    // Reset to first page whenever filters change
-    setCurrentPage(1);
-    
-    // Apply the filters to properties
-    let filtered = [...properties];
-    console.log("Applying filters:", activeFilters);
-    console.log("Location input:", locationInput);
-    console.log("Date input:", dateInput);
-    console.log("Gender input:", genderInput);
-    
-    // Filter by location input
-    if (locationInput) {
-      filtered = filtered.filter(
-        property => 
-          property.title.toLowerCase().includes(locationInput.toLowerCase()) ||
-          (property.subtitle?.toLowerCase().includes(locationInput.toLowerCase()) ?? false) ||
-          property.address.city.toLowerCase().includes(locationInput.toLowerCase()) ||
-          property.address.state.toLowerCase().includes(locationInput.toLowerCase()) ||
-          property.propertyType.toLowerCase().includes(locationInput.toLowerCase())
-      );
-    }
-    
-    // Filter by date input (availability date)
-    if (dateInput) {
-      // In a real app, you would check against property availability dates
-      const dateObj = new Date(dateInput);
-      
-      filtered = filtered.filter(property => {
-        // Mock implementation - in a real app, check actual availability dates
-        if (property.createdAt) {
-          // For demo, filter based on a simple comparison (created before selected date is available)
-          const propertyDate = property.createdAt instanceof Date 
-            ? property.createdAt 
-            : new Date(property.createdAt);
-          
-          return propertyDate <= dateObj;
-        }
-        return true;  
-      });
-    }
-    
-    // Filter by gender preference
-    if (genderInput) {
-      // In a real app, you would check against property gender preference settings
-      if (genderInput === 'women_only') {
-        // Mock implementation - filter only properties meant for women
-        filtered = filtered.filter((property, index) => {
-          // Use the index to create a deterministic filter
-          return index % 3 === 0;
-        });
-      } else if (genderInput === 'men_only') {
-        // Mock implementation - filter only properties meant for men
-        filtered = filtered.filter((property, index) => {
-          // Use the index to create a deterministic filter
-          return index % 3 === 1;
-        });
-      }
-    }
-    
-    // Apply other active filters 
-    if (activeFilters.length > 0) {
-      filtered = filtered.filter(property => {
-        // Check each filter
-        return activeFilters.every(filter => {
-          // Bedroom filters
-          if (filter.includes('Bedroom')) {
-            const bedroomCount = property.bedrooms || 0;
-            const filterValue = parseInt(filter.split(' ')[0]);
-            
-            if (filter.includes('+')) {
-              return bedroomCount >= filterValue;
-            } else {
-              return bedroomCount === filterValue;
-            }
-          }
-          
-          // Property type filters
-          if (filter === 'Apartment' || filter === 'House' || filter === 'Condo' || filter === 'Commercial') {
-            return property.propertyType.toLowerCase() === filter.toLowerCase();
-          }
-          
-          // Price range filters
-          if (filter.includes('$0-$1000')) {
-            return property.price <= 1000;
-          }
-          
-          if (filter.includes('$1000-$3000')) {
-            return property.price > 1000 && property.price <= 3000;
-          }
-          
-          if (filter.includes('$3000+')) {
-            return property.price > 3000;
-          }
-          
-          // Custom price range filter (e.g., "1500 to 4000")
-          if (filter.includes('to')) {
-            try {
-              const [min, max] = filter.split('to').map(s => parseInt(s.trim()));
-              if (!isNaN(min) && !isNaN(max)) {
-                return property.price >= min && property.price <= max;
-              }
-            } catch (e) {
-              console.error("Error parsing price range:", e);
-            }
-            return true;
-          }
-          
-          // Amenities filters
-          if (filter === 'WiFi' || filter === 'Parking' || filter === 'Pets Allowed' || filter === 'Furnished') {
-            return property.amenities?.some(
-              amenity => amenity.toLowerCase() === filter.toLowerCase()
-            ) ?? false;
-          }
-          
-          // Status filters
-          if (filter === 'Available') {
-            return property.status === 'available';
-          }
-          
-          if (filter === 'Pending') {
-            return property.status === 'pending';
-          }
-          
-          return true; // Default to including if filter is not recognized
-        });
-      });
-    }
-    
-    // Apply sorting after filtering
-    switch(sortOption) {
-      case 'Price: Low to High':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'Price: High to Low':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'Newest First':
-        filtered.sort((a, b) => {
-          const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
-          const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
-          return dateB.getTime() - dateA.getTime();
-        });
-        break;
-      case 'Recommended':
-      default:
-        // Sort recommended properties first
-        filtered.sort((a, b) => (b.isRecommended ? 1 : 0) - (a.isRecommended ? 1 : 0));
-        break;
-    }
-    
-    console.log("Filtered properties count:", filtered.length);
-    setFilteredProperties(filtered);
-    setIsLoading(false);
-  };
+  // Load Google Maps API
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: ['places', 'geometry']
+  });
 
-  // Handle applying filters from the filtering section
-  const handleApplyFilters = () => {
-    // First close the filtering section
-    setIsFilteringSectionVisible(false);
-    
-    // Set loading state immediately
-    setIsLoading(true);
-    
-    // Update URL with the current search parameters
-    const params = new URLSearchParams(location.search);
-    
-    if (locationInput) {
-      params.set('location', locationInput);
-    } else {
-      params.delete('location');
-    }
-    
-    if (dateInput) {
-      params.set('date', dateInput);
-    } else {
-      params.delete('date');
-    }
-    
-    if (genderInput) {
-      params.set('gender', genderInput);
-    } else {
-      params.delete('gender');
-    }
-    
-    // Use the current path with the updated query parameters
-    const currentPath = location.pathname;
-    const newUrl = `${currentPath}?${params.toString()}`;
-    
-    // Update the URL without causing a full page reload
-    navigate(newUrl, { replace: true });
-    
-    // Apply filters immediately using the current filters
-    console.log("Applying filters immediately after FilteringSection close");
-    applyCurrentFilters(activeFilters);
-  };
-  
-  // Fetch properties from Firestore on component mount
+  // Load properties on mount
   useEffect(() => {
-    const getPropertiesData = async () => {
-      setIsLoading(true);
+    const loadProperties = async () => {
       try {
-        // Always use the getProperties function from backend
-        const propertiesData = await getProperties({ limit: 50 });
+        setIsLoading(true);
         
-        // Transform properties to include UI-specific fields
-        const transformedProperties = propertiesData.map(property => {
-          return {
-            ...property,
-            subtitle: property.address.city + ', ' + property.address.state,
-            priceType: property.propertyType === 'apartment' ? '/month' : '', 
-            minstay: 'Min stay: 1 month', // Default minimum stay
-            isRecommended: Math.random() > 0.7, // Random recommendation for now
-            isFavorite: false, // Default not favorite
-            // Use the default image if no images available
-            image: defaultImage,
-            // Mock location for now - in real app, get from geocoding
-            location: { 
-              lat: parseFloat((Math.random() * (36.2 - 33.7) + 33.7).toFixed(6)), 
-              lng: parseFloat((Math.random() * (-75.17 - (-80.00)) + (-80.00)).toFixed(6)) 
+        // Fetch properties from Firestore
+        const fetchedProperties = await getProperties();
+        
+        if (fetchedProperties && fetchedProperties.length > 0) {
+          // Transform Firestore data to match our PropertyType interface if needed
+          const propertyData: PropertyType[] = fetchedProperties.map((prop) => {
+            // Ensure we have proper type conversion
+            const property = prop as any;
+            
+            // Convert Firestore timestamp to Date objects if needed
+            let createdDate = new Date();
+            let updatedDate = new Date();
+            
+            if (property.createdAt instanceof Date) {
+              createdDate = property.createdAt;
+            } else if (property.createdAt && typeof property.createdAt.toDate === 'function') {
+              createdDate = property.createdAt.toDate();
             }
-          };
-        });
-        
-        setProperties(transformedProperties);
-        setFilteredProperties(transformedProperties);
+            
+            if (property.updatedAt instanceof Date) {
+              updatedDate = property.updatedAt;
+            } else if (property.updatedAt && typeof property.updatedAt.toDate === 'function') {
+              updatedDate = property.updatedAt.toDate();
+            }
+            
+            // Use property's location if available, otherwise it will be geocoded later
+            const location = property.location && 
+                            typeof property.location.lat === 'number' && 
+                            typeof property.location.lng === 'number' ? 
+                            property.location : null;
+            
+            return {
+              id: property.id || '',
+              ownerId: property.ownerId || '',
+              title: property.title || '',
+              description: property.description || '',
+              address: property.address || {
+                street: '',
+                city: 'Rabat',
+                state: 'Rabat-Salé-Kénitra',
+                zipCode: '',
+                country: 'Morocco'
+              },
+              propertyType: (property.propertyType || 'apartment') as 'apartment' | 'house' | 'condo' | 'land' | 'commercial',
+              bedrooms: property.bedrooms,
+              bathrooms: property.bathrooms,
+              area: property.area || 0,
+              price: property.price || 0,
+              images: property.images || [],
+              amenities: property.amenities || [],
+              features: property.features || [],
+              status: (property.status || 'available') as 'available' | 'sold' | 'pending' | 'rented',
+              createdAt: createdDate,
+              updatedAt: updatedDate,
+              // UI specific properties
+              isFavorite: Boolean(property.isFavorite),
+              isRecommended: Boolean(property.isRecommended),
+              subtitle: property.subtitle || '',
+              priceType: property.priceType || '/month',
+              minstay: property.minstay || '',
+              location,
+              image: property.image || defaultImage
+            } as PropertyType;
+          });
+          
+          console.log("Loaded properties from Firestore:", propertyData.length);
+          setProperties(propertyData);
+          setFilteredProperties(propertyData);
+    setIsLoading(false);
+          return;
+    } else {
+          console.log("No properties found in Firestore, using mock data");
+          
+          // If no properties found, use basic mock data with null locations (will be geocoded)
+          const mockPropertiesBase: PropertyType[] = [
+            {
+              id: '1',
+              ownerId: 'owner1',
+              title: 'Luxury Apartment in Agdal',
+              description: 'Beautiful apartment with great views of the city',
+              address: {
+                street: '123 Avenue Hassan II',
+                city: 'Rabat',
+                state: 'Rabat-Salé-Kénitra',
+                zipCode: '10000',
+                country: 'Morocco'
+              },
+              propertyType: 'apartment',
+              bedrooms: 2,
+              bathrooms: 2,
+              area: 120,
+              price: 7500,
+              images: [],
+              amenities: ['Parking', 'Pool', 'Gym', 'Furnished', 'WiFi'],
+              features: ['Water included', 'Electricity included', 'WiFi included'],
+              status: 'available',
+              createdAt: new Date('2023-01-15'),
+              updatedAt: new Date('2023-02-01'),
+              subtitle: 'Modern living in the heart of the city',
+              priceType: 'MAD/month',
+              minstay: '12 months',
+              isFavorite: false,
+              isRecommended: true,
+            image: defaultImage,
+              location: null
+            },
+            {
+              id: '2',
+              ownerId: 'owner2',
+              title: 'Cozy Studio Near University',
+              description: 'Perfect for students, close to campus',
+              address: {
+                street: '45 Avenue Mohammed V',
+                city: 'Rabat',
+                state: 'Rabat-Salé-Kénitra',
+                zipCode: '10010',
+                country: 'Morocco'
+              },
+              propertyType: 'apartment',
+              bedrooms: 0,
+              bathrooms: 1,
+              area: 50,
+              price: 3200,
+              images: [],
+              amenities: ['Furnished', 'WiFi'],
+              features: ['WiFi included'],
+              status: 'available',
+              createdAt: new Date('2023-03-10'),
+              updatedAt: new Date('2023-03-15'),
+              subtitle: 'Student-friendly housing',
+              priceType: 'MAD/month',
+              minstay: '6 months',
+              isFavorite: false,
+              isRecommended: false,
+              image: defaultImage,
+              location: null
+            }
+          ];
+          
+          setProperties(mockPropertiesBase);
+          setFilteredProperties(mockPropertiesBase);
+        }
       } catch (error) {
-        console.error('Error fetching properties:', error);
-        // Set empty arrays in case of error
-        setProperties([]);
-        setFilteredProperties([]);
-      } finally {
+        console.error('Error loading properties:', error);
         setIsLoading(false);
       }
     };
 
-    getPropertiesData();
+    loadProperties();
   }, []);
 
-  // Parse URL search parameters
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const locationParam = params.get('location');
-    const dateParam = params.get('date');
-    const genderParam = params.get('gender');
-    
-    // Initialize with a flag to avoid unnecessary re-filtering
-    let filtersChanged = false;
-    
-    // Set search query if location parameter exists
-    if (locationParam && locationParam !== locationInput) {
-      setLocationInput(locationParam);
-      filtersChanged = true;
-    }
-    
-    // Apply date filter if date parameter exists
-    if (dateParam && dateParam !== dateInput) {
-      setDateInput(dateParam);
-      filtersChanged = true;
-    }
-    
-    // Apply gender filter if it exists
-    if (genderParam && genderParam !== genderInput) {
-      setGenderInput(genderParam);
-      filtersChanged = true;
-    }
-    
-    // Apply filters if they changed
-    if (filtersChanged) {
-      // We need to use setTimeout to ensure state updates have happened
-      setTimeout(() => {
-        handleAdvancedFiltering();
-      }, 0);
-    }
-  }, [location.search]);
+  // Handler functions
+  const handleDateChange = (date: string) => {
+    setDateInput(date);
+  };
 
-  // Filter properties based on search inputs and filters
-  useEffect(() => {
-    // Only apply filtering when properties data changes or sort option changes
-    // This avoids unwanted filtering during user input
-    // Active filters are handled by the buttons that change them
-    if (properties.length > 0) {
-      handleAdvancedFiltering();
-    }
-  }, [properties, sortOption]);
+  const handleGenderChange = (gender: string) => {
+    setGenderInput(gender);
+  };
 
-  // Handle search input
-  const handleSearch = (e?: React.FormEvent) => {
-    // Prevent default form submission if called from a form event
-    if (e) {
-      e.preventDefault();
+  // Toggle main content collapse
+  const toggleMainContentCollapse = () => {
+    setIsMainContentCollapsed(!isMainContentCollapsed);
+    // Always show map when main content is collapsed
+    if (!isMainContentCollapsed && !showMap) {
+      setShowMap(true);
+    }
+  };
+
+  // Toggle map visibility
+  const toggleMap = () => {
+    setShowMap(!showMap);
+  };
+
+  // Apply sorting to properties
+  const applySort = useCallback((properties: PropertyType[]) => {
+    if (!properties || properties.length === 0) {
+      return [];
     }
     
-    // Set loading state
+    const sortedProperties = [...properties];
+    
+    // Apply sorting
+    if (sortOption === t('property_list.price_low_high')) {
+      sortedProperties.sort((a, b) => a.price - b.price);
+    } else if (sortOption === t('property_list.price_high_low')) {
+      sortedProperties.sort((a, b) => b.price - a.price);
+    } else if (sortOption === t('property_list.newest_first')) {
+      sortedProperties.sort((a, b) => {
+        // Convert dates to timestamps for comparison
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+    } else {
+      // Default sort: Recommended first, then others
+      sortedProperties.sort((a, b) => {
+        // First sort by recommended (true values first)
+        if (a.isRecommended && !b.isRecommended) {
+          return -1;
+        } else if (!a.isRecommended && b.isRecommended) {
+          return 1;
+        }
+        
+        // If both have the same recommendation status, sort by price (lowest first)
+        return a.price - b.price;
+      });
+    }
+    
+    // Default case: return the sorted array
+    return sortedProperties;
+  }, [t, sortOption]);
+
+  // Toggle a filter (add or remove)
+  const toggleFilter = (filter: string) => {
+    // Show loading state for visual feedback
     setIsLoading(true);
     
-    // Update URL with the search parameters
-    const params = new URLSearchParams(location.search);
+    // Use functional update pattern to ensure we have the latest state
+    setActiveFilters(prevFilters => {
+      const newFilters = prevFilters.includes(filter)
+        ? prevFilters.filter(f => f !== filter)
+        : [...prevFilters, filter];
+        
+      // Apply filters immediately with the new filters array
+      applyFiltersImmediately(newFilters);
+      
+        return newFilters;
+      });
+  };
+  
+  // Apply filters immediately without waiting for state updates
+  const applyFiltersImmediately = useCallback((activeFiltersArray: string[]) => {
+    // Start with all properties
+    let filtered = [...properties];
     
+    // Apply location filter if present
     if (locationInput) {
-      params.set('location', locationInput);
-    } else {
-      params.delete('location');
+      filtered = filtered.filter(property => {
+        const location = property.address.city + ', ' + property.address.state;
+        return location.toLowerCase().includes(locationInput.toLowerCase());
+      });
     }
     
-    if (dateInput) {
-      params.set('date', dateInput);
-    } else {
-      params.delete('date');
+    // Apply other active filters
+    if (activeFiltersArray.length > 0) {
+      filtered = filtered.filter(property => {
+        // Check each filter
+        for (const filter of activeFiltersArray) {
+          // Bedroom filters
+          if (filter === t('property_list.studio')) {
+            if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms !== 0) {
+              return false;
+            }
+          } else if (filter === "0 " + t('property_list.bedrooms')) {
+            if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms !== 0) {
+              return false;
+            }
+          } else if (filter === "1 " + t('property_list.bedroom')) {
+            if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms !== 1) {
+              return false;
+            }
+          } else if (filter === "2 " + t('property_list.bedrooms')) {
+            if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms !== 2) {
+              return false;
+            }
+          } else if (filter === "3 " + t('property_list.bedrooms')) {
+            if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms !== 3) {
+              return false;
+            }
+          } else if (filter === "3+ " + t('property_list.bedrooms')) {
+            // Check if bedrooms property exists and is a number before comparing
+            if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms < 3) {
+              return false;
+            }
+          }
+          
+          // Property Type filters - normalize case for comparison
+          const normalizedPropertyType = property.propertyType.toLowerCase();
+          if (filter === "Apartment" && normalizedPropertyType !== 'apartment') {
+            return false;
+          } else if (filter === "House" && normalizedPropertyType !== 'house') {
+            return false;
+          } else if (filter === "Condo" && normalizedPropertyType !== 'condo') {
+            return false;
+          } else if (filter === "Commercial" && normalizedPropertyType !== 'commercial') {
+            return false;
+          }
+          
+          // Price filters
+          if (filter === "$0-$1000") {
+            if (property.price > 1000) {
+              return false;
+            }
+          } else if (filter === "$1000-$2000") {
+            if (property.price < 1000 || property.price > 2000) {
+              return false;
+            }
+          } else if (filter === "$2000-$3000") {
+            if (property.price < 2000 || property.price > 3000) {
+              return false;
+            }
+          } else if (filter === "$3000+") {
+            if (property.price < 3000) {
+              return false;
+            }
+          }
+          
+          // Custom price range
+          if (filter.includes(" to ")) {
+            const [min, max] = filter.split(" to ").map(part => parseInt(part.replace(/\D/g, '')));
+            if (property.price < min || property.price > max) {
+              return false;
+            }
+          }
+          
+          // Amenity filters - case insensitive comparison
+          if (filter === t('property_list.parking') || filter === 'Parking') {
+            const hasParking = property.amenities.some(a => a.toLowerCase() === 'parking');
+            if (!hasParking) {
+              return false;
+            }
+          } else if (filter === t('property_list.pool') || filter === 'Pool') {
+            const hasPool = property.amenities.some(a => a.toLowerCase() === 'pool');
+            if (!hasPool) {
+              return false;
+            }
+          } else if (filter === t('property_list.fitness_center') || filter === 'Fitness Center') {
+            const hasFitness = property.amenities.some(a => a.toLowerCase() === 'fitness center');
+            if (!hasFitness) {
+              return false;
+            }
+          } else if (filter === t('property_list.pets_allowed') || filter === 'Pets Allowed') {
+            const allowsPets = property.amenities.some(a => a.toLowerCase() === 'pets allowed');
+            if (!allowsPets) {
+              return false;
+            }
+          }
+          
+          // Additional amenities from the FilteringSection
+          if (filter === 'Furnished') {
+            const isFurnished = property.amenities.some(a => a.toLowerCase() === 'furnished');
+            if (!isFurnished) {
+              return false;
+            }
+          } else if (filter === 'WiFi') {
+            const hasWifi = property.amenities.some(a => a.toLowerCase() === 'wifi' || a.toLowerCase() === 'wi-fi');
+            if (!hasWifi) {
+              return false;
+            }
+          }
+          
+          // Included fees
+          if (filter === 'water') {
+            const includesWater = property.features.some(f => f.toLowerCase().includes('water'));
+            if (!includesWater) {
+              return false;
+            }
+          } else if (filter === 'electricity') {
+            const includesElectricity = property.features.some(f => f.toLowerCase().includes('electric'));
+            if (!includesElectricity) {
+              return false;
+            }
+          } else if (filter === 'wifi') {
+            const includesWifi = property.features.some(f => f.toLowerCase().includes('wifi') || f.toLowerCase().includes('internet'));
+            if (!includesWifi) {
+              return false;
+            }
+          }
+          
+          // Location filter (already handled above)
+          if (filter.startsWith('Location:')) {
+            // Skip as this is handled by the locationInput filter above
+            continue;
+          }
+        }
+        
+        // If passed all filters
+        return true;
+      });
     }
     
-    if (genderInput) {
-      params.set('gender', genderInput);
-    } else {
-      params.delete('gender');
+    // Apply sorting to the filtered properties
+    const sortedProperties = applySort(filtered);
+    
+    // Update filtered properties directly
+    setFilteredProperties(sortedProperties);
+    // Reset pagination
+    setCurrentPage(1);
+    // Hide the filtering section
+    setIsFilteringSectionVisible(false);
+    // Turn off loading state
+    setIsLoading(false);
+  }, [properties, locationInput, t, applySort]);
+
+  // Apply current filters based on the activeFilters state
+  const applyCurrentFilters = useCallback(() => {
+    applyFiltersImmediately(activeFilters);
+  }, [activeFilters, applyFiltersImmediately]);
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setIsLoading(true);
+    
+    // Clear filter states immediately
+    setActiveFilters([]);
+    setLocationInput('');
+    setDateInput('');
+    setGenderInput('');
+    
+    // Reset to all properties with proper sorting
+    const sortedProperties = applySort([...properties]);
+    
+    // Update filtered properties immediately
+    setFilteredProperties(sortedProperties);
+    
+    // Reset pagination
+    setCurrentPage(1);
+    
+    // Hide the filtering section
+    setIsFilteringSectionVisible(false);
+    
+    // Set loading to false
+    setIsLoading(false);
+  };
+
+  // Handle search
+  const handleSearch = () => {
+    applyCurrentFilters();
+  };
+
+  // Handle search input changes with debounce
+  const handleSearchInputChange = (location: string) => {
+    // Update the location input state
+    setLocationInput(location);
+    
+    // Clear previous timeout if it exists
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
     }
     
-    // Use the current path with the updated query parameters
-    const currentPath = location.pathname;
-    const newUrl = `${currentPath}?${params.toString()}`;
+    // Set a new timeout to delay the search execution
+    const newTimeout = setTimeout(() => {
+      // If there's a search value, update the activeFilters state using the functional update pattern
+      if (location.trim()) {
+        // Using functional update to ensure we have the latest state
+        setActiveFilters(prevFilters => {
+          // Check if we already have a location filter
+          const hasLocationFilter = prevFilters.some(f => f.startsWith('Location:'));
+          let newFilters = [...prevFilters];
+          
+          // Remove existing location filter if any
+          if (hasLocationFilter) {
+            newFilters = newFilters.filter(f => !f.startsWith('Location:'));
+          }
+          
+          // Add new location filter
+          const newLocationFilter = `Location: ${location}`;
+          newFilters = [...newFilters, newLocationFilter];
+          
+          // Apply filters immediately with the updated filters
+          applyFiltersImmediately(newFilters);
+          
+          return newFilters;
+        });
+      } else {
+        // If location is empty, remove any location filters
+        setActiveFilters(prevFilters => {
+          const newFilters = prevFilters.filter(f => !f.startsWith('Location:'));
+          // Apply filters immediately with the updated filters
+          applyFiltersImmediately(newFilters);
+          return newFilters;
+        });
+      }
+    }, 300); // Reduced debounce time for better responsiveness
     
-    // Replace the URL without causing a full page reload
-    navigate(newUrl, { replace: true });
-    
-    // Apply filtering immediately
-    console.log("Searching and filtering immediately");
-    applyCurrentFilters(activeFilters);
-  };
-
-  // Handlers for input changes
-  const handleLocationChange = (value: string) => {
-    setLocationInput(value);
-  };
-
-  const handleDateChange = (value: string) => {
-    setDateInput(value);
-  };
-
-  const handleGenderChange = (value: string) => {
-    setGenderInput(value);
+    // Save the timeout ID
+    setSearchTimeout(newTimeout);
   };
 
   // Handle sort option change
   const handleSortChange = (value: string) => {
     setSortOption(value);
-  };
-
-  // Handle filter toggle
-  const toggleFilter = (filter: string) => {
-    // Set loading immediately
-    setIsLoading(true);
     
-    // Update filters state
-    if (activeFilters.includes(filter)) {
-      // Remove the filter
-      const newFilters = activeFilters.filter(f => f !== filter);
-      setActiveFilters(newFilters);
-      
-      // Use callback form to ensure we have the updated state
-      setActiveFilters(prev => {
-        const newFilters = prev.filter(f => f !== filter);
-        console.log("Updated active filters (removed):", newFilters);
-        
-        // Apply filtering immediately
-        applyCurrentFilters(newFilters);
-        return newFilters;
-      });
-    } else {
-      // Add the filter
-      setActiveFilters(prev => {
-        const newFilters = [...prev, filter];
-        console.log("Updated active filters (added):", newFilters);
-        
-        // Apply filtering immediately
-        applyCurrentFilters(newFilters);
-        return newFilters;
-      });
-    }
-  };
-  
-  // Function to apply current filters without relying on state updates
-  const applyCurrentFilters = (currentFilters: string[]) => {
-    // Apply the filters to properties
-    let filtered = [...properties];
-    
-    // Filter by location input
-    if (locationInput) {
-      filtered = filtered.filter(
-        property => 
-          property.title.toLowerCase().includes(locationInput.toLowerCase()) ||
-          (property.subtitle?.toLowerCase().includes(locationInput.toLowerCase()) ?? false) ||
-          property.address.city.toLowerCase().includes(locationInput.toLowerCase()) ||
-          property.address.state.toLowerCase().includes(locationInput.toLowerCase()) ||
-          property.propertyType.toLowerCase().includes(locationInput.toLowerCase())
-      );
-    }
-    
-    // Filter by date input (availability date)
-    if (dateInput) {
-      // In a real app, you would check against property availability dates
-      const dateObj = new Date(dateInput);
-      
-      filtered = filtered.filter(property => {
-        // Mock implementation - in a real app, check actual availability dates
-        if (property.createdAt) {
-          // For demo, filter based on a simple comparison (created before selected date is available)
-          const propertyDate = property.createdAt instanceof Date 
-            ? property.createdAt 
-            : new Date(property.createdAt);
-          
-          return propertyDate <= dateObj;
-        }
-        return true;  
-      });
-    }
-    
-    // Filter by gender preference
-    if (genderInput) {
-      // In a real app, you would check against property gender preference settings
-      if (genderInput === 'women_only') {
-        // Mock implementation - filter only properties meant for women
-        filtered = filtered.filter((property, index) => {
-          // Use the index to create a deterministic filter
-          return index % 3 === 0;
-        });
-      } else if (genderInput === 'men_only') {
-        // Mock implementation - filter only properties meant for men
-        filtered = filtered.filter((property, index) => {
-          // Use the index to create a deterministic filter
-          return index % 3 === 1;
-        });
-      }
-    }
-    
-    // Apply active filters 
-    if (currentFilters.length > 0) {
-      filtered = filtered.filter(property => {
-        // Check each filter
-        return currentFilters.every(filter => {
-          // Same filter logic as in handleAdvancedFiltering
-          
-          // Bedroom filters
-          if (filter.includes('Bedroom')) {
-            const bedroomCount = property.bedrooms || 0;
-            const filterValue = parseInt(filter.split(' ')[0]);
-            
-            if (filter.includes('+')) {
-              return bedroomCount >= filterValue;
-            } else {
-              return bedroomCount === filterValue;
-            }
-          }
-          
-          // Property type filters
-          if (filter === 'Apartment' || filter === 'House' || filter === 'Condo' || filter === 'Commercial') {
-            return property.propertyType.toLowerCase() === filter.toLowerCase();
-          }
-          
-          // Price range filters
-          if (filter.includes('$0-$1000')) {
-            return property.price <= 1000;
-          }
-          
-          if (filter.includes('$1000-$3000')) {
-            return property.price > 1000 && property.price <= 3000;
-          }
-          
-          if (filter.includes('$3000+')) {
-            return property.price > 3000;
-          }
-          
-          // Custom price range filter (e.g., "1500 to 4000")
-          if (filter.includes('to')) {
-            try {
-              const [min, max] = filter.split('to').map(s => parseInt(s.trim()));
-              if (!isNaN(min) && !isNaN(max)) {
-                return property.price >= min && property.price <= max;
-              }
-            } catch (e) {
-              console.error("Error parsing price range:", e);
-            }
-            return true;
-          }
-          
-          // Amenities filters
-          if (filter === 'WiFi' || filter === 'Parking' || filter === 'Pets Allowed' || filter === 'Furnished') {
-            return property.amenities?.some(
-              amenity => amenity.toLowerCase() === filter.toLowerCase()
-            ) ?? false;
-          }
-          
-          // Status filters
-          if (filter === 'Available') {
-            return property.status === 'available';
-          }
-          
-          if (filter === 'Pending') {
-            return property.status === 'pending';
-          }
-          
-          return true; // Default to including if filter is not recognized
-        });
-      });
-    }
-    
-    // Apply sorting
-    switch(sortOption) {
-      case 'Price: Low to High':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'Price: High to Low':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'Newest First':
-        filtered.sort((a, b) => {
-          const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
-          const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
-          return dateB.getTime() - dateA.getTime();
-        });
-        break;
-      case 'Recommended':
-      default:
-        // Sort recommended properties first
-        filtered.sort((a, b) => (b.isRecommended ? 1 : 0) - (a.isRecommended ? 1 : 0));
-        break;
-    }
-    
-    console.log("Filtered properties count:", filtered.length);
-    
-    // Update state
-    setFilteredProperties(filtered);
-    setIsLoading(false);
+    // Apply the new sort immediately to the current filtered properties
+    setTimeout(() => {
+      const sortedProperties = applySort(filteredProperties);
+      setFilteredProperties(sortedProperties);
+    }, 0);
   };
 
   // Toggle filtering section visibility
@@ -711,121 +990,66 @@ export default function PropertyListPage() {
     setIsFilteringSectionVisible(!isFilteringSectionVisible);
   };
 
-  // Toggle map visibility on mobile
-  const toggleMap = () => {
-    setShowMap(!showMap);
-  };
+  // Advanced filtering implementation
+  const handleAdvancedFiltering = useCallback(() => {
+    applyCurrentFilters();
+  }, [applyCurrentFilters]);
 
   // Toggle favorite status
-  const toggleFavorite = useCallback((id: string | number) => {
-    console.log("PropertyListPage toggleFavorite called with ID:", id);
-    
+  const toggleFavorite = useCallback((propertyId: string | number) => {
     if (!isAuthenticated) {
-      // Show toast notification if user is not logged in
-      toast.info("Please login to save properties to your favorites", {
-        position: "top-center",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      
-      // Optionally, navigate to login page
-      // navigate('/login', { state: { from: location.pathname } });
+      setShowAuthModal(true);
       return;
     }
-    
-    // Use functional updates to ensure we're working with the latest state
-    setProperties(prevProperties => {
-      return prevProperties.map(property => {
-        if (property.id === id) {
-          console.log("Found matching property to toggle favorite:", property.id);
-          return { ...property, isFavorite: !property.isFavorite };
-        }
-        return property;
-      });
-    });
-    
-    setFilteredProperties(prevFilteredProperties => {
-      return prevFilteredProperties.map(property => {
-        if (property.id === id) {
-          console.log("Found matching filtered property to toggle favorite:", property.id);
-          return { ...property, isFavorite: !property.isFavorite };
-        }
-        return property;
-      });
-    });
-    
-    // Here you would also update the favorite status in your backend
-    // If authenticated, call your API to save the favorite status
-    if (isAuthenticated) {
-      // Example API call (replace with your actual implementation)
-      // saveFavoriteStatus(id, isFavorite);
-      console.log("Saving favorite status to backend for property ID:", id);
-    }
-  }, [isAuthenticated, navigate, location.pathname]);
 
-  // Scroll to top when changing page
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [currentPage]);
+    setProperties(prevProperties => 
+      prevProperties.map(property => 
+        property.id === propertyId 
+          ? { ...property, isFavorite: !property.isFavorite } 
+          : property
+      )
+    );
 
-  // Pagination
-  const indexOfLastProperty = currentPage * propertiesPerPage;
-  const indexOfFirstProperty = indexOfLastProperty - propertiesPerPage;
-  const currentProperties = filteredProperties.slice(indexOfFirstProperty, indexOfLastProperty);
-  const totalPages = Math.ceil(filteredProperties.length / propertiesPerPage);
-
-  // Pagination controls
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
-  const nextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
-  const prevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
-
-  // Custom AppliedFilterBanner component that includes remove functionality
-  const FilterBadge = ({ label, onRemove }: { label: string; onRemove: () => void }) => {
-    const handleClick = (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      onRemove();
-    };
+    setFilteredProperties(prevFiltered => 
+      prevFiltered.map(property => 
+        property.id === propertyId 
+          ? { ...property, isFavorite: !property.isFavorite } 
+          : property
+      )
+    );
+  }, [isAuthenticated]);
 
     return (
-      <div className="filter-badge">
-        <AppliedFilterBannerComponent label={label} />
+    <PropertyList $isCollapsed={isMainContentCollapsed}>
+      <div className={`main-content ${isMainContentCollapsed ? 'collapsed' : ''}`} ref={scrollRef}>
         <button 
-          className="remove-icon" 
-          onClick={handleClick}
-          aria-label={`Remove ${label} filter`}
+          className="collapse-toggle-button"
+          onClick={toggleMainContentCollapse}
+          aria-label={isMainContentCollapsed ? 'Expand content' : 'Collapse content'}
         >
-          ×
+          {isMainContentCollapsed ? <IoChevronForwardOutline /> : <IoChevronBackOutline />}
         </button>
-      </div>
-    );
-  };
 
-  // Clear all filters
-  const clearAllFilters = () => {
-    setIsLoading(true);
-    setActiveFilters([]);
-    setLocationInput('');
-    setDateInput('');
-    setGenderInput('');
-    
-    // Apply filtering after state update with short delay
-    setTimeout(() => handleAdvancedFiltering(), 10);
-  };
-
-  return (
-    <PropertyList>
-      <div className="main-content" ref={scrollRef}>
-        {!isFilteringSectionVisible ? (
+        {isFilteringSectionVisible ? (
+          <div className="filtering-section">
+            <FilteringSection 
+              onApplyFilters={applyCurrentFilters}
+              onClearFilters={clearAllFilters}
+              activeFilters={activeFilters}
+              onToggleFilter={toggleFilter}
+              location={locationInput}
+              date={dateInput}
+              gender={genderInput}
+              onLocationChange={handleSearchInputChange}
+              onDateChange={handleDateChange}
+              onGenderChange={handleGenderChange}
+            />
+          </div>
+        ) : (
           <div className="content-container">
             <div className="search-form">
               <SearchFilterBar 
-                onLocationChange={handleLocationChange}
+                onLocationChange={handleSearchInputChange}
                 onDateChange={handleDateChange}
                 onGenderChange={handleGenderChange}
                 onSearch={handleSearch}
@@ -836,22 +1060,28 @@ export default function PropertyListPage() {
               />
             </div>
 
+            {/* Restore the search results container */}
             <div className="search-results-container">
               <div className="filters-container">
                 <div className="text-select">
                   <div className="text">
                     <div className="title">
-                      Renting flats, houses and rooms 
+                      {t('property_list.renting_title')}
                     </div>
                     <div className="sub-title">
-                      {filteredProperties.length} amazing {filteredProperties.length === 1 ? 'listing' : 'listings'} {filteredProperties.length === 1 ? 'is' : 'are'} waiting for new tenants
+                      {filteredProperties.length} {t(filteredProperties.length === 1 ? 'property_list.waiting_tenants' : 'property_list.waiting_tenants_plural')}
                     </div>
                   </div>
 
                   <div className="select-container">
                     <SelectFieldBaseModelVariant2 
-                      options={sortOptions}
-                      placeholder="Sort by" 
+                      options={[
+                        t('property_list.recommended'),
+                        t('property_list.price_low_high'),
+                        t('property_list.price_high_low'),
+                        t('property_list.newest_first')
+                      ]}
+                      placeholder={t('property_list.sort_by')}
                       onChange={handleSortChange}
                     />
                   </div>
@@ -860,11 +1090,16 @@ export default function PropertyListPage() {
                 {activeFilters.length > 0 && (
                   <div className="applied-filters">
                     {activeFilters.map((filter, index) => (
-                      <FilterBadge
-                        key={index} 
-                        label={filter}
-                        onRemove={() => toggleFilter(filter)}
-                      />
+                      <div key={index} className="filter-badge">
+                        <AppliedFilterBannerComponent label={filter} />
+                        <button 
+                          className="remove-icon" 
+                          onClick={() => toggleFilter(filter)}
+                          aria-label={`Remove ${filter} filter`}
+                        >
+                          ×
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -873,13 +1108,15 @@ export default function PropertyListPage() {
               {isLoading ? (
                 <div className="loading-container">
                   <div className="loading-spinner"></div>
-                  <p>Finding the perfect properties for you...</p>
+                  <p>{t('property_list.loading')}</p>
                 </div>
               ) : filteredProperties.length > 0 ? (
                 <>
                   <div className="results-container">
-                    {currentProperties.map((property) => {
-                      // Ensure property ID is properly handled
+                    {filteredProperties.slice(
+                      (currentPage - 1) * propertiesPerPage, 
+                      currentPage * propertiesPerPage
+                    ).map((property) => {
                       const propertyKey = property.id.toString();
                       
                       return (
@@ -896,21 +1133,21 @@ export default function PropertyListPage() {
                     })}
                   </div>
 
-                  {totalPages > 1 && (
+                  {Math.ceil(filteredProperties.length / propertiesPerPage) > 1 && (
                     <div className="pagination">
                       <button 
                         className="page-button arrow" 
-                        onClick={prevPage}
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
                       >
                         ←
                       </button>
                       
-                      {[...Array(totalPages)].map((_, index) => (
+                      {[...Array(Math.ceil(filteredProperties.length / propertiesPerPage))].map((_, index) => (
                         <button
                           key={index}
                           className={`page-button ${currentPage === index + 1 ? 'active' : ''}`}
-                          onClick={() => paginate(index + 1)}
+                          onClick={() => setCurrentPage(index + 1)}
                         >
                           {index + 1}
                         </button>
@@ -918,8 +1155,8 @@ export default function PropertyListPage() {
                       
                       <button 
                         className="page-button arrow" 
-                        onClick={nextPage}
-                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredProperties.length / propertiesPerPage)))}
+                        disabled={currentPage === Math.ceil(filteredProperties.length / propertiesPerPage)}
                       >
                         →
                       </button>
@@ -929,40 +1166,39 @@ export default function PropertyListPage() {
               ) : (
                 <div className="no-results">
                   <div className="no-results-icon">🏠</div>
-                  <h3>No properties found</h3>
-                  <p>Try adjusting your search filters or explore our featured properties</p>
+                  <h3>{t('property_list.no_results')}</h3>
+                  <p>{t('property_list.adjust_filters')}</p>
                   <button onClick={clearAllFilters}>
-                    Clear all filters
+                    {t('property_list.clear_filters')}
                   </button>
                 </div>
               )}
             </div>
           </div>
-        ) : (
-          <FilteringSection 
-            onApplyFilters={handleApplyFilters}
-            activeFilters={activeFilters}
-            onToggleFilter={toggleFilter}
-            location={locationInput}
-            date={dateInput}
-            gender={genderInput}
-            onLocationChange={handleLocationChange}
-            onDateChange={handleDateChange}
-            onGenderChange={handleGenderChange}
-          />
         )}
       </div>
 
       <PropertyMap 
-        selectedProperty={null} 
-        showMap={showMap}
+        showMap={showMap || isMainContentCollapsed}
         properties={filteredProperties} 
+        isCollapsed={isMainContentCollapsed}
+        setProperties={setProperties}
+        toggleFavorite={toggleFavorite}
       />
 
+      {!isMainContentCollapsed && (
       <button className="toggle-map-button" onClick={toggleMap}>
         <IoMap />
-        {showMap ? 'Hide Map' : 'Show Map'}
+          {showMap ? t('property_list.hide_map') : t('property_list.show_map')}
       </button>
+      )}
+
+      {showAuthModal && (
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+        />
+      )}
     </PropertyList>
-  )
+  );
 }

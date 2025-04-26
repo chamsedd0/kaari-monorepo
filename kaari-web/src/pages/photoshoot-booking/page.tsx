@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PhotoshootBookingPageStyle } from './styles';
 import UnifiedHeader from '../../components/skeletons/constructed/headers/unified-header';
 import CalendarComponent from '../../components/skeletons/constructed/calendar/calendar';
@@ -18,6 +19,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 const PhotoshootBookingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   // State for form values
   const [formData, setFormData] = useState({
@@ -29,7 +31,7 @@ const PhotoshootBookingPage: React.FC = () => {
     flat: '',
     stateRegion: '',
     country: '',
-    propertyType: 'Apartment',
+    propertyType: t('photoshoot_booking.property_types.apartment'),
     date: '',
     timeSlot: '',
     comments: ''
@@ -52,12 +54,12 @@ const PhotoshootBookingPage: React.FC = () => {
 
   // Property type options
   const propertyTypeOptions = [
-    'Apartment',
-    'House',
-    'Villa',
-    'Penthouse',
-    'Studio',
-    'Townhouse'
+    t('photoshoot_booking.property_types.apartment'),
+    t('photoshoot_booking.property_types.house'),
+    t('photoshoot_booking.property_types.villa'),
+    t('photoshoot_booking.property_types.penthouse'),
+    t('photoshoot_booking.property_types.studio'),
+    t('photoshoot_booking.property_types.townhouse')
   ];
 
   // Inside the PhotoshootBookingPage component, add the current user state
@@ -156,12 +158,12 @@ const PhotoshootBookingPage: React.FC = () => {
     
     // Validate form
     if (!selectedDate || !selectedTimeSlot) {
-      alert('Please select a date and time for your photoshoot.');
+      alert(t('photoshoot_booking.validation.date_time'));
       return;
     }
     
     if (!formData.streetName || !formData.postalCode || !formData.city || !formData.country) {
-      alert('Please fill in all required address fields.');
+      alert(t('photoshoot_booking.validation.address'));
       return;
     }
     
@@ -182,7 +184,7 @@ const PhotoshootBookingPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error submitting booking:', error);
-      setResponseMessage('An error occurred while saving your booking to Firestore. Please try again.');
+      setResponseMessage(t('photoshoot_booking.error.generic'));
       setShowErrorModal(true);
     } finally {
       setIsSubmitting(false);
@@ -200,17 +202,16 @@ const PhotoshootBookingPage: React.FC = () => {
       city: '',
       stateRegion: '',
       country: '',
-      propertyType: 'Apartment',
+      propertyType: t('photoshoot_booking.property_types.apartment'),
       date: '',
       timeSlot: '',
       comments: ''
     });
     setSelectedDate(null);
     setSelectedTimeSlot('');
-    setDisplayDate('Wednesday, May 15th');
   };
-
-  // Navigation for date selection
+  
+  // Navigate to previous day
   const navigatePrevDay = () => {
     if (selectedDate) {
       const prevDay = new Date(selectedDate);
@@ -218,59 +219,50 @@ const PhotoshootBookingPage: React.FC = () => {
       handleDateChange(prevDay);
     }
   };
-
+  
+  // Navigate to next day
   const navigateNextDay = () => {
     if (selectedDate) {
       const nextDay = new Date(selectedDate);
       nextDay.setDate(nextDay.getDate() + 1);
       handleDateChange(nextDay);
-    } else {
-      // If no date is selected, select tomorrow
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      handleDateChange(tomorrow);
     }
   };
-
-  // Error modal content
+  
+  // Render the error modal
   const renderErrorModal = () => {
+    if (!showErrorModal) return null;
+    
     return (
-      <Modal 
-        isOpen={showErrorModal} 
-        onClose={() => setShowErrorModal(false)}
-        title="Booking Error"
-      >
+      <Modal isOpen={showErrorModal} onClose={() => setShowErrorModal(false)}>
         <div className="error-modal">
-          <p>{responseMessage}</p>
-          <p>Please try selecting a different time slot or date.</p>
-          <button 
-            className="close-btn" 
-            onClick={() => setShowErrorModal(false)}
-          >
-            Close
+          <h3>{t('photoshoot_booking.error.title')}</h3>
+          <p>{responseMessage || t('photoshoot_booking.error.generic')}</p>
+          <button onClick={() => setShowErrorModal(false)}>
+            {t('photoshoot_booking.error.close')}
           </button>
         </div>
       </Modal>
     );
   };
-
+  
   return (
     <>
-      <UnifiedHeader variant="white" userType="advertiser" showSearchBar={true} />
+      <UnifiedHeader />
       
       <PhotoshootBookingPageStyle>
-        <h1 className="page-title">Booking a Photoshoot</h1>
+        <h1 className="page-title">{t('photoshoot_booking.title')}</h1>
         
         <form onSubmit={handleSubmit}>
-          {/* Property Address Section */}
-          <div className="form-section">
-            <h2 className="section-title">Address of the Property</h2>
+          {/* Address Section */}
+          <div className="form-section address-section">
+            <h2 className="section-title">{t('photoshoot_booking.address_section')}</h2>
             
-            <div className="form-grid">
+            <div className="address-content">
               <div className="form-group">
                 <InputBaseModel
                   type="text"
-                  title="Street Name *"
+                  title={`${t('photoshoot_booking.street_name')} *`}
                   placeholder="John Kennedy St"
                   value={formData.streetName}
                   onChange={(e) => handleCustomInputChange('streetName', e.target.value)}
@@ -281,7 +273,7 @@ const PhotoshootBookingPage: React.FC = () => {
                 <div className="form-group">
                   <InputBaseModel
                     type="text"
-                    title="Street Number"
+                    title={t('photoshoot_booking.street_number')}
                     placeholder="23"
                     value={formData.streetNumber}
                     onChange={(e) => handleCustomInputChange('streetNumber', e.target.value)}
@@ -291,7 +283,7 @@ const PhotoshootBookingPage: React.FC = () => {
                 <div className="form-group">
                   <InputBaseModel
                     type="text"
-                    title="Floor"
+                    title={t('photoshoot_booking.floor')}
                     placeholder="1"
                     value={formData.floor}
                     onChange={(e) => handleCustomInputChange('floor', e.target.value)}
@@ -301,7 +293,7 @@ const PhotoshootBookingPage: React.FC = () => {
                 <div className="form-group">
                   <InputBaseModel
                     type="text"
-                    title="Flat"
+                    title={t('photoshoot_booking.flat')}
                     placeholder="2"
                     value={formData.flat}
                     onChange={(e) => handleCustomInputChange('flat', e.target.value)}
@@ -312,7 +304,7 @@ const PhotoshootBookingPage: React.FC = () => {
               <div className="form-group">
                 <InputBaseModel
                   type="text"
-                  title="Postal Code *"
+                  title={`${t('photoshoot_booking.postal_code')} *`}
                   placeholder="012345"
                   value={formData.postalCode}
                   onChange={(e) => handleCustomInputChange('postalCode', e.target.value)}
@@ -322,7 +314,7 @@ const PhotoshootBookingPage: React.FC = () => {
               <div className="form-group">
                 <InputBaseModel
                   type="text"
-                  title="City *" 
+                  title={`${t('photoshoot_booking.city')} *`}
                   placeholder="Agadir" 
                   value={formData.city}
                   onChange={(e) => handleCustomInputChange('city', e.target.value)}
@@ -332,7 +324,7 @@ const PhotoshootBookingPage: React.FC = () => {
               <div className="form-group">
                 <InputBaseModel
                   type="text"
-                  title="State or Region"
+                  title={t('photoshoot_booking.state_region')}
                   placeholder="Some Region"
                   value={formData.stateRegion}
                   onChange={(e) => handleCustomInputChange('stateRegion', e.target.value)}
@@ -342,7 +334,7 @@ const PhotoshootBookingPage: React.FC = () => {
               <div className="form-group">
                 <InputBaseModel
                   type="text"
-                  title="Country *"
+                  title={`${t('photoshoot_booking.country')} *`}
                   placeholder="Morocco"
                   value={formData.country}
                   onChange={(e) => handleCustomInputChange('country', e.target.value)}
@@ -358,15 +350,15 @@ const PhotoshootBookingPage: React.FC = () => {
                 options={propertyTypeOptions}
                 value={formData.propertyType}
                 onChange={handlePropertyTypeChange}
-                placeholder="Select property type"
-                label="Type of property *"
+                placeholder={t('photoshoot_booking.select_property_type')}
+                label={`${t('photoshoot_booking.property_type')} *`}
               />
             </div>
           </div>
           
           {/* Appointment Request Section */}
           <div className="form-section appointment-section">
-            <h2 className="section-title">Appointment Request</h2>
+            <h2 className="section-title">{t('photoshoot_booking.appointment_section')}</h2>
             
             <div className="date-picker-container">
               <div className="calendar-wrapper">
@@ -394,7 +386,7 @@ const PhotoshootBookingPage: React.FC = () => {
                 {loadingTimeSlots ? (
                   <div className="loading-slots">
                     <FaSpinner className="spinner" />
-                    <p>Loading available time slots...</p>
+                    <p>{t('photoshoot_booking.loading_time_slots')}</p>
                   </div>
                 ) : (
                   <>
@@ -412,7 +404,7 @@ const PhotoshootBookingPage: React.FC = () => {
                       </div>
                     ) : (
                       <div className="no-slots-message">
-                        <p>No available time slots for this date. Please select another date.</p>
+                        <p>{t('photoshoot_booking.no_slots_message')}</p>
                       </div>
                     )}
                   </>
@@ -439,8 +431,8 @@ const PhotoshootBookingPage: React.FC = () => {
           <div className="form-section">            
             <div className="form-group">
               <TextAreaBaseModel
-                title="Any comments or concerns?"
-                placeholder="Tell us more about your property or any special requirements"
+                title={t('photoshoot_booking.comments_label')}
+                placeholder={t('photoshoot_booking.comments_placeholder')}
                 value={formData.comments}
                 onChange={(e) => handleCustomInputChange('comments', e.target.value)}
               />
@@ -450,7 +442,7 @@ const PhotoshootBookingPage: React.FC = () => {
           {/* Submit Button */}
           <div className="submit-button-container">
             <PurpleButtonLB60 
-              text={isSubmitting ? "Processing..." : "Book a Photoshoot"} 
+              text={isSubmitting ? t('photoshoot_booking.processing') : t('photoshoot_booking.submit_button')} 
               onClick={(e) => {
                 e?.preventDefault();
                 handleSubmit(e as unknown as React.FormEvent);
@@ -458,7 +450,7 @@ const PhotoshootBookingPage: React.FC = () => {
             />
           </div>
           
-          <p className="required-fields-note">* Required fields</p>
+          <p className="required-fields-note">{t('photoshoot_booking.required_fields')}</p>
         </form>
       </PhotoshootBookingPageStyle>
       

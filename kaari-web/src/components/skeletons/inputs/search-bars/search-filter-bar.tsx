@@ -2,6 +2,7 @@ import React, { useState, FormEvent } from 'react';
 import styled from 'styled-components';
 import { IoSearch, IoLocationOutline, IoCalendarOutline, IoPersonOutline, IoClose } from 'react-icons/io5';
 import { Theme } from '../../../../theme/theme';
+import { useTranslation } from 'react-i18next';
 
 // Styling for the new search and filter bar component
 const SearchFilterBarContainer = styled.div`
@@ -139,6 +140,8 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
   showApplyFiltersButton = false,
   onApplyFilters
 }) => {
+  const { t } = useTranslation();
+  
   // Local states to track which input is currently focused
   const [locationFocused, setLocationFocused] = useState(false);
   const [dateFocused, setDateFocused] = useState(false);
@@ -178,7 +181,7 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
         <IoLocationOutline color={locationFocused || location !== '' ? Theme.colors.primary : "#333"} />
         <input
           type="text"
-          placeholder="Location"
+          placeholder={t('common.location')}
           value={location}
           onChange={(e) => onLocationChange(e.target.value)}
           onFocus={() => setLocationFocused(true)}
@@ -215,28 +218,28 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
           onFocus={() => setGenderFocused(true)}
           onBlur={() => setGenderFocused(false)}
         >
-          <option value="">Any Gender</option>
-          <option value="women_only">Women Only</option>
-          <option value="men_only">Men Only</option>
-          <option value="other">Other/Non-binary</option>
+          <option value="">{t('common.any_gender')}</option>
+          <option value="women_only">{t('common.women_only')}</option>
+          <option value="men_only">{t('common.men_only')}</option>
+          <option value="other">{t('common.other_gender')}</option>
         </select>
       </FilterItem>
       
       {showSearchButton && (
-        <SearchButton onClick={onSearch} aria-label="Search" type="button">
+        <SearchButton onClick={onSearch} aria-label={t('common.search')} type="button">
           <IoSearch />
         </SearchButton>
       )}
       
       {showAdvancedButton && (
         <ApplyFiltersButton onClick={onAdvancedFilteringClick} type="button">
-          Advanced filtering
+          {t('common.advanced_filtering')}
         </ApplyFiltersButton>
       )}
       
       {showApplyFiltersButton && (
         <ApplyFiltersButton onClick={handleApplyFilters} type="button">
-          Apply Filters
+          {t('common.apply_filters')}
         </ApplyFiltersButton>
       )}
     </SearchFilterBarContainer>

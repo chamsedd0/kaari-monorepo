@@ -14,8 +14,8 @@ export const SelectHeader1 = styled(SelectHeader)`
 
 `;
 
-export const SelectDropdown1 = styled(SelectDropdown) <{ isOpen: boolean }>`
-  //same as select-field-base-model-style
+export const SelectDropdown1 = styled(SelectDropdown)<{ $isOpen: boolean }>`
+  display: ${props => props.$isOpen ? 'block' : 'none'};
 `;
 
 export const Option1 = styled(Option)`
@@ -26,10 +26,11 @@ export const Label1 = styled(Label)`
   font: ${Theme.typography.fonts.mediumB};
 `;
 
-export const ChevronIcon1 = styled(ChevronIcon)<{ isOpen: boolean }>`
+export const ChevronIcon1 = styled(ChevronIcon)<{ $isOpen: boolean }>`
   img {
     width: 10px;
     height: 10px;
-    transform: translateY(30%)
+    transform: ${props => props.$isOpen ? 'translateY(30%) rotate(180deg)' : 'translateY(30%)'};
+    transition: transform 0.2s ease;
   }
 `;

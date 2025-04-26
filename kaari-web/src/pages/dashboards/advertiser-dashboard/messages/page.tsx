@@ -8,6 +8,7 @@ import { ConversationHeader } from '../../../../components/skeletons/banners/sta
 import MessageField from '../../../../components/skeletons/inputs/input-fields/message-field';
 import MessageBubble from '../../../../components/skeletons/banners/messages/message-bubble';
 import ArrowLeft from '../../../../components/skeletons/icons/ArrowRightThickPrimary.svg';
+import { useTranslation } from 'react-i18next';
 
 
 
@@ -16,18 +17,22 @@ interface MessageHeaderProps {
   isPanelCollapsed: boolean;
 }
 
-const MessageHeader: React.FC<MessageHeaderProps> = ({ onTogglePanel, isPanelCollapsed }) => (
-  <div className="conversation-header-wrapper">
-    <button 
-      className={`toggle-panel-button ${isPanelCollapsed ? 'collapsed' : ''}`}
-      onClick={onTogglePanel}
-      aria-label={isPanelCollapsed ? "Expand conversations" : "Collapse conversations"}
-    >
-      <img src={ArrowLeft} alt="Toggle panel" />
-    </button>
-    <ConversationHeader senderName={'John Price'} senderPic={profileImage} lastOnline={'Today'} />
-  </div>
-);
+const MessageHeader: React.FC<MessageHeaderProps> = ({ onTogglePanel, isPanelCollapsed }) => {
+  const { t } = useTranslation();
+  
+  return (
+    <div className="conversation-header-wrapper">
+      <button 
+        className={`toggle-panel-button ${isPanelCollapsed ? 'collapsed' : ''}`}
+        onClick={onTogglePanel}
+        aria-label={isPanelCollapsed ? t('messages.expand_conversations') : t('messages.collapse_conversations')}
+      >
+        <img src={ArrowLeft} alt={t('messages.toggle_panel')} />
+      </button>
+      <ConversationHeader senderName={'John Price'} senderPic={profileImage} lastOnline={'Today'} />
+    </div>
+  );
+};
 
 const MessageInput = () => {
   const [message, setMessage] = useState<string>('');
@@ -43,6 +48,7 @@ const ConversationBanner = () => <MessageBanner profileImage={profileImage} name
 const MessagesPage: React.FC = () => {
   const [activeConversation, setActiveConversation] = useState<number | null>(0);
   const [isPanelCollapsed, setIsPanelCollapsed] = useState<boolean>(false);
+  const { t } = useTranslation();
 
   // Mock data - replace with your actual data
   const conversations = [
@@ -71,13 +77,13 @@ const MessagesPage: React.FC = () => {
         <div className={`conversations-list ${isPanelCollapsed ? 'collapsed' : ''}`}>
           <div className="conversations-list-content">
             <div className="conversations-header">
-              <h2>Messages</h2>
+              <h2>{t('messages.title')}</h2>
               <div className="actions">
                 <div className="edit-button">
-                  <img src={EditIcon} alt="Edit" />
+                  <img src={EditIcon} alt={t('messages.edit')} />
                 </div>
                 <div className="delete-button">
-                  <img src={DeleteIcon} alt="Delete" />
+                  <img src={DeleteIcon} alt={t('messages.delete')} />
                 </div>
               </div>
             </div>
@@ -104,7 +110,7 @@ const MessagesPage: React.FC = () => {
               >
                 {!isMessageFromMe(message.senderId) && (
                   <div className="avatar">
-                    <img src={profileImage} alt="Profile" />
+                    <img src={profileImage} alt={t('messages.profile')} />
                   </div>
                 )}
                 <div className="message-bubble">
@@ -116,7 +122,7 @@ const MessagesPage: React.FC = () => {
                 </div>
                 {isMessageFromMe(message.senderId) && (
                   <div className="avatar">
-                    <img src={profileImage} alt="Profile" />
+                    <img src={profileImage} alt={t('messages.profile')} />
                   </div>
                 )}
               </div>

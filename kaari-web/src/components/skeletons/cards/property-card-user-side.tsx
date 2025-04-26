@@ -2,6 +2,7 @@ import { CardBaseModelStyle1 } from "../../styles/cards/card-base-model-style-1"
 import { CertificationBanner } from "../banners/static/certification-banner";
 import { IoHeartOutline, IoHeart } from 'react-icons/io5';
 import React, { memo } from "react";
+import { useTranslation } from 'react-i18next';
 
 interface PropertyCardProps {
   id: string | number;
@@ -32,6 +33,8 @@ const PropertyCardComponent = ({
   onToggleFavorite,
   id
 }: PropertyCardProps) => {
+  const { t } = useTranslation();
+  
   // Use the prop directly instead of local state to ensure consistency
   const toggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -52,8 +55,8 @@ const PropertyCardComponent = ({
         <div className="image">
             <img src={image} alt="Property" />
             <div className="certifications">
-                <CertificationBanner purple text='Kaari Verified'></CertificationBanner>
-                <CertificationBanner text='Tenants Protection'></CertificationBanner>
+                <CertificationBanner purple text={t('property_card.kaari_verified')}></CertificationBanner>
+                <CertificationBanner text={t('property_card.tenant_protection')}></CertificationBanner>
             </div>
             <div className="favorite-icon" onClick={toggleFavorite}>
                 {isFavorite ? <IoHeart className="filled" /> : <IoHeartOutline />}
@@ -74,7 +77,7 @@ const PropertyCardComponent = ({
         </div>
         {isRecommended && (
           <div className="recommendedBanner">
-              <div className="banner">Recommended by Kaari</div>
+              <div className="banner">{t('property_card.recommended')}</div>
           </div>
         )}
     </CardBaseModelStyle1>

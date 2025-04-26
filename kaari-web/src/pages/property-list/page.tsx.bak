@@ -1,0 +1,884 @@
+import { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { IoMap} from 'react-icons/io5';
+import { AppliedFilterBannerComponent } from "../../components/skeletons/banners/static/applied-filter-banner";
+import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
+import SelectFieldBaseModelVariant2 from "../../components/skeletons/inputs/select-fields/select-field-base-model-variant-2"
+import { PropertyList } from "./styles"
+import { getProperties } from "../../backend/server-actions/PropertyServerActions";
+import SearchFilterBar from "../../components/skeletons/inputs/search-bars/search-filter-bar";
+import FilteringSection from "../../components/skeletons/constructed/filtering/filtering-section";
+import defaultImage from "../../assets/images/propertyExamplePic.png";
+import { useAuth } from "../../contexts/auth";
+import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
+
+// Updated PropertyType interface to match Firestore data model
+interface PropertyType {
+  id: string | number;
+  ownerId: string;
+  title: string;
+  description: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+  propertyType: 'apartment' | 'house' | 'condo' | 'land' | 'commercial';
+  bedrooms?: number;
+  bathrooms?: number;
+  area: number;
+  price: number;
+  images: string[];
+  amenities: string[];
+  features: string[];
+  status: 'available' | 'sold' | 'pending' | 'rented';
+  createdAt: Date;
+  updatedAt: Date;
+  listingId?: string;
+  // UI specific properties
+  isFavorite?: boolean;
+  isRecommended?: boolean;
+  subtitle?: string;
+  priceType?: string;
+  minstay?: string;
+  location?: { lat: number; lng: number };
+  image?: string;
+}
+
+// Define sort option type 
+type SortOptionType = string;
+
+// Filter type definition
+interface FilterType {
+  id: string;
+  label: string;
+  category: 'bedrooms' | 'price' | 'amenities' | 'other';
+}
+
+
+// Sort options
+const sortOptions: SortOptionType[] = [
+  'Recommended',
+  'Price: Low to High',
+  'Price: High to Low',
+  'Newest First'
+];
+
+// Create a separate component for the map with property popup
+const PropertyMap = memo(({ selectedProperty, showMap, properties }: { 
+  selectedProperty: PropertyType | null, 
+  showMap: boolean,
+  properties: PropertyType[] 
+}) => {
+  const { t } = useTranslation();
+  
+  return (
+    <div className={`map ${showMap ? 'active' : ''}`}>
+      {/* Map placeholder - would be replaced with an actual map component */}
+      <div className="map-placeholder">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="currentColor"/>
+        </svg>
+        <span>Interactive map would be displayed here - with {properties.length} properties</span>
+      </div>
+      
+      <div className="map-controls">
+        <button className="map-button" title="Zoom In">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" fill="currentColor"/>
+          </svg>
+        </button>
+        <button className="map-button" title="Zoom Out">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 13H5V11H19V13Z" fill="currentColor"/>
+          </svg>
+        </button>
+        <button className="map-button" title="My Location">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8ZM20.94 11C20.48 6.83 17.17 3.52 13 3.06V1H11V3.06C6.83 3.52 3.52 6.83 3.06 11H1V13H3.06C3.52 17.17 6.83 20.48 11 20.94V23H13V20.94C17.17 20.48 20.48 17.17 20.94 13H23V11H20.94ZM12 19C8.13 19 5 15.87 5 12C5 8.13 8.13 5 12 5C15.87 5 19 8.13 19 12C19 15.87 15.87 19 12 19Z" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+});
+
+// Enhanced property card component (outside of main component to avoid re-creation)
+interface EnhancedPropertyCardProps {
+  property: PropertyType;
+  onToggleFavorite: (id: string | number) => void;
+}
+
+const EnhancedPropertyCardComponent = ({ property, onToggleFavorite }: EnhancedPropertyCardProps) => {
+  // Format property data for the card component
+  const formattedPrice = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0
+  }).format(property.price);
+  
+  // Don't try to convert the ID, just pass it as is
+  const propertyId = property.id;
+  
+  return (
+    <div className="property-card-wrapper">
+      <PropertyCard 
+        image={property.image || defaultImage}
+        title={property.title}
+        subtitle={property.subtitle || ''}
+        minstay={property.minstay || ''}
+        price={formattedPrice}
+        priceType={property.priceType || ''}
+        description={property.description}
+        propertyType={property.propertyType}
+        isRecommended={!!property.isRecommended}
+        isFavorite={!!property.isFavorite}
+        onToggleFavorite={onToggleFavorite}
+        id={propertyId}
+      />
+    </div>
+  );
+};
+
+// Memoize the EnhancedPropertyCard to prevent unnecessary renders
+const EnhancedPropertyCard = memo(EnhancedPropertyCardComponent, (prevProps, nextProps) => {
+  // Custom comparison to prevent unnecessary re-renders
+  return (
+    prevProps.property.id === nextProps.property.id &&
+    prevProps.property.isFavorite === nextProps.property.isFavorite
+  );
+});
+
+export default function PropertyListPage() {
+  // Add translation hook
+  const { t } = useTranslation();
+  
+  // Refs
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // State management
+  const [properties, setProperties] = useState<PropertyType[]>([]);
+  const [filteredProperties, setFilteredProperties] = useState<PropertyType[]>([]);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [locationInput, setLocationInput] = useState<string>('');
+  const [dateInput, setDateInput] = useState<string>('');
+  const [genderInput, setGenderInput] = useState<string>('');
+  const [sortOption, setSortOption] = useState<string>(t('property_list.recommended'));
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [showMap, setShowMap] = useState<boolean>(false);
+  const [isFilteringSectionVisible, setIsFilteringSectionVisible] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const propertiesPerPage = 6;
+
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // State for applying filters with delay
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // Toggle map visibility
+  const toggleMap = () => {
+    setShowMap(!showMap);
+  };
+  
+  // Advanced filtering implementation
+  const handleAdvancedFiltering = useCallback(() => {
+    // Show loading state
+    setIsLoading(true);
+    
+    console.log("Starting filtering with:", {
+      activeFilters,
+      locationInput,
+      dateInput,
+      genderInput,
+      sortOption
+    });
+    
+    try {
+      // Start with all original properties
+      let filtered = [...properties];
+      
+      // Apply location filter if present
+      if (locationInput) {
+        console.log("Filtering by location:", locationInput);
+        filtered = filtered.filter(property => {
+          const propertyLocation = `${property.address.city}, ${property.address.state}`.toLowerCase();
+          return propertyLocation.includes(locationInput.toLowerCase());
+        });
+      }
+      
+      // Apply active filters
+      if (activeFilters.length > 0) {
+        console.log("Applying active filters:", activeFilters);
+        
+        filtered = filtered.filter(property => {
+          // For each property, check all active filters
+          for (const filter of activeFilters) {
+            // Bedroom filters
+            if (filter === t('property_list.studio')) {
+              if (property.bedrooms !== 0) return false;
+            } else if (filter === "1 " + t('property_list.bedroom')) {
+              if (property.bedrooms !== 1) return false;
+            } else if (filter === "2 " + t('property_list.bedrooms')) {
+              if (property.bedrooms !== 2) return false;
+            } else if (filter === "3+ " + t('property_list.bedrooms')) {
+              if (!property.bedrooms || property.bedrooms < 3) return false;
+            }
+            
+            // Price filters
+            if (filter === "$0-$1000") {
+              if (property.price > 1000) return false;
+            } else if (filter === "$1000-$2000") {
+              if (property.price < 1000 || property.price > 2000) return false;
+            } else if (filter === "$2000-$3000") {
+              if (property.price < 2000 || property.price > 3000) return false;
+            } else if (filter === "$3000+") {
+              if (property.price < 3000) return false;
+            } else if (filter.includes(" to ")) {
+              // Custom price range
+              const [min, max] = filter.split(" to ").map(part => parseInt(part.replace(/\D/g, '')));
+              if (property.price < min || property.price > max) return false;
+            }
+            
+            // Property type filters
+            if (filter === "Apartment" || filter === "House" || filter === "Condo" || filter === "Commercial") {
+              if (property.propertyType.toLowerCase() !== filter.toLowerCase()) return false;
+            }
+            
+            // Amenity filters
+            if (filter === t('property_list.parking')) {
+              if (!property.amenities.includes('parking')) return false;
+            } else if (filter === t('property_list.pool')) {
+              if (!property.amenities.includes('pool')) return false;
+            } else if (filter === t('property_list.fitness_center')) {
+              if (!property.amenities.includes('fitness center')) return false;
+            } else if (filter === t('property_list.pets_allowed')) {
+              if (!property.amenities.includes('pets allowed')) return false;
+            } else if (filter === "Furnished") {
+              if (!property.amenities.includes('furnished')) return false;
+            } else if (filter === "WiFi") {
+              if (!property.amenities.includes('wifi')) return false;
+            }
+          }
+          
+          // If passed all filters
+          return true;
+        });
+      }
+      
+      // Apply sorting
+      console.log("Applying sort option:", sortOption);
+      if (sortOption) {
+        if (sortOption === t('property_list.recommended')) {
+          filtered.sort((a, b) => {
+            if (a.isRecommended && !b.isRecommended) return -1;
+            if (!a.isRecommended && b.isRecommended) return 1;
+            return a.price - b.price;
+          });
+        } else if (sortOption === t('property_list.price_low_high')) {
+          filtered.sort((a, b) => a.price - b.price);
+        } else if (sortOption === t('property_list.price_high_low')) {
+          filtered.sort((a, b) => b.price - a.price);
+        } else if (sortOption === t('property_list.newest_first')) {
+          filtered.sort((a, b) => {
+            const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+            const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+            return dateB.getTime() - dateA.getTime();
+          });
+        }
+      }
+      
+      console.log("Filtered properties count:", filtered.length);
+      
+      // Update filtered properties
+      setFilteredProperties(filtered);
+      
+      // Reset to first page when filters change
+      setCurrentPage(1);
+    } catch (error) {
+      console.error("Error during filtering:", error);
+    } finally {
+      // Always hide loading indicator
+      setIsLoading(false);
+    }
+  }, [properties, activeFilters, locationInput, dateInput, genderInput, sortOption, t]);
+  
+  // Calculate pagination
+    // Apply search filters (location, date, gender)
+    if (locationInput) {
+      filtered = filtered.filter(property => {
+        const location = property.address.city + ', ' + property.address.state;
+        return location.toLowerCase().includes(locationInput.toLowerCase());
+      });
+    }
+    
+    // Filter by active filters
+    if (activeFilters.length > 0) {
+      filtered = filtered.filter(property => {
+        // Check each filter
+        for (const filter of activeFilters) {
+          // Bedroom filters
+          if (filter === t('property_list.studio')) {
+            if (property.bedrooms !== 0) return false;
+          } else if (filter === "1 " + t('property_list.bedroom')) {
+            if (property.bedrooms !== 1) return false;
+          } else if (filter === "2 " + t('property_list.bedrooms')) {
+            if (property.bedrooms !== 2) return false;
+          } else if (filter === "3+ " + t('property_list.bedrooms')) {
+            if (!property.bedrooms || property.bedrooms < 3) return false;
+          }
+          
+          // Price filters
+          if (filter === "$0-$1000") {
+            if (property.price > 1000) return false;
+          } else if (filter === "$1000-$2000") {
+            if (property.price < 1000 || property.price > 2000) return false;
+          } else if (filter === "$2000-$3000") {
+            if (property.price < 2000 || property.price > 3000) return false;
+          } else if (filter === "$3000+") {
+            if (property.price < 3000) return false;
+          }
+          
+          // Amenity filters - assuming the amenities array contains these values
+          if (filter === t('property_list.parking')) {
+            if (!property.amenities.includes('parking')) return false;
+          } else if (filter === t('property_list.pool')) {
+            if (!property.amenities.includes('pool')) return false;
+          } else if (filter === t('property_list.fitness_center')) {
+            if (!property.amenities.includes('fitness center')) return false;
+          } else if (filter === t('property_list.pets_allowed')) {
+            if (!property.amenities.includes('pets allowed')) return false;
+          }
+        }
+        
+        // If passed all filters
+        return true;
+      });
+    }
+    
+    // Apply sorting
+    if (sortOption === t('property_list.recommended')) {
+      // Sort by recommendation first, then by price
+      filtered.sort((a, b) => {
+        if (a.isRecommended && !b.isRecommended) return -1;
+        if (!a.isRecommended && b.isRecommended) return 1;
+        return a.price - b.price;
+      });
+    } else if (sortOption === t('property_list.price_low_high')) {
+      filtered.sort((a, b) => a.price - b.price);
+    } else if (sortOption === t('property_list.price_high_low')) {
+      filtered.sort((a, b) => b.price - a.price);
+    } else if (sortOption === t('property_list.newest_first')) {
+      filtered.sort((a, b) => {
+        const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+        const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+      });
+    }
+    
+    // Update the filtered properties
+    setFilteredProperties(filtered);
+    
+    // Set loading to false
+    setIsLoading(false);
+  }, [properties, activeFilters, locationInput, dateInput, genderInput, sortOption, t]);
+  
+  // Calculate pagination
+  const indexOfLastProperty = currentPage * propertiesPerPage;
+  const indexOfFirstProperty = indexOfLastProperty - propertiesPerPage;
+  const currentProperties = filteredProperties.slice(indexOfFirstProperty, indexOfLastProperty);
+  const totalPages = Math.ceil(filteredProperties.length / propertiesPerPage);
+
+  // Pagination controls
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const nextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  const prevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+
+  // Custom AppliedFilterBanner component that includes remove functionality
+  const FilterBadge = ({ label, onRemove }: { label: string; onRemove: () => void }) => {
+    const handleClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onRemove();
+    };
+
+    return (
+      <div className="filter-badge">
+        <AppliedFilterBannerComponent label={label} />
+        <button 
+          className="remove-icon" 
+          onClick={handleClick}
+          aria-label={`Remove ${label} filter`}
+        >
+          ×
+        </button>
+      </div>
+    );
+  };
+
+  // Replacement for filter toggle function
+  const toggleFilter = (filter: string) => {
+    console.log("Toggling filter:", filter);
+    setIsLoading(true);
+    
+    // Update active filters state
+    setActiveFilters(prev => {
+      if (prev.includes(filter)) {
+        return prev.filter(f => f !== filter);
+      } else {
+        return [...prev, filter];
+      }
+    });
+    
+    // We'll execute filtering after state updates with a slight delay
+    setTimeout(() => handleAdvancedFiltering(), 100);
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    console.log("Clearing all filters");
+    setIsLoading(true);
+    setActiveFilters([]);
+    setLocationInput('');
+    setDateInput('');
+    setGenderInput('');
+    
+    // Apply filtering after state update with short delay
+    setTimeout(() => handleAdvancedFiltering(), 100);
+  };
+
+  // Function to apply current filters
+  const applyCurrentFilters = () => {
+    console.log("Applying current filters:", activeFilters);
+  // Update sort options with translations
+  const updatedSortOptions: SortOptionType[] = [
+    t('property_list.recommended'),
+    t('property_list.price_low_high'),
+    t('property_list.price_high_low'),
+    t('property_list.newest_first')
+  ];
+
+  // Fetch properties from Firestore on component mount
+  useEffect(() => {
+    const getPropertiesData = async () => {
+      setIsLoading(true);
+      try {
+        // Always use the getProperties function from backend
+        const propertiesData = await getProperties({ limit: 50 });
+        
+        // Transform properties to include UI-specific fields
+        const transformedProperties = propertiesData.map(property => {
+          return {
+            ...property,
+            subtitle: property.address.city + ', ' + property.address.state,
+            priceType: property.propertyType === 'apartment' ? '/month' : '', 
+            minstay: 'Min stay: 1 month', // Default minimum stay
+            isRecommended: Math.random() > 0.7, // Random recommendation for now
+            isFavorite: false, // Default not favorite
+            // Use the default image if no images available
+            image: defaultImage,
+            // Mock location for now - in real app, get from geocoding
+            location: { 
+              lat: parseFloat((Math.random() * (36.2 - 33.7) + 33.7).toFixed(6)), 
+              lng: parseFloat((Math.random() * (-75.17 - (-80.00)) + (-80.00)).toFixed(6)) 
+            }
+          };
+        });
+        
+        setProperties(transformedProperties);
+        setFilteredProperties(transformedProperties);
+      } catch (error) {
+        console.error('Error fetching properties:', error);
+        // Set empty arrays in case of error
+        setProperties([]);
+        setFilteredProperties([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getPropertiesData();
+  }, []);
+
+  // Parse URL search parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const locationParam = params.get('location');
+    const dateParam = params.get('date');
+    const genderParam = params.get('gender');
+    
+    // Initialize with a flag to avoid unnecessary re-filtering
+    let filtersChanged = false;
+    
+    // Set search query if location parameter exists
+    if (locationParam && locationParam !== locationInput) {
+      setLocationInput(locationParam);
+      filtersChanged = true;
+    }
+    
+    // Apply date filter if date parameter exists
+    if (dateParam && dateParam !== dateInput) {
+      setDateInput(dateParam);
+      filtersChanged = true;
+    }
+    
+    // Apply gender filter if it exists
+    if (genderParam && genderParam !== genderInput) {
+      setGenderInput(genderParam);
+      filtersChanged = true;
+    }
+    
+    // Apply filters if they changed
+    if (filtersChanged) {
+      // We need to use setTimeout to ensure state updates have happened
+      setTimeout(() => {
+        handleAdvancedFiltering();
+      }, 0);
+    }
+  }, [location.search]);
+
+  // Filter properties based on search inputs and filters
+  useEffect(() => {
+    // Only apply filtering when properties data changes or sort option changes
+    // This avoids unwanted filtering during user input
+    // Active filters are handled by the buttons that change them
+    if (properties.length > 0) {
+      handleAdvancedFiltering();
+    }
+  }, [properties, sortOption]);
+
+  // Handle search input
+  const handleSearch = (e?: React.FormEvent) => {
+    // Prevent default form submission if called from a form event
+    if (e) {
+      e.preventDefault();
+    }
+    
+    // Set loading state
+    setIsLoading(true);
+    
+    // Update URL with the search parameters
+    const params = new URLSearchParams(location.search);
+    
+    if (locationInput) {
+      params.set('location', locationInput);
+    } else {
+      params.delete('location');
+    }
+    
+    if (dateInput) {
+      params.set('date', dateInput);
+    } else {
+      params.delete('date');
+    }
+    
+    if (genderInput) {
+      params.set('gender', genderInput);
+    } else {
+      params.delete('gender');
+    }
+    
+    // Use the current path with the updated query parameters
+    const currentPath = location.pathname;
+    const newUrl = `${currentPath}?${params.toString()}`;
+    
+    // Replace the URL without causing a full page reload
+    navigate(newUrl, { replace: true });
+    
+    // Apply filtering immediately
+    console.log("Searching and filtering immediately");
+    applyCurrentFilters();
+  };
+
+  // Handlers for input changes
+  const handleLocationChange = (value: string) => {
+    setLocationInput(value);
+  };
+
+  const handleDateChange = (value: string) => {
+    setDateInput(value);
+  };
+
+  const handleGenderChange = (value: string) => {
+    setGenderInput(value);
+  };
+
+  // Handle sort option change
+  const handleSortChange = (value: string) => {
+    setSortOption(value);
+  };
+
+  // Filter toggle function
+  const toggleFilter = (filter: string) => {
+    setIsLoading(true);
+    if (activeFilters.includes(filter)) {
+      setActiveFilters(activeFilters.filter(f => f !== filter));
+    } else {
+      setActiveFilters([...activeFilters, filter]);
+    }
+    
+    // Apply filtering after state update with short delay
+    setTimeout(() => handleAdvancedFiltering(), 10);
+  };
+  
+  // Filter options with translations
+  const bedroomOptions = [
+    t('property_list.studio'),
+    `1 ${t('property_list.bedroom')}`,
+    `2 ${t('property_list.bedrooms')}`,
+    `3+ ${t('property_list.bedrooms')}`
+  ];
+
+  const priceOptions = ["$0-$1000", "$1000-$2000", "$2000-$3000", "$3000+"];
+
+  const amenityOptions = [
+    t('property_list.parking'),
+    t('property_list.pool'),
+    t('property_list.fitness_center'),
+    t('property_list.pets_allowed')
+  ];
+
+  // Handle search input change
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocationInput(e.target.value);
+    
+    // Apply filters after a short delay for better UX
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    setSearchTimeout(setTimeout(() => {
+      handleAdvancedFiltering();
+    }, 300));
+  };
+
+  // Toggle filtering section visibility
+  const toggleFilteringSection = () => {
+    setIsFilteringSectionVisible(!isFilteringSectionVisible);
+  };
+
+  // Toggle favorite status
+  const toggleFavorite = useCallback((id: string | number) => {
+    console.log("PropertyListPage toggleFavorite called with ID:", id);
+    
+    if (!isAuthenticated) {
+      // Show toast notification if user is not logged in
+      toast.info("Please login to save properties to your favorites", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
+      // Optionally, navigate to login page
+      // navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
+    
+    // Use functional updates to ensure we're working with the latest state
+    setProperties(prevProperties => {
+      return prevProperties.map(property => {
+        if (property.id === id) {
+          console.log("Found matching property to toggle favorite:", property.id);
+          return { ...property, isFavorite: !property.isFavorite };
+        }
+        return property;
+      });
+    });
+    
+    setFilteredProperties(prevFilteredProperties => {
+      return prevFilteredProperties.map(property => {
+        if (property.id === id) {
+          console.log("Found matching filtered property to toggle favorite:", property.id);
+          return { ...property, isFavorite: !property.isFavorite };
+        }
+        return property;
+      });
+    });
+    
+    // Here you would also update the favorite status in your backend
+    // If authenticated, call your API to save the favorite status
+    if (isAuthenticated) {
+      // Example API call (replace with your actual implementation)
+      // saveFavoriteStatus(id, isFavorite);
+      console.log("Saving favorite status to backend for property ID:", id);
+    }
+  }, [isAuthenticated, navigate, location.pathname]);
+
+  // Scroll to top when changing page
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentPage]);
+
+  // Function to apply current filters
+  const applyCurrentFilters = (filters?: string[]) => {
+    const filtersToApply = filters || activeFilters;
+    console.log('Applying filters:', filtersToApply);
+    
+    // First set loading state to give visual feedback
+    setIsLoading(true);
+    
+    // Apply the filters after a short delay to allow for state updates
+    setTimeout(() => {
+      handleAdvancedFiltering();
+    }, 100);
+  };
+
+  return (
+    <PropertyList>
+      <div className="main-content" ref={scrollRef}>
+        {isFilteringSectionVisible ? (
+          <div className="filtering-section">
+            <FilteringSection 
+              onApplyFilters={applyCurrentFilters}
+              activeFilters={activeFilters}
+              onToggleFilter={toggleFilter}
+              location={locationInput}
+              date={dateInput}
+              gender={genderInput}
+              onLocationChange={handleLocationChange}
+              onDateChange={handleDateChange}
+              onGenderChange={handleGenderChange}
+            />
+          </div>
+        ) : (
+          <div className="content-container">
+            <div className="search-form">
+              <SearchFilterBar 
+                onLocationChange={handleLocationChange}
+                onDateChange={handleDateChange}
+                onGenderChange={handleGenderChange}
+                onSearch={handleSearch}
+                onAdvancedFilteringClick={toggleFilteringSection}
+                location={locationInput}
+                date={dateInput}
+                gender={genderInput}
+              />
+            </div>
+
+            <div className="search-results-container">
+              <div className="filters-container">
+                <div className="text-select">
+                  <div className="text">
+                    <div className="title">
+                      {t('property_list.renting_title')}
+                    </div>
+                    <div className="sub-title">
+                      {filteredProperties.length} {t(filteredProperties.length === 1 ? 'property_list.waiting_tenants' : 'property_list.waiting_tenants_plural')}
+                    </div>
+                  </div>
+
+                  <div className="select-container">
+                    <SelectFieldBaseModelVariant2 
+                      options={updatedSortOptions}
+                      placeholder={t('property_list.sort_by')}
+                      onChange={handleSortChange}
+                    />
+                  </div>
+                </div>
+
+                {activeFilters.length > 0 && (
+                  <div className="applied-filters">
+                    {activeFilters.map((filter, index) => (
+                      <FilterBadge
+                        key={index} 
+                        label={filter}
+                        onRemove={() => toggleFilter(filter)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {isLoading ? (
+                <div className="loading-container">
+                  <div className="loading-spinner"></div>
+                  <p>{t('property_list.loading')}</p>
+                </div>
+              ) : filteredProperties.length > 0 ? (
+                <>
+                  <div className="results-container">
+                    {currentProperties.map((property) => {
+                      // Ensure property ID is properly handled
+                      const propertyKey = property.id.toString();
+                      
+                      return (
+                        <div 
+                          className="result" 
+                          key={propertyKey}
+                        >
+                          <EnhancedPropertyCard 
+                            property={property} 
+                            onToggleFavorite={toggleFavorite} 
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="pagination">
+                      <button 
+                        className="page-button arrow" 
+                        onClick={prevPage}
+                        disabled={currentPage === 1}
+                      >
+                        ←
+                      </button>
+                      
+                      {[...Array(totalPages)].map((_, index) => (
+                        <button
+                          key={index}
+                          className={`page-button ${currentPage === index + 1 ? 'active' : ''}`}
+                          onClick={() => paginate(index + 1)}
+                        >
+                          {index + 1}
+                        </button>
+                      ))}
+                      
+                      <button 
+                        className="page-button arrow" 
+                        onClick={nextPage}
+                        disabled={currentPage === totalPages}
+                      >
+                        →
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="no-results">
+                  <div className="no-results-icon">🏠</div>
+                  <h3>{t('property_list.no_results')}</h3>
+                  <p>{t('property_list.adjust_filters')}</p>
+                  <button onClick={clearAllFilters}>
+                    {t('property_list.clear_filters')}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <PropertyMap 
+        selectedProperty={null} 
+        showMap={showMap}
+        properties={filteredProperties} 
+      />
+
+      <button className="toggle-map-button" onClick={toggleMap}>
+        <IoMap />
+        {showMap ? t('property_list.hide_map') : t('property_list.show_map')}
+      </button>
+    </PropertyList>
+  )
+}

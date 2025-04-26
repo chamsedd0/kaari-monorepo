@@ -17,6 +17,8 @@ import { SignOutConfirmationModal } from '../modals/signout-confirmation-modal';
 import { ProfileDropdown } from '../profile-dropdown/profile-dropdown';
 import { signOut } from '../../../../backend/firebase/auth';
 import eventBus, { AUTH_EVENTS } from '../../../../utils/event-bus';
+import LanguageSwitcher from '../../language-switcher/language-switcher';
+import { useTranslation } from 'react-i18next';
 
 // Define the styled components for different header styles
 const HeaderContainer = styled(HeaderBaseModel)<{
@@ -221,6 +223,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   customLink,
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   // Check if we should use transparent background for landing pages
   const isTransparent = variant === 'landing' || variant === 'advertiser-landing';
@@ -363,12 +366,6 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     setShowAuthModal(false);
   };
 
-  const handleLanguageChange = () => {
-    if (onLanguageChange) {
-      onLanguageChange('ENG');
-    }
-  };
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchValue.trim()) {
@@ -401,14 +398,14 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     if (userType === 'advertiser' || variant === 'advertiser-landing') {
       return (
         <div className="link" onClick={handleTenantClick}>
-          Are you a tenant?
+          {t('common.are_you_tenant')}
         </div>
       );
     }
     
     return (
       <div className="link" onClick={handleLandlordClick}>
-        Are you a landlord?
+        {t('common.are_you_landlord')}
       </div>
     );
   };
@@ -421,7 +418,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         <form onSubmit={handleSearch}>
           <input 
             type="text" 
-            placeholder="Search" 
+            placeholder={t('common.search')}
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
           />
@@ -435,9 +432,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
   const renderLanguageButton = () => {
     return (
-      <button className="language-button" onClick={handleLanguageChange}>
-        ENG
-      </button>
+      <LanguageSwitcher />
     );
   };
 
@@ -501,7 +496,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     if (!isUserAuthenticated) {
       return (
         <div className="sign-in" onClick={handleSignIn}>
-          Sign in
+          {t('common.login')}
         </div>
       );
     }
@@ -550,7 +545,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           {renderNavIcons()}
           
           <div className="link" onClick={handleHelpClick}>
-            Help
+            {t('common.help')}
           </div>
           
           {renderAuthSection()}
