@@ -10,8 +10,6 @@ import { PurpleButtonLB60 } from '../../components/skeletons/buttons/purple_LB60
 import { DEFAULT_TIME_SLOTS } from '../../config/constants';
 
 import { FaClock, FaChevronLeft, FaChevronRight, FaSpinner } from 'react-icons/fa';
-import mapImage from '../../assets/images/map.png';
-import Footer from '../../components/skeletons/constructed/footer/footer';
 import SelectFieldBaseModelVariant1 from '../../components/skeletons/inputs/select-fields/select-field-base-model-variant-1';
 import photoshootService from '../../services/photoshoot-service';
 import Modal from '../../components/skeletons/constructed/modal/modal';
@@ -456,7 +454,7 @@ const PhotoshootBookingPage: React.FC = () => {
       
       {renderErrorModal()}
       
-      <Footer />
+      
     </>
   );
 };

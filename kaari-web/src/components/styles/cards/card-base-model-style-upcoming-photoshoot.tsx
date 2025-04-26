@@ -125,7 +125,8 @@ export const CardBaseModelStyleUpcomingPhotoshoot = styled.div`
             width: 32px;
             height: 32px;
             align-self: end;
-            
+            cursor: pointer;
+            transition: transform 0.3s ease;
         }
 
     }

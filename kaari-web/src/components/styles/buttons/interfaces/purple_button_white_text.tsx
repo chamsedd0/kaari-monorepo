@@ -10,6 +10,8 @@ export const PurpleButtonWhiteText = styled.button`
   transition: all 0.3s ease;
   max-width: 100%;
   width: 100%;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     background-color: ${Theme.colors.primary};
