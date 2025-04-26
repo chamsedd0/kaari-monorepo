@@ -53,13 +53,12 @@ const BookingSearchForm: React.FC<BookingSearchFormProps> = ({ onSubmit }) => {
         placeholder="Location"
         value={location}
         onChange={handleSearchChange}
-        title="Where do you want to stay?"
       />
 
       <InputVariantDatePicker
         value={selectedDate}
         onChange={handleDateChange}
-        title="When do you want to stay?"
+        title="When?"
       />
       
       <PurpleButtonH4B70 onClick={handleSubmit} />    

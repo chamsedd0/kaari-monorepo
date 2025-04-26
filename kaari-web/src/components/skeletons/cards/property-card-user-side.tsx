@@ -1,9 +1,25 @@
 import { CardBaseModelStyle1 } from "../../styles/cards/card-base-model-style-1";
 import { CertificationBanner } from "../banners/static/certification-banner";
 import { IoHeartOutline, IoHeart } from 'react-icons/io5';
-import { useState, useEffect } from "react";
+import React, { memo } from "react";
 
-export const PropertyCard = ({
+interface PropertyCardProps {
+  id: string | number;
+  title: string;
+  description: string;
+  subtitle: string;
+  price: string | number;
+  priceType?: string;
+  propertyType: string;
+  minstay?: string;
+  image: string;
+  isRecommended?: boolean;
+  isFavorite: boolean;
+  onToggleFavorite: (id: string | number) => void;
+}
+
+// Create the component
+const PropertyCardComponent = ({
   image, 
   title, 
   subtitle, 
@@ -15,35 +31,19 @@ export const PropertyCard = ({
   isFavorite, 
   onToggleFavorite,
   id
-}: {
-  title: string, 
-  subtitle: string, 
-  price: string, 
-  priceType: string, 
-  minstay: string, 
-  description: string, 
-  isRecommended: boolean, 
-  image: string, 
-  isFavorite?: boolean,
-  onToggleFavorite?: (id: number) => void,
-  id?: number
-}) => {
-  const [favorite, setFavorite] = useState(isFavorite || false);
-  
-  // Update local state when prop changes
-  useEffect(() => {
-    setFavorite(isFavorite || false);
-  }, [isFavorite]);
-  
+}: PropertyCardProps) => {
+  // Use the prop directly instead of local state to ensure consistency
   const toggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
-    
-    // Update local state
-    setFavorite(!favorite);
     
     // Propagate change to parent component if callback provided
     if (onToggleFavorite && id !== undefined) {
+      console.log("Property card calling onToggleFavorite with ID:", id);
+      // Pass the id directly without trying to convert it
       onToggleFavorite(id);
+    } else {
+      console.warn("Cannot toggle favorite: missing callback or ID", { onToggleFavorite, id });
     }
   };
 
@@ -56,7 +56,7 @@ export const PropertyCard = ({
                 <CertificationBanner text='Tenants Protection'></CertificationBanner>
             </div>
             <div className="favorite-icon" onClick={toggleFavorite}>
-                {favorite ? <IoHeart className="filled" /> : <IoHeartOutline />}
+                {isFavorite ? <IoHeart className="filled" /> : <IoHeartOutline />}
             </div>
         </div>
         <div className="title">
@@ -80,3 +80,14 @@ export const PropertyCard = ({
     </CardBaseModelStyle1>
   );
 };
+
+// Memoize and export the component
+export const PropertyCard = memo(PropertyCardComponent, (prevProps, nextProps) => {
+  // Only re-render if these key props change
+  return (
+    prevProps.id === nextProps.id &&
+    prevProps.isFavorite === nextProps.isFavorite &&
+    prevProps.title === nextProps.title &&
+    prevProps.price === nextProps.price
+  );
+});

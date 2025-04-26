@@ -107,7 +107,9 @@ const UsersLanding: React.FC = () => {
       minstay: 'Min stay: 3 months',
       description: 'Fully furnished, 2 bedrooms, close to amenities and beach.',
       image: PropertyImage,
-      isRecommended: true
+      isRecommended: true,
+      propertyType: 'Apartment',
+      isFavorite: false
     },
     { 
       id: '2', 
@@ -118,7 +120,9 @@ const UsersLanding: React.FC = () => {
       minstay: 'Min stay: 1 month',
       description: 'Perfect for remote workers, high-speed wifi included.',
       image: PropertyImage,
-      isRecommended: false
+      isRecommended: false,
+      propertyType: 'Studio',
+      isFavorite: false
     },
     { 
       id: '3', 
@@ -129,7 +133,9 @@ const UsersLanding: React.FC = () => {
       minstay: 'Min stay: 6 months',
       description: 'Spacious 3-bedroom villa with private garden and pool.',
       image: PropertyImage,
-      isRecommended: true
+      isRecommended: true,
+      propertyType: 'Villa',
+      isFavorite: false
     },
     { 
       id: '4', 
@@ -140,7 +146,9 @@ const UsersLanding: React.FC = () => {
       minstay: 'Min stay: 2 months',
       description: 'Close to government buildings and historic sites.',
       image: PropertyImage,
-      isRecommended: false
+      isRecommended: false,
+      propertyType: 'Apartment',
+      isFavorite: false
     }
   ];
 
@@ -373,6 +381,7 @@ const UsersLanding: React.FC = () => {
             {topProperties.map((property) => (
               <div key={property.id} className="property-card" onClick={() => navigate(`/property/${property.id}`)}>
                 <PropertyCard
+                  id={property.id}
                   image={property.image}
                   title={property.title}
                   subtitle={property.subtitle}
@@ -381,6 +390,9 @@ const UsersLanding: React.FC = () => {
                   minstay={property.minstay}
                   description={property.description}
                   isRecommended={property.isRecommended}
+                  propertyType={property.propertyType}
+                  isFavorite={property.isFavorite}
+                  onToggleFavorite={() => {}}
                 />
               </div>
             ))}
@@ -451,6 +463,7 @@ const UsersLanding: React.FC = () => {
             {topProperties.map((property) => (
               <div key={property.id} className="property-card" onClick={() => navigate(`/property/${property.id}`)}>
                 <PropertyCard
+                  id={property.id}
                   image={property.image}
                   title={property.title}
                   subtitle={property.subtitle}
@@ -459,6 +472,9 @@ const UsersLanding: React.FC = () => {
                   minstay={property.minstay}
                   description={property.description}
                   isRecommended={property.isRecommended}
+                  propertyType={property.propertyType}
+                  isFavorite={property.isFavorite}
+                  onToggleFavorite={() => {}}
                 />
               </div>
             ))}
