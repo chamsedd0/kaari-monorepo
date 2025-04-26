@@ -5,6 +5,8 @@ import "./global.css"
 import { useStore } from './backend/store'
 import { AuthProvider } from './contexts/auth'
 import { BrowserRouter as Router } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 // Error Boundary component to handle uncaught errors
 class ErrorBoundary extends Component<{ children: ReactNode }> {
@@ -70,6 +72,7 @@ const AppWithAuth = () => {
       <Router>
         <AuthProvider>
           <App />
+          <ToastContainer />
         </AuthProvider>
       </Router>
     </ErrorBoundary>
