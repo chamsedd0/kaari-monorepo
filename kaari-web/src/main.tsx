@@ -1,5 +1,7 @@
 import { StrictMode, useEffect, Component, ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
+// Import i18n configuration before any components that might use translations
+import './i18n'
 import App from './App.tsx'
 import "./global.css"
 import { useStore } from './backend/store'

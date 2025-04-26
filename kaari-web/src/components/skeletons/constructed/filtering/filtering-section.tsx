@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { useTranslation } from 'react-i18next';
 import { Theme } from '../../../../theme/theme';
 import SearchFilterBar from '../../inputs/search-bars/search-filter-bar';
 
@@ -137,10 +138,24 @@ const AmenityItem = styled.div`
   }
 `;
 
+const ClearAllButton = styled.button`
+  background-color: ${Theme.colors.primary};
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  width: 100%;
+`;
+
 interface FilteringSectionProps {
   onApplyFilters: () => void;
   activeFilters: string[];
   onToggleFilter: (filter: string) => void;
+  onClearFilters?: () => void;
   location?: string;
   date?: string;
   gender?: string;
@@ -153,6 +168,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
   onApplyFilters,
   activeFilters,
   onToggleFilter,
+  onClearFilters,
   location = '',
   date = '',
   gender = '',
@@ -160,6 +176,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
   onDateChange = () => {},
   onGenderChange = () => {}
 }) => {
+  const { t } = useTranslation();
   const [numPeople, setNumPeople] = useState('2');
   const [bedrooms, setBedrooms] = useState('2');
   const [minPrice, setMinPrice] = useState('');
@@ -176,6 +193,11 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
     setLocalGender(gender);
   }, [location, date, gender]);
 
+  // Handle bedrooms - create the filter string expected by the page component
+  const handleBedroomChange = (value: string) => {
+    setBedrooms(value);
+  };
+
   // Apply local state to parent component when the apply button is clicked
   const handleApply = () => {
     // First, update parent component's state with local values
@@ -190,7 +212,8 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
     if (minPrice && maxPrice) {
       const priceRangeFilter = `${minPrice} to ${maxPrice}`;
       const existingPriceFilter = activeFilters.find(f => 
-        f.includes('$0-$1000') || f.includes('$1000-$3000') || f.includes('$3000+') || f.includes(' to '));
+        f.includes('$0-$1000') || f.includes('$1000-$2000') || f.includes('$2000-$3000') || 
+        f.includes('$3000+') || f.includes(' to '));
       
       if (existingPriceFilter && existingPriceFilter !== priceRangeFilter) {
         // Add to removal list
@@ -203,11 +226,23 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
       }
     }
     
-    // Handle bedrooms
-    const bedroomFilter = `${bedrooms}${bedrooms.includes('+') ? '' : ''} Bedroom${bedrooms === '1' ? '' : 's'}`;
-    const existingBedroomFilter = activeFilters.find(f => f.includes('Bedroom') && f !== bedroomFilter);
+    // Handle bedrooms - create the filter string that will be checked in the main page
+    let bedroomFilter;
+    if (bedrooms === '0') {
+      bedroomFilter = t('property_list.studio');
+    } else if (bedrooms === '1') {
+      bedroomFilter = `1 ${t('property_list.bedroom')}`;
+    } else {
+      bedroomFilter = `${bedrooms} ${t('property_list.bedrooms')}`;
+    }
     
-    if (existingBedroomFilter) {
+    // Find any existing bedroom filter that is different from the one we want to apply
+    const existingBedroomFilter = activeFilters.find(f => 
+      f === t('property_list.studio') || 
+      f.includes(t('property_list.bedroom')) || 
+      f.includes(t('property_list.bedrooms')));
+    
+    if (existingBedroomFilter && existingBedroomFilter !== bedroomFilter) {
       // Add to removal list
       filterChanges.push({ action: 'remove', filter: existingBedroomFilter });
     }
@@ -253,16 +288,10 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
   const amenities = [
     { id: 'Furnished', label: 'Furnished', icon: '🪑' },
     { id: 'WiFi', label: 'Wi-Fi', icon: '📶' },
-    { id: 'Parking', label: 'Parking', icon: '🚗' },
-    { id: 'Pets Allowed', label: 'Pets Allowed', icon: '🐾' },
-    { id: 'sofa-bed', label: 'Sofa-bed', icon: '🛋️' },
-    { id: 'dining-table', label: 'Dining table', icon: '🍽️' },
-    { id: 'wardrobe', label: 'Wardrobe', icon: '👔' },
-    { id: 'cabinet', label: 'Cabinet', icon: '🗄️' },
-    { id: 'desk', label: 'Desk', icon: '📚' },
-    { id: 'mirror', label: 'Mirror', icon: '🪞' },
-    { id: 'coffee-table', label: 'Coffee table', icon: '☕' },
-    { id: 'dresser', label: 'Dresser', icon: '👕' },
+    { id: t('property_list.parking'), label: t('property_list.parking'), icon: '🚗' },
+    { id: t('property_list.pets_allowed'), label: t('property_list.pets_allowed'), icon: '🐾' },
+    { id: t('property_list.pool'), label: t('property_list.pool'), icon: '🏊' },
+    { id: t('property_list.fitness_center'), label: t('property_list.fitness_center'), icon: '🏋️' }
   ];
 
   const includedFees = [
@@ -277,10 +306,6 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
 
   const handleAmenityToggle = (id: string) => {
     onToggleFilter(id);
-  };
-
-  const handleBedroomChange = (value: string) => {
-    setBedrooms(value);
   };
 
   const handlePropertyTypeChange = (value: string) => {
@@ -304,6 +329,12 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
         onApplyFilters={handleApply}
       />
       
+      {activeFilters.length > 0 && onClearFilters && (
+        <ClearAllButton onClick={onClearFilters}>
+          {t('property_list.clear_all_filters')}
+        </ClearAllButton>
+      )}
+      
       <FilteringRow>
         <FilteringTitle>Number of People</FilteringTitle>
         <DropdownSelector>
@@ -321,12 +352,13 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
       </FilteringRow>
       
       <FilteringRow>
-        <FilteringTitle>Number of Bedrooms</FilteringTitle>
+        <FilteringTitle>{t('property_list.bedrooms')}</FilteringTitle>
         <DropdownSelector>
           <select 
             value={bedrooms} 
             onChange={(e) => handleBedroomChange(e.target.value)}
           >
+            <option value="0">{t('property_list.studio')}</option>
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="3">3</option>
@@ -336,7 +368,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
       </FilteringRow>
       
       <FilteringRow>
-        <FilteringTitle>Price</FilteringTitle>
+        <FilteringTitle>{t('property_list.price_range')}</FilteringTitle>
         <PriceInputsContainer>
           <PriceInput 
             type="number" 
@@ -370,7 +402,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
       </FilteringRow>
       
       <FilteringRow>
-        <FilteringTitle>Amenities</FilteringTitle>
+        <FilteringTitle>{t('property_list.amenities')}</FilteringTitle>
         <AmenitiesGrid>
           {amenities.map(amenity => (
             <AmenityItem key={amenity.id}>

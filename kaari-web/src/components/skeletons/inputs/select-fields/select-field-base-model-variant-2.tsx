@@ -53,9 +53,9 @@ const SelectFieldBaseModelVariant2: React.FC<SelectFieldProps> = ({
       {label && <Label1>{label}</Label1>}
       <SelectHeader1 onClick={() => setIsOpen(!isOpen)}>
         <span>{selectedValue || placeholder}</span>
-        <ChevronIcon1 isOpen={isOpen}><img src={chevronDown} alt="chevron_down" /></ChevronIcon1>
+        <ChevronIcon1 $isOpen={isOpen}><img src={chevronDown} alt="chevron_down" /></ChevronIcon1>
       </SelectHeader1>
-      <SelectDropdown1 isOpen={isOpen}>
+      <SelectDropdown1 $isOpen={isOpen}>
         {options.map((option, index) => (
           <Option1 
             key={index}

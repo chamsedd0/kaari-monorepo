@@ -312,7 +312,7 @@ function App() {
   
   return (
     <MainLayout key={renderKey}>
-          {routes}
+      {routes}
     </MainLayout>
   );
 }

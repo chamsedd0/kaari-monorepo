@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ModalOverlayStyle, MessagingModalStyle } from '../../../styles/constructed/modals/auth-modal-style';
 import { FaTimes, FaPaperPlane } from 'react-icons/fa';
 import { PurpleButtonLB60 } from '../../buttons/purple_LB60';
+import { useTranslation } from 'react-i18next';
 
 interface MessagingModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
   const [message, setMessage] = useState('');
   const modalRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -70,7 +72,7 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
                 {recipient.name.charAt(0).toUpperCase()}
               </div>
             )}
-            <h2>Message to {recipient.name}</h2>
+            <h2>{t('messages.message_to')} {recipient.name}</h2>
           </div>
           <button className="close-button" onClick={onClose}>
             <FaTimes />
@@ -84,7 +86,7 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
                 ref={textareaRef}
                 value={message}
                 onChange={handleChange}
-                placeholder={`Write your message to ${recipient.name}...`}
+                placeholder={`${t('messages.write_message_to')} ${recipient.name}...`}
                 rows={5}
                 required
               />
@@ -92,13 +94,13 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
 
             <div className="messaging-info">
               <p>
-                <strong>Response time:</strong> Usually within 24 hours
+                <strong>{t('messages.response_time')}:</strong> {t('messages.usually_within')}
               </p>
             </div>
 
             <div className="button-container">
               <PurpleButtonLB60 
-                text="Send Message" 
+                text={t('messages.send_message')}
                 onClick={handleSubmit}
                 icon={<FaPaperPlane />}
                 disabled={!message.trim()}
