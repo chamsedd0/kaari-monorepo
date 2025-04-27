@@ -1,7 +1,15 @@
 import { BpurpleLB40 } from "../../styles/buttons/Bpurple_LB40_style"
 
-export const BpurpleButtonLB40 = ({ text }: { text: string }) => {
+interface BpurpleButtonLB40Props {
+    text: string;
+    onClick?: () => void;
+    disabled?: boolean;
+}
+
+export const BpurpleButtonLB40: React.FC<BpurpleButtonLB40Props> = ({ text, onClick, disabled }) => {
     return (
-        <BpurpleLB40>{text}</BpurpleLB40>
+        <BpurpleLB40 onClick={onClick} disabled={disabled}>
+            {text}
+        </BpurpleLB40>
     )
 }

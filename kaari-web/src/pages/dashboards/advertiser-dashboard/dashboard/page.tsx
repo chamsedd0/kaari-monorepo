@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { DashboardPageStyle } from './styles';
-import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-help-card';
 import UpcomingPhotoshoot from '../../../../components/skeletons/cards/upcoming-photoshoot';
 import LatestRequestDashboardCard from '../../../../components/skeletons/cards/lateest-request-dashboard-card';
 import MessagesCard from '../../../../components/skeletons/cards/messages-card';
@@ -8,7 +7,7 @@ import BookAPhotoshootComponent from '../../../../components/skeletons/cards/boo
 import PaymentCardComponent from '../../../../components/skeletons/cards/payment-card';
 import { PerformanceChart } from '../../../../components/skeletons/constructed/chart/performance-chart';
 import UpToDateCardComponent from '../../../../components/skeletons/cards/up-to-date-card';
-import PropertiesGraphCardComponent from '../../../../components/skeletons/cards/properties-garph-card';
+import { useNavigate } from 'react-router-dom';
 import { 
     getAdvertiserStatistics, 
     getAdvertiserProperties, 
@@ -20,10 +19,11 @@ import {
 } from '../../../../backend/server-actions/AdvertiserServerActions';
 import { useStore } from '../../../../backend/store';
 import { Property, Listing } from '../../../../backend/entities';
-import { getDocumentsByField, getDocumentById } from '../../../../backend/firebase/firestore';
+
 
 const DashboardPage: React.FC = () => {
     const { user } = useStore();
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [statistics, setStatistics] = useState({
         totalProperties: 0,
@@ -162,6 +162,9 @@ const DashboardPage: React.FC = () => {
                     img={user?.profilePicture || ''}
                     messageCount={requests.length}
                     message={latestRequest?.message || 'No messages yet'}
+                    onViewMore={() => {
+                        navigate('/dashboard/advertiser/messages');
+                    }}
                 />
             </div>
             <div className="right">
@@ -191,17 +194,14 @@ const DashboardPage: React.FC = () => {
                         { title: "Active Listings", number: statistics.activeListings.toString() },
                         { title: "Properties", number: statistics.totalProperties.toString() }
                     ]}
-                    onViewMore={() => {}}
+                    onViewMore={() => {
+                        navigate('/dashboard/advertiser/payments');
+                    }}
                 />
-                <UpToDateCardComponent />
-                <NeedHelpCardComponent 
-                    title="Need Help?" 
-                    faqItems={[
-                        { question: "How can I add a new property?", onClick: () => {} },
-                        { question: "How to respond to a booking request?", onClick: () => {} },
-                        { question: "How to book a new photoshoot?", onClick: () => {} }
-                    ]}
-                />
+                <UpToDateCardComponent onClick={() => {
+                    navigate('/dashboard/advertiser/properties');
+                }} />
+                
             </div>
         </DashboardPageStyle>
     );

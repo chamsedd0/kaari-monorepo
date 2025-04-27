@@ -12,13 +12,16 @@ export const BannerBaseModelStyleTimer = styled.div`
     backdrop-filter: blur(10px);
     border-radius: ${Theme.borders.radius.lg};
     max-width: 100%;
+    min-width: 370px;
+    display: flex;
+    align-items: start;
     height: 72px;
     padding: 16px;
 
 
     .timer {
         font: normal 900 58px Visby CF;
-        color: ${Theme.colors.white};
+        color: ${Theme.colors.black};
         text-align: center;
         vertical-align: center;
         margin-top: 8px;

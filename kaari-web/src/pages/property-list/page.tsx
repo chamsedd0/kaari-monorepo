@@ -36,6 +36,8 @@ interface PropertyType {
   images: string[];
   amenities: string[];
   features: string[];
+  // Only properties with 'available' or 'rented' status are shown in search results
+  // Properties with 'sold' or 'pending' status are considered unlisted and filtered out
   status: 'available' | 'sold' | 'pending' | 'rented';
   createdAt: Date;
   updatedAt: Date;
@@ -89,11 +91,33 @@ const PropertyMarkers = memo(({ properties, onPropertyClick, selectedPropertyId 
     }).format(price).replace(/\s/g, '');
   };
 
+  // Count properties with valid locations for debugging
+  const propertiesWithLocation = properties.filter(p => p.location);
+  console.log(`Rendering ${propertiesWithLocation.length} property markers out of ${properties.length} total properties`);
+  
+  // Log the first few properties to debug
+  if (propertiesWithLocation.length > 0) {
+    console.log("Sample property locations:", 
+      propertiesWithLocation.slice(0, 3).map(p => ({
+        id: p.id,
+        title: p.title,
+        location: p.location
+      }))
+    );
+  } else {
+    console.warn("No properties with location data found");
+  }
+
   return (
     <>
       {properties.map(property => {
-        if (property.location) {
+        if (property.location && 
+            typeof property.location.lat === 'number' && 
+            typeof property.location.lng === 'number') {
           const isSelected = selectedPropertyId === property.id;
+
+          // Log each marker being rendered for debugging
+          console.log(`Rendering marker for property ${property.id} at location:`, property.location);
 
           return (
             <Marker
@@ -148,6 +172,15 @@ const PropertyMap = memo(({
   const geocoderRef = useRef<google.maps.Geocoder>();
   const { isAuthenticated } = useAuth();
 
+  // Debug properties being passed to map
+  useEffect(() => {
+    if (properties.length > 0) {
+      console.log(`PropertyMap received ${properties.length} properties`);
+      const withLocations = properties.filter(p => p.location && typeof p.location.lat === 'number');
+      console.log(`${withLocations.length} properties have valid location data`);
+    }
+  }, [properties]);
+
   // Load the Google Maps JavaScript API
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -195,17 +228,69 @@ const PropertyMap = memo(({
       // Process geocoding for each property without location
       for (const property of propertiesWithoutLocation) {
         try {
-          const fullAddress = `${property.address.street}, ${property.address.city}, ${property.address.country}`;
+          // Construct a more detailed address string using all available address components
+          let addressComponents = [];
+          
+          // Add street if available
+          if (property.address.street) {
+            addressComponents.push(property.address.street);
+          }
+          
+          // Add city if available
+          if (property.address.city) {
+            addressComponents.push(property.address.city);
+          }
+          
+          // Add state/region if available
+          if (property.address.state) {
+            addressComponents.push(property.address.state);
+          }
+          
+          // Add zip/postal code if available
+          if (property.address.zipCode) {
+            addressComponents.push(property.address.zipCode);
+          }
+          
+          // Add country if available
+          if (property.address.country) {
+            addressComponents.push(property.address.country);
+          }
+          
+          // Join all components to create a full address string
+          const fullAddress = addressComponents.join(", ");
+          
+          console.log(`Geocoding address: ${fullAddress} for property ID: ${property.id}`);
           
           // Add a small delay between geocoding requests to respect API limits
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          // Create geocoding options with region biasing for Morocco
+          const geocodingOptions = {
+            address: fullAddress,
+            region: 'ma' // Country code for Morocco to improve regional accuracy
+          };
           
           const result = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
-            geocoderRef.current?.geocode({ address: fullAddress }, (results, status) => {
+            geocoderRef.current?.geocode(geocodingOptions, (results, status) => {
               if (status === google.maps.GeocoderStatus.OK && results && results.length > 0) {
+                console.log(`Geocoding successful for property ${property.id}:`, results[0].geometry.location.toJSON());
                 resolve(results);
               } else {
-                reject(new Error(`Geocoding failed for address: ${fullAddress}, status: ${status}`));
+                // Fallback to components geocoding if address string geocoding fails
+                if (property.address.city) {
+                  geocoderRef.current?.geocode({ 
+                    address: property.address.city + (property.address.country ? `, ${property.address.country}` : '')
+                  }, (cityResults, cityStatus) => {
+                    if (cityStatus === google.maps.GeocoderStatus.OK && cityResults && cityResults.length > 0) {
+                      console.log(`Fallback geocoding successful for property ${property.id} using city:`, cityResults[0].geometry.location.toJSON());
+                      resolve(cityResults);
+                    } else {
+                      reject(new Error(`Geocoding failed for address: ${fullAddress}, status: ${status}`));
+                    }
+                  });
+                } else {
+                  reject(new Error(`Geocoding failed for address: ${fullAddress}, status: ${status}`));
+                }
               }
             });
           });
@@ -228,6 +313,68 @@ const PropertyMap = memo(({
 
       // Update properties with geocoded locations
       setProperties(updatedProperties);
+      
+      // Check for properties that still couldn't be geocoded and try a final fallback
+      const stillMissingLocations = updatedProperties.filter(
+        p => (!p.location || typeof p.location?.lat !== 'number' || typeof p.location?.lng !== 'number')
+      );
+      
+      if (stillMissingLocations.length > 0) {
+        console.log(`${stillMissingLocations.length} properties still missing locations, trying city-level fallback`);
+        
+        const finalUpdatedProperties = [...updatedProperties];
+        
+        // Try to geocode just using city names as a last resort
+        for (const property of stillMissingLocations) {
+          try {
+            // Skip if we don't even have a city
+            if (!property.address || !property.address.city) continue;
+            
+            // Add a delay to respect API limits
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            // Try geocoding with just the city and country
+            const cityCountry = `${property.address.city}${property.address.country ? `, ${property.address.country}` : ''}`;
+            
+            console.log(`Final fallback geocoding attempt for property ${property.id} using: ${cityCountry}`);
+            
+            const result = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
+              geocoderRef.current?.geocode({ 
+                address: cityCountry,
+                region: 'ma'
+              }, (results, status) => {
+                if (status === google.maps.GeocoderStatus.OK && results && results.length > 0) {
+                  console.log(`City-level fallback successful for property ${property.id}`);
+                  resolve(results);
+                } else {
+                  reject(new Error(`City-level fallback failed for: ${cityCountry}`));
+                }
+              });
+            });
+            
+            // Update property location
+            const propertyIndex = finalUpdatedProperties.findIndex(p => p.id === property.id);
+            if (propertyIndex !== -1 && result[0].geometry.location) {
+              // Add a small random offset to prevent overlap of properties in the same city
+              const randomLat = (Math.random() - 0.5) * 0.01; // ~1km random offset
+              const randomLng = (Math.random() - 0.5) * 0.01;
+              
+              finalUpdatedProperties[propertyIndex] = {
+                ...finalUpdatedProperties[propertyIndex],
+                location: {
+                  lat: result[0].geometry.location.lat() + randomLat,
+                  lng: result[0].geometry.location.lng() + randomLng
+                }
+              };
+            }
+          } catch (error) {
+            console.error(`Final fallback geocoding failed for property ${property.id}:`, error);
+          }
+        }
+        
+        // Update with final geocoded data
+        setProperties(finalUpdatedProperties);
+      }
     };
 
     geocodeProperties();
@@ -240,6 +387,8 @@ const PropertyMap = memo(({
       const validProperties = properties.filter(
         p => p.location && typeof p.location?.lat === 'number' && typeof p.location?.lng === 'number'
       );
+      
+      console.log(`Fitting map to ${validProperties.length} valid properties`);
       
       if (validProperties.length > 0) {
         const bounds = new window.google.maps.LatLngBounds();
@@ -279,6 +428,19 @@ const PropertyMap = memo(({
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
   }, []);
+
+  // Fix to ensure we're using the actual filtered properties
+  useEffect(() => {
+    // Force refresh markers when properties change
+    // This helps address any issues with React's render optimization
+    const timer = setTimeout(() => {
+      if (mapRef.current) {
+        google.maps.event.trigger(mapRef.current, 'resize');
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [properties, showMap]);
 
   return (
     <div className={`map ${showMap ? 'active' : ''} ${isCollapsed ? 'expanded' : ''}`}>
@@ -557,12 +719,15 @@ export default function PropertyListPage() {
             } as PropertyType;
           });
           
-          console.log("Loaded properties from Firestore:", propertyData.length);
-          setProperties(propertyData);
-          setFilteredProperties(propertyData);
-    setIsLoading(false);
+          // Filter out unlisted properties (those with status 'sold' or 'pending')
+          const filteredProperties = propertyData.filter(property => property.status === 'available' || property.status === 'rented');
+          
+          console.log("Loaded properties from Firestore:", filteredProperties.length);
+          setProperties(filteredProperties);
+          setFilteredProperties(filteredProperties);
+          setIsLoading(false);
           return;
-    } else {
+        } else {
           console.log("No properties found in Firestore, using mock data");
           
           // If no properties found, use basic mock data with null locations (will be geocoded)
@@ -631,8 +796,13 @@ export default function PropertyListPage() {
             }
           ];
           
-          setProperties(mockPropertiesBase);
-          setFilteredProperties(mockPropertiesBase);
+          // Filter mock data before setting state
+          const availableMockProperties = mockPropertiesBase.filter(
+            property => property.status === 'available' || property.status === 'rented'
+          );
+          
+          setProperties(availableMockProperties);
+          setFilteredProperties(availableMockProperties);
         }
       } catch (error) {
         console.error('Error loading properties:', error);

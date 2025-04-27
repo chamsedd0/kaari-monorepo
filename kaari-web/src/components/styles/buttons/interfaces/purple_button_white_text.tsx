@@ -16,4 +16,10 @@ export const PurpleButtonWhiteText = styled.button`
   &:hover {
     background-color: ${Theme.colors.primary};
   }
+  
+  &:disabled {
+    background-color: ${Theme.colors.gray2};
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
 `;

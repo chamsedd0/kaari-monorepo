@@ -135,6 +135,12 @@ export interface PhotoshootBooking {
   floor?: string;
   flat?: string;
   
+  // Location coordinates for map display
+  location?: {
+    lat: number;
+    lng: number;
+  };
+  
   propertyType: string;
   date: Date;
   timeSlot: string;

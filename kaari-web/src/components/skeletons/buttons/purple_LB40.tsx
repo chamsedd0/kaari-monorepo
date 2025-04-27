@@ -1,8 +1,15 @@
 import { PurpleLB40 } from "../../styles/buttons/purple_LB40_style";
 
+interface PurpleButtonLB40Props {
+    text: string;
+    onClick?: () => void;
+    disabled?: boolean;
+}
 
-export const PurpleButtonLB40 = ({text}: {text: string}) => {
+export const PurpleButtonLB40: React.FC<PurpleButtonLB40Props> = ({ text, onClick, disabled }) => {
     return (
-        <PurpleLB40>{text}</PurpleLB40>
+        <PurpleLB40 onClick={onClick} disabled={disabled}>
+            {text}
+        </PurpleLB40>
     );
 }

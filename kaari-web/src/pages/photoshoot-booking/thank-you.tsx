@@ -27,7 +27,7 @@ const ThankYouPage: React.FC = () => {
   };
   
   const handleGoToDashboard = () => {
-    navigate('/dashboard');
+    navigate('/dashboard/advertiser/dashboard');
   };
   
   return (
@@ -68,7 +68,7 @@ const ThankYouPage: React.FC = () => {
           </div>
           
           <div className="action-buttons">
-            <BpurpleButtonLB60 text="Download Summary" />
+            <BpurpleButtonLB60 text="Download Summary" onClick={handleDownloadSummary} />
             
             <PurpleButtonLB60 text="Go to Dashboard" onClick={handleGoToDashboard} />
           </div>

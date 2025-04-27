@@ -16,4 +16,11 @@ export const PurpleBorderButton = styled.button`
     border-color: ${Theme.colors.primary};
     color: ${Theme.colors.primary};
   }
+  
+  &:disabled {
+    border-color: ${Theme.colors.gray2};
+    color: ${Theme.colors.gray2};
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
 `;

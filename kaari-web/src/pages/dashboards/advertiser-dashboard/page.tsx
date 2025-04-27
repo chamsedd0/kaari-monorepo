@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { NavigationPannelAdviser } from '../../../components/skeletons/constructed/dashboard-navigation-pannel/navigation-pannel-adviser';
 import { AdvertiserDashboardStyle } from './styles';
 import LoadingScreen from '../../../components/loading/LoadingScreen';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Routes, Route } from 'react-router-dom';
 
 // Import all section pages
 import DashboardPage from './dashboard/page';
 import ProfilePage from './profile/page';
 import MessagesPage from './messages/page';
 import PropertyPage from './properties/page';
+import PropertyEditRequestPage from './properties/edit-request/page';
 import ReservationsPage from './reservations/page';
 import ReviewsPage from './reviews/page';
 import PaymentsPage from './payments/page';
@@ -110,7 +111,17 @@ const AdvertiserDashboard: React.FC = () => {
         };
     }, [activeSection, isLoading]);
 
+    // Check if the current path is the property edit request page
+    const isPropertyEditRequest = location.pathname.includes('/properties/edit-request/');
+    
+    // Modify the renderSection function to handle the property edit request case
     const renderSection = () => {
+        // If the URL matches the property edit request pattern, render that component
+        if (isPropertyEditRequest) {
+            return <PropertyEditRequestPage />;
+        }
+        
+        // Otherwise use the standard section rendering logic
         switch (activeSection) {
             case 'Dashboard':
                 return <DashboardPage />;
