@@ -16,6 +16,7 @@ import {
   QuerySnapshot,
   DocumentData,
   DocumentReference,
+  increment,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { PhotoshootBooking } from '../entities';
@@ -259,16 +260,46 @@ export class PhotoshootBookingServerActions {
    */
   static async getBookingsByAdvertiserId(advertiserId: string): Promise<PhotoshootBooking[]> {
     try {
-      const q = query(
+      // First, look for bookings with the advertiserId field
+      const q1 = query(
         bookingsCollection, 
-        where('advertiserId', '==', advertiserId),
-        orderBy('date', 'desc')
+        where('advertiserId', '==', advertiserId)
       );
-      const querySnapshot = await getDocs(q);
       
-      return querySnapshot.docs.map(doc => 
-        fromFirestoreBooking(doc.id, doc.data())
+      const querySnapshot1 = await getDocs(q1);
+      
+      // Then look for bookings with the userId field (for backward compatibility)
+      const q2 = query(
+        bookingsCollection, 
+        where('userId', '==', advertiserId)
       );
+      
+      const querySnapshot2 = await getDocs(q2);
+      
+      // Combine the results, avoiding duplicates
+      const bookings: PhotoshootBooking[] = [];
+      const bookingIds = new Set<string>();
+      
+      // Process advertiserId results
+      querySnapshot1.forEach(doc => {
+        if (!bookingIds.has(doc.id)) {
+          bookingIds.add(doc.id);
+          bookings.push(fromFirestoreBooking(doc.id, doc.data()));
+        }
+      });
+      
+      // Process userId results
+      querySnapshot2.forEach(doc => {
+        if (!bookingIds.has(doc.id)) {
+          bookingIds.add(doc.id);
+          bookings.push(fromFirestoreBooking(doc.id, doc.data()));
+        }
+      });
+      
+      // Sort by date (newest first)
+      bookings.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      return bookings;
     } catch (error) {
       console.error(`Error getting bookings for advertiser ${advertiserId}:`, error);
       throw error;
@@ -297,7 +328,11 @@ export class PhotoshootBookingServerActions {
   /**
    * Assign a team to a photoshoot booking
    */
-  static async assignTeamToBooking(bookingId: string, teamId: string, teamMembers: string[]): Promise<void> {
+  static async assignTeamToBooking(
+    bookingId: string,
+    teamId: string,
+    teamMembers: string[]
+  ): Promise<void> {
     try {
       const docRef = doc(db, COLLECTION_NAME, bookingId);
       
@@ -340,13 +375,15 @@ export class PhotoshootBookingServerActions {
   /**
    * Cancel a photoshoot booking
    */
-  static async cancelBooking(bookingId: string): Promise<void> {
+  static async cancelBooking(bookingId: string, reason?: string): Promise<void> {
     try {
       const docRef = doc(db, COLLECTION_NAME, bookingId);
       
       await updateDoc(docRef, {
         status: 'cancelled',
         updatedAt: serverTimestamp(),
+        cancellationReason: reason || 'No reason provided',
+        cancelledAt: serverTimestamp(),
       });
     } catch (error) {
       console.error(`Error cancelling booking ${bookingId}:`, error);
@@ -403,6 +440,30 @@ export class PhotoshootBookingServerActions {
       return { count: deletedCount };
     } catch (error) {
       console.error('Error removing sample data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Reschedule a photoshoot booking
+   */
+  static async rescheduleBooking(
+    bookingId: string, 
+    newDate: Date, 
+    newTimeSlot: string
+  ): Promise<void> {
+    try {
+      const docRef = doc(db, COLLECTION_NAME, bookingId);
+      
+      await updateDoc(docRef, {
+        date: Timestamp.fromDate(new Date(newDate)),
+        timeSlot: newTimeSlot,
+        updatedAt: serverTimestamp(),
+        rescheduledAt: serverTimestamp(),
+        previousRescheduleTimes: increment(1), // Keep count of how many times it was rescheduled
+      });
+    } catch (error) {
+      console.error(`Error rescheduling booking ${bookingId}:`, error);
       throw error;
     }
   }

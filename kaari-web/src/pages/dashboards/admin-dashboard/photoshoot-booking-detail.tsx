@@ -52,6 +52,10 @@ interface PropertyFormData {
   amenities: string[];
   features: string[];
   status: 'available' | 'sold' | 'pending' | 'rented';
+  location: {
+    lat: number;
+    lng: number;
+  } | null;
 }
 
 // Common amenities and features
@@ -125,6 +129,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     amenities: [],
     features: [],
     status: 'available',
+    location: null,
   });
   
   const [amenityInput, setAmenityInput] = useState('');
@@ -168,28 +173,34 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     }
   };
   
-  // Function to create property and update advertiser
+  // Function to create a property and link it to an advertiser
   const createPropertyAndLinkToAdvertiser = async (propertyData: PropertyFormData, advertiserId: string): Promise<string> => {
     try {
-      // Validate the advertiser ID exists
-      if (!advertiserId) {
-        throw new Error('Advertiser ID is missing. Cannot create property without owner.');
-      }
-
-      console.log('Creating property for advertiser ID:', advertiserId);
-      
-      // Prepare property data with timestamps
       const now = new Date();
-      const propertyWithTimestamps = {
-        ...propertyData,
-        ownerId: advertiserId,
-        createdAt: now,
-        updatedAt: now
-      };
+
+      // Create a new property document in the properties collection
+      const propertiesCollectionRef = collection(db, 'properties');
+      const propertyDocRef = doc(propertiesCollectionRef);
       
-      // Create property document with auto-generated ID
-      const propertyCollectionRef = collection(db, 'properties');
-      const propertyDocRef = doc(propertyCollectionRef);
+      // Prepare the property data with timestamps
+      const propertyWithTimestamps = {
+        id: propertyDocRef.id,
+        ownerId: advertiserId,
+        title: propertyData.title,
+        description: propertyData.description,
+        address: propertyData.address,
+        propertyType: propertyData.propertyType,
+        bedrooms: propertyData.bedrooms,
+        bathrooms: propertyData.bathrooms,
+        area: propertyData.area,
+        price: propertyData.price,
+        images: propertyData.images,
+        amenities: propertyData.amenities,
+        features: propertyData.features,
+        status: propertyData.status,
+        // Include location data if available
+        location: propertyData.location,
+      };
       
       // Log the data being sent to Firestore for debugging
       console.log('Property data being saved:', JSON.stringify({
@@ -294,6 +305,8 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
             zipCode: bookingData.propertyAddress?.zipCode || bookingData.postalCode || '',
             country: bookingData.propertyAddress?.country || bookingData.country || '',
           },
+          // Include location data if it exists in the booking
+          location: bookingData.location || null,
           propertyType: (bookingData.propertyType?.toLowerCase() === 'apartment' || 
                         bookingData.propertyType?.toLowerCase() === 'house' || 
                         bookingData.propertyType?.toLowerCase() === 'condo' || 
@@ -610,6 +623,9 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
               ) : (
                 <p><strong>Address:</strong> No address information available</p>
               )}
+              {booking.location && (
+                <p><strong>Location:</strong> Lat: {booking.location.lat}, Lng: {booking.location.lng}</p>
+              )}
             </div>
             
             <div>
@@ -906,110 +922,41 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                 </FormGroup>
               </div>
               
-              <h3>Amenities & Features</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                <div>
-                  <FormGroup>
-                    <Label>Amenities</Label>
+              {/* Location Coordinates */}
+              <h3>Location Coordinates</h3>
                     <div style={{ 
-                      border: '1px solid #ddd', 
-                      borderRadius: '4px', 
                       padding: '10px',
-                      maxHeight: '300px',
-                      overflowY: 'auto'
-                    }}>
-                      {COMMON_AMENITIES.map((amenity) => (
-                        <div key={amenity} style={{ marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
-                          <input 
-                            type="checkbox" 
-                            id={`amenity-${amenity}`} 
-                            checked={isItemSelected('amenities', amenity)}
-                            onChange={(e) => handleCheckboxChange('amenities', amenity, e.target.checked)}
-                            style={{ marginRight: '8px' }}
-                          />
-                          <label htmlFor={`amenity-${amenity}`}>{amenity}</label>
-                        </div>
-                      ))}
-                      
-                      {/* Custom amenity input */}
-                      <div style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-                        <Label>Custom Amenity:</Label>
-                        <div style={{ display: 'flex' }}>
-                          <Input 
-                            type="text" 
-                            value={amenityInput} 
-                            onChange={(e) => setAmenityInput(e.target.value)}
-                            placeholder="Add custom amenity"
-                            style={{ flex: 1, marginRight: '10px' }}
-                          />
-                          <Button onClick={addAmenity} type="button">
-                            <FaPlus /> Add
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </FormGroup>
-                </div>
-                
-                <div>
-                  <FormGroup>
-                    <Label>Features</Label>
-                    <div style={{ 
-                      border: '1px solid #ddd', 
+                backgroundColor: '#f5f5f5', 
                       borderRadius: '4px', 
-                      padding: '10px',
-                      maxHeight: '300px',
-                      overflowY: 'auto'
+                marginBottom: '20px' 
                     }}>
-                      {COMMON_FEATURES.map((feature) => (
-                        <div key={feature} style={{ marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
-                          <input 
-                            type="checkbox" 
-                            id={`feature-${feature}`} 
-                            checked={isItemSelected('features', feature)}
-                            onChange={(e) => handleCheckboxChange('features', feature, e.target.checked)}
-                            style={{ marginRight: '8px' }}
-                          />
-                          <label htmlFor={`feature-${feature}`}>{feature}</label>
+                {propertyData.location ? (
+                  <div>
+                    <p><strong>Latitude:</strong> {propertyData.location.lat}</p>
+                    <p><strong>Longitude:</strong> {propertyData.location.lng}</p>
+                    <p style={{ fontSize: '0.9em', color: '#666', marginTop: '8px' }}>
+                      Location coordinates from booking will be automatically stored with the property.
+                    </p>
                         </div>
-                      ))}
-                      
-                      {/* Custom feature input */}
-                      <div style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-                        <Label>Custom Feature:</Label>
-                        <div style={{ display: 'flex' }}>
-                          <Input 
-                            type="text" 
-                            value={featureInput} 
-                            onChange={(e) => setFeatureInput(e.target.value)}
-                            placeholder="Add custom feature"
-                            style={{ flex: 1, marginRight: '10px' }}
-                          />
-                          <Button onClick={addFeature} type="button">
-                            <FaPlus /> Add
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </FormGroup>
-                </div>
+                ) : (
+                  <p>No location coordinates available from the booking.</p>
+                )}
               </div>
               
+              {/* Property Images */}
               <h3>Property Images*</h3>
               <FormGroup>
-                <Label>Add Images (URLs from photoshoot)</Label>
-                <div style={{ display: 'flex', marginBottom: '10px' }}>
+                <Label>Add Image URLs</Label>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
                   <Input 
                     type="text" 
                     value={imageInput} 
                     onChange={(e) => setImageInput(e.target.value)}
-                    placeholder="Enter image URL"
-                    style={{ flex: 1, marginRight: '10px' }}
+                    placeholder="https://example.com/image.jpg"
+                    style={{ flex: 1 }}
                   />
                   <Button onClick={() => {
                     if (imageInput.trim()) {
-                      // Add to both the images state and propertyData
-                      setImages([...images, imageInput.trim()]);
                       setPropertyData(prev => ({
                         ...prev,
                         images: [...prev.images, imageInput.trim()]

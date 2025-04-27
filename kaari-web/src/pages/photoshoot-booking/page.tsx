@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PhotoshootBookingPageStyle } from './styles';
@@ -9,11 +9,35 @@ import TextAreaBaseModel from '../../components/skeletons/inputs/input-fields/te
 import { PurpleButtonLB60 } from '../../components/skeletons/buttons/purple_LB60';
 import { DEFAULT_TIME_SLOTS } from '../../config/constants';
 
-import { FaClock, FaChevronLeft, FaChevronRight, FaSpinner } from 'react-icons/fa';
+import { FaClock, FaChevronLeft, FaChevronRight, FaSpinner, FaMapMarkerAlt, FaSearch } from 'react-icons/fa';
 import SelectFieldBaseModelVariant1 from '../../components/skeletons/inputs/select-fields/select-field-base-model-variant-1';
 import photoshootService from '../../services/photoshoot-service';
 import Modal from '../../components/skeletons/constructed/modal/modal';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { GoogleMap, useJsApiLoader, Marker, StandaloneSearchBox } from '@react-google-maps/api';
+
+// Google Maps API Key
+const GOOGLE_MAPS_API_KEY = 'AIzaSyCqhbPAiPspwgshgE9lzbtkpFZwVMfJoww';
+
+// Default map center (Rabat, Morocco)
+const DEFAULT_MAP_CENTER = { lat: 34.020882, lng: -6.841650 };
+
+// Map container style
+const mapContainerStyle = {
+  width: '100%',
+  height: '350px',
+  borderRadius: '12px',
+};
+
+// Libraries needed for Google Maps
+const libraries = ['places', 'geometry'];
+
+// Declare global google namespace
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 const PhotoshootBookingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +56,8 @@ const PhotoshootBookingPage: React.FC = () => {
     propertyType: t('photoshoot_booking.property_types.apartment'),
     date: '',
     timeSlot: '',
-    comments: ''
+    comments: '',
+    location: null as { lat: number; lng: number } | null,
   });
 
   // State for selected date
@@ -50,6 +75,14 @@ const PhotoshootBookingPage: React.FC = () => {
   const [responseMessage, setResponseMessage] = useState('');
   const [disabledDates, setDisabledDates] = useState<Date[]>([]);
 
+  // Google Maps-related state
+  const [mapCenter, setMapCenter] = useState(DEFAULT_MAP_CENTER);
+  const [markerPosition, setMarkerPosition] = useState<google.maps.LatLngLiteral | null>(null);
+  const [mapZoom, setMapZoom] = useState(12);
+  const mapRef = useRef<google.maps.Map>();
+  const searchBoxRef = useRef<google.maps.places.SearchBox>();
+  const geocoderRef = useRef<google.maps.Geocoder>();
+
   // Property type options
   const propertyTypeOptions = [
     t('photoshoot_booking.property_types.apartment'),
@@ -64,6 +97,13 @@ const PhotoshootBookingPage: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [authChecked, setAuthChecked] = useState(false);
 
+  // Load Google Maps JavaScript API
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: libraries as any[]
+  });
+
   // Add this useEffect to check for authentication state
   useEffect(() => {
     const auth = getAuth();
@@ -74,6 +114,227 @@ const PhotoshootBookingPage: React.FC = () => {
     
     return () => unsubscribe();
   }, []);
+
+  // Create geocoder instance when maps are loaded
+  useEffect(() => {
+    if (isLoaded && window.google && window.google.maps) {
+      geocoderRef.current = new window.google.maps.Geocoder();
+    }
+  }, [isLoaded]);
+
+  // Handle map load
+  const onMapLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
+  }, []);
+
+  // Handle search box load
+  const onSearchBoxLoad = useCallback((searchBox: google.maps.places.SearchBox) => {
+    searchBoxRef.current = searchBox;
+  }, []);
+
+  // Handle search box places changed
+  const onPlacesChanged = useCallback(() => {
+    if (searchBoxRef.current) {
+      const places = searchBoxRef.current.getPlaces();
+      
+      if (places && places.length > 0) {
+        const place = places[0];
+        
+        if (place.geometry && place.geometry.location) {
+          // Get location
+          const location = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng()
+          };
+          
+          // Update map
+          setMapCenter(location);
+          setMarkerPosition(location);
+          setMapZoom(16);
+          
+          // Update form data with location
+          setFormData(prev => ({
+            ...prev,
+            location
+          }));
+          
+          // Extract address components
+          if (place.address_components) {
+            let streetName = '';
+            let streetNumber = '';
+            let city = '';
+            let state = '';
+            let postalCode = '';
+            let country = '';
+            
+            place.address_components.forEach(component => {
+              const types = component.types;
+              
+              if (types.includes('street_number')) {
+                streetNumber = component.long_name;
+              }
+              
+              if (types.includes('route')) {
+                streetName = component.long_name;
+              }
+              
+              if (types.includes('locality')) {
+                city = component.long_name;
+              }
+              
+              if (types.includes('administrative_area_level_1')) {
+                state = component.long_name;
+              }
+              
+              if (types.includes('postal_code')) {
+                postalCode = component.long_name;
+              }
+              
+              if (types.includes('country')) {
+                country = component.long_name;
+              }
+            });
+            
+            // Update form data with address components
+            setFormData(prev => ({
+              ...prev,
+              streetName: streetName || prev.streetName,
+              streetNumber: streetNumber || prev.streetNumber,
+              city: city || prev.city,
+              stateRegion: state || prev.stateRegion,
+              postalCode: postalCode || prev.postalCode,
+              country: country || prev.country
+            }));
+          }
+        }
+      }
+    }
+  }, []);
+
+  // Handle marker drag end
+  const onMarkerDragEnd = useCallback((event: google.maps.MapMouseEvent) => {
+    if (event.latLng) {
+      const newPosition = {
+        lat: event.latLng.lat(),
+        lng: event.latLng.lng()
+      };
+      
+      setMarkerPosition(newPosition);
+      
+      // Update form data with new position
+      setFormData(prev => ({
+        ...prev,
+        location: newPosition
+      }));
+      
+      // Reverse geocode the new position to get address
+      if (geocoderRef.current) {
+        geocoderRef.current.geocode({ location: newPosition }, (results, status) => {
+          if (status === 'OK' && results && results[0]) {
+            const place = results[0];
+            
+            // Extract address components
+            if (place.address_components) {
+              let streetName = '';
+              let streetNumber = '';
+              let city = '';
+              let state = '';
+              let postalCode = '';
+              let country = '';
+              
+              place.address_components.forEach(component => {
+                const types = component.types;
+                
+                if (types.includes('street_number')) {
+                  streetNumber = component.long_name;
+                }
+                
+                if (types.includes('route')) {
+                  streetName = component.long_name;
+                }
+                
+                if (types.includes('locality')) {
+                  city = component.long_name;
+                }
+                
+                if (types.includes('administrative_area_level_1')) {
+                  state = component.long_name;
+                }
+                
+                if (types.includes('postal_code')) {
+                  postalCode = component.long_name;
+                }
+                
+                if (types.includes('country')) {
+                  country = component.long_name;
+                }
+              });
+              
+              // Update form data with address components
+              setFormData(prev => ({
+                ...prev,
+                streetName: streetName || prev.streetName,
+                streetNumber: streetNumber || prev.streetNumber,
+                city: city || prev.city,
+                stateRegion: state || prev.stateRegion,
+                postalCode: postalCode || prev.postalCode,
+                country: country || prev.country
+              }));
+            }
+          }
+        });
+      }
+    }
+  }, []);
+
+  // Update map when address fields change
+  useEffect(() => {
+    // Only run if all required fields are filled
+    if (
+      formData.streetName && 
+      formData.city && 
+      formData.country && 
+      geocoderRef.current && 
+      isLoaded
+    ) {
+      // Build address string
+      const addressString = `${formData.streetNumber} ${formData.streetName}, ${formData.city}, ${formData.stateRegion ? `${formData.stateRegion}, ` : ''}${formData.country}`;
+      
+      // Geocode the address
+      geocoderRef.current.geocode({ address: addressString }, (results, status) => {
+        if (status === 'OK' && results && results[0]) {
+          const location = {
+            lat: results[0].geometry.location.lat(),
+            lng: results[0].geometry.location.lng()
+          };
+          
+          // Update map only if the location is significantly different
+          // to avoid infinite loops
+          if (!markerPosition || 
+              Math.abs(location.lat - markerPosition.lat) > 0.0001 || 
+              Math.abs(location.lng - markerPosition.lng) > 0.0001) {
+            setMapCenter(location);
+            setMarkerPosition(location);
+            setMapZoom(16);
+            
+            // Update form data with location
+            setFormData(prev => ({
+              ...prev,
+              location
+            }));
+          }
+        }
+      });
+    }
+  }, [
+    formData.streetName, 
+    formData.streetNumber, 
+    formData.city, 
+    formData.stateRegion, 
+    formData.country, 
+    isLoaded,
+    markerPosition
+  ]);
 
   // Check date availability
   const checkDateAvailability = async (date: Date): Promise<boolean> => {
@@ -151,42 +412,69 @@ const PhotoshootBookingPage: React.FC = () => {
   };
 
   // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent | React.MouseEvent<HTMLButtonElement> | any) => {
+    if (e && e.preventDefault) {
     e.preventDefault();
+    }
+    
+    console.log('Submitting form data:', formData);
     
     // Validate form
     if (!selectedDate || !selectedTimeSlot) {
-      alert(t('photoshoot_booking.validation.date_time'));
+      alert(t('photoshoot_booking.validation.date_time', 'Please select a date and time for your photoshoot.'));
       return;
     }
     
     if (!formData.streetName || !formData.postalCode || !formData.city || !formData.country) {
-      alert(t('photoshoot_booking.validation.address'));
+      alert(t('photoshoot_booking.validation.address', 'Please fill in all required address fields.'));
       return;
     }
+    
+    // Create a copy of form data with location properly handled
+    const submissionData = {
+      ...formData,
+      location: formData.location || undefined // Convert null to undefined
+    };
     
     // Submit the booking
     setIsSubmitting(true);
     try {
-      const response = await photoshootService.bookPhotoshoot(formData);
+      console.log('Calling bookPhotoshoot service...');
+      const response = await photoshootService.bookPhotoshoot(submissionData);
+      console.log('Received booking response:', response);
       
       setResponseMessage(response.message);
       
       if (response.success) {
-        // Navigate to thank you page with booking ID
-        navigate(`/photoshoot-booking/thank-you?bookingId=${response.bookingId}`, {
+        console.log('Booking successful, navigating to thank you page with ID:', response.bookingId);
+        
+        // Try direct location change instead of navigate
+        const thankYouUrl = `/photoshoot-booking/thank-you?bookingId=${response.bookingId}`;
+        console.log('Navigating to URL:', thankYouUrl);
+        
+        // Use both methods to ensure navigation works
+        window.location.href = thankYouUrl;
+        
+        // Also try React Router navigate as a fallback
+        navigate(thankYouUrl, {
           state: { bookingId: response.bookingId }
         });
       } else {
+        console.log('Booking unsuccessful:', response.message);
         setShowErrorModal(true);
       }
     } catch (error) {
       console.error('Error submitting booking:', error);
-      setResponseMessage(t('photoshoot_booking.error.generic'));
+      setResponseMessage(t('photoshoot_booking.error.generic', 'An error occurred while processing your booking. Please try again.'));
       setShowErrorModal(true);
     } finally {
       setIsSubmitting(false);
     }
+  };
+  
+  // Simple wrapper for button click
+  const handleButtonSubmit = () => {
+    handleSubmit({});
   };
   
   // Reset form to initial state
@@ -203,10 +491,14 @@ const PhotoshootBookingPage: React.FC = () => {
       propertyType: t('photoshoot_booking.property_types.apartment'),
       date: '',
       timeSlot: '',
-      comments: ''
+      comments: '',
+      location: null
     });
     setSelectedDate(null);
     setSelectedTimeSlot('');
+    setMarkerPosition(null);
+    setMapCenter(DEFAULT_MAP_CENTER);
+    setMapZoom(12);
   };
   
   // Navigate to previous day
@@ -234,10 +526,10 @@ const PhotoshootBookingPage: React.FC = () => {
     return (
       <Modal isOpen={showErrorModal} onClose={() => setShowErrorModal(false)}>
         <div className="error-modal">
-          <h3>{t('photoshoot_booking.error.title')}</h3>
-          <p>{responseMessage || t('photoshoot_booking.error.generic')}</p>
+          <h3>{t('photoshoot_booking.error.title', 'Booking Error')}</h3>
+          <p>{responseMessage || t('photoshoot_booking.error.generic', 'An error occurred while processing your booking. Please try again.')}</p>
           <button onClick={() => setShowErrorModal(false)}>
-            {t('photoshoot_booking.error.close')}
+            {t('photoshoot_booking.error.close', 'Close')}
           </button>
         </div>
       </Modal>
@@ -249,134 +541,200 @@ const PhotoshootBookingPage: React.FC = () => {
       <UnifiedHeader />
       
       <PhotoshootBookingPageStyle>
-        <h1 className="page-title">{t('photoshoot_booking.title')}</h1>
+        <h1 className="page-title">{t('photoshoot_booking.title', 'Book Your Free Photoshoot')}</h1>
         
         <form onSubmit={handleSubmit}>
-          {/* Address Section */}
-          <div className="form-section address-section">
-            <h2 className="section-title">{t('photoshoot_booking.address_section')}</h2>
+          <div className="form-section">
+            <h2 className="section-title">{t('photoshoot_booking.address_title', 'Property Address')}</h2>
             
-            <div className="address-content">
+            <div className="form-grid">
               <div className="form-group">
+                <label htmlFor="streetName">{t('photoshoot_booking.street_name', 'Street Name')}</label>
                 <InputBaseModel
-                  type="text"
-                  title={`${t('photoshoot_booking.street_name')} *`}
-                  placeholder="John Kennedy St"
                   value={formData.streetName}
                   onChange={(e) => handleCustomInputChange('streetName', e.target.value)}
+                  placeholder={t('photoshoot_booking.street_name_placeholder', 'Enter street name')}
+                  
                 />
               </div>
               
               <div className="form-row">
                 <div className="form-group">
+                  <label htmlFor="streetNumber">{t('photoshoot_booking.street', 'Street Number')}</label>
                   <InputBaseModel
-                    type="text"
-                    title={t('photoshoot_booking.street_number')}
-                    placeholder="23"
                     value={formData.streetNumber}
                     onChange={(e) => handleCustomInputChange('streetNumber', e.target.value)}
+                    placeholder={t('photoshoot_booking.street_placeholder', '23')}
                   />
                 </div>
                 
                 <div className="form-group">
+                  <label htmlFor="floor">{t('photoshoot_booking.floor', 'Floor')}</label>
                   <InputBaseModel
-                    type="text"
-                    title={t('photoshoot_booking.floor')}
-                    placeholder="1"
                     value={formData.floor}
                     onChange={(e) => handleCustomInputChange('floor', e.target.value)}
+                    placeholder={t('photoshoot_booking.floor_placeholder', '1')}
                   />
                 </div>
                 
                 <div className="form-group">
+                  <label htmlFor="flat">{t('photoshoot_booking.flat', 'Flat')}</label>
                   <InputBaseModel
-                    type="text"
-                    title={t('photoshoot_booking.flat')}
-                    placeholder="2"
                     value={formData.flat}
                     onChange={(e) => handleCustomInputChange('flat', e.target.value)}
+                    placeholder={t('photoshoot_booking.flat_placeholder', '2')}
+                  />
+                </div>
+              </div>
+              
+              <div className="form-row">
+              <div className="form-group">
+                  <label htmlFor="postalCode">{t('photoshoot_booking.postal_code', 'Postal Code')}</label>
+                <InputBaseModel
+                  value={formData.postalCode}
+                  onChange={(e) => handleCustomInputChange('postalCode', e.target.value)}
+                    placeholder={t('photoshoot_booking.postal_code_placeholder', '12345')}
+                    
+                />
+              </div>
+              
+              <div className="form-group">
+                  <label htmlFor="city">{t('photoshoot_booking.city', 'City')}</label>
+                <InputBaseModel
+    
+                  value={formData.city}
+                  onChange={(e) => handleCustomInputChange('city', e.target.value)}
+                    placeholder={t('photoshoot_booking.city_placeholder', 'Enter city')}
+                    
+                />
+                </div>
+              </div>
+              
+              <div className="form-row">
+              <div className="form-group">
+                  <label htmlFor="stateRegion">{t('photoshoot_booking.state_region', 'State or Region')}</label>
+                <InputBaseModel
+                  value={formData.stateRegion}
+                  onChange={(e) => handleCustomInputChange('stateRegion', e.target.value)}
+                    placeholder={t('photoshoot_booking.state_region_placeholder', 'Enter state or region')}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label htmlFor="country">{t('photoshoot_booking.country', 'Country')}</label>
+                  <InputBaseModel 
+                    value={formData.country}
+                    onChange={(e) => handleCustomInputChange('country', e.target.value)}
+                    placeholder={t('photoshoot_booking.country_placeholder', 'Enter country')}
+
                   />
                 </div>
               </div>
               
               <div className="form-group">
-                <InputBaseModel
-                  type="text"
-                  title={`${t('photoshoot_booking.postal_code')} *`}
-                  placeholder="012345"
-                  value={formData.postalCode}
-                  onChange={(e) => handleCustomInputChange('postalCode', e.target.value)}
-                />
-              </div>
-              
-              <div className="form-group">
-                <InputBaseModel
-                  type="text"
-                  title={`${t('photoshoot_booking.city')} *`}
-                  placeholder="Agadir" 
-                  value={formData.city}
-                  onChange={(e) => handleCustomInputChange('city', e.target.value)}
-                />
-              </div>
-              
-              <div className="form-group">
-                <InputBaseModel
-                  type="text"
-                  title={t('photoshoot_booking.state_region')}
-                  placeholder="Some Region"
-                  value={formData.stateRegion}
-                  onChange={(e) => handleCustomInputChange('stateRegion', e.target.value)}
-                />
-              </div>
-              
-              <div className="form-group">
-                <InputBaseModel
-                  type="text"
-                  title={`${t('photoshoot_booking.country')} *`}
-                  placeholder="Morocco"
-                  value={formData.country}
-                  onChange={(e) => handleCustomInputChange('country', e.target.value)}
+                <label htmlFor="propertyType">{t('photoshoot_booking.property_type', 'Type of property')}</label>
+                <SelectFieldBaseModelVariant1
+                  value={formData.propertyType}
+                  onChange={handlePropertyTypeChange}
+                  options={propertyTypeOptions}
                 />
               </div>
             </div>
             
-
-            
-            {/* Property Type */}
-            <div className="form-group" style={{ maxWidth: '300px' }}>
-              <SelectFieldBaseModelVariant1
-                options={propertyTypeOptions}
-                value={formData.propertyType}
-                onChange={handlePropertyTypeChange}
-                placeholder={t('photoshoot_booking.select_property_type')}
-                label={`${t('photoshoot_booking.property_type')} *`}
-              />
+            {/* Google Maps Location Picker */}
+            <div className="map-section">
+              <h3 className="map-title">{t('photoshoot_booking.locate_on_map', 'Locate on Map')}</h3>
+              <p className="map-description">{t('photoshoot_booking.map_description', 'Select the exact location of your property by searching or moving the marker on the map.')}</p>
+              
+              {isLoaded ? (
+                <>
+                  <div className="search-box-container">
+                    <StandaloneSearchBox
+                      onLoad={onSearchBoxLoad}
+                      onPlacesChanged={onPlacesChanged}
+                    >
+                      <div className="search-input-container">
+                        <FaSearch className="search-icon" />
+                        <input
+                          type="text"
+                          placeholder={t('photoshoot_booking.search_address', 'Search for an address')}
+                          className="map-search-input"
+                        />
+                      </div>
+                    </StandaloneSearchBox>
+                  </div>
+                  
+                  <div className="map-container">
+                    <GoogleMap
+                      mapContainerStyle={mapContainerStyle}
+                      center={mapCenter}
+                      zoom={mapZoom}
+                      onLoad={onMapLoad}
+                      options={{
+                        zoomControl: true,
+                        streetViewControl: false,
+                        mapTypeControl: false,
+                        fullscreenControl: true
+                      }}
+                    >
+                      {markerPosition && (
+                        <Marker
+                          position={markerPosition}
+                          draggable={true}
+                          onDragEnd={onMarkerDragEnd}
+                          animation={window.google.maps.Animation.DROP}
+                        />
+                      )}
+                    </GoogleMap>
+                  </div>
+                  
+                  <p className="map-hint">
+                    <FaMapMarkerAlt className="map-hint-icon" />
+                    {t('photoshoot_booking.drag_marker_hint', 'Drag the marker to set the exact location of your property')}
+                  </p>
+                </>
+              ) : (
+                <div className="map-loading">
+                  <FaSpinner className="spinner" />
+                  <p>{t('photoshoot_booking.loading_map', 'Loading map...')}</p>
+                </div>
+              )}
             </div>
           </div>
           
-          {/* Appointment Request Section */}
-          <div className="form-section appointment-section">
-            <h2 className="section-title">{t('photoshoot_booking.appointment_section')}</h2>
+          <div className="appointment-section">
+            <h2 className="section-title">{t('photoshoot_booking.appointment_title', 'Appointment Request')}</h2>
             
             <div className="date-picker-container">
               <div className="calendar-wrapper">
                 <CalendarComponent
                   selectedDate={selectedDate}
                   onDateSelect={handleDateChange}
-                  format="MM/DD/YYYY"
-                  minDate={new Date()}
                   disabledDates={disabledDates}
-                  checkAvailability={checkDateAvailability}
                 />
               </div>
               
               <div className="time-picker">
                 <div className="date-navigation">
-                  <button className="nav-button prev" onClick={navigatePrevDay} type="button">
+                  <button 
+                    type="button"
+                    className="nav-button"
+                    onClick={navigatePrevDay}
+                    disabled={!selectedDate}
+                  >
                     <FaChevronLeft />
                   </button>
-                  <div className="selected-date">{displayDate}</div>
-                  <button className="nav-button next" onClick={navigateNextDay} type="button">
+                  
+                  <div className="selected-date">
+                    {selectedDate ? displayDate : t('photoshoot_booking.select_date', 'Select a date')}
+                  </div>
+                  
+                  <button 
+                    type="button"
+                    className="nav-button"
+                    onClick={navigateNextDay}
+                    disabled={!selectedDate}
+                  >
                     <FaChevronRight />
                   </button>
                 </div>
@@ -384,7 +742,7 @@ const PhotoshootBookingPage: React.FC = () => {
                 {loadingTimeSlots ? (
                   <div className="loading-slots">
                     <FaSpinner className="spinner" />
-                    <p>{t('photoshoot_booking.loading_time_slots')}</p>
+                    <p>{t('photoshoot_booking.loading_time_slots', 'Loading available time slots...')}</p>
                   </div>
                 ) : (
                   <>
@@ -402,7 +760,7 @@ const PhotoshootBookingPage: React.FC = () => {
                       </div>
                     ) : (
                       <div className="no-slots-message">
-                        <p>{t('photoshoot_booking.no_slots_message')}</p>
+                        <p>{t('photoshoot_booking.no_slots_message', 'No available time slots for this date. Please select another date.')}</p>
                       </div>
                     )}
                   </>
@@ -426,35 +784,29 @@ const PhotoshootBookingPage: React.FC = () => {
           </div>
           
           {/* Comments Section */}
-          <div className="form-section">            
+          <div className="comments-section">
+            <h2 className="section-title">{t('photoshoot_booking.comments_title', 'Additional Comments')}</h2>
+            
             <div className="form-group">
               <TextAreaBaseModel
-                title={t('photoshoot_booking.comments_label')}
-                placeholder={t('photoshoot_booking.comments_placeholder')}
                 value={formData.comments}
                 onChange={(e) => handleCustomInputChange('comments', e.target.value)}
+                placeholder={t('photoshoot_booking.comments_placeholder', 'Tell us more about your property or any special requirements')}
               />
             </div>
           </div>
           
-          {/* Submit Button */}
-          <div className="submit-button-container">
+          <div className="submit-section">
             <PurpleButtonLB60 
-              text={isSubmitting ? t('photoshoot_booking.processing') : t('photoshoot_booking.submit_button')} 
-              onClick={(e) => {
-                e?.preventDefault();
-                handleSubmit(e as unknown as React.FormEvent);
-              }} 
+              text={t('photoshoot_booking.submit_button', 'Book a Photoshoot')}
+              onClick={handleButtonSubmit}
+              disabled={isSubmitting}
             />
           </div>
-          
-          <p className="required-fields-note">{t('photoshoot_booking.required_fields')}</p>
         </form>
+        
+        {renderErrorModal()}
       </PhotoshootBookingPageStyle>
-      
-      {renderErrorModal()}
-      
-      
     </>
   );
 };

@@ -42,10 +42,7 @@ const ProfilePage: React.FC = () => {
                     activeSection={activeSection} 
                     onSectionChange={setActiveSection} 
                 />
-                <GoogleCard 
-                    title="Connect to Google" 
-                    description="Connect your Google account to your Kaari account to easily sign in and access your reservations." 
-                />
+                
             </div>
         </ProfilePageStyle>
     );

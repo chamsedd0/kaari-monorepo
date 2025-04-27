@@ -62,10 +62,114 @@ export const PhotoshootBookingPageStyle = styled.div`
 
   }
   
+  /* Map section styles */
+  .map-section {
+    margin-top: 30px;
+    width: 100%;
+  }
+
+  .map-title {
+    font: ${Theme.typography.fonts.mediumB};
+    color: ${Theme.colors.black};
+    margin-bottom: 10px;
+  }
+
+  .map-description {
+    font: ${Theme.typography.fonts.mediumM};
+    color: ${Theme.colors.gray2};
+    margin-bottom: 20px;
+  }
+
+  .search-box-container {
+    margin-bottom: 15px;
+    width: 100%;
+  }
+
+  .search-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 15px;
+    color: ${Theme.colors.primary};
+    font-size: 16px;
+    z-index: 1;
+  }
+
+  .map-search-input {
+    width: 100%;
+    padding: 14px 15px 14px 45px;
+    border: 1px solid ${Theme.colors.lightGray};
+    border-radius: 8px;
+    font: ${Theme.typography.fonts.mediumM};
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+    &:focus {
+      outline: none;
+      border-color: ${Theme.colors.primary};
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    &::placeholder {
+      color: ${Theme.colors.gray};
+    }
+  }
+
+  .map-container {
+    width: 100%;
+    height: 350px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid ${Theme.colors.lightGray};
+  }
+
+  .map-hint {
+    display: flex;
+    align-items: center;
+    font: ${Theme.typography.fonts.smallM};
+    color: ${Theme.colors.gray2};
+    margin: 10px 0 20px;
+
+    .map-hint-icon {
+      color: ${Theme.colors.primary};
+      margin-right: 8px;
+      font-size: 14px;
+    }
+  }
+
+  .map-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 350px;
+    border: 1px solid ${Theme.colors.lightGray};
+    border-radius: 12px;
+    background-color: ${Theme.colors.lightGray}30;
+
+    .spinner {
+      animation: ${spin} 1s linear infinite;
+      color: ${Theme.colors.primary};
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: ${Theme.colors.gray2};
+      font: ${Theme.typography.fonts.mediumM};
+    }
+  }
+  
   .map-container {
     margin: 20px 0;
     width: 100%;
-    height: 200px;
+    height: 350px;
     border-radius: 12px;
     overflow: hidden;
     
@@ -147,6 +251,12 @@ export const PhotoshootBookingPageStyle = styled.div`
     
     &:hover {
       background-color: ${Theme.colors.primary}40;
+    }
+
+    &:disabled {
+      background-color: ${Theme.colors.lightGray};
+      color: ${Theme.colors.gray};
+      cursor: not-allowed;
     }
   }
   
@@ -250,7 +360,6 @@ export const PhotoshootBookingPageStyle = styled.div`
       
       &:focus {
         outline: none;
-        box-shadow: none;
       }
     }
     
@@ -260,7 +369,7 @@ export const PhotoshootBookingPageStyle = styled.div`
       &:after {
         content: "";
         position: absolute;
-        right: 8px;
+        right: 4px;
         top: 50%;
         transform: translateY(-50%);
         width: 0;
@@ -273,124 +382,30 @@ export const PhotoshootBookingPageStyle = styled.div`
     }
   }
   
-  .required-fields-note {
-    text-align: center;
-    color: ${Theme.colors.gray2};
-    font: ${Theme.typography.fonts.text14};
-    margin-top: 20px;
+  .comments-section {
+    margin-bottom: 48px;
   }
   
-  .nav-controls {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-    gap: 12px;
-    
-    button {
-      font: ${Theme.typography.fonts.mediumB};
-      color: ${Theme.colors.white};
-      background: ${Theme.colors.primary};
-      border: none;
-      border-radius: 8px;
-      padding: 12px 24px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      
-      &:hover {
-        background: ${Theme.colors.primary}DD;
-      }
-      
-      &.back-button {
-        background: transparent;
-        color: ${Theme.colors.primary};
-        border: 1px solid ${Theme.colors.primary};
-        
-        &:hover {
-          background: ${Theme.colors.primary}10;
-        }
-      }
-    }
-  }
-  
-  .submit-button-container {
+  .submit-section {
     display: flex;
     justify-content: center;
-    margin: 0 auto;
     margin-top: 40px;
-    max-width: 260px;
+    margin-bottom: 20px;
   }
-  
-  .book-button {
-    background-color: ${Theme.colors.primary};
-    color: ${Theme.colors.white};
-    font: ${Theme.typography.fonts.mediumB};
-    padding: 14px 32px;
-    border-radius: 50px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
+
+  /* Make the property-price-label class visible on the map */
+  :global(.property-price-label) {
+    background-color: white;
+    padding: 4px 8px;
+    border-radius: 16px;
+    border: 1px solid ${Theme.colors.primary};
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
     
-    &:hover {
-      background-color: ${Theme.colors.primary}DD;
-      transform: translateY(-2px);
-    }
-  }
-  
-  /* Modal styles */
-  .success-modal, .error-modal {
-    padding: 20px;
-    text-align: center;
-    
-    p {
-      font: ${Theme.typography.fonts.text16};
-      margin-bottom: 16px;
-      color: ${Theme.colors.black};
-    }
-    
-    .booking-id {
-      font: ${Theme.typography.fonts.mediumB};
-      color: ${Theme.colors.primary};
-      background-color: ${Theme.colors.primary}10;
-      padding: 12px;
-      border-radius: 8px;
-      margin: 16px 0;
-    }
-    
-    .auth-note {
-      font: ${Theme.typography.fonts.text14};
-      color: #FF9800;
-      background-color: #FFF8E1;
-      padding: 10px;
-      border-radius: 6px;
-      margin: 10px 0;
-      border-left: 3px solid #FF9800;
-    }
-    
-    .close-btn {
+    &.selected {
       background-color: ${Theme.colors.primary};
-      color: ${Theme.colors.white};
-      font: ${Theme.typography.fonts.mediumB};
-      padding: 12px 32px;
-      border-radius: 50px;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      margin-top: 16px;
-      
-      &:hover {
-        background-color: ${Theme.colors.primary}DD;
-        transform: translateY(-2px);
-      }
-    }
-  }
-  
-  .error-modal {
-    p {
-      &:first-child {
-        color: #e53935;
-        font: ${Theme.typography.fonts.mediumB};
-      }
+      color: white;
     }
   }
 `;
-6

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { FaHome, FaCalendarAlt, FaUsers, FaCameraRetro, FaBuilding, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { FaHome, FaCalendarAlt, FaUsers, FaCameraRetro, FaBuilding, FaCog, FaSignOutAlt, FaEdit } from 'react-icons/fa';
 
 import {
   AdminDashboardContainer,
@@ -21,6 +21,7 @@ import PhotoshootBookingsPage from './photoshoot-bookings';
 import TeamsPage from './teams';
 import OverviewPage from './overview';
 import AdminControls from './admin-controls';
+import PropertyEditRequestsPage from './property-edit-requests';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -98,6 +99,13 @@ const AdminDashboard: React.FC = () => {
         </NavItem>
         
         <NavItem 
+          $active={activePage === 'property-edit-requests'} 
+          onClick={() => handleNavigation('property-edit-requests')}
+        >
+          <FaEdit /> Property Edit Requests
+        </NavItem>
+        
+        <NavItem 
           $active={activePage === 'settings'} 
           onClick={() => handleNavigation('settings')}
         >
@@ -118,6 +126,7 @@ const AdminDashboard: React.FC = () => {
             {activePage === 'photoshoot-bookings' && 'Photoshoot Bookings'}
             {activePage === 'teams' && 'Manage Teams'}
             {activePage === 'properties' && 'Properties'}
+            {activePage === 'property-edit-requests' && 'Property Edit Requests'}
             {activePage === 'settings' && 'Admin Controls'}
           </PageTitle>
           
@@ -148,6 +157,7 @@ const AdminDashboard: React.FC = () => {
           <Route path="/overview" element={<OverviewPage />} />
           <Route path="/photoshoot-bookings/*" element={<PhotoshootBookingsPage />} />
           <Route path="/teams/*" element={<TeamsPage />} />
+          <Route path="/property-edit-requests" element={<PropertyEditRequestsPage />} />
           <Route path="/settings" element={<AdminControls />} />
           {/* Additional routes to be implemented */}
           <Route path="*" element={<OverviewPage />} />

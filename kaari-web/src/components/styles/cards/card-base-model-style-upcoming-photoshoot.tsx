@@ -121,13 +121,50 @@ export const CardBaseModelStyleUpcomingPhotoshoot = styled.div`
             gap: 12px;
         }
 
-        .upload-Icon{
-            width: 32px;
-            height: 32px;
+        .download-icon {
+            width: 36px;
+            height: 36px;
             align-self: end;
             cursor: pointer;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            
+            &:hover {
+                background-color: rgba(155, 81, 224, 0.1);
+                border-radius: 50%;
+                
+                .tooltip {
+                    opacity: 1;
+                    visibility: visible;
+                    transform: translateY(-5px);
+                }
+            }
+            
+            img {
+                width: 24px;
+                height: 24px;
+            }
+            
+            .tooltip {
+                position: absolute;
+                bottom: -30px;
+                right: 0;
+                background-color: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                white-space: nowrap;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                transform: translateY(0);
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+                z-index: 10;
+            }
         }
-
     }
 `;

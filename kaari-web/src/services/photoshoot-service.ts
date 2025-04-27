@@ -26,6 +26,10 @@ export interface PhotoshootBookingData {
   date: string;
   timeSlot: string;
   comments: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 export interface BookingResponse {

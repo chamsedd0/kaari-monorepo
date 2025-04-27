@@ -180,6 +180,22 @@ function App() {
             })()
         }
       />
+      {/* Add route for property edit requests - must be before the generic route */}
+      <Route 
+        path="/dashboard/advertiser/properties/edit-request/:propertyId" 
+        element={
+          isAuthenticated && userIsAdvertiser ? 
+            <AdvertiserDashboard /> : 
+            (() => {
+              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                path: '/dashboard/advertiser/properties/edit-request',
+                redirectTo: '/',
+                isAuthenticated: isAuthenticated
+              });
+              return <Navigate to="/" replace />;
+            })()
+        }
+      />
       <Route 
         path="/dashboard/advertiser/:section" 
         element={

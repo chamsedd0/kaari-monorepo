@@ -15,6 +15,10 @@ interface PropertyCardProps {
   description?: string;
   subtitle?: string;
   minStay?: string;
+  onList?: () => void;
+  onUnlist?: () => void;
+  onAskForEdit?: () => void;
+  propertyId?: string;
 }
 
 const PropertyCardAdvertiserSide: React.FC<PropertyCardProps> = ({
@@ -27,7 +31,11 @@ const PropertyCardAdvertiserSide: React.FC<PropertyCardProps> = ({
   imageUrl,
   description,
   subtitle,
-  minStay
+  minStay,
+  onList,
+  onUnlist,
+  onAskForEdit,
+  propertyId
 }) => {
   return (
     <CardBaseModelStyle2>
@@ -61,10 +69,20 @@ const PropertyCardAdvertiserSide: React.FC<PropertyCardProps> = ({
 
         <div className="control">
             <div className="button">
-              <BpurpleButtonLB40 text="Unlist" />
+              {onUnlist ? (
+                <BpurpleButtonLB40 text="Unlist" onClick={onUnlist} />
+              ) : onList ? (
+                <BpurpleButtonLB40 text="List" onClick={onList} />
+              ) : (
+                <BpurpleButtonLB40 text="Unlist" disabled />
+              )}
             </div>
             <div className="button">
-              <PurpleButtonLB40 text="Ask for Edit" />
+              <PurpleButtonLB40 
+                text="Ask for Edit"
+                onClick={onAskForEdit}
+                disabled={!onAskForEdit} 
+              />
             </div>
         </div>
     </CardBaseModelStyle2>

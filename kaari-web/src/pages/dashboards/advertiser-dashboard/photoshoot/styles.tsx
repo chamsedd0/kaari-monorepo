@@ -34,6 +34,37 @@ export const PhotoshootsPageStyle = styled.div`
             }
         }
 
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            width: 100%;
+            font: ${Theme.typography.fonts.mediumB};
+            color: ${Theme.colors.gray2};
+            border: ${Theme.borders.primary};
+            border-radius: ${Theme.borders.radius.lg};
+        }
+
+        .no-bookings {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            width: 100%;
+            padding: 24px;
+            text-align: center;
+            font: ${Theme.typography.fonts.mediumB};
+            color: ${Theme.colors.gray2};
+            border: ${Theme.borders.primary};
+            border-radius: ${Theme.borders.radius.lg};
+
+            p {
+                max-width: 400px;
+                line-height: 1.5;
+            }
+        }
+
         .history-container {
             display: flex;
             flex-direction: column;
@@ -68,6 +99,28 @@ export const PhotoshootsPageStyle = styled.div`
                 .date-time {
                     font: ${Theme.typography.fonts.smallM};
                     color: ${Theme.colors.gray2};
+                }
+
+                .status {
+                    font-weight: 600;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    
+                    &.completed {
+                        background-color: ${Theme.colors.success};
+                        color: white;
+                    }
+                    
+                    &.cancelled {
+                        background-color: ${Theme.colors.warning};
+                        color: white;
+                    }
+                    
+                    &.pending, &.assigned {
+                        background-color: ${Theme.colors.primary};
+                        color: white;
+                    }
                 }
             }
         }

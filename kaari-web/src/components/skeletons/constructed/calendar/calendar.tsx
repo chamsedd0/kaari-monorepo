@@ -22,6 +22,7 @@ const CalendarComponent: React.FC<CalendarProps> = ({
   const [currentMonth, setCurrentMonth] = useState<number>(propSelectedDate ? propSelectedDate.getMonth() : new Date().getMonth());
   const [currentYear, setCurrentYear] = useState<number>(propSelectedDate ? propSelectedDate.getFullYear() : new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState<Date | null>(propSelectedDate);
+  const [internalDisabledDates, setInternalDisabledDates] = useState<Date[]>(disabledDates);
   const [days, setDays] = useState<Array<{ 
     day: number; 
     month: number; 
@@ -54,7 +55,7 @@ const CalendarComponent: React.FC<CalendarProps> = ({
     }
     
     // Check if date is in disabledDates
-    return disabledDates.some(disabledDate => {
+    return internalDisabledDates.some(disabledDate => {
       return (
         disabledDate.getDate() === day &&
         disabledDate.getMonth() === month &&
@@ -65,11 +66,16 @@ const CalendarComponent: React.FC<CalendarProps> = ({
 
   useEffect(() => {
     generateDays();
-  }, [currentMonth, currentYear, disabledDates, minDate]);
+  }, [currentMonth, currentYear, internalDisabledDates, minDate]);
 
   useEffect(() => {
     setSelectedDate(propSelectedDate);
   }, [propSelectedDate]);
+
+  // Update internal disabled dates when prop changes
+  useEffect(() => {
+    setInternalDisabledDates(disabledDates);
+  }, [disabledDates]);
 
   const generateDays = () => {
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
@@ -172,9 +178,7 @@ const CalendarComponent: React.FC<CalendarProps> = ({
         // Update days to mark this date as available/unavailable
         if (!isAvailable) {
           // If not available, add to disabled dates
-          const updatedDisabledDates = [...disabledDates, newDate];
-          disabledDates = updatedDisabledDates;
-          generateDays();
+          setInternalDisabledDates(prev => [...prev, newDate]);
           return;
         }
         

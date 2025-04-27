@@ -13,9 +13,86 @@ export const PropertiesPageStyle = styled.div`
         flex: 1;
         gap: 32px;
 
+        .section-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
         .properties-section-title {
             font: ${Theme.typography.fonts.h3};
             color: ${Theme.colors.black};
+        }
+        
+        .error-message {
+            padding: 12px 16px;
+            background-color: rgba(255, 99, 71, 0.1);
+            border-left: 4px solid tomato;
+            color: tomato;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+        
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px;
+            color: ${Theme.colors.gray2};
+            font: ${Theme.typography.fonts.mediumM};
+            
+            &:before {
+                content: '';
+                width: 24px;
+                height: 24px;
+                border: 3px solid ${Theme.colors.fifth};
+                border-top-color: ${Theme.colors.secondary};
+                border-radius: 50%;
+                animation: spinner 1s linear infinite;
+                margin-right: 12px;
+            }
+            
+            @keyframes spinner {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+        }
+        
+        .no-properties-message {
+            background-color: ${Theme.colors.white};
+            border: ${Theme.borders.primary};
+            border-radius: 12px;
+            padding: 60px 30px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            
+            img {
+                width: 120px;
+                height: auto;
+                margin-bottom: 20px;
+            }
+
+            button {
+                height: 48px !important;
+                width: 200px !important;
+                font: ${Theme.typography.fonts.mediumB} !important;
+            }
+            
+            h4 {
+                color: ${Theme.colors.primary};
+                font: ${Theme.typography.fonts.largeB};
+                margin-bottom: 10px;
+            }
+            
+            p {
+                color: ${Theme.colors.primary};
+                font: ${Theme.typography.fonts.mediumM};
+                margin-bottom: 24px;
+            }
         }
 
         .my-properties {
@@ -60,26 +137,25 @@ export const PropertiesPageStyle = styled.div`
 
             .properties-group {
                 display: flex;
-                align-items: start;
-                justify-content: start;
-                width: 100%;
-                height: calc(100% - 48px);
                 gap: 20px;
                 overflow-x: auto;
-                overflow-y: hidden;
+                padding: 10px 0;
+                scrollbar-width: none;
                 
-                > * {
-                    min-width: 301px;
-                    height: 100%;
-                }
-
                 &::-webkit-scrollbar {
                     display: none;
                 }
-                -ms-overflow-style: none;
-                scrollbar-width: none;
+
+                /* Set max-width for property cards */
+                > div {
+                    min-width: 320px;
+                    max-width: 320px;
+                    flex-shrink: 0;
+                }
             }
         }
     }
 `;
+
+
 
