@@ -17,7 +17,7 @@ interface PropertyEditRequestModalProps {
 export interface EditRequestFormData {
   propertyId: string;
   additionalAmenities: string[];
-  includedFees: string[];
+  features: string[];
   additionalComments: string;
 }
 
@@ -29,8 +29,8 @@ const AMENITIES_OPTIONS = [
   'Oven', 'Washing Machine', 'Hotplate/Cooktop', 'Water Heater'
 ];
 
-// Fees options
-const FEES_OPTIONS = [
+// Features options (previously Fees)
+const FEATURES_OPTIONS = [
   'Water', 'Electricity', 'Wi-Fi', 'Women Only'
 ];
 
@@ -43,7 +43,7 @@ export const PropertyEditRequestModal: React.FC<PropertyEditRequestModalProps> =
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const [additionalAmenities, setAdditionalAmenities] = useState<string[]>([]);
-  const [includedFees, setIncludedFees] = useState<string[]>([]);
+  const [features, setFeatures] = useState<string[]>([]);
   const [additionalComments, setAdditionalComments] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -71,11 +71,11 @@ export const PropertyEditRequestModal: React.FC<PropertyEditRequestModalProps> =
     );
   };
 
-  const handleFeeChange = (fee: string) => {
-    setIncludedFees(prev => 
-      prev.includes(fee) 
-        ? prev.filter(f => f !== fee) 
-        : [...prev, fee]
+  const handleFeatureChange = (feature: string) => {
+    setFeatures(prev => 
+      prev.includes(feature) 
+        ? prev.filter(f => f !== feature) 
+        : [...prev, feature]
     );
   };
 
@@ -88,7 +88,7 @@ export const PropertyEditRequestModal: React.FC<PropertyEditRequestModalProps> =
       const formData: EditRequestFormData = {
         propertyId,
         additionalAmenities,
-        includedFees, 
+        features, 
         additionalComments
       };
       
@@ -136,17 +136,17 @@ export const PropertyEditRequestModal: React.FC<PropertyEditRequestModalProps> =
           </div>
           
           <div className="form-section">
-            <h3>Included Fees</h3>
+            <h3>Included Features</h3>
             <div className="checkbox-grid">
-              {FEES_OPTIONS.map(fee => (
-                <label key={fee} className="checkbox-item">
+              {FEATURES_OPTIONS.map(feature => (
+                <label key={feature} className="checkbox-item">
                   <input 
                     type="checkbox" 
-                    checked={includedFees.includes(fee)}
-                    onChange={() => handleFeeChange(fee)}
+                    checked={features.includes(feature)}
+                    onChange={() => handleFeatureChange(feature)}
                   />
                   <span className="amenity-icon"></span>
-                  <span className="amenity-text">{fee}</span>
+                  <span className="amenity-text">{feature}</span>
                 </label>
               ))}
             </div>
@@ -171,7 +171,7 @@ export const PropertyEditRequestModal: React.FC<PropertyEditRequestModalProps> =
             <PurpleButtonLB60 
               text={isSubmitting ? "Submitting..." : "Submit Request"} 
               onClick={handleSubmit}
-              disabled={isSubmitting || (additionalAmenities.length === 0 && includedFees.length === 0 && !additionalComments.trim())}
+              disabled={isSubmitting || (additionalAmenities.length === 0 && features.length === 0 && !additionalComments.trim())}
             />
           </div>
         </div>

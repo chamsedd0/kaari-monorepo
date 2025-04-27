@@ -13,6 +13,7 @@ const PropertyEditRequestsPage: React.FC = () => {
   const [editRequests, setEditRequests] = useState<PropertyEditRequest[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<PropertyEditRequest | null>(null);
   const [adminResponse, setAdminResponse] = useState<string>('');
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const PropertyEditRequestsPage: React.FC = () => {
     const fetchEditRequests = async () => {
       try {
         setLoading(true);
+        setSuccessMessage(null);
         const requests = await getAllPendingEditRequests();
         setEditRequests(requests);
         setError(null);
@@ -39,12 +41,26 @@ const PropertyEditRequestsPage: React.FC = () => {
   // Handle request approval
   const handleApprove = async (requestId: string) => {
     try {
+      // Get the request before it's removed from state
+      const request = editRequests.find(req => req.id === requestId);
+      
       await updateEditRequestStatus(requestId, 'approved', adminResponse);
       
       // Update local state
       setEditRequests(editRequests.filter(req => req.id !== requestId));
       setSelectedRequest(null);
       setAdminResponse('');
+      
+      // Set success message
+      if (request) {
+        setSuccessMessage(
+          `Changes for "${request.propertyTitle}" have been approved and applied to the property. ${
+            request.additionalAmenities.length > 0 ? `${request.additionalAmenities.length} amenities updated.` : ''
+          } ${
+            request.features.length > 0 ? `${request.features.length} features updated.` : ''
+          }`
+        );
+      }
     } catch (err) {
       setError('Failed to approve request. Please try again.');
       console.error(err);
@@ -76,6 +92,8 @@ const PropertyEditRequestsPage: React.FC = () => {
       <h1>Property Edit Requests</h1>
       
       {error && <ErrorMessage>{error}</ErrorMessage>}
+      
+      {successMessage && <SuccessMessage>{successMessage}</SuccessMessage>}
       
       {loading ? (
         <LoadingMessage>Loading edit requests...</LoadingMessage>
@@ -141,11 +159,11 @@ const PropertyEditRequestsPage: React.FC = () => {
                   )}
                 </DetailItem>
                 <DetailItem>
-                  <Label>Included Fees:</Label>
-                  {selectedRequest.includedFees.length > 0 ? (
+                  <Label>Features:</Label>
+                  {selectedRequest.features.length > 0 ? (
                     <ItemList>
-                      {selectedRequest.includedFees.map((fee, index) => (
-                        <li key={index}>{fee}</li>
+                      {selectedRequest.features.map((feature, index) => (
+                        <li key={index}>{feature}</li>
                       ))}
                     </ItemList>
                   ) : (
@@ -192,6 +210,15 @@ const ErrorMessage = styled.div`
   background-color: #fff1f0;
   border: 1px solid #ffccc7;
   color: #ff4d4f;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+`;
+
+const SuccessMessage = styled.div`
+  background-color: #f6ffed;
+  border: 1px solid #b7eb8f;
+  color: #52c41a;
   padding: 10px 15px;
   border-radius: 4px;
   margin-bottom: 20px;

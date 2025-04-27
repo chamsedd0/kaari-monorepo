@@ -17,11 +17,13 @@ const EditRequestsPage: React.FC = () => {
   const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
   const [responseText, setResponseText] = useState('');
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const loadRequests = async () => {
       try {
         setIsLoading(true);
+        setSuccessMessage(null);
         const pendingRequests = await getAllPendingEditRequests();
         setRequests(pendingRequests);
         setError(null);
@@ -39,12 +41,26 @@ const EditRequestsPage: React.FC = () => {
   const handleApprove = async (requestId: string) => {
     try {
       setProcessingRequestId(requestId);
+      // Get the request before removing it from the list
+      const request = requests.find(req => req.id === requestId);
+      
       await updateEditRequestStatus(requestId, 'approved', responseText);
       
       // Update local state
       setRequests(prevRequests => 
         prevRequests.filter(request => request.id !== requestId)
       );
+      
+      // Set success message
+      if (request) {
+        setSuccessMessage(
+          `Changes for "${request.propertyTitle}" have been approved and applied to the property. ${
+            request.additionalAmenities.length > 0 ? `${request.additionalAmenities.length} amenities updated.` : ''
+          } ${
+            request.features.length > 0 ? `${request.features.length} features updated.` : ''
+          }`
+        );
+      }
       
       setResponseText('');
       setExpandedRequestId(null);
@@ -86,6 +102,7 @@ const EditRequestsPage: React.FC = () => {
       <h1 className="page-title">Property Edit Requests</h1>
       
       {error && <div className="error-message">{error}</div>}
+      {successMessage && <div className="success-message">{successMessage}</div>}
       
       {isLoading ? (
         <div className="loading-spinner">
@@ -117,9 +134,9 @@ const EditRequestsPage: React.FC = () => {
                       {request.additionalAmenities.length} amenities
                     </span>
                   )}
-                  {request.includedFees.length > 0 && (
+                  {request.features.length > 0 && (
                     <span className="change-item">
-                      {request.includedFees.length} fees
+                      {request.features.length} features
                     </span>
                   )}
                   {request.additionalComments && (
@@ -141,12 +158,12 @@ const EditRequestsPage: React.FC = () => {
                     </div>
                   )}
                   
-                  {request.includedFees.length > 0 && (
+                  {request.features.length > 0 && (
                     <div className="detail-section">
-                      <h4>Included Fees:</h4>
+                      <h4>Features:</h4>
                       <div className="tags-container">
-                        {request.includedFees.map(fee => (
-                          <span key={fee} className="tag">{fee}</span>
+                        {request.features.map(feature => (
+                          <span key={feature} className="tag">{feature}</span>
                         ))}
                       </div>
                     </div>
@@ -207,6 +224,15 @@ const EditRequestsPageStyle = styled.div`
     background-color: rgba(255, 99, 71, 0.1);
     border-left: 4px solid tomato;
     color: tomato;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  
+  .success-message {
+    padding: 12px 16px;
+    background-color: rgba(0, 128, 0, 0.1);
+    border-left: 4px solid green;
+    color: green;
     border-radius: 4px;
     margin-bottom: 16px;
   }

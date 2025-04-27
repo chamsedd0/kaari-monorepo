@@ -4,6 +4,7 @@ import { createDocument, getDocumentById, getDocumentsByField, updateDocument } 
 import { getCurrentUserProfile } from '../firebase/auth';
 import { User } from '../entities';
 import { EditRequestFormData } from '../../components/skeletons/constructed/modals/property-edit-request-modal';
+import { updateProperty } from './PropertyServerActions'; // Import the updateProperty function
 
 // Define edit request interface
 export interface PropertyEditRequest {
@@ -13,7 +14,7 @@ export interface PropertyEditRequest {
   requesterName: string;
   propertyTitle: string;
   additionalAmenities: string[];
-  includedFees: string[];
+  features: string[];
   additionalComments: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: Date;
@@ -47,7 +48,7 @@ export async function submitPropertyEditRequest(
       requesterName: currentUser.name || 'Unknown user',
       propertyTitle,
       additionalAmenities,
-      includedFees,
+      features: includedFees,
       additionalComments,
       status: 'pending' as const,
       createdAt: new Date(),
@@ -142,6 +143,39 @@ export async function updateEditRequestStatus(
       throw new Error('Not authorized to access admin functions');
     }
     
+    // Get the edit request details
+    const editRequest = await getDocumentById<PropertyEditRequest>(
+      PROPERTY_EDIT_REQUESTS_COLLECTION,
+      requestId
+    );
+    
+    if (!editRequest) {
+      throw new Error('Edit request not found');
+    }
+    
+    // If approving, apply the changes to the property
+    if (status === 'approved' && editRequest.propertyId) {
+      // Get the existing property
+      const propertyData: any = {}; // Create an object to hold the property updates
+      
+      // Add amenities if they were requested
+      if (editRequest.additionalAmenities && editRequest.additionalAmenities.length > 0) {
+        propertyData.amenities = editRequest.additionalAmenities;
+      }
+      
+      // Add features if they were requested
+      if (editRequest.features && editRequest.features.length > 0) {
+        propertyData.features = editRequest.features;
+      }
+      
+      // Update the property with the requested changes
+      if (Object.keys(propertyData).length > 0) {
+        await updateProperty(editRequest.propertyId, propertyData);
+        console.log(`Property ${editRequest.propertyId} updated with requested changes`);
+      }
+    }
+    
+    // Update the edit request status
     return await updateDocument<PropertyEditRequest>(
       PROPERTY_EDIT_REQUESTS_COLLECTION, 
       requestId, 

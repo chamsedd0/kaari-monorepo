@@ -33,7 +33,7 @@ const AMENITIES_OPTIONS = [
 ];
 
 // Fees options with icons
-const FEES_OPTIONS = [
+const FEATURES_OPTIONS = [
   { id: 'water', label: 'Water', icon: <RiWaterFlashFill style={{ color: Theme.colors.secondary }} /> },
   { id: 'electricity', label: 'Electricity', icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> },
   { id: 'wifi', label: 'Wi-Fi', icon: <RiWifiFill style={{ color: Theme.colors.secondary }} /> },
@@ -43,7 +43,7 @@ const FEES_OPTIONS = [
 export interface EditRequestFormData {
   propertyId: string;
   additionalAmenities: string[];
-  includedFees: string[];
+  features: string[];
   additionalComments: string;
 }
 
@@ -56,7 +56,7 @@ const PropertyEditRequestPage: React.FC = () => {
   const [propertyTitle, setPropertyTitle] = useState('');
   const [propertyLocation, setPropertyLocation] = useState('');
   const [additionalAmenities, setAdditionalAmenities] = useState<string[]>([]);
-  const [includedFees, setIncludedFees] = useState<string[]>([]);
+  const [features, setFeatures] = useState<string[]>([]);
   const [additionalComments, setAdditionalComments] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -81,9 +81,9 @@ const PropertyEditRequestPage: React.FC = () => {
             setAdditionalAmenities(property.amenities);
           }
           
-          // Set existing included fees from property data
+          // Set existing features from property data
           if (property.features && Array.isArray(property.features)) {
-            setIncludedFees(property.features);
+            setFeatures(property.features);
           }
         } else {
           setError('Property not found');
@@ -107,11 +107,11 @@ const PropertyEditRequestPage: React.FC = () => {
     );
   };
 
-  const handleFeeChange = (feeId: string) => {
-    setIncludedFees(prev => 
-      prev.includes(feeId) 
-        ? prev.filter(f => f !== feeId) 
-        : [...prev, feeId]
+  const handleFeatureChange = (featureId: string) => {
+    setFeatures(prev => 
+      prev.includes(featureId) 
+        ? prev.filter(f => f !== featureId) 
+        : [...prev, featureId]
     );
   };
 
@@ -126,7 +126,7 @@ const PropertyEditRequestPage: React.FC = () => {
         propertyId,
         propertyTitle,
         additionalAmenities,
-        includedFees, 
+        features, 
         additionalComments
       };
       
@@ -182,18 +182,18 @@ const PropertyEditRequestPage: React.FC = () => {
             </div>
             
             <div className="form-section">
-              <h3>Included Fees</h3>
+              <h3>Included Features</h3>
               <div className="checkbox-grid">
-                {FEES_OPTIONS.map(fee => (
-                  <label key={fee.id} className="checkbox-item">
+                {FEATURES_OPTIONS.map(feature => (
+                  <label key={feature.id} className="checkbox-item">
                     <input 
                       type="checkbox" 
-                      checked={includedFees.includes(fee.id)}
-                      onChange={() => handleFeeChange(fee.id)}
+                      checked={features.includes(feature.id)}
+                      onChange={() => handleFeatureChange(feature.id)}
                     />
-                    <div className="amenity-icon">{fee.icon}</div>
+                    <div className="amenity-icon">{feature.icon}</div>
                     <span className="checkbox-square"></span>
-                    <span className="amenity-text">{fee.label}</span>
+                    <span className="amenity-text">{feature.label}</span>
                   </label>
                 ))}
               </div>
@@ -213,7 +213,7 @@ const PropertyEditRequestPage: React.FC = () => {
               <button 
                 className="submit-button" 
                 onClick={handleSubmit}
-                disabled={isSubmitting || (additionalAmenities.length === 0 && includedFees.length === 0 && !additionalComments.trim())}
+                disabled={isSubmitting || (additionalAmenities.length === 0 && features.length === 0 && !additionalComments.trim())}
               >
                 Submit Request
               </button>
