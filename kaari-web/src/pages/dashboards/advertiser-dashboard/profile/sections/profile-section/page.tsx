@@ -10,10 +10,15 @@ import TextareaVariant from '../../../../../../components/skeletons/inputs/input
 import GenderCheckBox from '../../../../../../components/skeletons/inputs/check-box/gander-check-box';
 import SelectFieldBaseModel from '../../../../../../components/skeletons/inputs/select-fields/select-field-base-model';
 import { updateUserProfile, uploadGovernmentID } from '../../../../../../backend/server-actions/UserServerActions';
+import { useToastService } from '../../../../../../services/ToastService';
+import { useTranslation } from 'react-i18next';
+import SpokenLanguagesModal from '../../../../../../components/skeletons/constructed/modals/spoken-languages-modal';
 
 const ProfileSection: React.FC = () => {
+    const { t } = useTranslation();
     const user = useStore(state => state.user);
     const setUser = useStore(state => state.setUser);
+    const toast = useToastService();
     
     // Form state
     const [name, setName] = useState('');
@@ -27,6 +32,8 @@ const ProfileSection: React.FC = () => {
     const [profilePicture, setProfilePicture] = useState<File | null>(null);
     const [idFront, setIdFront] = useState<File | null>(null);
     const [idBack, setIdBack] = useState<File | null>(null);
+    const [languages, setLanguages] = useState<string[]>([]);
+    const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
     
     // UI states
     const [loading, setLoading] = useState(false);
@@ -94,8 +101,15 @@ const ProfileSection: React.FC = () => {
             
             setNationality(user.nationality || '');
             setAboutMe(user.aboutMe || '');
+            setLanguages(user.languages || []);
         }
     }, [user]);
+    
+    // Handle language selection
+    const handleSaveLanguages = (selectedLanguages: string[]) => {
+        setLanguages(selectedLanguages);
+        toast.app.actionSuccess(t('advertiser_dashboard.profile.languages_updated'));
+    };
     
     // Handle profile update
     const handleSaveProfile = async () => {
@@ -114,6 +128,7 @@ const ProfileSection: React.FC = () => {
                 dateOfBirth,
                 gender,
                 nationality,
+                languages,
                 aboutMe,
                 profilePicture
             });
@@ -121,11 +136,16 @@ const ProfileSection: React.FC = () => {
             // Upload ID documents if provided
             if (idFront) {
                 await uploadGovernmentID(user.id, idFront, idBack || undefined);
+                // Show document upload success toast
+                toast.profile.uploadDocumentSuccess();
             }
             
             // Update user in global store
             setUser(updatedUser);
             setSuccess(true);
+            
+            // Show success toast
+            toast.profile.updateSuccess();
             
             // Show success message briefly
             setTimeout(() => {
@@ -133,7 +153,10 @@ const ProfileSection: React.FC = () => {
             }, 3000);
         } catch (err) {
             console.error('Error updating profile:', err);
-            setError('Failed to update profile. Please try again.');
+            setError(t('advertiser_dashboard.profile.error_message'));
+            
+            // Show error toast
+            toast.profile.updateError(t('advertiser_dashboard.profile.error_message'));
         } finally {
             setLoading(false);
         }
@@ -142,38 +165,41 @@ const ProfileSection: React.FC = () => {
     // Handle profile picture change
     const handleProfilePictureChange = (file: File) => {
         setProfilePicture(file);
+        // Show success toast for profile picture upload
+        toast.profile.uploadPhotoSuccess();
     };
     
     return (
         <ProfileSectionStyle>
-            <h1 className="section-title">Your Profile</h1>
+            <h1 className="section-title">{t('advertiser_dashboard.profile.section_title')}</h1>
             <div className="profile-image-container">
                 <div className="profile-image">
-                    <img src={user?.profilePicture || Picture} alt="Profile" />
+                    <img src={user?.profilePicture || Picture} alt={t('advertiser_dashboard.profile.profile_image_alt', 'Profile')} />
                 </div>
                 <UploadFieldModel
-                    label="Change Profile Picture"
+                    label={t('advertiser_dashboard.profile.change_profile_picture')}
                     onFileSelect={handleProfilePictureChange}
                     isProfilePicture
                 />
             </div>
             <div className="profile-grid">
                 <InputVariant 
-                    title="Full Name" 
+                    title={t('advertiser_dashboard.profile.full_name')}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                 />
                 <InputVariant 
-                    title="Your Surname" 
+                    title={t('advertiser_dashboard.profile.your_surname')}
                     value={surname}
                     onChange={(e) => setSurname(e.target.value)}
                 />
                 <InputVariant 
-                    title="Phone Number" 
+                    title={t('advertiser_dashboard.profile.phone_number')}
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                 />
                 <SelectFieldDatePicker 
+                    label={t('advertiser_dashboard.profile.date_of_birth', 'Date of Birth')}
                     initialDate={parsedDate}
                     onChange={(date) => {
                         // Convert date object to string format (YYYY-MM-DD)
@@ -183,35 +209,57 @@ const ProfileSection: React.FC = () => {
                     }}
                 /> 
                 <UploadFieldModel 
-                    label="Passport or Front of ID" 
-                    hlabel="Government ID"
+                    label={t('advertiser_dashboard.profile.passport_front_id')}
+                    hlabel={t('advertiser_dashboard.profile.government_id')}
                     onFileSelect={(file) => setIdFront(file)}
-                    fileName={user?.identificationDocuments?.frontId ? "ID Front uploaded" : ""}
+                    fileName={user?.identificationDocuments?.frontId ? t('advertiser_dashboard.profile.id_front_uploaded') : ""}
                 />
                 <UploadFieldModel 
-                    label="Back of ID" 
+                    label={t('advertiser_dashboard.profile.back_of_id')}
                     onFileSelect={(file) => setIdBack(file)}
-                    fileName={user?.identificationDocuments?.backId ? "ID Back uploaded" : ""}
+                    fileName={user?.identificationDocuments?.backId ? t('advertiser_dashboard.profile.id_back_uploaded') : ""}
                 />
                
-                <div className="profile-inbut-label">Gender</div>
-                <div className="profile-inbut-label">Languages</div>
+                <div className="profile-inbut-label">{t('advertiser_dashboard.profile.gender')}</div>
+                <div className="profile-inbut-label">{t('advertiser_dashboard.profile.languages')}</div>
                 <GenderCheckBox 
                     defaultValue={gender}
                     onChange={(value) => setGender(value)}
                 />
-                <div className="text-button">Add A Language+</div>
+                <div className="languages-container">
+                    {languages.length > 0 ? (
+                        <div className="selected-languages">
+                            {languages.length > 0 && (
+                                <div className="language-badge" style={{
+                                    backgroundColor: '#f3e8ff',
+                                    color: '#9333ea',
+                                    borderColor: '#f3e8ff',
+                                    padding: '5px 12px'
+                                }}>
+                                    {languages[0]}
+                                </div>
+                            )}
+                            <div className="text-button" onClick={() => setIsLanguageModalOpen(true)} style={{ marginLeft: '4px' }}>
+                                {t('advertiser_dashboard.profile.edit_languages')}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-button" onClick={() => setIsLanguageModalOpen(true)}>
+                            {t('advertiser_dashboard.profile.add_language')}
+                        </div>
+                    )}
+                </div>
             </div>
            
             <SelectFieldBaseModel 
-                label="Nationality"
+                label={t('advertiser_dashboard.profile.nationality')}
                 options={['English', 'French', 'Spanish', 'German', 'Italian', 'Portuguese', 'Russian', 'Arabic', 'Chinese', 'Japanese', 'Korean', 'Vietnamese', 'Other']} 
                 value={nationality}
                 onChange={(value) => setNationality(value)}
             />  
            
             <TextareaVariant 
-                title="About Me" 
+                title={t('advertiser_dashboard.profile.about_me')}
                 value={aboutMe}
                 onChange={(e) => setAboutMe(e.target.value)}
             />
@@ -224,17 +272,24 @@ const ProfileSection: React.FC = () => {
             
             {success && (
                 <div className="success-message">
-                    Profile updated successfully!
+                    {t('advertiser_dashboard.profile.success_message')}
                 </div>
             )}
             
             <div className="profile-actions">
                 <PurpleButtonMB48 
-                    text={loading ? "Saving..." : "Save Data"} 
+                    text={loading ? t('advertiser_dashboard.profile.saving') : t('advertiser_dashboard.profile.save_data')} 
                     onClick={handleSaveProfile}
                     disabled={loading}
                 />
             </div>
+
+            <SpokenLanguagesModal
+                isOpen={isLanguageModalOpen}
+                onClose={() => setIsLanguageModalOpen(false)}
+                onSave={handleSaveLanguages}
+                initialSelectedLanguages={languages}
+            />
         </ProfileSectionStyle>
     );
 };

@@ -3,21 +3,16 @@ import { BookAPhotoshootCard } from '../../styles/cards/card-base-model-style-bo
 import { PurpleButtonMB48 } from '../buttons/purple_MB48';
 import cameraIcon from '../../../assets/icons/camera-girl.svg';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface BookAPhotoshootCardProps {
-  hostText?: string;
-  infoText?: string;
-  buttonText?: string;
-
   onClick?: () => void;
 }
 
 const BookAPhotoshootComponent: React.FC<BookAPhotoshootCardProps> = ({
-  hostText = "Host your property",
-  infoText = " Book a photoshoot right now and start hosting with Kaari!",
-  buttonText = "Book a Photoshoot",
   onClick
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   
   const handleClick = () => {
@@ -32,15 +27,15 @@ const BookAPhotoshootComponent: React.FC<BookAPhotoshootCardProps> = ({
     <BookAPhotoshootCard>
       <div className="text-picture-container">
         <div className="text-container">
-          <span className="host-text">{hostText}</span>
-          <span className="book-a-photoshoot-text">Book a Photoshoot!</span>
-          <span className="info-text">{infoText}</span>
+          <span className="host-text">{t('advertiser_dashboard.photoshoot.host_property', 'Host your property')}</span>
+          <span className="book-a-photoshoot-text">{t('advertiser_dashboard.photoshoot.book_exclamation', 'Book a Photoshoot!')}</span>
+          <span className="info-text">{t('advertiser_dashboard.photoshoot.book_info', 'Book a photoshoot right now and start hosting with Kaari!')}</span>
         </div>
         <div className="picture-container">
-          <img src={cameraIcon} alt="Camera" />
+          <img src={cameraIcon} alt={t('advertiser_dashboard.photoshoot.camera_alt', 'Camera')} />
         </div>
       </div>
-      <PurpleButtonMB48 text={buttonText} onClick={handleClick} />
+      <PurpleButtonMB48 text={t('advertiser_dashboard.photoshoot.book_button', 'Book a Photoshoot')} onClick={handleClick} />
     </BookAPhotoshootCard>
   );
 };

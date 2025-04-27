@@ -19,11 +19,13 @@ import {
 } from '../../../../backend/server-actions/AdvertiserServerActions';
 import { useStore } from '../../../../backend/store';
 import { Property, Listing } from '../../../../backend/entities';
+import { useTranslation } from 'react-i18next';
 
 
 const DashboardPage: React.FC = () => {
     const { user } = useStore();
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
     const [loading, setLoading] = useState(true);
     const [statistics, setStatistics] = useState({
         totalProperties: 0,
@@ -58,14 +60,17 @@ const DashboardPage: React.FC = () => {
                 setRequests(reqs);
                 setPhotoshoots(shoots);
             } catch (error) {
-                console.error('Error loading dashboard data:', error);
+                console.error(t('advertiser_dashboard.dashboard.errors.loading_data', 'Error loading dashboard data:'), error);
             } finally {
                 setLoading(false);
             }
         };
         
         loadData();
-    }, [user?.id]);
+    }, [user?.id, t]);
+    
+    // Get current locale for date formatting
+    const locale = i18n.language === 'fr' ? 'fr-FR' : 'en-US';
     
     // Prepare property data for chart with real metrics
     const propertyDataForChart = properties.map(property => {
@@ -103,11 +108,11 @@ const DashboardPage: React.FC = () => {
             lastMonth: lastMonthViews.toString(),
             clicks: (listingForProperty?.contactCount || 0).toString(),
             requests: propertyRequests.length.toString(),
-            listedOn: listingForProperty ? new Date(listingForProperty.createdAt).toLocaleDateString('en-US', {
+            listedOn: listingForProperty ? new Date(listingForProperty.createdAt).toLocaleDateString(locale, {
                 day: '2-digit',
                 month: 'short',
                 year: 'numeric'
-            }) : 'Not listed',
+            }) : t('advertiser_dashboard.dashboard.not_listed'),
             views: (listingForProperty?.viewCount || 0).toString()
         };
     });
@@ -133,7 +138,7 @@ const DashboardPage: React.FC = () => {
         <DashboardPageStyle>
             <div className="left">
                 <PerformanceChart 
-                    title="Performance Overview" 
+                    title={t('advertiser_dashboard.dashboard.performance_overview')} 
                     viewCount={statistics.viewsCount}
                     inquiryCount={statistics.inquiriesCount}
                     bookingCount={statistics.pendingReservations}
@@ -141,15 +146,15 @@ const DashboardPage: React.FC = () => {
                 />
                 {latestRequest && (
                     <LatestRequestDashboardCard 
-                        title="Latest Request"
+                        title={t('advertiser_dashboard.dashboard.latest_request')}
                         name={latestRequest.message.substring(0, 20) + (latestRequest.message.length > 20 ? '...' : '')}
                         img={user?.profilePicture || ''}
-                        date={new Date(latestRequest.createdAt).toLocaleDateString('en-US', {
+                        date={new Date(latestRequest.createdAt).toLocaleDateString(locale, {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric'
                         })}
-                        time={new Date(latestRequest.createdAt).toLocaleTimeString('en-US', {
+                        time={new Date(latestRequest.createdAt).toLocaleTimeString(locale, {
                             hour: '2-digit',
                             minute: '2-digit'
                         })}
@@ -157,11 +162,11 @@ const DashboardPage: React.FC = () => {
                     />
                 )}
                 <MessagesCard 
-                    title="Messages"
-                    name={user?.name || 'User'}
+                    title={t('advertiser_dashboard.dashboard.messages')}
+                    name={user?.name || t('advertiser_dashboard.dashboard.user')}
                     img={user?.profilePicture || ''}
                     messageCount={requests.length}
-                    message={latestRequest?.message || 'No messages yet'}
+                    message={latestRequest?.message || t('advertiser_dashboard.dashboard.no_messages')}
                     onViewMore={() => {
                         navigate('/dashboard/advertiser/messages');
                     }}
@@ -172,15 +177,15 @@ const DashboardPage: React.FC = () => {
                 
                 {upcomingPhotoshoot && photoshootProperty ? (
                     <UpcomingPhotoshoot 
-                        date={new Date(upcomingPhotoshoot.date).toLocaleDateString('en-US', {
+                        date={new Date(upcomingPhotoshoot.date).toLocaleDateString(locale, {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric'
                         })}
                         time={upcomingPhotoshoot.time}
-                        photographerName={upcomingPhotoshoot.photographerName}
-                        photographerInfo={upcomingPhotoshoot.photographerInfo}
-                        photographerImage={upcomingPhotoshoot.photographerImage}
+                        photographerName={upcomingPhotoshoot.photographerName || t('advertiser_dashboard.photoshoot.photographer_team')}
+                        photographerInfo={upcomingPhotoshoot.photographerInfo || t('advertiser_dashboard.photoshoot.professional_photographer')}
+                        photographerImage={upcomingPhotoshoot.photographerImage || ''}
                         location={`${photoshootProperty.address.street}, ${photoshootProperty.address.city}`}
                         number={statistics.photoshootsScheduled}
                     />
@@ -189,10 +194,10 @@ const DashboardPage: React.FC = () => {
                 )}
                 
                 <PaymentCardComponent 
-                    incomeAmount={`$${listings.reduce((sum, listing) => sum + listing.price, 0).toLocaleString()}`}
+                    incomeAmount={`${t('advertiser_dashboard.payments.currency', '$')}${listings.reduce((sum, listing) => sum + listing.price, 0).toLocaleString()}`}
                     infoItems={[
-                        { title: "Active Listings", number: statistics.activeListings.toString() },
-                        { title: "Properties", number: statistics.totalProperties.toString() }
+                        { title: t('advertiser_dashboard.dashboard.active_listings'), number: statistics.activeListings.toString() },
+                        { title: t('advertiser_dashboard.dashboard.properties'), number: statistics.totalProperties.toString() }
                     ]}
                     onViewMore={() => {
                         navigate('/dashboard/advertiser/payments');

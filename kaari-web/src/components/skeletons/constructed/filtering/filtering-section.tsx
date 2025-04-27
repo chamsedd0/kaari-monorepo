@@ -3,6 +3,13 @@ import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { Theme } from '../../../../theme/theme';
 import SearchFilterBar from '../../inputs/search-bars/search-filter-bar';
+import { FaBed, FaCouch, FaTable, FaChair, FaDesktop, FaArrowLeft } from 'react-icons/fa';
+import { BiCloset, BiCabinet } from 'react-icons/bi';
+import { MdTableRestaurant, MdOutlineCoffee, MdWaterDrop, MdOutlineLocalLaundryService, MdOutlineKitchen, MdOutlineMicrowave } from 'react-icons/md';
+import { RiWaterFlashFill, RiWifiFill } from 'react-icons/ri';
+import { BsFillLightningFill } from 'react-icons/bs';
+import { ImWoman } from 'react-icons/im';
+import { IoChevronDown } from 'react-icons/io5';
 
 const FilteringSectionContainer = styled.div`
   width: 100%;
@@ -22,18 +29,23 @@ const FilteringTitle = styled.div`
   color: ${Theme.colors.black};
 `;
 
+// Updated dropdown selector to match search bar styling
 const DropdownSelector = styled.div`
   position: relative;
   width: 100%;
   
   select {
     width: 100%;
-    padding: 12px 16px;
-    border: 1px solid #E0E0E0;
-    border-radius: 8px;
+    padding: 0 16px;
+    height: 42px;
+    border: 1px solid #E2E8F0;
+    border-radius: 50px;
     background-color: white;
     appearance: none;
     font-size: 14px;
+    color: #1E293B;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     
     &:focus {
       outline: none;
@@ -47,12 +59,12 @@ const DropdownSelector = styled.div`
     right: 16px;
     top: 50%;
     transform: translateY(-50%);
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     pointer-events: none;
+    font-size: 16px;
+    color: #94A3B8;
   }
 `;
 
@@ -64,10 +76,13 @@ const PriceInputsContainer = styled.div`
 
 const PriceInput = styled.input`
   flex: 1;
-  padding: 12px 16px;
-  border: 1px solid #E0E0E0;
-  border-radius: 8px;
+  padding: 0 16px;
+  height: 42px;
+  border: 1px solid #E2E8F0;
+  border-radius: 50px;
   font-size: 14px;
+  color: #1E293B;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   
   &:focus {
     outline: none;
@@ -75,7 +90,7 @@ const PriceInput = styled.input`
   }
   
   &::placeholder {
-    color: #9E9E9E;
+    color: #94A3B8;
   }
 `;
 
@@ -97,7 +112,7 @@ const AmenityItem = styled.div`
   .checkbox {
     width: 20px;
     height: 20px;
-    border: 1px solid #E0E0E0;
+    border: 1px solid #E2E8F0;
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -132,9 +147,16 @@ const AmenityItem = styled.div`
     svg {
       width: 16px;
       height: 16px;
-      color: #9E9E9E;
+      color: ${Theme.colors.secondary};
     }
   }
+`;
+
+const ButtonsContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 32px;
 `;
 
 const ClearAllButton = styled.button`
@@ -142,12 +164,40 @@ const ClearAllButton = styled.button`
   color: white;
   padding: 12px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: 50px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  margin-top: 20px;
-  width: 100%;
+  flex: 1;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  
+  &:hover {
+    background-color: ${Theme.colors.secondary};
+  }
+`;
+
+const BackButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: white;
+  color: ${Theme.colors.black};
+  padding: 12px 24px;
+  border: 1px solid #E2E8F0;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  
+  &:hover {
+    background-color: #F8FAFC;
+  }
+  
+  svg {
+    font-size: 16px;
+  }
 `;
 
 interface FilteringSectionProps {
@@ -155,6 +205,7 @@ interface FilteringSectionProps {
   activeFilters: string[];
   onToggleFilter: (filter: string) => void;
   onClearFilters?: () => void;
+  onBack?: () => void;
   location?: string;
   date?: string;
   gender?: string;
@@ -169,6 +220,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
   activeFilters,
   onToggleFilter,
   onClearFilters,
+  onBack,
   location = '',
   date = '',
   gender = '',
@@ -292,19 +344,26 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
     onApplyFilters(finalFilters);
   };
 
+  // Updated amenities with icons and matching the advertiser dashboard
   const amenities = [
-    { id: 'Furnished', label: t('common.furnished'), icon: '🪑' },
-    { id: 'WiFi', label: t('common.wifi'), icon: '📶' },
-    { id: t('property_list.parking'), label: t('property_list.parking'), icon: '🚗' },
-    { id: t('property_list.pets_allowed'), label: t('property_list.pets_allowed'), icon: '🐾' },
-    { id: t('property_list.pool'), label: t('property_list.pool'), icon: '🏊' },
-    { id: t('property_list.fitness_center'), label: t('property_list.fitness_center'), icon: '🏋️' }
+    { id: 'furnished', label: t('common.furnished'), icon: <FaBed style={{ color: Theme.colors.secondary }} /> },
+    { id: 'sofabed', label: t('advertiser_dashboard.properties.amenities.sofabed'), icon: <FaCouch style={{ color: Theme.colors.secondary }} /> },
+    { id: 'dining-table', label: t('advertiser_dashboard.properties.amenities.dining_table'), icon: <MdTableRestaurant style={{ color: Theme.colors.secondary }} /> },
+    { id: 'wardrobe', label: t('advertiser_dashboard.properties.amenities.wardrobe'), icon: <BiCloset style={{ color: Theme.colors.secondary }} /> },
+    { id: 'cabinet', label: t('advertiser_dashboard.properties.amenities.cabinet'), icon: <BiCabinet style={{ color: Theme.colors.secondary }} /> },
+    { id: 'desk', label: t('advertiser_dashboard.properties.amenities.desk'), icon: <FaDesktop style={{ color: Theme.colors.secondary }} /> },
+    { id: 'sofa', label: t('advertiser_dashboard.properties.amenities.sofa'), icon: <FaCouch style={{ color: Theme.colors.secondary }} /> },
+    { id: 'coffee-table', label: t('advertiser_dashboard.properties.amenities.coffee_table'), icon: <MdOutlineCoffee style={{ color: Theme.colors.secondary }} /> },
+    { id: 'washing-machine', label: t('advertiser_dashboard.properties.amenities.washing_machine'), icon: <MdOutlineLocalLaundryService style={{ color: Theme.colors.secondary }} /> },
+    { id: 'oven', label: t('advertiser_dashboard.properties.amenities.oven'), icon: <MdOutlineKitchen style={{ color: Theme.colors.secondary }} /> }
   ];
 
+  // Updated included fees options
   const includedFees = [
-    { id: 'water', label: t('common.water'), icon: '💧' },
-    { id: 'electricity', label: t('common.electricity'), icon: '⚡' },
-    { id: 'wifi', label: t('common.wifi'), icon: '📶' }
+    { id: 'water', label: t('common.water'), icon: <RiWaterFlashFill style={{ color: Theme.colors.secondary }} /> },
+    { id: 'electricity', label: t('common.electricity'), icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> },
+    { id: 'wifi', label: t('common.wifi'), icon: <RiWifiFill style={{ color: Theme.colors.secondary }} /> },
+    { id: 'women-only', label: t('common.women_only'), icon: <ImWoman style={{ color: Theme.colors.secondary }} /> }
   ];
 
   const isAmenityChecked = (id: string) => {
@@ -325,6 +384,12 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
     setPropertyType(value);
   };
 
+  const handleBackClick = () => {
+    if (onBack) {
+      onBack();
+    }
+  };
+
   return (
     <FilteringSectionContainer>
       <SearchFilterBar 
@@ -342,12 +407,6 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
         onApplyFilters={handleApply}
       />
       
-      {activeFilters.length > 0 && onClearFilters && (
-        <ClearAllButton onClick={onClearFilters}>
-          {t('property_list.clear_all_filters')}
-        </ClearAllButton>
-      )}
-      
       <FilteringRow>
         <FilteringTitle>{t('common.number_of_people')}</FilteringTitle>
         <DropdownSelector>
@@ -361,6 +420,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
             <option value="4">4</option>
             <option value="5+">5+</option>
           </select>
+          <IoChevronDown style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', pointerEvents: 'none' }}/>
         </DropdownSelector>
       </FilteringRow>
       
@@ -377,6 +437,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
             <option value="3">3</option>
             <option value="3+">3+</option>
           </select>
+          <IoChevronDown style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', pointerEvents: 'none' }}/>
         </DropdownSelector>
       </FilteringRow>
       
@@ -411,6 +472,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
             <option value="Condo">{t('property_list.property_type.condo')}</option>
             <option value="Commercial">{t('property_list.property_type.commercial')}</option>
           </select>
+          <IoChevronDown style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', pointerEvents: 'none' }}/>
         </DropdownSelector>
       </FilteringRow>
       
@@ -424,7 +486,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
                 onClick={() => handleAmenityToggle(amenity.id)}
               ></div>
               <label onClick={() => handleAmenityToggle(amenity.id)}>
-                <span>{amenity.icon}</span> {amenity.label}
+                {amenity.icon} {amenity.label}
               </label>
             </AmenityItem>
           ))}
@@ -441,12 +503,24 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
                 onClick={() => handleAmenityToggle(fee.id)}
               ></div>
               <label onClick={() => handleAmenityToggle(fee.id)}>
-                <span>{fee.icon}</span> {fee.label}
+                {fee.icon} {fee.label}
               </label>
             </AmenityItem>
           ))}
         </AmenitiesGrid>
       </FilteringRow>
+
+      <ButtonsContainer>
+        <BackButton onClick={handleBackClick}>
+          <FaArrowLeft /> {t('common.back')}
+        </BackButton>
+      
+        {activeFilters.length > 0 && onClearFilters && (
+          <ClearAllButton onClick={onClearFilters}>
+            {t('property_list.clear_all_filters')}
+          </ClearAllButton>
+        )}
+      </ButtonsContainer>
     </FilteringSectionContainer>
   );
 };

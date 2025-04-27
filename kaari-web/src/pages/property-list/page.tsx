@@ -540,7 +540,7 @@ const PropertyMap = memo(({
                     {selectedProperty.amenities.length > 0 && (
                       <div className="info-window-amenities">
                         {selectedProperty.amenities.slice(0, 2).map((amenity, index) => (
-                          <span key={index} className="amenity-tag">{t(`property_list.amenities.${amenity.toLowerCase().replace(/\s+/g, '_')}`, amenity)}</span>
+                          <span key={index} className="amenity-tag">{t(`property_list.${amenity.toLowerCase().replace(/\s+/g, '_')}`, amenity)}</span>
                         ))}
                         {selectedProperty.amenities.length > 2 && (
                           <span className="more-amenities">+{selectedProperty.amenities.length - 2}</span>
@@ -1145,6 +1145,7 @@ export default function PropertyListPage() {
               onDateChange={handleDateChange}
               onGenderChange={handleGenderChange}
               setActiveFilters={setActiveFilters}
+              onBack={() => setIsFilteringSectionVisible(false)}
             />
           </div>
         ) : (

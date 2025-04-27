@@ -10,6 +10,7 @@ import eventBus, { EventType } from '../../../../utils/event-bus';
 import AccessibleModal from '../modal/accessible-modal';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
+import { useToastService } from '../../../../services/ToastService';
 
 // Create styled components for the auth modal content
 const AuthModalContent = styled.div`
@@ -200,19 +201,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   
   // Use auth context
   const { signIn, signUp, signInWithGooglePopup, error, loading, clearError, forceUpdate } = useAuth();
+  
+  // Use toast service
+  const toast = useToastService();
 
   // Listen for successful auth events to close modal
   useEffect(() => {
     const unsubscribe = eventBus.on(EventType.AUTH_SIGNED_IN, () => {
       // When user successfully signs in, close the modal and call success callback
       if (isOpen) {
+        // Show success toast
+        toast.auth.loginSuccess();
         if (onSuccess) onSuccess();
         onClose();
       }
     });
     
     return unsubscribe;
-  }, [isOpen, onSuccess, onClose]);
+  }, [isOpen, onSuccess, onClose, toast]);
   
   // Reset form when opening modal
   useEffect(() => {
@@ -247,6 +253,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setIsSubmitting(false);
       // Set a user-friendly error message
       setErrorMessage("Could not sign in with Google. Please try again.");
+      toast.auth.loginError("Could not sign in with Google. Please try again.");
     }
   };
 
@@ -276,27 +283,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
     
     setIsSubmitting(true);
+    setErrorMessage(null);
     
     try {
-      // Try sign in first
-      await signIn(email, password);
+      // Check if email exists to determine if we should sign in or sign up
+      const mode = initialMode === 'signup' ? 'signup' : 'signin';
       
-      // No need to manually close or navigate as the AUTH_SIGNED_IN event listener will handle it
-    } catch (err: any) {
-      console.error("Sign in error:", err);
-      // If error contains 'user-not-found', attempt to register
-      if (err.message && err.message.includes('user-not-found')) {
-        try {
-          await signUp(email, password, email.split('@')[0]); // Use part of email as name
-          
-          // No need to manually close or navigate as the AUTH_SIGNED_IN event listener will handle it
-        } catch (signUpErr) {
-          console.error("Sign up error:", signUpErr);
-          setIsSubmitting(false);
-          setErrorMessage("Registration failed. Please try again.");
-        }
+      if (mode === 'signup') {
+        await signUp(email, password);
+        // Show registration success toast - the AUTH_SIGNED_IN event will show login success
+        toast.auth.registrationSuccess();
       } else {
-        setIsSubmitting(false);
+        await signIn(email, password);
+        // Login success toast will be shown by the AUTH_SIGNED_IN event listener
+      }
+      
+      // If we get here, it means the operation was successful
+      if (onSuccess) onSuccess();
+      
+      // Clear fields for security
+      setEmail('');
+      setPassword('');
+      setShowPassword(false);
+      
+    } catch (error) {
+      console.error('Auth error:', error);
+      setIsSubmitting(false);
+      
+      // Convert error to string for display
+      const errorText = error instanceof Error ? error.message : String(error);
+      setErrorMessage(errorText);
+      
+      // Show toast notification for the error
+      if (initialMode === 'signup') {
+        toast.auth.registrationError(formatErrorMessage(errorText));
+      } else {
+        toast.auth.loginError(formatErrorMessage(errorText));
       }
     }
   };
@@ -309,6 +331,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       modalId: 'forgot-password-modal',
       props: { email }
     });
+  };
+
+  const handleForgotPasswordClose = (success?: boolean) => {
+    setShowForgotPassword(false);
+    if (success) {
+      // Show toast for password reset email sent
+      toast.auth.resetPasswordSuccess();
+    }
   };
 
   const formatErrorMessage = (message: string): string => {
@@ -473,7 +503,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       {showForgotPassword && (
         <ForgotPasswordModal
           isOpen={showForgotPassword}
-          onClose={() => setShowForgotPassword(false)}
+          onClose={handleForgotPasswordClose}
           loading={isSubmitting || loading}
           initialEmail={email}
         />

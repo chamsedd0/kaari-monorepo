@@ -1,8 +1,8 @@
 import { PurpleLB60 } from "../../styles/buttons/purple_LB60_style"
-import React from "react"
+import React, { ReactNode } from "react"
 
 interface ButtonProps {
-  text: string;
+  text: string | ReactNode;
   onClick?: (e?: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
 }

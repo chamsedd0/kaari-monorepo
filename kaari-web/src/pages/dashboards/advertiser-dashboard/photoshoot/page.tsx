@@ -12,6 +12,7 @@ import { PhotoshootBookingServerActions } from '../../../../backend/server-actio
 import { PhotoshootBooking, Team } from '../../../../backend/entities';
 import { useStore } from '../../../../backend/store';
 import { TeamServerActions } from '../../../../backend/server-actions/TeamServerActions';
+import { useTranslation } from 'react-i18next';
 
 // Interface for booking with team data
 interface BookingWithTeam extends PhotoshootBooking {
@@ -29,6 +30,7 @@ interface BookingWithTeamInfo extends PhotoshootBooking {
 }
 
 const PhotoshootPage: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useStore();
   const [bookings, setBookings] = useState<BookingWithTeamInfo[]>([]);
@@ -148,10 +150,10 @@ const PhotoshootPage: React.FC = () => {
       setSelectedBooking(null);
       
       // Show success message
-      alert('Photoshoot rescheduled successfully');
+      alert(t('advertiser_dashboard.photoshoot.reschedule_success', 'Photoshoot rescheduled successfully'));
     } catch (error) {
       console.error('Error rescheduling photoshoot:', error);
-      alert('Failed to reschedule photoshoot. Please try again.');
+      alert(t('advertiser_dashboard.photoshoot.reschedule_error', 'Failed to reschedule photoshoot. Please try again.'));
     }
   };
   
@@ -181,11 +183,11 @@ const PhotoshootPage: React.FC = () => {
       setCancelModalOpen(false);
       setSelectedBooking(null);
       
-      // Show success message (optional)
-      alert('Photoshoot cancelled successfully');
+      // Show success message
+      alert(t('advertiser_dashboard.photoshoot.cancel_success', 'Photoshoot cancelled successfully'));
     } catch (error) {
       console.error('Error cancelling photoshoot:', error);
-      alert('Failed to cancel photoshoot. Please try again.');
+      alert(t('advertiser_dashboard.photoshoot.cancel_error', 'Failed to cancel photoshoot. Please try again.'));
     }
   };
   
@@ -196,12 +198,12 @@ const PhotoshootPage: React.FC = () => {
     } else if (booking.streetName && booking.city) {
       return `${booking.streetName}, ${booking.city}`;
     }
-    return 'Address not available';
+    return t('advertiser_dashboard.photoshoot.address_unavailable', 'Address not available');
   };
   
   const formatDate = (date: Date | string) => {
     const dateObj = new Date(date);
-    return dateObj.toLocaleDateString('en-US', {
+    return dateObj.toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', {
       month: 'long',
       day: 'numeric',
       year: 'numeric',
@@ -269,17 +271,17 @@ const PhotoshootPage: React.FC = () => {
     <PhotoshootsPageStyle>
       <div className="left">
         <div className="section-title-container">
-          <h2 className="section-title">Book a Photoshoot</h2>
+          <h2 className="section-title">{t('advertiser_dashboard.photoshoot.section_title', 'Book a photoshoot')}</h2>
           <div className="button-container">
             <PurpleButtonMB48 
-              text="Book a free Photoshoot" 
+              text={t('advertiser_dashboard.photoshoot.book_button', 'Book a free photoshoot')}
               onClick={handleBookPhotoshoot}
             />
           </div>
         </div>
         
         {loading ? (
-          <div className="loading">Loading photoshoots...</div>
+          <div className="loading">{t('advertiser_dashboard.photoshoot.loading', 'Loading photoshoots...')}</div>
         ) : (
           <>
             {activeBookings.length > 0 ? (
@@ -291,8 +293,8 @@ const PhotoshootPage: React.FC = () => {
                   scheduledDate={booking.date}
                   timeSlot={booking.timeSlot}
                   status={booking.status}
-                  photographerName={booking.status === 'assigned' ? (booking.team?.name || "Kaari Photography Team") : undefined}
-                  photographerInfo={booking.status === 'assigned' ? (booking.team?.specialization || "Professional Photographer") : undefined}
+                  photographerName={booking.status === 'assigned' ? (booking.team?.name || t('advertiser_dashboard.photoshoot.photographer_team', 'Kaari Photography Team')) : undefined}
+                  photographerInfo={booking.status === 'assigned' ? (booking.team?.specialization || t('advertiser_dashboard.photoshoot.professional_photographer', 'Professional Photographer')) : undefined}
                   photographerImage={booking.status === 'assigned' ? profile : undefined}
                   phoneNumber={booking.status === 'assigned' ? booking.team?.leaderPhone : undefined}
                   number={index + 1}
@@ -302,7 +304,7 @@ const PhotoshootPage: React.FC = () => {
               ))
             ) : (
               <div className="no-bookings">
-                <p>You have no upcoming photoshoots. Book a free photoshoot for your property!</p>
+                <p>{t('advertiser_dashboard.photoshoot.no_bookings_message', 'You don\'t have any upcoming photoshoots. Book a free photoshoot for your property!')}</p>
               </div>
             )}
           </>
@@ -310,29 +312,30 @@ const PhotoshootPage: React.FC = () => {
         
         {completedBookings.length > 0 && (
         <div className="history-container">
-          <h3 className="history-title">History of photoshoots</h3>
+          <h3 className="history-title">{t('advertiser_dashboard.photoshoot.history_title', 'Photoshoot History')}</h3>
           <div className="history-item-container">
               {completedBookings.map(booking => {
                 const bookingDate = new Date(booking.date);
+                const locale = i18n.language === 'fr' ? 'fr-FR' : 'en-US';
                 return (
                   <div key={booking.id} className="history-item">
                     <span className="location">{getFormattedAddress(booking)}</span>
                     <span className="date-time">
-                      {bookingDate.toLocaleDateString('en-US', {
+                      {bookingDate.toLocaleDateString(locale, {
                         month: '2-digit',
                         day: '2-digit',
                         year: 'numeric'
                       })}
                     </span>
                     <span className="date-time">
-                      {bookingDate.toLocaleTimeString('en-US', {
+                      {bookingDate.toLocaleTimeString(locale, {
                         hour: '2-digit',
                         minute: '2-digit',
                         hour12: true
                       })}
                     </span>
                     <span className={`status ${booking.status}`}>
-                      {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                      {t(`advertiser_dashboard.photoshoot.${booking.status}`, booking.status)}
                     </span>
           </div>
                 );

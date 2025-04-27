@@ -10,8 +10,12 @@ import linkedin from "../../../../components/skeletons/icons/linkedIn.svg"
 import InputBaseModel from '../../../../components/skeletons/inputs/input-fields/input-variant';
 import TextAreaBaseModel from '../../../../components/skeletons/inputs/input-fields/textarea-variant';
 import { sendSupportEmail, isValidEmail, isValidPhoneNumber, SupportFormData } from '../../../../backend/server-actions/SupportServerActions';
+import { useToastService } from '../../../../services/ToastService';
+import { useTranslation } from 'react-i18next';
 
 const ContactsPage: React.FC = () => {
+    const { t } = useTranslation();
+    
     // Form state
     const [formData, setFormData] = useState<SupportFormData>({
         firstName: '',
@@ -22,14 +26,13 @@ const ContactsPage: React.FC = () => {
         message: ''
     });
     
+    // Toast service
+    const toast = useToastService();
+    
     // UI state
     const [formVisible, setFormVisible] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formErrors, setFormErrors] = useState<Partial<Record<keyof SupportFormData, string>>>({});
-    const [submitResult, setSubmitResult] = useState<{
-        success: boolean;
-        message: string;
-    } | null>(null);
     
     // Handle form input changes
     const handleInputChange = (field: keyof SupportFormData, value: string) => {
@@ -45,11 +48,6 @@ const ContactsPage: React.FC = () => {
                 [field]: undefined
             }));
         }
-        
-        // Clear previous submission result when form is edited
-        if (submitResult) {
-            setSubmitResult(null);
-        }
     };
     
     // Validate form data
@@ -57,31 +55,31 @@ const ContactsPage: React.FC = () => {
         const errors: Partial<Record<keyof SupportFormData, string>> = {};
         
         if (!formData.firstName.trim()) {
-            errors.firstName = 'First name is required';
+            errors.firstName = t('advertiser_dashboard.support.validation.first_name_required');
         }
         
         if (!formData.lastName.trim()) {
-            errors.lastName = 'Last name is required';
+            errors.lastName = t('advertiser_dashboard.support.validation.last_name_required');
         }
         
         if (!formData.email.trim()) {
-            errors.email = 'Email is required';
+            errors.email = t('advertiser_dashboard.support.validation.email_required');
         } else if (!isValidEmail(formData.email)) {
-            errors.email = 'Please enter a valid email address';
+            errors.email = t('advertiser_dashboard.support.validation.invalid_email');
         }
         
         if (formData.phoneNumber.trim() && !isValidPhoneNumber(formData.phoneNumber)) {
-            errors.phoneNumber = 'Please enter a valid phone number';
+            errors.phoneNumber = t('advertiser_dashboard.support.validation.invalid_phone');
         }
         
         if (!formData.subject.trim()) {
-            errors.subject = 'Subject is required';
+            errors.subject = t('advertiser_dashboard.support.validation.subject_required');
         }
         
         if (!formData.message.trim()) {
-            errors.message = 'Message is required';
+            errors.message = t('advertiser_dashboard.support.validation.message_required');
         } else if (formData.message.length < 10) {
-            errors.message = 'Message must be at least 10 characters';
+            errors.message = t('advertiser_dashboard.support.validation.message_length');
         }
         
         setFormErrors(errors);
@@ -95,13 +93,14 @@ const ContactsPage: React.FC = () => {
         }
         
         setIsSubmitting(true);
-        setSubmitResult(null);
         
         try {
             const result = await sendSupportEmail(formData);
-            setSubmitResult(result);
             
             if (result.success) {
+                // Show success toast
+                toast.support.messageSuccess();
+                
                 // Reset form on successful submission
                 setFormData({
                     firstName: '',
@@ -111,13 +110,13 @@ const ContactsPage: React.FC = () => {
                     subject: '',
                     message: ''
                 });
+            } else {
+                // Show error toast
+                toast.support.messageError(result.message);
             }
         } catch (error) {
             console.error('Error submitting support form:', error);
-            setSubmitResult({
-                success: false,
-                message: 'An unexpected error occurred. Please try again later.'
-            });
+            toast.support.messageError('An unexpected error occurred. Please try again later.');
         } finally {
             setIsSubmitting(false);
         }
@@ -135,20 +134,20 @@ const ContactsPage: React.FC = () => {
             <div className="main-content">
                 <div className="contacts-content">
                     <div className="contacts-content-info">
-                        <h2 className="contacts-content-info-title">Kaari Customer Support Available 24/7</h2>
-                        <p className="contacts-email-number">kaariofficial@gmail.com | +2125XXXXXXX</p>
+                        <h2 className="contacts-content-info-title">{t('advertiser_dashboard.support.title')}</h2>
+                        <p className="contacts-email-number">{t('advertiser_dashboard.support.contact_info')}</p>
                         <p className="contacts-content-description">
-                            Have questions or need assistance? Feel free to reach out to us using the contact form below or through our email and phone number. We're here to help!
+                            {t('advertiser_dashboard.support.description')}
                         </p>
                         <div className="form-button">
-                            <PurpleButtonMB48 text="Fill the Form" onClick={handleShowForm} />
+                            <PurpleButtonMB48 text={t('advertiser_dashboard.support.fill_form')} onClick={handleShowForm} />
                         </div>
                     </div>
                     <img src={Picture} alt="Contact support" />
                 </div>
 
                 <div className="social-media-content">
-                    <h3 className="social-media-content-title">Social Media</h3>
+                    <h3 className="social-media-content-title">{t('advertiser_dashboard.support.social_media')}</h3>
                     <div className="social-media-box">
                         <div className="facebook-content">
                             <img src={facebook} alt="Facebook" className="contact-icon" />
@@ -170,19 +169,13 @@ const ContactsPage: React.FC = () => {
                 </div>
 
                 <div id="contact-form" className="contact-form">
-                    <h3 className="contact-form-title">Contact us via Form</h3>
-                    
-                    {submitResult && (
-                        <div className={`form-result ${submitResult.success ? 'success' : 'error'}`}>
-                            {submitResult.message}
-                        </div>
-                    )}
+                    <h3 className="contact-form-title">{t('advertiser_dashboard.support.contact_form')}</h3>
                     
                     <div className="contact-form-container">
                         <div className="form-row">
                             <div className="form-group">
                                 <InputBaseModel
-                                    title="First Name"
+                                    title={t('advertiser_dashboard.support.first_name')}
                                     value={formData.firstName}
                                     onChange={(e) => handleInputChange('firstName', e.target.value)}
                                     error={formErrors.firstName}
@@ -190,7 +183,7 @@ const ContactsPage: React.FC = () => {
                             </div>
                             <div className="form-group">
                                 <InputBaseModel
-                                    title="Last Name"
+                                    title={t('advertiser_dashboard.support.last_name')}
                                     value={formData.lastName}
                                     onChange={(e) => handleInputChange('lastName', e.target.value)}
                                     error={formErrors.lastName}
@@ -200,7 +193,7 @@ const ContactsPage: React.FC = () => {
                         <div className="form-row">
                             <div className="form-group">
                                 <InputBaseModel
-                                    title="Email"
+                                    title={t('advertiser_dashboard.support.email')}
                                     value={formData.email}
                                     onChange={(e) => handleInputChange('email', e.target.value)}
                                     error={formErrors.email}
@@ -208,7 +201,7 @@ const ContactsPage: React.FC = () => {
                             </div>
                             <div className="form-group">
                                 <InputBaseModel
-                                    title="Phone Number"
+                                    title={t('advertiser_dashboard.support.phone_number')}
                                     value={formData.phoneNumber}
                                     onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                                     error={formErrors.phoneNumber}
@@ -217,7 +210,7 @@ const ContactsPage: React.FC = () => {
                         </div>
                         <div className="form-group">
                             <InputBaseModel
-                                title="Subject"
+                                title={t('advertiser_dashboard.support.subject')}
                                 value={formData.subject}
                                 onChange={(e) => handleInputChange('subject', e.target.value)}
                                 error={formErrors.subject}
@@ -225,7 +218,7 @@ const ContactsPage: React.FC = () => {
                         </div>
                         <div className="form-group">
                             <TextAreaBaseModel
-                                title="Message"
+                                title={t('advertiser_dashboard.support.message')}
                                 value={formData.message}
                                 onChange={(e) => handleInputChange('message', e.target.value)}
                                 error={formErrors.message}
@@ -233,7 +226,7 @@ const ContactsPage: React.FC = () => {
                         </div>
                         <div className="form-button">
                             <PurpleButtonMB48
-                                text={isSubmitting ? "Sending..." : "Send Message"}
+                                text={isSubmitting ? t('advertiser_dashboard.support.sending') : t('advertiser_dashboard.support.send_message')}
                                 onClick={handleSubmit}
                                 disabled={isSubmitting}
                             />

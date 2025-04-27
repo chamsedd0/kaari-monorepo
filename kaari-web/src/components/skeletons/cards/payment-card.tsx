@@ -1,5 +1,6 @@
 import React from 'react';
 import { PaymentCard } from '../../styles/cards/card-base-model-style-payment';
+import { useTranslation } from 'react-i18next';
 
 interface PaymentCardProps {
     title?: string;
@@ -13,22 +14,24 @@ interface PaymentCardProps {
 }
 
 const PaymentCardComponent: React.FC<PaymentCardProps> = ({
-    title = "Payment",
+    title,
     incomeAmount,
-    incomeText = "Total Income",
+    incomeText,
     infoItems,
     onViewMore
 }) => {
+    const { t } = useTranslation();
+    
     return (
         <PaymentCard>
             <div className="title-viewmore-container">
-                <h3 className="title">{title}</h3>
-                <span className="viewmore-text" onClick={onViewMore}>View More</span>
+                <h3 className="title">{title || t('advertiser_dashboard.payments.title', 'Payment')}</h3>
+                <span className="viewmore-text" onClick={onViewMore}>{t('common.view_more', 'View More')}</span>
             </div>
 
             <div className="income-container">
                 <span className="income-amount">{incomeAmount}</span>
-                <span className="income-text">{incomeText}</span>
+                <span className="income-text">{incomeText || t('advertiser_dashboard.payments.total_income', 'Total Income')}</span>
             </div>
 
             <div className="info-container">

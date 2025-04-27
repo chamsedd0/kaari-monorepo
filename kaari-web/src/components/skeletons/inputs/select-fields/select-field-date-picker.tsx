@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SelectFieldBaseModelVariant1 from './select-field-base-model-variant-1';
 import styled from 'styled-components';
 import { Label2 } from '../../../styles/inputs/select-fields/select-field-base-model-style-1';
+import { useTranslation } from 'react-i18next';
 
 const DatePickerContainer = styled.div`
   display: flex;
@@ -19,6 +20,7 @@ const SelectFieldDatePicker: React.FC<DatePickerProps> = ({
   onChange,
   initialDate
 }) => {
+  const { t } = useTranslation();
   const [selectedDate, setSelectedDate] = useState({
     day: initialDate?.day || '',
     month: initialDate?.month || '',
@@ -56,19 +58,19 @@ const SelectFieldDatePicker: React.FC<DatePickerProps> = ({
       <DatePickerContainer>
         <SelectFieldBaseModelVariant1
           options={days}
-          placeholder="DD"
+          placeholder={t('common.date_picker.day', 'DD')}
           value={selectedDate.day}
           onChange={(value) => handleChange(value, 'day')}
         />
         <SelectFieldBaseModelVariant1
           options={months}
-          placeholder="MM"
+          placeholder={t('common.date_picker.month', 'MM')}
           value={selectedDate.month}
           onChange={(value) => handleChange(value, 'month')}
         />
         <SelectFieldBaseModelVariant1
           options={years}
-          placeholder="YYYY"
+          placeholder={t('common.date_picker.year', 'YYYY')}
           value={selectedDate.year}
           onChange={(value) => handleChange(value, 'year')}
         />

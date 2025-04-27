@@ -18,9 +18,14 @@ type Section = 'Dashboard' | 'MyProfile' | 'Messages' | 'Properties' | 'Reservat
 interface NavigationPannelAdviserProps {
     activeSection: Section;
     onSectionChange: (section: Section) => void;
+    getTranslatedSectionName?: (section: Section) => string;
 }
 
-export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = ({ activeSection, onSectionChange }) => {
+export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = ({ 
+    activeSection, 
+    onSectionChange,
+    getTranslatedSectionName = (section) => section === 'MyProfile' ? 'My Profile' : section
+}) => {
     return (
         <NavigationPannelDashboardStyle>
             <button 
@@ -29,7 +34,7 @@ export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = (
                 aria-current={activeSection === 'Dashboard' ? 'page' : undefined}
             >
                 <img src={DashboardIcon} alt="Dashboard" className="nav-link-icon" />
-                <span className="nav-link-text">Dashboard</span>
+                <span className="nav-link-text">{getTranslatedSectionName('Dashboard')}</span>
             </button>
             <button 
                 onClick={() => onSectionChange('MyProfile')} 
@@ -37,7 +42,7 @@ export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = (
                 aria-current={activeSection === 'MyProfile' ? 'page' : undefined}
             >
                 <img src={ProfileIcon} alt="Profile" className="nav-link-icon" />
-                <span className="nav-link-text">My Profile</span>
+                <span className="nav-link-text">{getTranslatedSectionName('MyProfile')}</span>
             </button>
             <button 
                 onClick={() => onSectionChange('Messages')} 
@@ -45,7 +50,7 @@ export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = (
                 aria-current={activeSection === 'Messages' ? 'page' : undefined}
             >
                 <img src={MessagesIcon} alt="Messages" className="nav-link-icon" />
-                <span className="nav-link-text">Messages</span>
+                <span className="nav-link-text">{getTranslatedSectionName('Messages')}</span>
             </button>
             <button 
                 onClick={() => onSectionChange('Properties')} 
@@ -53,7 +58,7 @@ export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = (
                 aria-current={activeSection === 'Properties' ? 'page' : undefined}
             >
                 <img src={PropertiesIcon} alt="Properties" className="nav-link-icon" />
-                <span className="nav-link-text">Properties</span>
+                <span className="nav-link-text">{getTranslatedSectionName('Properties')}</span>
             </button>
             <button 
                 onClick={() => onSectionChange('Reservations')} 
@@ -61,7 +66,7 @@ export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = (
                 aria-current={activeSection === 'Reservations' ? 'page' : undefined}
             >
                 <img src={ReservationsIcon} alt="Reservations" className="nav-link-icon" />
-                <span className="nav-link-text">Reservations</span>
+                <span className="nav-link-text">{getTranslatedSectionName('Reservations')}</span>
             </button>
             <button 
                 onClick={() => onSectionChange('Reviews')} 
@@ -69,7 +74,7 @@ export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = (
                 aria-current={activeSection === 'Reviews' ? 'page' : undefined}
             >
                 <img src={ReviewsIcon} alt="Reviews" className="nav-link-icon" />
-                <span className="nav-link-text">Reviews</span>
+                <span className="nav-link-text">{getTranslatedSectionName('Reviews')}</span>
             </button>
             <button 
                 onClick={() => onSectionChange('Payments')} 
@@ -77,7 +82,7 @@ export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = (
                 aria-current={activeSection === 'Payments' ? 'page' : undefined}
             >
                 <img src={PaymentsIcon} alt="Payments" className="nav-link-icon" />
-                <span className="nav-link-text">Payments</span>
+                <span className="nav-link-text">{getTranslatedSectionName('Payments')}</span>
             </button>
             <button 
                 onClick={() => onSectionChange('Tenants')} 
@@ -85,7 +90,7 @@ export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = (
                 aria-current={activeSection === 'Tenants' ? 'page' : undefined}
             >
                 <img src={TenantsIcon} alt="Tenants" className="nav-link-icon" />
-                <span className="nav-link-text">Tenants</span>
+                <span className="nav-link-text">{getTranslatedSectionName('Tenants')}</span>
             </button>
             <button 
                 onClick={() => onSectionChange('Photoshoot')} 
@@ -93,7 +98,7 @@ export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = (
                 aria-current={activeSection === 'Photoshoot' ? 'page' : undefined}
             >
                 <img src={PhotoshootIcon} alt="Photoshoot" className="nav-link-icon" />
-                <span className="nav-link-text">Photoshoot</span>
+                <span className="nav-link-text">{getTranslatedSectionName('Photoshoot')}</span>
             </button>
             <button 
                 onClick={() => onSectionChange('Support')} 
@@ -101,7 +106,7 @@ export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = (
                 aria-current={activeSection === 'Support' ? 'page' : undefined}
             >
                 <img src={SupportIcon} alt="Support" className="nav-link-icon" />
-                <span className="nav-link-text">Support</span>
+                <span className="nav-link-text">{getTranslatedSectionName('Support')}</span>
             </button>
         </NavigationPannelDashboardStyle>
     );

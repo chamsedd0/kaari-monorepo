@@ -8,25 +8,26 @@ import RecommendToFriendPage from './sections/recommend-to-friend/page';
 import ContactDetailsPage from './sections/contact-details/page';
 import ChangePasswordPage from './sections/change-password/page';
 import PayoutMethodPage from './sections/payout-method/page';
+import { useTranslation } from 'react-i18next';
 
 const ProfilePage: React.FC = () => {
-    const [activeSection, setActiveSection] = useState('profile');
+    const { t } = useTranslation();
+    const [activeSection, setActiveSection] = useState(t('advertiser_dashboard.profile.profile_section'));
 
     const renderSection = () => {
         switch (activeSection) {
-            case 'profile':
+            case t('advertiser_dashboard.profile.profile_section'):
                 return <ProfileSection />;
-            case 'documents':
+            case t('advertiser_dashboard.profile.documents_section'):
                 return <SupportingDocumentsPage />;
-            case 'recommend':
+            case t('advertiser_dashboard.profile.recommend_section'):
                 return <RecommendToFriendPage />;
-            case 'contact':
+            case t('advertiser_dashboard.profile.contact_section'):
                 return <ContactDetailsPage />;
-            case 'password':
+            case t('advertiser_dashboard.profile.password_section'):
                 return <ChangePasswordPage />;
-            case 'payout':
+            case t('advertiser_dashboard.profile.payout_section'):
                 return <PayoutMethodPage />;
-
             default:
                 return <ProfileSection />;
         }
@@ -42,7 +43,6 @@ const ProfilePage: React.FC = () => {
                     activeSection={activeSection} 
                     onSectionChange={setActiveSection} 
                 />
-                
             </div>
         </ProfilePageStyle>
     );

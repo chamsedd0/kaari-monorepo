@@ -10,6 +10,7 @@ import whatsapp from '../icons/whatsapp-icon.svg';
 import download from '../icons/icon_download.svg';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useTranslation } from 'react-i18next';
 
 interface PhotoshootStatusCardProps {
   photoshootId: string;
@@ -47,11 +48,13 @@ const PhotoshootStatusCard: React.FC<PhotoshootStatusCardProps> = ({
   onReschedule,
   onCancel,
 }) => {
+  const { t, i18n } = useTranslation();
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   
   const formatDate = (date: Date | string) => {
     const dateObj = new Date(date);
-    return dateObj.toLocaleDateString('en-US', {
+    const locale = i18n.language === 'fr' ? 'fr-FR' : 'en-US';
+    return dateObj.toLocaleDateString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -60,7 +63,8 @@ const PhotoshootStatusCard: React.FC<PhotoshootStatusCardProps> = ({
   
   const formatTime = (date: Date | string) => {
     const dateObj = new Date(date);
-    return dateObj.toLocaleTimeString('en-US', {
+    const locale = i18n.language === 'fr' ? 'fr-FR' : 'en-US';
+    return dateObj.toLocaleTimeString(locale, {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
@@ -120,118 +124,127 @@ const PhotoshootStatusCard: React.FC<PhotoshootStatusCardProps> = ({
       // Add title to header - center aligned, all caps
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(20);
-      doc.text('KAARI PHOTOGRAPHY', pageWidth / 2, 20, { align: 'center' });
+      doc.text(t('advertiser_dashboard.photoshoot.pdf_header', 'KAARI PHOTOGRAPHY'), pageWidth / 2, 20, { align: 'center' });
       doc.setFontSize(14);
-      doc.text('PHOTOSHOOT BOOKING SUMMARY', pageWidth / 2, 30, { align: 'center' });
+      doc.text(t('advertiser_dashboard.photoshoot.pdf_subtitle', 'Photoshoot Summary'), pageWidth / 2, 30, { align: 'center' });
       
-      // Add curved white section under header
-      // We'll create a white background for the rest of the page with a curved top edge
-      // by adding a white rectangle that overlaps with the header
-      doc.setFillColor(255, 255, 255);
-      
-      // Create a diagonal line effect at the top of the white section
-      // This simulates the curved design in the screenshot
-      const points = [];
-      for (let x = 0; x <= pageWidth; x += 5) {
-        points.push([x, 40 + (x / pageWidth) * 15]);
-      }
-      
-      // Fill the area below the curve
-      doc.setFillColor(255, 255, 255);
-      doc.moveTo(0, 55);
-      
-      // Add points along the curve
-      for (const point of points) {
-        doc.lineTo(point[0], point[1]);
-      }
-      
-      // Complete the polygon
-      doc.lineTo(pageWidth, pageHeight);
-      doc.lineTo(0, pageHeight);
-      doc.lineTo(0, 55);
-      doc.fill();
-      
-      // Booking Reference - positioned where shown in screenshot
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Booking Reference: ${photoshootId}`, 20, 70);
-      
-      // Status box with rounded corners - make it green for assigned with proper positioning
-      if (status === 'assigned') {
-        doc.setFillColor(successGreen.r, successGreen.g, successGreen.b);
-      } else {
-        doc.setFillColor(primaryPurple.r, primaryPurple.g, primaryPurple.b);
-      }
-      
-      // Create status box with rounded corners - make it wider and more visible
-      try {
-        doc.roundedRect(pageWidth - 100, 65, 80, 12, 6, 6, 'F');
-      } catch (e) {
-        doc.rect(pageWidth - 100, 65, 80, 12, 'F');
-      }
-      
-      // Add status text - all caps as shown in screenshot
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(10);
-      doc.text(status.toUpperCase(), pageWidth - 60, 72, { align: 'center' });
-      
-      // Section headings - positioned as in the screenshot
-      drawSectionHeading('BOOKING DETAILS', 100);
-      
-      // Details section - no background, just text
-      const details = [
-        ['Property:', propertyLocation],
-        ['Date:', formatDate(scheduledDate)],
-        ['Time:', timeSlot],
-        ['Photographer:', photographerName || 'Pending Assignment']
-      ];
-      
-      // Add details as simple text without background
-      details.forEach((detail, index) => {
-        // Label (bold)
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(80, 80, 80);
-        doc.text(detail[0], 25, 120 + (index * 15));
-        
-        // Value (normal)
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(20, 20, 20);
-        doc.text(detail[1], 120, 120 + (index * 15));
+      // Add current date
+      const currentDate = new Date().toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       });
       
-      // Important notes section
-      drawSectionHeading('IMPORTANT NOTES', 190);
+      // Main content area
+      doc.setTextColor(50, 50, 50);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
       
-      // Notes with bullet points - format as shown in screenshot
+      // Add date to right side
+      doc.text(t('advertiser_dashboard.photoshoot.pdf_generated_date', 'Generated on: {{date}}', { date: currentDate }), pageWidth - 15, 50, { align: 'right' });
+      
+      // Booking ID
+      doc.setFont('helvetica', 'bold');
+      doc.text(t('advertiser_dashboard.photoshoot.pdf_booking_id', 'Booking ID:'), 15, 60);
+      doc.setFont('helvetica', 'normal');
+      doc.text(photoshootId, 50, 60);
+      
+      // Property Information Section
+      drawSectionHeading(t('advertiser_dashboard.photoshoot.pdf_property_info', 'PROPERTY INFORMATION'), 80);
+      
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(50, 50, 50);
+      doc.text(t('advertiser_dashboard.photoshoot.pdf_location', 'Location:'), 20, 90);
+      doc.setFont('helvetica', 'normal');
+      doc.text(propertyLocation, 60, 90);
+      
+      // Photoshoot Details Section
+      drawSectionHeading(t('advertiser_dashboard.photoshoot.pdf_schedule_info', 'SCHEDULE INFORMATION'), 110);
+      
+      doc.setFont('helvetica', 'bold');
+      doc.text(t('advertiser_dashboard.photoshoot.pdf_date', 'Date:'), 20, 120);
+      doc.setFont('helvetica', 'normal');
+      doc.text(formatDate(scheduledDate), 60, 120);
+      
+      doc.setFont('helvetica', 'bold');
+      doc.text(t('advertiser_dashboard.photoshoot.pdf_time', 'Time:'), 20, 130);
+      doc.setFont('helvetica', 'normal');
+      doc.text(timeSlot, 60, 130);
+      
+      doc.setFont('helvetica', 'bold');
+      doc.text(t('advertiser_dashboard.photoshoot.pdf_status', 'Status:'), 20, 140);
+      doc.setFont('helvetica', 'normal');
+      
+      // Set status color based on status type
+      if (status === 'assigned') {
+        doc.setTextColor(successGreen.r, successGreen.g, successGreen.b);
+      } else if (status === 'pending') {
+        doc.setTextColor(primaryPurple.r, primaryPurple.g, primaryPurple.b);
+      }
+      
+      doc.text(t(`advertiser_dashboard.photoshoot.${status}`, status.charAt(0).toUpperCase() + status.slice(1)), 60, 140);
+      doc.setTextColor(50, 50, 50);
+      
+      // Photographer Details Section (if assigned)
+      if (status === 'assigned' && photographerName) {
+        drawSectionHeading(t('advertiser_dashboard.photoshoot.pdf_photographer_info', 'PHOTOGRAPHER INFORMATION'), 160);
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text(t('advertiser_dashboard.photoshoot.pdf_photographer', 'Photographer:'), 20, 170);
+        doc.setFont('helvetica', 'normal');
+        doc.text(photographerName, 60, 170);
+        
+        if (photographerInfo) {
+          doc.setFont('helvetica', 'bold');
+          doc.text(t('advertiser_dashboard.photoshoot.pdf_specialization', 'Specialization:'), 20, 180);
+          doc.setFont('helvetica', 'normal');
+          doc.text(photographerInfo, 60, 180);
+        }
+        
+        if (phoneNumber) {
+          doc.setFont('helvetica', 'bold');
+          doc.text(t('advertiser_dashboard.photoshoot.pdf_contact', 'Contact:'), 20, 190);
+          doc.setFont('helvetica', 'normal');
+          doc.text(phoneNumber, 60, 190);
+        }
+      }
+      
+      // Notes section
+      drawSectionHeading(t('advertiser_dashboard.photoshoot.pdf_important_notes', 'IMPORTANT NOTES'), status === 'assigned' ? 210 : 160);
+      
+      // Standard notes table
+      const notesY = status === 'assigned' ? 220 : 170;
+      
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
-      doc.setTextColor(60, 60, 60);
+      doc.text([
+        t('advertiser_dashboard.photoshoot.pdf_note1', '• Please ensure the property is clean and tidy before the photoshoot.'),
+        t('advertiser_dashboard.photoshoot.pdf_note2', '• Remove personal items and declutter all spaces.'),
+        t('advertiser_dashboard.photoshoot.pdf_note3', '• Turn on all lights and open curtains for better lighting.'),
+        t('advertiser_dashboard.photoshoot.pdf_note4', '• Ensure all rooms are accessible for the photographer.'),
+        t('advertiser_dashboard.photoshoot.pdf_note5', '• Have someone available to provide access to the property.')
+      ], 20, notesY);
       
-      const notes = [
-        'Please ensure the property is tidy and well-presented on the scheduled date.',
-        'The photographer will arrive at the beginning of the time slot.',
-        'The photoshoot typically takes 1-2 hours depending on property size.',
-        'You will receive your photos within 48 hours after the photoshoot.',
-        'To reschedule or cancel, please do so at least 24 hours in advance.'
-      ];
+      // Footer with Kaari branding
+      doc.setFillColor(primaryPurple.r, primaryPurple.g, primaryPurple.b);
+      doc.rect(0, pageHeight - 25, pageWidth, 25, 'F');
       
-      notes.forEach((note, index) => {
-        // Add bullet symbol
-        doc.text('•', 25, 210 + (index * 15));
-        
-        // Add note text with proper spacing
-        doc.text(note, 35, 210 + (index * 15));
-      });
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text(t('advertiser_dashboard.photoshoot.pdf_footer_contact', 'For support: support@kaari.com | www.kaari.com'), pageWidth / 2, pageHeight - 15, { align: 'center' });
+      doc.setFontSize(8);
+      doc.text(t('advertiser_dashboard.photoshoot.pdf_footer_copyright', '© {{year}} Kaari. All rights reserved.', { year: new Date().getFullYear() }), pageWidth / 2, pageHeight - 8, { align: 'center' });
       
-      // No visible footer in the screenshot, so removing that
+      // Save the document
+      const formatToday = new Date().toISOString().slice(0, 10);
+      const filename = `Kaari_Photoshoot_${formatToday}_${photoshootId.slice(-5)}.pdf`;
       
-      // Save PDF
-      const filename = `Kaari_Photoshoot_${photoshootId}.pdf`;
       doc.save(filename);
       
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert('There was an error generating the PDF. Please try again.');
+      alert(t('advertiser_dashboard.photoshoot.pdf_error', 'There was an error generating the PDF. Please try again.'));
     }
   };
 
@@ -240,7 +253,7 @@ const PhotoshootStatusCard: React.FC<PhotoshootStatusCardProps> = ({
       <div className="first-container">
         <div className="title-container">
           <div className="circle-number">{number}</div>
-          <h3 className="title">Upcoming Photoshoot</h3>
+          <h3 className="title">{t('advertiser_dashboard.photoshoot.upcoming_title', 'Upcoming Photoshoot')}</h3>
         </div>
         <p className="info-text">{propertyLocation}</p>
       </div>
@@ -248,12 +261,13 @@ const PhotoshootStatusCard: React.FC<PhotoshootStatusCardProps> = ({
       <div className="middle-container">
         <div className="left-container">
           {status === 'assigned' && photographerImage ? (
-            <img src={photographerImage} alt="Photographer" />
+            <img src={photographerImage} alt={t('advertiser_dashboard.photoshoot.photographer_alt', 'Photographer')} />
           ) : (
             <div style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <SpinningLoading />
             </div>
           )}
+          
           <div className="personal-info-container">
             {status === 'assigned' ? (
               <>
@@ -291,16 +305,16 @@ const PhotoshootStatusCard: React.FC<PhotoshootStatusCardProps> = ({
                   >
                     <img 
                       src={whatsapp} 
-                      alt="WhatsApp" 
+                      alt={t('advertiser_dashboard.photoshoot.whatsapp_alt', 'WhatsApp')} 
                       style={{ width: '16px', height: '16px' }} 
                     />
-                    Contact via WhatsApp
+                    {t('advertiser_dashboard.photoshoot.contact_whatsapp', 'Contact via WhatsApp')}
                   </button>
                 )}
               </>
             ) : (
               <span className="description2">
-                An agent is being assigned to your photoshoot. Please wait a moment.
+                {t('advertiser_dashboard.photoshoot.assigning_message', 'An agent is being assigned to your photoshoot. Please wait a moment.')}
               </span>
             )}
           </div>
@@ -316,12 +330,12 @@ const PhotoshootStatusCard: React.FC<PhotoshootStatusCardProps> = ({
       <div className="bottom-container">
         <div className="button-container">
           <PurpleButtonMB48 
-            text="Reschedule" 
+            text={t('advertiser_dashboard.photoshoot.reschedule', 'Reschedule')} 
             onClick={onReschedule}
           />
           <BpurpleButtonMB48 
-            text="Cancel Photoshoot" 
-            icon={<img src={cancel} alt="cancel" />}
+            text={t('advertiser_dashboard.photoshoot.cancel', 'Cancel Photoshoot')} 
+            icon={<img src={cancel} alt={t('common.cancel_icon_alt', 'cancel')} />}
             onClick={onCancel}
           />
         </div>
@@ -331,8 +345,8 @@ const PhotoshootStatusCard: React.FC<PhotoshootStatusCardProps> = ({
           className="download-icon"
           onClick={handleDownloadSummary}
         >
-          <img src={download} alt="Download Summary" />
-          <div className="tooltip">Download Summary</div>
+          <img src={download} alt={t('advertiser_dashboard.photoshoot.download_alt', 'Download Summary')} />
+          <div className="tooltip">{t('advertiser_dashboard.photoshoot.download_tooltip', 'Download Summary')}</div>
         </div>
       </div>
       
@@ -340,7 +354,7 @@ const PhotoshootStatusCard: React.FC<PhotoshootStatusCardProps> = ({
       <WhatsAppContactModal
         isOpen={showWhatsAppModal}
         onClose={() => setShowWhatsAppModal(false)}
-        teamName={photographerName || 'Photography Team'}
+        teamName={photographerName || t('advertiser_dashboard.photoshoot.photographer_team', 'Photography Team')}
         phoneNumber={phoneNumber || ''}
       />
     </CardBaseModelStyleUpcomingPhotoshoot>

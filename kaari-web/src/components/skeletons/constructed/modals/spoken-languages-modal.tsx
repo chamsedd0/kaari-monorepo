@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ModalOverlayStyle, SpokenLanguagesModalStyle } from '../../../styles/constructed/modals/auth-modal-style';
 import { FaTimes } from 'react-icons/fa';
 import { PurpleButtonLB60 } from '../../buttons/purple_LB60';
+import { useTranslation } from 'react-i18next';
 
 interface Language {
   name: string;
@@ -12,13 +13,16 @@ interface SpokenLanguagesModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (languages: string[]) => void;
+  initialSelectedLanguages?: string[];
 }
 
 export const SpokenLanguagesModal: React.FC<SpokenLanguagesModalProps> = ({
   isOpen,
   onClose,
-  onSave
+  onSave,
+  initialSelectedLanguages = []
 }) => {
+  const { t } = useTranslation();
   const [languages, setLanguages] = useState<Language[]>([
     { name: 'English', selected: false },
     { name: 'French', selected: false },
@@ -43,6 +47,17 @@ export const SpokenLanguagesModal: React.FC<SpokenLanguagesModalProps> = ({
   ]);
   
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // Initialize with initialSelectedLanguages when opened
+  useEffect(() => {
+    if (isOpen && initialSelectedLanguages.length > 0) {
+      const updatedLanguages = languages.map(lang => ({
+        ...lang,
+        selected: initialSelectedLanguages.includes(lang.name)
+      }));
+      setLanguages(updatedLanguages);
+    }
+  }, [isOpen, initialSelectedLanguages]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -82,7 +97,7 @@ export const SpokenLanguagesModal: React.FC<SpokenLanguagesModalProps> = ({
       <SpokenLanguagesModalStyle ref={modalRef}>
         <div className="modal-header">
           <div className="logo-container">
-            <h2>Spoken Languages</h2>
+            <h2>{t('spoken_languages')}</h2>
           </div>
           <button className="close-button" onClick={onClose}>
             <FaTimes />
@@ -91,7 +106,7 @@ export const SpokenLanguagesModal: React.FC<SpokenLanguagesModalProps> = ({
         
         <div className="modal-body">
           <div className="languages-header">
-            <p>What languages can you speak fluently?</p>
+            <p>{t('what_languages_fluent')}</p>
           </div>
 
           <div className="languages-grid">
@@ -109,7 +124,10 @@ export const SpokenLanguagesModal: React.FC<SpokenLanguagesModalProps> = ({
           </div>
 
           <div className="button-container">
-            <PurpleButtonLB60 text="Add Languages" onClick={handleSave} />
+            <PurpleButtonLB60 
+              text="Add Languages" 
+              onClick={handleSave} 
+            />
           </div>
         </div>
       </SpokenLanguagesModalStyle>

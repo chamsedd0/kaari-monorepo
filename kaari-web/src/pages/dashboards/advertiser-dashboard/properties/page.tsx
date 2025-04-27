@@ -13,8 +13,10 @@ import PropertyUnlistConfirmationModal from '../../../../components/skeletons/co
 import EmptyBox from '../../../../assets/images/emptybox.svg';
 import { PurpleButtonLB40 } from '../../../../components/skeletons/buttons/purple_LB40';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const PropertiesPage: React.FC = () => {
+    const { t } = useTranslation();
     const listedPropertiesRef = useRef<HTMLDivElement>(null);
     const unlistedPropertiesRef = useRef<HTMLDivElement>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -40,14 +42,14 @@ const PropertiesPage: React.FC = () => {
                 setError(null);
             } catch (err) {
                 console.error('Error loading properties:', err);
-                setError('Failed to load your properties. Please try again later.');
+                setError(t('advertiser_dashboard.properties.errors.load_failed'));
             } finally {
                 setIsLoading(false);
             }
         };
         
         loadProperties();
-    }, []);
+    }, [t]);
     
     // Filter properties by status
     const listedProperties = properties.filter(
@@ -77,7 +79,7 @@ const PropertiesPage: React.FC = () => {
             setSelectedProperty(null);
         } catch (err) {
             console.error('Error updating property status:', err);
-            setError('Failed to update property status. Please try again.');
+            setError(t('advertiser_dashboard.properties.errors.update_status_failed'));
         } finally {
             setIsSubmitting(false);
         }
@@ -112,25 +114,25 @@ const PropertiesPage: React.FC = () => {
         <PropertiesPageStyle>
             <div className="properties-section">
                 <div className="section-top">
-                <h2 className="properties-section-title">Properties</h2>
+                <h2 className="properties-section-title">{t('advertiser_dashboard.properties.title')}</h2>
                 </div>
                 
                 {error && <div className="error-message">{error}</div>}
                 
                 {isLoading ? (
-                    <div className="loading-spinner">Loading your properties...</div>
+                    <div className="loading-spinner">{t('advertiser_dashboard.properties.loading')}</div>
                 ) : (
                     <>
                 <div className="my-properties">
                     <div className="section-header">
-                                <h3 className="title">My listed properties ({listedProperties.length})</h3>
+                                <h3 className="title">{t('advertiser_dashboard.properties.listed_properties', { count: listedProperties.length })}</h3>
                                 {listedProperties.length > 0 && (
                         <div className="navigation-buttons">
                             <button onClick={() => scroll('left', listedPropertiesRef)}>
-                                <img src={LeftArrow} alt="Left Arrow" />
+                                <img src={LeftArrow} alt={t('common.left_arrow')} />
                             </button>
                             <button onClick={() => scroll('right', listedPropertiesRef)}>
-                                <img src={RightArrow} alt="Right Arrow" />
+                                <img src={RightArrow} alt={t('common.right_arrow')} />
                             </button>
                         </div>
                                 )}
@@ -138,10 +140,10 @@ const PropertiesPage: React.FC = () => {
                             
                             {listedProperties.length === 0 ? (
                                 <div className="no-properties-message">
-                                    <img src={EmptyBox} alt="No properties" />
-                                    <h4>You have no listed properties</h4>
-                                    <p>List your property by booking a photoshoot from Kaari!</p>
-                                    <PurpleButtonLB40 text="Book a Photoshoot" onClick={() => window.location.href = '/photoshoot-booking'} />
+                                    <img src={EmptyBox} alt={t('advertiser_dashboard.properties.no_properties_alt')} />
+                                    <h4>{t('advertiser_dashboard.properties.no_listed_properties')}</h4>
+                                    <p>{t('advertiser_dashboard.properties.list_property_photoshoot')}</p>
+                                    <PurpleButtonLB40 text={t('advertiser_dashboard.properties.book_photoshoot')} onClick={() => window.location.href = '/photoshoot-booking'} />
                     </div>
                             ) : (
                     <div className="properties-group" ref={listedPropertiesRef}>
@@ -151,8 +153,8 @@ const PropertiesPage: React.FC = () => {
                                             title={property.title}
                                             location={`${property.address.city}, ${property.address.country}`}
                                             imageUrl={PropertyExamplePic}
-                                            price={`${property.price} /month`}
-                            minStay="1 month"
+                                            price={`${property.price} ${t('common.per_month')}`}
+                            minStay={t('common.min_stay', { count: 1 })}
                                             propertyId={property.id}
                                             onUnlist={() => handleOpenUnlistModal(property)}
                                             onAskForEdit={() => handleAskForEdit(property)}
@@ -164,14 +166,14 @@ const PropertiesPage: React.FC = () => {
                         
                 <div className="my-properties">
                     <div className="section-header">
-                                <h3 className="title">My unlisted properties ({unlistedProperties.length})</h3>
+                                <h3 className="title">{t('advertiser_dashboard.properties.unlisted_properties', { count: unlistedProperties.length })}</h3>
                                 {unlistedProperties.length > 0 && (
                         <div className="navigation-buttons">
                             <button onClick={() => scroll('left', unlistedPropertiesRef)}>
-                                <img src={LeftArrow} alt="Left Arrow" />
+                                <img src={LeftArrow} alt={t('common.left_arrow')} />
                             </button>
                             <button onClick={() => scroll('right', unlistedPropertiesRef)}>
-                                <img src={RightArrow} alt="Right Arrow" />
+                                <img src={RightArrow} alt={t('common.right_arrow')} />
                             </button>
                         </div>
                                 )}
@@ -179,8 +181,8 @@ const PropertiesPage: React.FC = () => {
                             
                             {unlistedProperties.length === 0 ? (
                                 <div className="no-properties-message">
-                                    <img src={EmptyBox} alt="No unlisted properties" />
-                                    <h4>You have no unlisted properties</h4>
+                                    <img src={EmptyBox} alt={t('advertiser_dashboard.properties.no_properties_alt')} />
+                                    <h4>{t('advertiser_dashboard.properties.no_unlisted_properties')}</h4>
                     </div>
                             ) : (
                     <div className="properties-group" ref={unlistedPropertiesRef}>
@@ -190,8 +192,8 @@ const PropertiesPage: React.FC = () => {
                                             title={property.title}
                                             location={`${property.address.city}, ${property.address.country}`}
                                             imageUrl={PropertyExamplePic}
-                                            price={`${property.price} /month`}
-                            minStay="1 month"
+                                            price={`${property.price} ${t('common.per_month')}`}
+                            minStay={t('common.min_stay', { count: 1 })}
                                             propertyId={property.id}
                                             onList={() => handleChangePropertyStatus(property.id, 'available')}
                                             onAskForEdit={() => handleAskForEdit(property)}

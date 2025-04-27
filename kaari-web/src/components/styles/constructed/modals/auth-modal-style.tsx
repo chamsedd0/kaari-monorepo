@@ -430,40 +430,123 @@ export const CardDetailsModalStyle = styled(ModalStyle)`
 `;
 
 export const SpokenLanguagesModalStyle = styled(ModalStyle)`
-  max-width: 500px;
+  max-width: 400px;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  
+  .modal-header {
+    padding: 0;
+    margin-bottom: 8px;
+    text-align: center;
+    
+    .logo-container {
+      width: 100%;
+      h2 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+      }
+    }
+    
+    .close-button {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      left: auto;
+      font-size: 18px;
+    }
+  }
   
   .languages-header {
     text-align: center;
-    margin-bottom: 24px;
-    
-    h2 {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
+    margin-bottom: 20px;
     
     p {
-      color: ${Theme.colors.gray2};
-      font-size: 16px;
+      color: #555;
+      font-size: 14px;
+      margin-top: 4px;
     }
+  }
+  
+  .modal-body {
+    padding: 0;
   }
   
   .languages-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px 30px;
-    margin-bottom: 30px;
+    gap: 12px 30px;
+    margin-bottom: 24px;
     
     .language-checkbox {
       display: flex;
       align-items: center;
+      padding: 4px 0;
       
       input {
         margin-right: 10px;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 1.5px solid #ccc;
+        border-radius: 4px;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        
+        &:checked {
+          background-color: #9333ea;
+          border-color: #9333ea;
+          
+          &:after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 5px;
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+          }
+        }
+        
+        &:hover {
+          border-color: #9333ea;
+        }
       }
       
       label {
-        font-size: 16px;
+        font-size: 14px;
+        cursor: pointer;
+        user-select: none;
+        color: #333;
+        transition: color 0.2s ease;
+        flex: 1;
+      }
+    }
+  }
+  
+  .button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px;
+    
+    button {
+      width: 160px;
+      padding: 10px 0;
+      background-color: #9333ea;
+      color: white;
+      font-weight: 500;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: #8529d9;
       }
     }
   }

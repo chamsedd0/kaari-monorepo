@@ -8,6 +8,7 @@ import { useAuth } from '../../../../contexts/auth';
 import { FaUser, FaSignOutAlt, FaTachometerAlt, FaHome, FaWallet, FaQuestionCircle } from 'react-icons/fa';
 import { isAdmin, isAdvertiser, isRegularUser } from '../../../../utils/user-roles';
 import eventBus, { EventType } from '../../../../utils/event-bus';
+import { useTranslation } from 'react-i18next';
 
 export interface ProfileDropdownProps {
   isOpen: boolean;
@@ -131,6 +132,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { forceUpdate } = useAuth();
   const [forceRender, setForceRender] = useState(0);
+  const { t } = useTranslation();
   
   // Get user from store
   const user = useStore(state => state.user);
@@ -224,7 +226,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
     // Emit UI toast notification for better user feedback
     eventBus.emit(EventType.UI_TOAST_NOTIFICATION, {
       type: 'info',
-      message: 'Signing you out...',
+      message: t('header.profile_dropdown.signing_out'),
       duration: 3000
     });
     
@@ -254,10 +256,10 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           {userIsAdmin && (
             <>
               <MenuItem onClick={handleDashboardClick}>
-                <FaTachometerAlt /> Dashboard
+                <FaTachometerAlt /> {t('header.profile_dropdown.dashboard')}
               </MenuItem>
               <MenuItem onClick={handleAccountSettingsClick}>
-                <FaUser /> Account
+                <FaUser /> {t('header.profile_dropdown.account')}
               </MenuItem>
             </>
           )}
@@ -266,16 +268,16 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           {userIsAdvertiser && (
             <>
               <MenuItem onClick={handleDashboardClick}>
-                <FaTachometerAlt /> Dashboard
+                <FaTachometerAlt /> {t('header.profile_dropdown.dashboard')}
               </MenuItem>
               <MenuItem onClick={handleAccountSettingsClick}>
-                <FaUser /> Account
+                <FaUser /> {t('header.profile_dropdown.account')}
               </MenuItem>
               <MenuItem onClick={handlePaymentsClick}>
-                <FaWallet /> Payments
+                <FaWallet /> {t('header.profile_dropdown.payments')}
               </MenuItem>
               <MenuItem onClick={handleHelpClick}>
-                <FaQuestionCircle /> Help
+                <FaQuestionCircle /> {t('header.profile_dropdown.help')}
               </MenuItem>
             </>
           )}
@@ -284,22 +286,22 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           {userIsRegular && (
             <>
               <MenuItem onClick={handleReservationsClick}>
-                <FaHome /> Reservation
+                <FaHome /> {t('header.profile_dropdown.reservation')}
               </MenuItem>
               <MenuItem onClick={handleAccountSettingsClick}>
-                <FaUser /> Account
+                <FaUser /> {t('header.profile_dropdown.account')}
               </MenuItem>
               <MenuItem onClick={handlePaymentsClick}>
-                <FaWallet /> Payments
+                <FaWallet /> {t('header.profile_dropdown.payments')}
               </MenuItem>
               <MenuItem onClick={handleHelpClick}>
-                <FaQuestionCircle /> Help
+                <FaQuestionCircle /> {t('header.profile_dropdown.help')}
               </MenuItem>
             </>
           )}
           
           <LogoutButton onClick={handleLogOut}>
-            <FaSignOutAlt /> Log Out
+            <FaSignOutAlt /> {t('header.profile_dropdown.log_out')}
           </LogoutButton>
         </MenuItems>
       </DropdownContainer>

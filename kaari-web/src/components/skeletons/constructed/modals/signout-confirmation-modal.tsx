@@ -6,6 +6,7 @@ import { useAuth } from '../../../../contexts/auth';
 import { ModalOverlayStyle, ConfirmationModalStyle } from '../../../styles/constructed/modals/auth-modal-style';
 import { PurpleButtonLB60 } from '../../buttons/purple_LB60';
 import { WhiteButtonLB60 } from '../../buttons/white_LB60';
+import { useToastService } from '../../../../services/ToastService';
 
 interface SignOutConfirmationModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const SignOutConfirmationModal: React.FC<SignOutConfirmationModalProps> =
   const modalRef = useRef<HTMLDivElement>(null);
   const { signOutUser, status } = useAuth();
   const isLoading = status === 'loading';
+  const toast = useToastService();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -48,6 +50,9 @@ export const SignOutConfirmationModal: React.FC<SignOutConfirmationModalProps> =
       } else {
         // Use the centralized auth context for logout
         await signOutUser();
+        
+        // Show logout success toast
+        toast.auth.logoutSuccess();
         
         // Navigate to home page
         navigate('/', { replace: true });

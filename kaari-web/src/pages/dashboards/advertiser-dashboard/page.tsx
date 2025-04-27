@@ -3,6 +3,7 @@ import { NavigationPannelAdviser } from '../../../components/skeletons/construct
 import { AdvertiserDashboardStyle } from './styles';
 import LoadingScreen from '../../../components/loading/LoadingScreen';
 import { useNavigate, useLocation, Routes, Route } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 // Import all section pages
 import DashboardPage from './dashboard/page';
@@ -15,9 +16,7 @@ import ReviewsPage from './reviews/page';
 import PaymentsPage from './payments/page';
 import TenantsPage from './tenants/page';
 import PhotoshootsPage from './photoshoot/page';
-import SupprotPage from './support/page';
-
-
+import SupportPage from './support/page';
 
 type Section = 'Dashboard' | 'MyProfile' | 'Messages' | 'Properties' | 'Reservations' | 'Reviews' | 'Payments' | 'Tenants' | 'Photoshoot' | 'Support';
 
@@ -50,9 +49,24 @@ const SECTION_TO_URL: Record<Section, string> = {
     'Support': 'support'
 };
 
+// Map section names to translation keys
+const SECTION_TO_TRANSLATION: Record<Section, string> = {
+    'Dashboard': 'advertiser_dashboard.sections.dashboard',
+    'MyProfile': 'advertiser_dashboard.sections.my_profile',
+    'Messages': 'advertiser_dashboard.sections.messages',
+    'Properties': 'advertiser_dashboard.sections.properties',
+    'Reservations': 'advertiser_dashboard.sections.reservations',
+    'Reviews': 'advertiser_dashboard.sections.reviews',
+    'Payments': 'advertiser_dashboard.sections.payments',
+    'Tenants': 'advertiser_dashboard.sections.tenants',
+    'Photoshoot': 'advertiser_dashboard.sections.photoshoot',
+    'Support': 'advertiser_dashboard.sections.support'
+};
+
 const AdvertiserDashboard: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const { t } = useTranslation();
     
     // Get the current section from the URL
     const getInitialSection = (): Section => {
@@ -145,8 +159,13 @@ const AdvertiserDashboard: React.FC = () => {
             case 'Photoshoot':
                 return <PhotoshootsPage />;
             case 'Support':
-                return <SupprotPage />;
+                return <SupportPage />;
         }
+    };
+
+    // Get translated section names for the navigation panel
+    const getTranslatedSectionName = (section: Section): string => {
+        return t(SECTION_TO_TRANSLATION[section]);
     };
 
     return (
@@ -156,6 +175,7 @@ const AdvertiserDashboard: React.FC = () => {
                 <NavigationPannelAdviser 
                     activeSection={activeSection}
                     onSectionChange={handleSectionChange}
+                    getTranslatedSectionName={getTranslatedSectionName}
                 />
                 <AdvertiserDashboardStyle>
                     <div className={`section-container ${isAnimating ? 'animating' : ''}`}>

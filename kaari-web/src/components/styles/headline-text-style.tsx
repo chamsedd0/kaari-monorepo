@@ -2,17 +2,18 @@ import { Theme } from "../../theme/theme";
 import styled from "styled-components";
 
 export const HeadlineTextStyle = styled.h1`
-border-radius: ${Theme.borders.radius.md};
+  border-radius: ${Theme.borders.radius.md};
   display: flex;
   gap: 8px;
   min-width: 300px;
   max-width: 400px;
-  z-index: 1;
+  z-index: 1000;
   align-items: start;
   justify-content: space-between;
   padding: 16px;
-  position: absolute;
-  
+  position: relative;
+  margin: 0;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   
   .left-group {
     display: flex;
@@ -57,11 +58,5 @@ border-radius: ${Theme.borders.radius.md};
         height: 16px;
         cursor: pointer;
     }
-    
   }
-  
-  
-
-
-
 `;

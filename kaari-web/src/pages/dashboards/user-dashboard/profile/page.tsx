@@ -13,10 +13,12 @@ import TextAreaBaseModel from '../../../../components/skeletons/inputs/input-fie
 import GenderCheckBox from '../../../../components/skeletons/inputs/check-box/gander-check-box';
 import SelectFieldBaseModel from '../../../../components/skeletons/inputs/select-fields/select-field-base-model';
 import { updateUserProfile, uploadGovernmentID, connectWithGoogle } from '../../../../backend/server-actions/UserServerActions';
+import { useToastService } from '../../../../services/ToastService';
 
 const ProfilePage: React.FC = () => {
     const user = useStore(state => state.user);
     const setUser = useStore(state => state.setUser);
+    const toast = useToastService();
     
     // Form state
     const [name, setName] = useState('');
@@ -72,14 +74,23 @@ const ProfilePage: React.FC = () => {
             // Upload ID documents if provided
             if (idFront) {
                 await uploadGovernmentID(user.id, idFront, idBack || undefined);
+                // Show document upload success toast
+                toast.profile.uploadDocumentSuccess();
             }
             
             // Update user in global store
             setUser(updatedUser);
             setSuccess(true);
+            
+            // Show profile update success toast
+            toast.profile.updateSuccess();
+            
         } catch (err) {
             console.error('Error updating profile:', err);
             setError('Failed to update profile. Please try again.');
+            
+            // Show error toast
+            toast.profile.updateError('Failed to update profile. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -99,15 +110,22 @@ const ProfilePage: React.FC = () => {
             
             const updatedUser = await connectWithGoogle(user.id, googleData);
             setUser(updatedUser);
+            
+            // Show success toast
+            toast.app.actionSuccess('Google account connection');
         } catch (err) {
             console.error('Error connecting with Google:', err);
             setError('Failed to connect with Google. Please try again.');
+            
+            // Show error toast
+            toast.app.actionError('Google account connection', 'Failed to connect with Google. Please try again.');
         }
     };
     
     // Handle profile picture change
     const handleProfilePictureChange = (file: File) => {
         setProfilePicture(file);
+        toast.profile.uploadPhotoSuccess();
     };
     
     return (

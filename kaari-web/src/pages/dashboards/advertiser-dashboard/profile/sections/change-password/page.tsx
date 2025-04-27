@@ -2,7 +2,10 @@ import React, { useState, ChangeEvent } from 'react';
 import { ChangePasswordStyle } from './styles';
 import InputBaseModelWithIcon from '../../../../../../components/skeletons/inputs/input-fields/input-variant-with-icon';
 import { PurpleButtonMB48 } from '../../../../../../components/skeletons/buttons/purple_MB48';
+import { useTranslation } from 'react-i18next';
+
 const ChangePasswordPage: React.FC = () => {
+    const { t } = useTranslation();
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,38 +21,37 @@ const ChangePasswordPage: React.FC = () => {
 
     return (
         <ChangePasswordStyle>
-            <h1 className="section-title">Change Password</h1>
+            <h1 className="section-title">{t('advertiser_dashboard.profile.change_password.title')}</h1>
             <p className="section-info">
-            If you want to change your password, you have to enter your current password first. If you have any trouble remembering your password, you can contact Kaari Support for help.
+                {t('advertiser_dashboard.profile.password_requirements')}
             </p>
             
                 
-                    <div className="input-filed">
-                        <InputBaseModelWithIcon
-                            title="Current Password"
-                            placeholder="Enter your current password"
-                            value={currentPassword}
-                            onChange={handleInputChange(setCurrentPassword)}
-                        />
-                    </div>
+            <div className="input-filed">
+                <InputBaseModelWithIcon
+                    title={t('advertiser_dashboard.profile.change_password.current_password')}
+                    placeholder={t('advertiser_dashboard.profile.change_password.current_password_placeholder')}
+                    value={currentPassword}
+                    onChange={handleInputChange(setCurrentPassword)}
+                />
+            </div>
                 
-                <div className="password-fields">
-                    <InputBaseModelWithIcon
-                        title="New Password"
-                        placeholder="Enter your new password"
-                        value={newPassword}
-                        onChange={handleInputChange(setNewPassword)}
-                    />
-                    <InputBaseModelWithIcon
-                        title="Re-enter New Password"
-                        placeholder="Confirm your new password"
-                        value={confirmPassword}
-                        onChange={handleInputChange(setConfirmPassword)}
-                    />
-                
+            <div className="password-fields">
+                <InputBaseModelWithIcon
+                    title={t('advertiser_dashboard.profile.change_password.new_password')}
+                    placeholder={t('advertiser_dashboard.profile.change_password.new_password_placeholder')}
+                    value={newPassword}
+                    onChange={handleInputChange(setNewPassword)}
+                />
+                <InputBaseModelWithIcon
+                    title={t('advertiser_dashboard.profile.change_password.confirm_password')}
+                    placeholder={t('advertiser_dashboard.profile.change_password.confirm_password_placeholder')}
+                    value={confirmPassword}
+                    onChange={handleInputChange(setConfirmPassword)}
+                />
             </div>
             <div className="save-button">
-                <PurpleButtonMB48 text="Save Changes" onClick={handleSave} />
+                <PurpleButtonMB48 text={t('advertiser_dashboard.profile.change_password.save_button')} onClick={handleSave} />
             </div>
         </ChangePasswordStyle>
     );

@@ -1,22 +1,34 @@
 import React from 'react';
 import { SupportingDocumentsPageStyle } from './styles';
 import { UploadCard } from '../../../../../../components/skeletons/cards/upload-card';
+import { useTranslation } from 'react-i18next';
 
 const SupportingDocumentsPage: React.FC = () => {
+  const { t } = useTranslation();
+  
   return (
     <SupportingDocumentsPageStyle>
       <div className="left">
-        <h2 className="title">Supporting Documents</h2>
+        <h2 className="title">{t('advertiser_dashboard.profile.supporting_documents.title')}</h2>
         <div className="container">
-          <UploadCard title="Double-sided National Card" description="Upload a digital copy of your National ID Card" onUpload={() => {}} />
-          <UploadCard title="Rules and Requirements" description="Upload the documents that inform your future tenants about the booking requirements and house rules"  onUpload={() => {}} />
-          <UploadCard title="Other Documents" description="Upload other documents that relate to your account on Kaari" onUpload={() => {}} />
-
+          <UploadCard 
+            title={t('advertiser_dashboard.profile.supporting_documents.national_id_title')} 
+            description={t('advertiser_dashboard.profile.supporting_documents.national_id_description')} 
+            onUpload={() => {}} 
+          />
+          <UploadCard 
+            title={t('advertiser_dashboard.profile.supporting_documents.rules_title')} 
+            description={t('advertiser_dashboard.profile.supporting_documents.rules_description')}  
+            onUpload={() => {}} 
+          />
+          <UploadCard 
+            title={t('advertiser_dashboard.profile.supporting_documents.other_documents_title')} 
+            description={t('advertiser_dashboard.profile.supporting_documents.other_documents_description')} 
+            onUpload={() => {}} 
+          />
         </div>
       </div>
-
     </SupportingDocumentsPageStyle>
-    
   );
 };
 

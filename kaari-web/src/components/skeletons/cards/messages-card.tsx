@@ -1,6 +1,7 @@
 import React from 'react';
 import { CardBaseModelStyleMessages } from '../../styles/cards/card-base-model-style-messages';
 import { Theme } from '../../../theme/theme';
+import { useTranslation } from 'react-i18next';
 
 interface MessagesCardProps {
     title?: string;
@@ -13,25 +14,27 @@ interface MessagesCardProps {
 }
 
 const MessagesCard: React.FC<MessagesCardProps> = ({
-    title = "Messages",
+    title,
     message = "",
     img = "",
-    name = "User",
+    name = "",
     messageCount = 0,
     isRead = false,
     onViewMore
 }) => {
+    const { t } = useTranslation();
+    
     return (
         <CardBaseModelStyleMessages>
             <div className="title-viewmore-container">
-                <h3 className="title">{title}</h3>
-                <span className="viewmore" onClick={onViewMore}>View More</span>
+                <h3 className="title">{title || t('advertiser_dashboard.dashboard.messages')}</h3>
+                <span className="viewmore" onClick={onViewMore}>{t('common.view_more', 'View More')}</span>
             </div>
             <div className="chat-container">
                 <div className="chat-box">
                     <img 
                         src={img} 
-                        alt={`${name}'s profile`} 
+                        alt={t('advertiser_dashboard.messages.profile_picture_alt', '{{name}}\'s profile', { name })} 
                         className="profile-picture"
                     />
                     <div className="text-container">
@@ -55,7 +58,7 @@ const MessagesCard: React.FC<MessagesCardProps> = ({
                                 strokeLinejoin="round"
                             />
                         </svg>
-                        <span className="details">{"Details"}</span>
+                        <span className="details">{t('common.details', 'Details')}</span>
                     </div>
                 </div>
             </div>
@@ -63,7 +66,7 @@ const MessagesCard: React.FC<MessagesCardProps> = ({
                 <div className="chat-box">
                     <img 
                         src={img} 
-                        alt={`${name}'s profile`} 
+                        alt={t('advertiser_dashboard.messages.profile_picture_alt', '{{name}}\'s profile', { name })} 
                         className="profile-picture"
                     />
                     <div className="text-container">
@@ -87,7 +90,7 @@ const MessagesCard: React.FC<MessagesCardProps> = ({
                                 strokeLinejoin="round"
                             />
                         </svg>
-                        <span className="details">{"Details"}</span>
+                        <span className="details">{t('common.details', 'Details')}</span>
                     </div>
                 </div>
             </div>

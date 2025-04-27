@@ -2,6 +2,7 @@ import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { PerformanceChartStyling } from '../../../styles/constructed/chart/performance-chart-styling';
 import { FiArrowUp, FiArrowDown } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 
 interface DataPoint {
   date: string;
@@ -24,7 +25,6 @@ const data: DataPoint[] = [
   { date: '15 Apr', views: 1900, clicks: 900, bookings: 565 },
   { date: '22 Apr', views: 900, clicks: 1700, bookings: 80 },
   { date: '29 Apr', views: 1500, clicks: 1200, bookings: 1985 },
-
 ];
 
 // Custom dot component for better control over the appearance
@@ -41,18 +41,20 @@ const CustomDot = (props: any) => {
 };
 
 export const PerformanceChart: React.FC<PerformanceChartProps> = ({
-  title = "Listing Performance",
+  title,
   viewCount = 1500,
   inquiryCount = 1200,
   bookingCount = 85,
   loading = false
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <PerformanceChartStyling>
       <div className="chart-info">
         <div className="header">
-            <h2 className="title">{title}</h2>
-            <div className="date">April 2025</div>
+            <h2 className="title">{title || t('advertiser_dashboard.dashboard.performance_overview', 'Listing Performance')}</h2>
+            <div className="date">{t('advertiser_dashboard.dashboard.chart_date', 'April 2025')}</div>
         </div>
 
         <div className="metrics">
@@ -62,7 +64,7 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
                 <span className="value-number">{viewCount}</span>
                 
             </div>
-            <div className="label">Views</div>
+            <div className="label">{t('advertiser_dashboard.dashboard.views', 'Views')}</div>
             </div>
             <div className="metric">
             <div className="value clicks">
@@ -70,7 +72,7 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   <span className="value-number">{inquiryCount}</span>
                 
             </div>
-            <div className="label">Clicks</div>
+            <div className="label">{t('advertiser_dashboard.dashboard.clicks', 'Clicks')}</div>
             </div>
             <div className="metric">
             <div className="value bookings">
@@ -78,7 +80,7 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
                 <span className="value-number">{bookingCount}</span>
                 
             </div>
-            <div className="label">Booking Requests</div>
+            <div className="label">{t('advertiser_dashboard.dashboard.booking_requests', 'Booking Requests')}</div>
             </div>
         </div>
       </div>

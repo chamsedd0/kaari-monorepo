@@ -17,7 +17,7 @@ interface PropertyEditRequestModalProps {
 export interface EditRequestFormData {
   propertyId: string;
   additionalAmenities: string[];
-  features: string[];
+  includedFees: string[];
   additionalComments: string;
 }
 
@@ -43,7 +43,7 @@ export const PropertyEditRequestModal: React.FC<PropertyEditRequestModalProps> =
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const [additionalAmenities, setAdditionalAmenities] = useState<string[]>([]);
-  const [features, setFeatures] = useState<string[]>([]);
+  const [includedFees, setIncludedFees] = useState<string[]>([]);
   const [additionalComments, setAdditionalComments] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -72,7 +72,7 @@ export const PropertyEditRequestModal: React.FC<PropertyEditRequestModalProps> =
   };
 
   const handleFeatureChange = (feature: string) => {
-    setFeatures(prev => 
+    setIncludedFees(prev => 
       prev.includes(feature) 
         ? prev.filter(f => f !== feature) 
         : [...prev, feature]
@@ -88,7 +88,7 @@ export const PropertyEditRequestModal: React.FC<PropertyEditRequestModalProps> =
       const formData: EditRequestFormData = {
         propertyId,
         additionalAmenities,
-        features, 
+        includedFees, 
         additionalComments
       };
       
@@ -142,7 +142,7 @@ export const PropertyEditRequestModal: React.FC<PropertyEditRequestModalProps> =
                 <label key={feature} className="checkbox-item">
                   <input 
                     type="checkbox" 
-                    checked={features.includes(feature)}
+                    checked={includedFees.includes(feature)}
                     onChange={() => handleFeatureChange(feature)}
                   />
                   <span className="amenity-icon"></span>
@@ -171,7 +171,7 @@ export const PropertyEditRequestModal: React.FC<PropertyEditRequestModalProps> =
             <PurpleButtonLB60 
               text={isSubmitting ? "Submitting..." : "Submit Request"} 
               onClick={handleSubmit}
-              disabled={isSubmitting || (additionalAmenities.length === 0 && features.length === 0 && !additionalComments.trim())}
+              disabled={isSubmitting || (additionalAmenities.length === 0 && includedFees.length === 0 && !additionalComments.trim())}
             />
           </div>
         </div>

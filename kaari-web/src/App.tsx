@@ -17,6 +17,7 @@ import { useMemo, useEffect, useState } from 'react';
 import MainLayout from './layouts/MainLayout';
 import { isAdmin, isAdvertiser, isRegularUser } from './utils/user-roles';
 import eventBus, { EventType } from './utils/event-bus';
+import { ToastProvider } from './contexts/ToastContext';
 
 function App() {
   // Use the global store for authentication
@@ -331,9 +332,11 @@ function App() {
   ), [isAuthenticated, userIsAdvertiser, userIsRegular, userIsAdmin, renderKey]);
   
   return (
-    <MainLayout key={renderKey}>
-          {routes}
-    </MainLayout>
+    <ToastProvider>
+      <MainLayout key={renderKey}>
+        {routes}
+      </MainLayout>
+    </ToastProvider>
   );
 }
 
