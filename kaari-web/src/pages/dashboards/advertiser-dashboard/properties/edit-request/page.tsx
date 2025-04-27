@@ -82,8 +82,8 @@ const PropertyEditRequestPage: React.FC = () => {
           }
           
           // Set existing included fees from property data
-          if (property.includedFees && Array.isArray(property.includedFees)) {
-            setIncludedFees(property.includedFees);
+          if (property.features && Array.isArray(property.features)) {
+            setIncludedFees(property.features);
           }
         } else {
           setError('Property not found');

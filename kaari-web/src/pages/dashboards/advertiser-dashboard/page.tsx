@@ -76,7 +76,10 @@ const AdvertiserDashboard: React.FC = () => {
     // Update active section when URL changes
     useEffect(() => {
         const newSection = getInitialSection();
-        if (newSection !== activeSection) {
+        // Check if we're on the property edit request page and set active section to Properties
+        if (location.pathname.includes('/properties/edit-request/')) {
+            setActiveSection('Properties');
+        } else if (newSection !== activeSection) {
             setActiveSection(newSection);
         }
     }, [location.pathname]);

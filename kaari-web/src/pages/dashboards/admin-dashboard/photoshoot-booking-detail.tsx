@@ -60,34 +60,29 @@ interface PropertyFormData {
 
 // Common amenities and features
 const COMMON_AMENITIES = [
-  'Swimming Pool',
-  'Gym',
-  'Parking',
-  'Elevator',
-  'Security',
-  'Garden',
-  'Balcony',
-  'Terrace',
-  'Air Conditioning',
-  'Heating',
-  'WiFi',
-  'Laundry',
-  'Playground'
+  'furnished',
+  'sofabed',
+  'dining-table',
+  'wardrobe',
+  'cabinet',
+  'chair',
+  'desk',
+  'sofa',
+  'coffee-table',
+  'dresser',
+  'mirror',
+  'walk-in-closet',
+  'oven',
+  'washing-machine',
+  'hotplate-cooktop',
+  'water-heater'
 ];
 
 const COMMON_FEATURES = [
-  'Hardwood Floors',
-  'High Ceilings',
-  'Large Windows',
-  'Open Plan',
-  'Fireplace',
-  'Newly Renovated',
-  'Modern Kitchen',
-  'Smart Home',
-  'Walk-in Closet',
-  'En-suite Bathroom',
-  'Storage Space',
-  'Pet Friendly'
+  'water',
+  'electricity',
+  'wifi',
+  'women-only'
 ];
 
 const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpdateBooking }) => {
@@ -1019,6 +1014,212 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                               alignItems: 'center',
                               justifyContent: 'center',
                               cursor: 'pointer'
+                            }}
+                          >
+                            <FaTimes size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </FormGroup>
+
+              {/* Amenities Section */}
+              <h3>Additional Amenities</h3>
+              <FormGroup>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                  <Input 
+                    type="text" 
+                    value={amenityInput} 
+                    onChange={(e) => setAmenityInput(e.target.value)}
+                    placeholder="Add amenity (e.g., WiFi, Furnished, etc.)"
+                    style={{ flex: 1 }}
+                  />
+                  <Button onClick={addAmenity}>
+                    <FaPlus /> Add
+                  </Button>
+                </div>
+                
+                <div style={{ marginBottom: '15px' }}>
+                  <Label>Common Amenities:</Label>
+                  <div style={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: '8px',
+                    marginTop: '8px'
+                  }}>
+                    {COMMON_AMENITIES.map(amenity => (
+                      <div 
+                        key={amenity} 
+                        onClick={() => handleCheckboxChange('amenities', amenity, !isItemSelected('amenities', amenity))}
+                        style={{ 
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '5px 10px',
+                          border: '1px solid #ddd',
+                          borderRadius: '20px',
+                          cursor: 'pointer',
+                          background: isItemSelected('amenities', amenity) ? '#e6f7ff' : 'white',
+                          borderColor: isItemSelected('amenities', amenity) ? '#1890ff' : '#ddd',
+                          fontSize: '13px'
+                        }}
+                      >
+                        {isItemSelected('amenities', amenity) && (
+                          <div style={{ marginRight: '5px', color: '#1890ff' }}>✓</div>
+                        )}
+                        {amenity === 'furnished' ? 'Furnished' :
+                          amenity === 'sofabed' ? 'Sofabed' :
+                          amenity === 'dining-table' ? 'Dining Table' :
+                          amenity === 'wardrobe' ? 'Wardrobe' :
+                          amenity === 'cabinet' ? 'Cabinet' :
+                          amenity === 'chair' ? 'Chair' :
+                          amenity === 'desk' ? 'Desk' :
+                          amenity === 'sofa' ? 'Sofa' :
+                          amenity === 'coffee-table' ? 'Coffee Table' :
+                          amenity === 'dresser' ? 'Dresser' :
+                          amenity === 'mirror' ? 'Mirror' :
+                          amenity === 'walk-in-closet' ? 'Walk-in Closet' :
+                          amenity === 'oven' ? 'Oven' :
+                          amenity === 'washing-machine' ? 'Washing Machine' :
+                          amenity === 'hotplate-cooktop' ? 'Hotplate/Cooktop' :
+                          amenity === 'water-heater' ? 'Water Heater' :
+                          amenity}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {propertyData.amenities.length > 0 && (
+                  <div>
+                    <Label>Added Amenities ({propertyData.amenities.length}):</Label>
+                    <div style={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: '10px',
+                      marginTop: '10px',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px'
+                    }}>
+                      {propertyData.amenities.map((amenity, index) => (
+                        <div key={index} style={{ 
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '6px 12px',
+                          background: '#f5f5f5',
+                          borderRadius: '20px',
+                          fontSize: '14px'
+                        }}>
+                          {amenity}
+                          <button 
+                            onClick={() => removeAmenity(index)}
+                            style={{
+                              marginLeft: '5px',
+                              background: 'transparent',
+                              color: '#666',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            <FaTimes size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </FormGroup>
+              
+              {/* Features Section */}
+              <h3>Included Fees</h3>
+              <FormGroup>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                  <Input 
+                    type="text" 
+                    value={featureInput} 
+                    onChange={(e) => setFeatureInput(e.target.value)}
+                    placeholder="Add included fee (e.g., Water, Electricity, etc.)"
+                    style={{ flex: 1 }}
+                  />
+                  <Button onClick={addFeature}>
+                    <FaPlus /> Add
+                  </Button>
+                </div>
+                
+                <div style={{ marginBottom: '15px' }}>
+                  <Label>Common Features:</Label>
+                  <div style={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: '8px',
+                    marginTop: '8px'
+                  }}>
+                    {COMMON_FEATURES.map(feature => (
+                      <div 
+                        key={feature} 
+                        onClick={() => handleCheckboxChange('features', feature, !isItemSelected('features', feature))}
+                        style={{ 
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '5px 10px',
+                          border: '1px solid #ddd',
+                          borderRadius: '20px',
+                          cursor: 'pointer',
+                          background: isItemSelected('features', feature) ? '#e6f7ff' : 'white',
+                          borderColor: isItemSelected('features', feature) ? '#1890ff' : '#ddd',
+                          fontSize: '13px'
+                        }}
+                      >
+                        {isItemSelected('features', feature) && (
+                          <div style={{ marginRight: '5px', color: '#1890ff' }}>✓</div>
+                        )}
+                        {feature === 'water' ? 'Water' :
+                          feature === 'electricity' ? 'Electricity' :
+                          feature === 'wifi' ? 'Wi-Fi' :
+                          feature === 'women-only' ? 'Women Only' :
+                          feature}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {propertyData.features.length > 0 && (
+                  <div>
+                    <Label>Added Features ({propertyData.features.length}):</Label>
+                    <div style={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: '10px',
+                      marginTop: '10px',
+                      padding: '10px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px'
+                    }}>
+                      {propertyData.features.map((feature, index) => (
+                        <div key={index} style={{ 
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '6px 12px',
+                          background: '#f5f5f5',
+                          borderRadius: '20px',
+                          fontSize: '14px'
+                        }}>
+                          {feature}
+                          <button 
+                            onClick={() => removeFeature(index)}
+                            style={{
+                              marginLeft: '5px',
+                              background: 'transparent',
+                              color: '#666',
+                              border: 'none',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
                             }}
                           >
                             <FaTimes size={12} />
