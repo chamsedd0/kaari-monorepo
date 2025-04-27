@@ -56,6 +56,18 @@
     "upload_icon_alt": "upload",
     "back": "Back"
   },
+  "header": {
+    "profile_dropdown": {
+      "dashboard": "Dashboard",
+      "account": "My Account",
+      "payments": "Payments",
+      "help": "Help & Support",
+      "logout": "Logout",
+      "log_out": "Logout",
+      "reservation": "My Reservations",
+      "signing_out": "Signing out..."
+    }
+  },
   "home": {
     "hero_title": "Trustworthy, verified rentals",
     "explore_places": "Explore Places",
