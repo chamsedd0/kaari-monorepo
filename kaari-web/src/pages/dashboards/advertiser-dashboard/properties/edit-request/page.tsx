@@ -11,7 +11,7 @@ import { submitPropertyEditRequest } from '../../../../../backend/server-actions
 import { getPropertyById } from '../../../../../backend/server-actions/PropertyServerActions';
 import { PropertyEditRequestPageStyle } from './styles';
 import PropertyExamplePic from '../../../../../assets/images/propertyExamplePic.png';
-
+import NeedHelpCardComponent from '../../../../../components/skeletons/cards/need-help-card';
 // Amenities options with icons
 const AMENITIES_OPTIONS = [
   { id: 'furnished', label: 'Furnished', icon: <FaBed style={{ color: Theme.colors.secondary }} /> },
@@ -150,9 +150,7 @@ const PropertyEditRequestPage: React.FC = () => {
   return (
     <PropertyEditRequestPageStyle>
       <div className="header">
-        <button className="back-button" onClick={handleCancel}>
-          <FaArrowLeft /> Back to Properties
-        </button>
+        
         <h1>Ask for Edit</h1>
       </div>
 
@@ -174,15 +172,15 @@ const PropertyEditRequestPage: React.FC = () => {
                       onChange={() => handleAmenityChange(amenity.id)}
                     />
                     <div className="amenity-icon">{amenity.icon}</div>
-                    <span className="checkbox-square"></span>
                     <span className="amenity-text">{amenity.label}</span>
+                    <span className="checkbox-square"></span>
                   </label>
                 ))}
               </div>
             </div>
             
             <div className="form-section">
-              <h3>Included Fees</h3>
+              <h3>Other</h3>
               <div className="checkbox-grid">
                 {FEES_OPTIONS.map(fee => (
                   <label key={fee.id} className="checkbox-item">
@@ -192,8 +190,8 @@ const PropertyEditRequestPage: React.FC = () => {
                       onChange={() => handleFeeChange(fee.id)}
                     />
                     <div className="amenity-icon">{fee.icon}</div>
-                    <span className="checkbox-square"></span>
                     <span className="amenity-text">{fee.label}</span>
+                    <span className="checkbox-square"></span>
                   </label>
                 ))}
               </div>
@@ -210,6 +208,9 @@ const PropertyEditRequestPage: React.FC = () => {
             </div>
             
             <div className="button-container">
+            <button className="back-button" onClick={handleCancel}>
+                <FaArrowLeft /> Back
+              </button>
               <button 
                 className="submit-button" 
                 onClick={handleSubmit}
@@ -234,18 +235,7 @@ const PropertyEditRequestPage: React.FC = () => {
               <div className="detail">Apartment</div>
               <div className="detail">2 People</div>
             </div>
-            <div className="need-help">
-              <h4>Need Help?</h4>
-              <div className="help-option">
-                When will I get my payout? <FaChevronRight />
-              </div>
-              <div className="help-option">
-                How payouts work? <FaChevronRight />
-              </div>
-              <div className="help-option">
-                My transaction history <FaChevronRight />
-              </div>
-            </div>
+            <NeedHelpCardComponent />
           </div>
         </div>
       )}
