@@ -627,7 +627,7 @@ const PhotoshootBookingPage: React.FC = () => {
                     onChange={(e) => handleCustomInputChange('country', e.target.value)}
                     placeholder={t('photoshoot_booking.country_placeholder', 'Enter country')}
 
-                  />
+                />
                 </div>
               </div>
               

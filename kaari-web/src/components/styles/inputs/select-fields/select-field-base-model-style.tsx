@@ -46,9 +46,10 @@ export const SelectDropdown = styled.div<{ isOpen: boolean }>`
 
 `;
 
-export const Option = styled.div`
+export const Option = styled.div<{ selected?: boolean }>`
   padding: 12px 16px;
   cursor: pointer;
+  background: ${props => props.selected ? Theme.colors.quaternary : 'transparent'};
   
   &:hover {
     background: ${Theme.colors.quaternary};

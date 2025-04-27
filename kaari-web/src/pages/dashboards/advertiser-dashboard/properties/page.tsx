@@ -112,7 +112,7 @@ const PropertiesPage: React.FC = () => {
         <PropertiesPageStyle>
             <div className="properties-section">
                 <div className="section-top">
-                    <h2 className="properties-section-title">Properties</h2>
+                <h2 className="properties-section-title">Properties</h2>
                 </div>
                 
                 {error && <div className="error-message">{error}</div>}
@@ -121,18 +121,18 @@ const PropertiesPage: React.FC = () => {
                     <div className="loading-spinner">Loading your properties...</div>
                 ) : (
                     <>
-                        <div className="my-properties">
-                            <div className="section-header">
+                <div className="my-properties">
+                    <div className="section-header">
                                 <h3 className="title">My listed properties ({listedProperties.length})</h3>
                                 {listedProperties.length > 0 && (
-                                    <div className="navigation-buttons">
-                                        <button onClick={() => scroll('left', listedPropertiesRef)}>
-                                            <img src={LeftArrow} alt="Left Arrow" />
-                                        </button>
-                                        <button onClick={() => scroll('right', listedPropertiesRef)}>
-                                            <img src={RightArrow} alt="Right Arrow" />
-                                        </button>
-                                    </div>
+                        <div className="navigation-buttons">
+                            <button onClick={() => scroll('left', listedPropertiesRef)}>
+                                <img src={LeftArrow} alt="Left Arrow" />
+                            </button>
+                            <button onClick={() => scroll('right', listedPropertiesRef)}>
+                                <img src={RightArrow} alt="Right Arrow" />
+                            </button>
+                        </div>
                                 )}
                             </div>
                             
@@ -142,38 +142,38 @@ const PropertiesPage: React.FC = () => {
                                     <h4>You have no listed properties</h4>
                                     <p>List your property by booking a photoshoot from Kaari!</p>
                                     <PurpleButtonLB40 text="Book a Photoshoot" onClick={() => window.location.href = '/photoshoot-booking'} />
-                                </div>
+                    </div>
                             ) : (
-                                <div className="properties-group" ref={listedPropertiesRef}>
+                    <div className="properties-group" ref={listedPropertiesRef}>
                                     {listedProperties.map(property => (
-                                        <PropertyCardAdvertiserSide 
+                        <PropertyCardAdvertiserSide 
                                             key={property.id}
                                             title={property.title}
                                             location={`${property.address.city}, ${property.address.country}`}
                                             imageUrl={PropertyExamplePic}
                                             price={`${property.price} /month`}
-                                            minStay="1 month"
+                            minStay="1 month"
                                             propertyId={property.id}
                                             onUnlist={() => handleOpenUnlistModal(property)}
                                             onAskForEdit={() => handleAskForEdit(property)}
                                         />
                                     ))}
-                                </div>
+                    </div>
                             )}
-                        </div>
+                </div>
                         
-                        <div className="my-properties">
-                            <div className="section-header">
+                <div className="my-properties">
+                    <div className="section-header">
                                 <h3 className="title">My unlisted properties ({unlistedProperties.length})</h3>
                                 {unlistedProperties.length > 0 && (
-                                    <div className="navigation-buttons">
-                                        <button onClick={() => scroll('left', unlistedPropertiesRef)}>
-                                            <img src={LeftArrow} alt="Left Arrow" />
-                                        </button>
-                                        <button onClick={() => scroll('right', unlistedPropertiesRef)}>
-                                            <img src={RightArrow} alt="Right Arrow" />
-                                        </button>
-                                    </div>
+                        <div className="navigation-buttons">
+                            <button onClick={() => scroll('left', unlistedPropertiesRef)}>
+                                <img src={LeftArrow} alt="Left Arrow" />
+                            </button>
+                            <button onClick={() => scroll('right', unlistedPropertiesRef)}>
+                                <img src={RightArrow} alt="Right Arrow" />
+                            </button>
+                        </div>
                                 )}
                             </div>
                             
@@ -181,25 +181,25 @@ const PropertiesPage: React.FC = () => {
                                 <div className="no-properties-message">
                                     <img src={EmptyBox} alt="No unlisted properties" />
                                     <h4>You have no unlisted properties</h4>
-                                </div>
+                    </div>
                             ) : (
-                                <div className="properties-group" ref={unlistedPropertiesRef}>
+                    <div className="properties-group" ref={unlistedPropertiesRef}>
                                     {unlistedProperties.map(property => (
-                                        <PropertyCardAdvertiserSide 
+                        <PropertyCardAdvertiserSide 
                                             key={property.id}
                                             title={property.title}
                                             location={`${property.address.city}, ${property.address.country}`}
                                             imageUrl={PropertyExamplePic}
                                             price={`${property.price} /month`}
-                                            minStay="1 month"
+                            minStay="1 month"
                                             propertyId={property.id}
                                             onList={() => handleChangePropertyStatus(property.id, 'available')}
                                             onAskForEdit={() => handleAskForEdit(property)}
                                         />
                                     ))}
-                                </div>
+                    </div>
                             )}
-                        </div>
+                </div>
                     </>
                 )}
                 

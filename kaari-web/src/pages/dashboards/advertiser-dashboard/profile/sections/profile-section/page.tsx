@@ -20,6 +20,7 @@ const ProfileSection: React.FC = () => {
     const [surname, setSurname] = useState('');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [dateOfBirth, setDateOfBirth] = useState('');
+    const [parsedDate, setParsedDate] = useState({ day: '', month: '', year: '' });
     const [gender, setGender] = useState('');
     const [nationality, setNationality] = useState('');
     const [aboutMe, setAboutMe] = useState('');
@@ -32,6 +33,49 @@ const ProfileSection: React.FC = () => {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
     
+    // Parse date of birth into parts
+    const parseDateOfBirth = (dateString: string) => {
+        if (!dateString) return { day: '', month: '', year: '' };
+        
+        try {
+            // Handle different date formats (YYYY-MM-DD or MM/DD/YYYY, etc.)
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) {
+                // If date is invalid, try to parse from string format
+                const parts = dateString.split(/[-\/]/);
+                
+                if (parts.length === 3) {
+                    // Assume YYYY-MM-DD or MM/DD/YYYY
+                    if (parts[0].length === 4) {
+                        // YYYY-MM-DD
+                        return {
+                            day: parts[2].padStart(2, '0'),
+                            month: parts[1].padStart(2, '0'),
+                            year: parts[0]
+                        };
+                    } else {
+                        // MM/DD/YYYY
+                        return {
+                            day: parts[1].padStart(2, '0'),
+                            month: parts[0].padStart(2, '0'),
+                            year: parts[2]
+                        };
+                    }
+                }
+                return { day: '', month: '', year: '' };
+            }
+            
+            return {
+                day: date.getDate().toString().padStart(2, '0'),
+                month: (date.getMonth() + 1).toString().padStart(2, '0'),
+                year: date.getFullYear().toString()
+            };
+        } catch (e) {
+            console.error('Error parsing date:', e);
+            return { day: '', month: '', year: '' };
+        }
+    };
+    
     // Load user data when component mounts
     useEffect(() => {
         if (user) {
@@ -39,7 +83,15 @@ const ProfileSection: React.FC = () => {
             setSurname(user.surname || '');
             setPhoneNumber(user.phoneNumber || '');
             setDateOfBirth(user.dateOfBirth || '');
-            setGender(user.gender || '');
+            setParsedDate(parseDateOfBirth(user.dateOfBirth || ''));
+            
+            // Normalize gender value
+            const normalizedGender = user.gender ? 
+                user.gender.toLowerCase() === 'male' || user.gender.toLowerCase() === 'm' ? 'male' : 
+                user.gender.toLowerCase() === 'female' || user.gender.toLowerCase() === 'f' ? 'female' : 
+                user.gender : '';
+            setGender(normalizedGender);
+            
             setNationality(user.nationality || '');
             setAboutMe(user.aboutMe || '');
         }
@@ -99,7 +151,11 @@ const ProfileSection: React.FC = () => {
                 <div className="profile-image">
                     <img src={user?.profilePicture || Picture} alt="Profile" />
                 </div>
-                <div className="text-button">Edit Profile Picture</div>
+                <UploadFieldModel
+                    label="Change Profile Picture"
+                    onFileSelect={handleProfilePictureChange}
+                    isProfilePicture
+                />
             </div>
             <div className="profile-grid">
                 <InputVariant 
@@ -118,6 +174,7 @@ const ProfileSection: React.FC = () => {
                     onChange={(e) => setPhoneNumber(e.target.value)}
                 />
                 <SelectFieldDatePicker 
+                    initialDate={parsedDate}
                     onChange={(date) => {
                         // Convert date object to string format (YYYY-MM-DD)
                         if (date.year && date.month && date.day) {
@@ -129,29 +186,29 @@ const ProfileSection: React.FC = () => {
                     label="Passport or Front of ID" 
                     hlabel="Government ID"
                     onFileSelect={(file) => setIdFront(file)}
-                    
+                    fileName={user?.identificationDocuments?.frontId ? "ID Front uploaded" : ""}
                 />
                 <UploadFieldModel 
                     label="Back of ID" 
                     onFileSelect={(file) => setIdBack(file)}
+                    fileName={user?.identificationDocuments?.backId ? "ID Back uploaded" : ""}
                 />
                
-                    <div className="profile-inbut-label">Gender</div>
-                    <div className="profile-inbut-label">Languages</div>
-                    <GenderCheckBox 
-                        defaultValue={gender}
-                        onChange={(value) => setGender(value)}
-                    />
-                    <div className="text-button">Add A Language+</div>
-                
+                <div className="profile-inbut-label">Gender</div>
+                <div className="profile-inbut-label">Languages</div>
+                <GenderCheckBox 
+                    defaultValue={gender}
+                    onChange={(value) => setGender(value)}
+                />
+                <div className="text-button">Add A Language+</div>
             </div>
            
-                <SelectFieldBaseModel 
-                    label="Nationality"
-                    options={['English', 'French', 'Spanish', 'German', 'Italian', 'Portuguese', 'Russian', 'Arabic', 'Chinese', 'Japanese', 'Korean', 'Vietnamese', 'Other']} 
-                    value={nationality}
-                    onChange={(value) => setNationality(value)}
-                />  
+            <SelectFieldBaseModel 
+                label="Nationality"
+                options={['English', 'French', 'Spanish', 'German', 'Italian', 'Portuguese', 'Russian', 'Arabic', 'Chinese', 'Japanese', 'Korean', 'Vietnamese', 'Other']} 
+                value={nationality}
+                onChange={(value) => setNationality(value)}
+            />  
            
             <TextareaVariant 
                 title="About Me" 

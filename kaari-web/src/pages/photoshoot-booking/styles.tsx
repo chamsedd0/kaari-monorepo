@@ -392,7 +392,7 @@ export const PhotoshootBookingPageStyle = styled.div`
     margin-top: 40px;
     margin-bottom: 20px;
   }
-
+  
   /* Make the property-price-label class visible on the map */
   :global(.property-price-label) {
     background-color: white;

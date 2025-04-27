@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import UploadFieldBaseModel from '../../../styles/inputs/upload-fields/upload-field-base-model-style';
 import icon from '../../icons/Icon-Attach.svg';
 import generativeObject from '../../icons/Generative-Object.svg';
@@ -11,13 +11,14 @@ interface UploadFieldProps {
   onClick?: () => void;
   onFileSelect?: (file: File) => void;
   showIllustration?: boolean;
+  fileName?: string;
+  isProfilePicture?: boolean;
 }
 
 const UploadFieldContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  
   
   .head-label {
     margin-bottom: 12px;
@@ -34,6 +35,27 @@ const UploadFieldContainer = styled.div`
       height: auto;
     }
   }
+  
+  .file-name {
+    margin-top: 8px;
+    font: ${Theme.typography.fonts.smallM};
+    color: ${Theme.colors.secondary};
+  }
+  
+  .profile-picture-link {
+    color: ${Theme.colors.secondary};
+    font: ${Theme.typography.fonts.link16};
+    text-decoration: underline;
+    cursor: pointer;
+    
+    &:hover {
+      opacity: 0.8;
+    }
+    
+    &:active {
+      opacity: 0.6;
+    }
+  }
 `;
 
 const UploadFieldModel: React.FC<UploadFieldProps> = ({ 
@@ -41,18 +63,39 @@ const UploadFieldModel: React.FC<UploadFieldProps> = ({
   hlabel, 
   onClick, 
   onFileSelect,
-  showIllustration = false
+  showIllustration = false,
+  fileName,
+  isProfilePicture = false
 }) => {
+  const [selectedFileName, setSelectedFileName] = useState<string | undefined>(fileName);
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0] && onFileSelect) {
-      onFileSelect(e.target.files[0]);
+      const file = e.target.files[0];
+      onFileSelect(file);
+      setSelectedFileName(file.name);
     }
   };
 
   const handleClick = () => {
-    document.getElementById('file-upload')?.click();
+    document.getElementById(isProfilePicture ? 'profile-picture-upload' : 'file-upload')?.click();
     if (onClick) onClick();
   };
+
+  if (isProfilePicture) {
+    return (
+      <div className="profile-picture-link" onClick={handleClick}>
+        Edit Profile Picture
+        <input 
+          type="file" 
+          id="profile-picture-upload" 
+          style={{ display: 'none' }} 
+          onChange={handleFileChange}
+          accept="image/*"
+        />
+      </div>
+    );
+  }
 
   return (
     <UploadFieldContainer>
@@ -72,6 +115,11 @@ const UploadFieldModel: React.FC<UploadFieldProps> = ({
           onChange={handleFileChange}
         />
       </UploadFieldBaseModel>
+      {selectedFileName && (
+        <div className="file-name">
+          Selected file: {selectedFileName}
+        </div>
+      )}
     </UploadFieldContainer>
   );
 };

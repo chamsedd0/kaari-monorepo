@@ -309,9 +309,9 @@ const PhotoshootPage: React.FC = () => {
         )}
         
         {completedBookings.length > 0 && (
-          <div className="history-container">
-            <h3 className="history-title">History of photoshoots</h3>
-            <div className="history-item-container">
+        <div className="history-container">
+          <h3 className="history-title">History of photoshoots</h3>
+          <div className="history-item-container">
               {completedBookings.map(booking => {
                 const bookingDate = new Date(booking.date);
                 return (
@@ -334,15 +334,15 @@ const PhotoshootPage: React.FC = () => {
                     <span className={`status ${booking.status}`}>
                       {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                     </span>
-                  </div>
+          </div>
                 );
               })}
-            </div>
+          </div>
           </div>
         )}
       </div>
       <div className="right">
-        <PreparePropertyComponent />
+      <PreparePropertyComponent />
         <NeedHelpCardComponent />
       </div>
       

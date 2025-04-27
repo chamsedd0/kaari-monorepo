@@ -109,6 +109,26 @@ export const ContactsPageStyle = styled.div`
                 font: ${Theme.typography.fonts.h4B};
                 color: ${Theme.colors.black};
             }
+            
+            .form-result {
+                padding: 16px;
+                border-radius: 8px;
+                margin-bottom: 16px;
+                font: ${Theme.typography.fonts.mediumM};
+                
+                &.success {
+                    background-color: rgba(92, 208, 133, 0.1);
+                    border: 1px solid rgba(92, 208, 133, 0.5);
+                    color: #2e7d32;
+                }
+                
+                &.error {
+                    background-color: rgba(244, 67, 54, 0.1);
+                    border: 1px solid rgba(244, 67, 54, 0.5);
+                    color: #d32f2f;
+                }
+            }
+            
             .contact-form-container {
                 display: flex;
                 flex-direction: column;
@@ -135,11 +155,23 @@ export const ContactsPageStyle = styled.div`
                         font: ${Theme.typography.fonts.largeB};
                         color: ${Theme.colors.black};
                     }
+                    
+                    .error-text {
+                        font: ${Theme.typography.fonts.smallM};
+                        color: #d32f2f;
+                        margin-top: 4px;
+                    }
+                }
+                
+                .form-error {
+                    border-color: #d32f2f !important;
+                    
+                    &:focus {
+                        border-color: #d32f2f !important;
+                        box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.2) !important;
+                    }
                 }
             }
-           
-            
-            
         }
     }
     .right {
@@ -155,7 +187,6 @@ export const ContactsPageStyle = styled.div`
         justify-content: center;
         align-items: center;
         width: 100%;
-        max-width: 188px;
-                    
+        max-width: 188px;      
     }
 `;

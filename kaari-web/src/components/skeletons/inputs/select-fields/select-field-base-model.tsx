@@ -30,6 +30,13 @@ const SelectFieldBaseModel: React.FC<SelectFieldProps> = ({
   const [selectedValue, setSelectedValue] = useState(value || '');
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Update selectedValue when value prop changes
+  useEffect(() => {
+    if (value !== undefined) {
+      setSelectedValue(value);
+    }
+  }, [value]);
+
   const handleSelect = (option: string) => {
     setSelectedValue(option);
     onChange?.(option);
@@ -60,6 +67,7 @@ const SelectFieldBaseModel: React.FC<SelectFieldProps> = ({
           <Option 
             key={index}
             onClick={() => handleSelect(option)}
+            selected={option === selectedValue}
           >
             {option}
           </Option>

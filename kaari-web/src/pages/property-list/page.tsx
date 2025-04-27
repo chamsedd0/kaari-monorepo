@@ -284,8 +284,8 @@ const PropertyMap = memo(({
                     if (cityStatus === google.maps.GeocoderStatus.OK && cityResults && cityResults.length > 0) {
                       console.log(`Fallback geocoding successful for property ${property.id} using city:`, cityResults[0].geometry.location.toJSON());
                       resolve(cityResults);
-                    } else {
-                      reject(new Error(`Geocoding failed for address: ${fullAddress}, status: ${status}`));
+              } else {
+                reject(new Error(`Geocoding failed for address: ${fullAddress}, status: ${status}`));
                     }
                   });
                 } else {
@@ -725,9 +725,9 @@ export default function PropertyListPage() {
           console.log("Loaded properties from Firestore:", filteredProperties.length);
           setProperties(filteredProperties);
           setFilteredProperties(filteredProperties);
-          setIsLoading(false);
+    setIsLoading(false);
           return;
-        } else {
+    } else {
           console.log("No properties found in Firestore, using mock data");
           
           // If no properties found, use basic mock data with null locations (will be geocoded)

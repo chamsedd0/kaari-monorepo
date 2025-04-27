@@ -43,7 +43,7 @@ const FEES_OPTIONS = [
 export interface EditRequestFormData {
   propertyId: string;
   additionalAmenities: string[];
-  includedFees: string[];
+  features: string[];
   additionalComments: string;
 }
 
@@ -56,7 +56,7 @@ const PropertyEditRequestPage: React.FC = () => {
   const [propertyTitle, setPropertyTitle] = useState('');
   const [propertyLocation, setPropertyLocation] = useState('');
   const [additionalAmenities, setAdditionalAmenities] = useState<string[]>([]);
-  const [includedFees, setIncludedFees] = useState<string[]>([]);
+  const [features, setFeatures] = useState<string[]>([]);
   const [additionalComments, setAdditionalComments] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -83,7 +83,7 @@ const PropertyEditRequestPage: React.FC = () => {
           
           // Set existing included fees from property data
           if (property.features && Array.isArray(property.features)) {
-            setIncludedFees(property.features);
+            setFeatures(property.features);
           }
         } else {
           setError('Property not found');
@@ -108,7 +108,7 @@ const PropertyEditRequestPage: React.FC = () => {
   };
 
   const handleFeeChange = (feeId: string) => {
-    setIncludedFees(prev => 
+    setFeatures(prev => 
       prev.includes(feeId) 
         ? prev.filter(f => f !== feeId) 
         : [...prev, feeId]
@@ -126,7 +126,7 @@ const PropertyEditRequestPage: React.FC = () => {
         propertyId,
         propertyTitle,
         additionalAmenities,
-        includedFees, 
+        features, 
         additionalComments
       };
       
@@ -186,7 +186,7 @@ const PropertyEditRequestPage: React.FC = () => {
                   <label key={fee.id} className="checkbox-item">
                     <input 
                       type="checkbox" 
-                      checked={includedFees.includes(fee.id)}
+                      checked={features.includes(fee.id)}
                       onChange={() => handleFeeChange(fee.id)}
                     />
                     <div className="amenity-icon">{fee.icon}</div>
@@ -214,7 +214,7 @@ const PropertyEditRequestPage: React.FC = () => {
               <button 
                 className="submit-button" 
                 onClick={handleSubmit}
-                disabled={isSubmitting || (additionalAmenities.length === 0 && includedFees.length === 0 && !additionalComments.trim())}
+                disabled={isSubmitting || (additionalAmenities.length === 0 && features.length === 0 && !additionalComments.trim())}
               >
                 Submit Request
               </button>

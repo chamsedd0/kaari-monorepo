@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SelectFieldBaseModelVariant1 from './select-field-base-model-variant-1';
 import styled from 'styled-components';
 import { Label2 } from '../../../styles/inputs/select-fields/select-field-base-model-style-1';
@@ -11,17 +11,30 @@ const DatePickerContainer = styled.div`
 interface DatePickerProps {
   label?: string;
   onChange?: (date: {day: string, month: string, year: string}) => void;
+  initialDate?: {day: string, month: string, year: string};
 }
 
 const SelectFieldDatePicker: React.FC<DatePickerProps> = ({
   label = "Date of Birth",
-  onChange
+  onChange,
+  initialDate
 }) => {
   const [selectedDate, setSelectedDate] = useState({
-    day: '',
-    month: '',
-    year: ''
+    day: initialDate?.day || '',
+    month: initialDate?.month || '',
+    year: initialDate?.year || ''
   });
+
+  // Update state when initialDate changes
+  useEffect(() => {
+    if (initialDate) {
+      setSelectedDate({
+        day: initialDate.day || '',
+        month: initialDate.month || '',
+        year: initialDate.year || ''
+      });
+    }
+  }, [initialDate]);
 
   // Generate arrays for days, months and years
   const days = Array.from({length: 31}, (_, i) => String(i + 1).padStart(2, '0'));
@@ -44,16 +57,19 @@ const SelectFieldDatePicker: React.FC<DatePickerProps> = ({
         <SelectFieldBaseModelVariant1
           options={days}
           placeholder="DD"
+          value={selectedDate.day}
           onChange={(value) => handleChange(value, 'day')}
         />
         <SelectFieldBaseModelVariant1
           options={months}
           placeholder="MM"
+          value={selectedDate.month}
           onChange={(value) => handleChange(value, 'month')}
         />
         <SelectFieldBaseModelVariant1
           options={years}
           placeholder="YYYY"
+          value={selectedDate.year}
           onChange={(value) => handleChange(value, 'year')}
         />
       </DatePickerContainer>
