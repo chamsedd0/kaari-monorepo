@@ -3,26 +3,31 @@ import { Theme } from "../../theme/theme";
 
 export const HelpStyle = styled.div`
     display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
+    align-items: start;
+    justify-content: start;
     background-color: ${Theme.colors.white};
     gap: 40px;
+    width: 100%;
+    padding: 80px;
+    margin-top: 80px;
+    padding-top: 40px;
+    padding-bottom: 86px;
+    max-width: 1500px;
+    margin-left: auto;
+    margin-right: auto;
 
     .left-container {
         display: flex;
         flex-direction: column;
         align-items: start;
         justify-content: start;
-        width: 40%;
+        width: 35%;
         height: 100%;
         gap: 42px;
         
         img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: 320px;
+            height: 320px;
         }
         
         .title-container {
@@ -46,7 +51,7 @@ export const HelpStyle = styled.div`
 
         .info-text{
             font: ${Theme.typography.fonts.h4B};
-            color: ${Theme.colors.gray};
+            color: ${Theme.colors.gray2};
         }
     }
 
@@ -55,7 +60,7 @@ export const HelpStyle = styled.div`
         flex-direction: column;
         align-items: start;
         justify-content: start;
-        width: 60%;
+        width: 65%;
         height: 100%;
         gap: 32px;
 

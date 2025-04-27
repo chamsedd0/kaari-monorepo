@@ -40,13 +40,104 @@ export const FavouritesPage = () => {
                     </div>
                 </div>
                 <div className="favourites-list" ref={favouritesRef}>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
+                    <PropertyCard 
+                        id="prop1"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="Apartment"
+                        isFavorite={true}
+                        onToggleFavorite={() => {}}
+                    />
+                    <PropertyCard 
+                        id="prop2"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="House"
+                        isFavorite={true}
+                        onToggleFavorite={() => {}}
+                    />
+                    <PropertyCard 
+                        id="prop3"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="Villa"
+                        isFavorite={true}
+                        onToggleFavorite={() => {}}
+                    />
+                    <PropertyCard 
+                        id="prop4"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="Apartment"
+                        isFavorite={true}
+                        onToggleFavorite={() => {}}
+                    />
+                    <PropertyCard 
+                        id="prop5"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="House"
+                        isFavorite={true}
+                        onToggleFavorite={() => {}}
+                    />
+                    <PropertyCard 
+                        id="prop6"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="Villa"
+                        isFavorite={true}
+                        onToggleFavorite={() => {}}
+                    />
+                    <PropertyCard 
+                        id="prop7"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="Apartment"
+                        isFavorite={true}
+                        onToggleFavorite={() => {}}
+                    />
                 </div>
             </div>
 
@@ -63,13 +154,104 @@ export const FavouritesPage = () => {
                     </div>
                 </div>
                 <div className="suggested-list" ref={suggestedRef}>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
-                    <PropertyCard image={PropertyPic} title="Property Title" subtitle="Property Subtitle" description="Property Description" price="100" priceType="Night" minstay="1" isRecommended={false}></PropertyCard>
+                    <PropertyCard 
+                        id="sugg1"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="House"
+                        isFavorite={false}
+                        onToggleFavorite={() => {}}
+                    />
+                    <PropertyCard 
+                        id="sugg2"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="Apartment"
+                        isFavorite={false}
+                        onToggleFavorite={() => {}}
+                    />
+                    <PropertyCard 
+                        id="sugg3"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="Villa"
+                        isFavorite={false}
+                        onToggleFavorite={() => {}}
+                    />
+                    <PropertyCard 
+                        id="sugg4"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="Condo"
+                        isFavorite={false}
+                        onToggleFavorite={() => {}}
+                    />
+                    <PropertyCard 
+                        id="sugg5"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="House"
+                        isFavorite={false}
+                        onToggleFavorite={() => {}}
+                    />
+                    <PropertyCard 
+                        id="sugg6"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="Apartment"
+                        isFavorite={false}
+                        onToggleFavorite={() => {}}
+                    />
+                    <PropertyCard 
+                        id="sugg7"
+                        image={PropertyPic} 
+                        title="Property Title" 
+                        subtitle="Property Subtitle" 
+                        description="Property Description" 
+                        price="100" 
+                        priceType="Night" 
+                        minstay="1" 
+                        isRecommended={false}
+                        propertyType="Villa"
+                        isFavorite={false}
+                        onToggleFavorite={() => {}}
+                    />
                 </div>
             </div>
         </FavouritesStyle>
