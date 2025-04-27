@@ -5,7 +5,7 @@ import InputBaseModel from '../../components/skeletons/inputs/input-fields/input
 import TextAreaBaseModel from '../../components/skeletons/inputs/input-fields/textarea-variant';
 import SelectFieldBaseModelVariant1 from '../../components/skeletons/inputs/select-fields/select-field-base-model-variant-1';
 import { PurpleButtonLB60 } from '../../components/skeletons/buttons/purple_LB60';
-import supportImage from '../../assets/images/support-image.png';
+import supportImage from '../../assets/images/support.svg';
 
 const HelpPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -74,9 +74,6 @@ const HelpPage: React.FC = () => {
             <h2 className="subtitle">Available 24/7</h2>
           </div>
           <p className="info-text">
-            Need assistance? Fill out the form and our support team will get back to you as soon as possible.
-          </p>
-          <p className="info-text">
             kaariofficial@gmail.com<br />
             +123XXXXXXXX
           </p>
@@ -119,6 +116,7 @@ const HelpPage: React.FC = () => {
           
           <div className="form-row full-width">
             <SelectFieldBaseModelVariant1
+              label="What is the topic of your question?"
               options={topicOptions}
               value={formData.topic}
               onChange={(value) => handleInputChange('topic', value)}
@@ -128,7 +126,7 @@ const HelpPage: React.FC = () => {
           
           <div className="form-row full-width">
             <TextAreaBaseModel
-              title="Describe your issue"
+              title="Give us the description of the assist you want"
               value={formData.description}
               onChange={handleInputChange.bind(null, 'description')}
               placeholder="Please provide details about your issue..."
@@ -142,6 +140,8 @@ const HelpPage: React.FC = () => {
             />
           </div>
         </div>
+
+        
       </HelpStyle>
     </>
   );

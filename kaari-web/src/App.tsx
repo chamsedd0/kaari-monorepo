@@ -11,6 +11,7 @@ import AdminDashboard from './pages/dashboards/admin-dashboard/page';
 import ProfileShowcasePage from './pages/profile-advertiser-showcase/page';
 import PhotoshootBookingPage from './pages/photoshoot-booking/page';
 import ThankYouPage from './pages/photoshoot-booking/thank-you';
+import HelpPage from './pages/help/page';
 import { useStore } from './backend/store';
 import { useMemo, useEffect, useState } from 'react';
 import MainLayout from './layouts/MainLayout';
@@ -304,6 +305,9 @@ function App() {
             })()
         }
       />
+      
+      {/* Help Page Route */}
+      <Route path="/help" element={<HelpPage />} />
       
       {/* Fallback route for 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
