@@ -14,29 +14,9 @@ export const PropertyEditRequestPageStyle = styled.div`
     h1 {
       font: ${Theme.typography.fonts.h3};
       color: ${Theme.colors.black};
-      margin: 0;
     }
     
-    .back-button {
-      display: flex;
-      align-items: center;
-      background: none;
-      border: none;
-      color: ${Theme.colors.secondary};
-      font: ${Theme.typography.fonts.mediumM};
-      cursor: pointer;
-      padding: 8px 16px;
-      margin-right: 16px;
-      border-radius: 8px;
-      
-      &:hover {
-        background-color: ${Theme.colors.fifth};
-      }
-      
-      svg {
-        margin-right: 8px;
-      }
-    }
+    
   }
   
   .error-message {
@@ -82,14 +62,11 @@ export const PropertyEditRequestPageStyle = styled.div`
       flex: 1;
       background-color: white;
       border-radius: 12px;
-      padding: 30px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-      
       .form-section {
         margin-bottom: 32px;
         
         h3 {
-          font: ${Theme.typography.fonts.largeB};
+          font: ${Theme.typography.fonts.h4B};
           color: ${Theme.colors.black};
           margin-bottom: 20px;
         }
@@ -102,6 +79,7 @@ export const PropertyEditRequestPageStyle = styled.div`
           .checkbox-item {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             cursor: pointer;
             padding: 4px 0;
             
@@ -114,13 +92,19 @@ export const PropertyEditRequestPageStyle = styled.div`
             }
             
             .amenity-icon {
-              width: 20px;
-              height: 20px;
+              width: 24px;
+              height: 24px;
               margin-right: 10px;
               display: flex;
               align-items: center;
               justify-content: center;
               color: ${Theme.colors.secondary};
+            }
+            
+            .amenity-text {
+              font: ${Theme.typography.fonts.mediumM};
+              color: ${Theme.colors.black};
+              flex: 1;
             }
             
             .checkbox-square {
@@ -130,7 +114,7 @@ export const PropertyEditRequestPageStyle = styled.div`
               border-radius: 4px;
               display: inline-block;
               position: relative;
-              margin-right: 12px;
+              margin-left: 10px;
               flex-shrink: 0;
               
               &:after {
@@ -154,11 +138,6 @@ export const PropertyEditRequestPageStyle = styled.div`
               &:after {
                 display: block;
               }
-            }
-            
-            .amenity-text {
-              font: ${Theme.typography.fonts.mediumM};
-              color: ${Theme.colors.black};
             }
           }
         }
@@ -188,13 +167,11 @@ export const PropertyEditRequestPageStyle = styled.div`
       flex: 0 0 300px;
       background-color: white;
       border-radius: 12px;
-      padding: 24px;
       height: fit-content;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
       
       .property-image {
         width: 100%;
-        height: 180px;
+        height: 200px;
         border-radius: 8px;
         overflow: hidden;
         margin-bottom: 16px;
@@ -227,44 +204,38 @@ export const PropertyEditRequestPageStyle = styled.div`
           margin-bottom: 8px;
         }
       }
-      
-      .need-help {
-        background-color: white;
-        border-radius: 12px;
-        padding: 20px;
-        margin-top: 16px;
-        border: 1px solid ${Theme.colors.fifth};
-        
-        h4 {
-          font: ${Theme.typography.fonts.mediumB};
-          color: ${Theme.colors.black};
-          margin-bottom: 16px;
-        }
-        
-        .help-option {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 12px 0;
-          border-bottom: 1px solid ${Theme.colors.fifth};
-          font: ${Theme.typography.fonts.mediumM};
-          color: ${Theme.colors.black};
-          cursor: pointer;
-          
-          &:hover {
-            color: ${Theme.colors.secondary};
-          }
-          
-          svg {
-            color: ${Theme.colors.gray};
-          }
-        }
-      }
     }
   }
   
   .button-container {
     margin-top: 32px;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    gap: 20px;
+
+    .back-button {
+      display: flex;
+      align-items: center;
+      background: none;
+      border: none;
+      height: 48px;
+      color: ${Theme.colors.gray2};
+      font: ${Theme.typography.fonts.mediumB};
+      cursor: pointer;
+      padding: 0px 16px;
+      border-radius:${Theme.borders.radius.extreme};
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background-color: ${Theme.colors.gray};
+      }
+      
+      svg {
+        margin-right: 8px;
+        margin-top: 1.5px;
+      }
+    }
     
     .submit-button {
       min-width: 160px;
