@@ -155,19 +155,24 @@ const PropertyMap = memo(({
   properties, 
   isCollapsed, 
   setProperties, 
-  toggleFavorite 
+  toggleFavorite, 
+  selectedProperty, 
+  setSelectedProperty,
+  mapCenter,
+  mapZoom
 }: { 
   showMap: boolean,
   properties: PropertyType[],
   isCollapsed: boolean,
   setProperties: React.Dispatch<React.SetStateAction<PropertyType[]>>,
-  toggleFavorite: (id: string | number) => void
+  toggleFavorite: (id: string | number) => void,
+  selectedProperty: PropertyType | null,
+  setSelectedProperty: (property: PropertyType | null) => void,
+  mapCenter: { lat: number; lng: number },
+  mapZoom: number
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [selectedProperty, setSelectedProperty] = useState<PropertyType | null>(null);
-  const [mapCenter, setMapCenter] = useState(DEFAULT_MAP_CENTER);
-  const [mapZoom, setMapZoom] = useState(DEFAULT_MAP_ZOOM);
   const mapRef = useRef<google.maps.Map>();
   const geocoderRef = useRef<google.maps.Geocoder>();
   const { isAuthenticated } = useAuth();
@@ -198,11 +203,7 @@ const PropertyMap = memo(({
   // Handle property click
   const handlePropertyClick = useCallback((property: PropertyType) => {
     setSelectedProperty(property);
-    if (property.location) {
-      setMapCenter(property.location);
-      setMapZoom(15); // Zoom in when a property is selected
-    }
-  }, []);
+  }, [setSelectedProperty]);
 
   // Handle view property button click
   const handleViewProperty = useCallback((propertyId: string | number) => {
@@ -404,22 +405,22 @@ const PropertyMap = memo(({
         
         // If we only have one property, set an appropriate zoom level
         if (validProperties.length === 1) {
-          setMapZoom(15);
+          mapZoom = 15;
           if (validProperties[0].location) {
-            setMapCenter(validProperties[0].location);
+            mapCenter = validProperties[0].location;
           }
         } else {
           // Get the zoom after fitting bounds
           const newZoom = mapRef.current.getZoom();
           // Adjust zoom if needed
           if (newZoom && newZoom > 15) {
-            setMapZoom(15);
+            mapZoom = 15;
           }
         }
       } else {
         // If no valid properties, center on Rabat
-        setMapCenter(DEFAULT_MAP_CENTER);
-        setMapZoom(DEFAULT_MAP_ZOOM);
+        mapCenter = DEFAULT_MAP_CENTER;
+        mapZoom = DEFAULT_MAP_ZOOM;
       }
     }
   }, [properties]);
@@ -571,9 +572,10 @@ const PropertyMap = memo(({
 interface EnhancedPropertyCardProps {
   property: PropertyType;
   onToggleFavorite: (id: string | number) => void;
+  isSelected?: boolean;
 }
 
-const EnhancedPropertyCardComponent = ({ property, onToggleFavorite }: EnhancedPropertyCardProps) => {
+const EnhancedPropertyCardComponent = ({ property, onToggleFavorite, isSelected }: EnhancedPropertyCardProps) => {
   // Format property data for the card component
   const formattedPrice = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -585,7 +587,7 @@ const EnhancedPropertyCardComponent = ({ property, onToggleFavorite }: EnhancedP
   const propertyId = property.id;
   
   return (
-    <div className="property-card-wrapper">
+    <div className={`property-card-wrapper${isSelected ? ' selected' : ''}`}>
       <PropertyCard 
         image={property.image || defaultImage}
         title={property.title}
@@ -640,6 +642,9 @@ export default function PropertyListPage() {
   // Add state for collapsing the main content
   const [isMainContentCollapsed, setIsMainContentCollapsed] = useState<boolean>(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<PropertyType | null>(null);
+  const [mapCenter, setMapCenter] = useState(DEFAULT_MAP_CENTER);
+  const [mapZoom, setMapZoom] = useState(DEFAULT_MAP_ZOOM);
 
   // Load Google Maps API
   const { isLoaded } = useJsApiLoader({
@@ -1120,6 +1125,14 @@ export default function PropertyListPage() {
     );
   }, [isAuthenticated]);
 
+  // Ensure map recenters when a property is selected from the card list
+  useEffect(() => {
+    if (selectedProperty && selectedProperty.location) {
+      setMapCenter(selectedProperty.location);
+      setMapZoom(15); // or your preferred zoom level
+    }
+  }, [selectedProperty]);
+
     return (
     <PropertyList $isCollapsed={isMainContentCollapsed}>
       <div className={`main-content ${isMainContentCollapsed ? 'collapsed' : ''}`} ref={scrollRef}>
@@ -1229,15 +1242,18 @@ export default function PropertyListPage() {
                       currentPage * propertiesPerPage
                     ).map((property) => {
                       const propertyKey = property.id.toString();
-                      
+                      const isSelected = selectedProperty?.id === property.id;
                       return (
                         <div 
-                          className="result" 
+                          className={`result${isSelected ? ' selected' : ''}`} 
                           key={propertyKey}
+                          onClick={() => setSelectedProperty(property)}
+                          style={{ cursor: 'pointer'}}
                         >
                           <EnhancedPropertyCard 
                             property={property} 
                             onToggleFavorite={toggleFavorite} 
+                            isSelected={isSelected}
                           />
                         </div>
                       );
@@ -1295,6 +1311,10 @@ export default function PropertyListPage() {
         isCollapsed={isMainContentCollapsed}
         setProperties={setProperties}
         toggleFavorite={toggleFavorite}
+        selectedProperty={selectedProperty}
+        setSelectedProperty={setSelectedProperty}
+        mapCenter={mapCenter}
+        mapZoom={mapZoom}
       />
 
       {!isMainContentCollapsed && (

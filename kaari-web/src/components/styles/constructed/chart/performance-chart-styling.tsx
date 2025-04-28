@@ -103,10 +103,50 @@ export const PerformanceChartStyling = styled.div`
 
   .chart {
     width: 100%;
-    height: 140px;
+    height: 180px;
     position: relative;
-    border-radius: 16px;
+    border-radius: 24px;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: ${Theme.borders.primary};
+    background: transparent;
+    margin: 0;
+    padding: 0;
+
+    .empty-state {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      margin: 0;
+      padding: 0;
+
+      img {
+        width: 70px;
+        margin-bottom: 8px;
+      }
+      .main-text {
+        color: ${Theme.colors.primary};
+        font-weight: 700;
+        font-size: 18px;
+        margin-bottom: 2px;
+        margin-top: 4px;
+        text-align: center;
+      }
+      .sub-text {
+        color: ${Theme.colors.primary};
+        font-weight: 400;
+        font-size: 13px;
+        opacity: 0.7;
+        text-align: center;
+      }
+    }
 
     .area {
       fill-opacity: 0.2;

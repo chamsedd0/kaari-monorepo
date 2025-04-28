@@ -147,6 +147,13 @@ export const ReservationsStyle = styled.div`
                 justify-content: center;
                 cursor: pointer;
                 color: ${Theme.colors.white};
+                transition: all 0.3s ease;
+
+                &.processing {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                    pointer-events: none;
+                }
 
                 img {
                     width: 22px;
@@ -160,7 +167,7 @@ export const ReservationsStyle = styled.div`
                 cursor: pointer;
                 transition: all 0.3s ease;
 
-                &:hover {
+                &:hover:not(.processing) {
                     background-color: darkgreen;
                 }
             }
@@ -170,7 +177,7 @@ export const ReservationsStyle = styled.div`
                 cursor: pointer;
                 transition: all 0.3s ease;
 
-                &:hover {
+                &:hover:not(.processing) {
                     background-color: #600000;
                 }
             }

@@ -90,10 +90,39 @@ export const PhotoshootsPageStyle = styled.div`
                 padding: 23px 16px;
                 border: ${Theme.borders.primary};
                 border-radius: ${Theme.borders.radius.lg};
+                gap: 16px;
                 
                 .location {
                     font: ${Theme.typography.fonts.mediumB};
                     color: ${Theme.colors.black};
+                    max-width: 140px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    cursor: pointer;
+                    position: relative;
+
+                    &:hover::after {
+                        content: attr(data-full);
+                        position: absolute;
+                        left: 50%;
+                        top: 100%;
+                        transform: translateX(-50%);
+                        background: #fff;
+                        color: #222;
+                        border: 1px solid ${Theme.colors.primary};
+                        border-radius: 8px;
+                        padding: 6px 12px;
+                        font-size: 13px;
+                        font-weight: 500;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                        white-space: pre-line;
+                        z-index: 10;
+                        min-width: 180px;
+                        max-width: 400px;
+                        word-break: break-word;
+                        pointer-events: none;
+                    }
                 }
                 
                 .date-time {
@@ -103,9 +132,12 @@ export const PhotoshootsPageStyle = styled.div`
 
                 .status {
                     font-weight: 600;
-                    padding: 4px 8px;
-                    border-radius: 4px;
-                    font-size: 12px;
+                    padding: 4px 18px;
+                    border-radius: 999px;
+                    font-size: 13px;
+                    min-width: 100px;
+                    text-align: center;
+                    display: inline-block;
                     
                     &.completed {
                         background-color: ${Theme.colors.success};

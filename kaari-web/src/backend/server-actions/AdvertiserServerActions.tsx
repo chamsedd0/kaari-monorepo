@@ -431,4 +431,219 @@ export async function getAdvertiserRequests(): Promise<Request[]> {
     console.error('Error fetching advertiser requests:', error);
     throw new Error('Failed to fetch advertiser requests');
   }
+}
+
+/**
+ * Get all reservation requests for the advertiser's properties
+ */
+export async function getAdvertiserReservationRequests(): Promise<{
+  reservation: Request;
+  listing?: Listing | null;
+  property?: Property | null;
+  client?: User | null;
+}[]> {
+  try {
+    // Check if user is authenticated and an advertiser
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    if (currentUser.role !== 'advertiser') {
+      throw new Error('Only advertisers can access their reservation requests');
+    }
+    
+    // Get properties owned by this user
+    const properties = await getDocumentsByField<Property>(
+      PROPERTIES_COLLECTION,
+      'ownerId',
+      currentUser.id
+    );
+    
+    // Get all requests for these properties
+    const propertyIds = properties.map(property => property.id);
+    const requests: Request[] = [];
+    
+    // For each property, get its requests
+    for (const propertyId of propertyIds) {
+      const propertyRequests = await getDocumentsByField<Request>(
+        'requests',
+        'propertyId',
+        propertyId
+      );
+      requests.push(...propertyRequests);
+    }
+    
+    // Get listing-specific requests too
+    const listings = await getDocumentsByField<Listing>(
+      LISTINGS_COLLECTION,
+      'agentId',
+      currentUser.id
+    );
+    
+    const listingIds = listings.map(listing => listing.id);
+    
+    for (const listingId of listingIds) {
+      const listingRequests = await getDocumentsByField<Request>(
+        'requests',
+        'listingId',
+        listingId
+      );
+      
+      // Filter out duplicates (requests that were already counted under properties)
+      const uniqueRequests = listingRequests.filter(
+        req => !requests.some(r => r.id === req.id)
+      );
+      
+      requests.push(...uniqueRequests);
+    }
+    
+    // For each request, get associated listing, property, and client info
+    const reservationsWithDetails = await Promise.all(
+      requests.map(async (request) => {
+        let listing = null;
+        let property = null;
+        let client = null;
+        
+        // Get the client info
+        client = await getDocumentById<User>(USERS_COLLECTION, request.userId);
+        
+        // If request has a listing ID, get the listing
+        if (request.listingId) {
+          listing = await getDocumentById<Listing>(LISTINGS_COLLECTION, request.listingId);
+          
+          // If listing found, get the property
+          if (listing) {
+            property = await getDocumentById<Property>(PROPERTIES_COLLECTION, listing.propertyId);
+          }
+        } 
+        // If request has a property ID but no listing ID, get the property directly
+        else if (request.propertyId) {
+          property = await getDocumentById<Property>(PROPERTIES_COLLECTION, request.propertyId);
+        }
+        
+        return {
+          reservation: request,
+          listing,
+          property,
+          client
+        };
+      })
+    );
+    
+    return reservationsWithDetails;
+  } catch (error) {
+    console.error('Error fetching advertiser reservation requests:', error);
+    throw new Error('Failed to fetch advertiser reservation requests');
+  }
+}
+
+/**
+ * Approve a reservation request
+ */
+export async function approveReservationRequest(requestId: string): Promise<boolean> {
+  try {
+    // Check if user is authenticated and an advertiser
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    if (currentUser.role !== 'advertiser') {
+      throw new Error('Only advertisers can approve reservation requests');
+    }
+    
+    // Get the request
+    const request = await getDocumentById<Request>('requests', requestId);
+    if (!request) {
+      throw new Error('Request not found');
+    }
+    
+    // Verify that the request is for a property or listing owned by this advertiser
+    let isAuthorized = false;
+    
+    if (request.propertyId) {
+      const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, request.propertyId);
+      if (property && property.ownerId === currentUser.id) {
+        isAuthorized = true;
+      }
+    }
+    
+    if (request.listingId) {
+      const listing = await getDocumentById<Listing>(LISTINGS_COLLECTION, request.listingId);
+      if (listing && listing.agentId === currentUser.id) {
+        isAuthorized = true;
+      }
+    }
+    
+    if (!isAuthorized) {
+      throw new Error('Not authorized to approve this request');
+    }
+    
+    // Update the request status to accepted
+    await updateDocument<Request>('requests', requestId, {
+      status: 'accepted',
+      updatedAt: new Date()
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error approving reservation request:', error);
+    throw new Error('Failed to approve reservation request');
+  }
+}
+
+/**
+ * Reject a reservation request
+ */
+export async function rejectReservationRequest(requestId: string): Promise<boolean> {
+  try {
+    // Check if user is authenticated and an advertiser
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    if (currentUser.role !== 'advertiser') {
+      throw new Error('Only advertisers can reject reservation requests');
+    }
+    
+    // Get the request
+    const request = await getDocumentById<Request>('requests', requestId);
+    if (!request) {
+      throw new Error('Request not found');
+    }
+    
+    // Verify that the request is for a property or listing owned by this advertiser
+    let isAuthorized = false;
+    
+    if (request.propertyId) {
+      const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, request.propertyId);
+      if (property && property.ownerId === currentUser.id) {
+        isAuthorized = true;
+      }
+    }
+    
+    if (request.listingId) {
+      const listing = await getDocumentById<Listing>(LISTINGS_COLLECTION, request.listingId);
+      if (listing && listing.agentId === currentUser.id) {
+        isAuthorized = true;
+      }
+    }
+    
+    if (!isAuthorized) {
+      throw new Error('Not authorized to reject this request');
+    }
+    
+    // Update the request status to rejected
+    await updateDocument<Request>('requests', requestId, {
+      status: 'rejected',
+      updatedAt: new Date()
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error rejecting reservation request:', error);
+    throw new Error('Failed to reject reservation request');
+  }
 } 
