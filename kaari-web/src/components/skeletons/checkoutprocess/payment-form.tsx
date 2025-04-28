@@ -1,6 +1,7 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import styled from 'styled-components';
 import { FaCreditCard, FaUser, FaCalendarAlt, FaLock, FaTimes } from 'react-icons/fa';
+import { Theme } from '../../../theme/theme';
 
 export interface PaymentFormData {
   cardNumber: string;
@@ -12,9 +13,10 @@ export interface PaymentFormData {
 interface PaymentFormProps {
   onSubmit: (formData: PaymentFormData) => void;
   onCancel: () => void;
+  onAddCard?: (cardData: any) => void; // For compatibility with payment-method-section
 }
 
-const PaymentForm: React.FC<PaymentFormProps> = ({ onSubmit, onCancel }) => {
+const PaymentForm: React.FC<PaymentFormProps> = ({ onSubmit, onCancel, onAddCard }) => {
   const [formData, setFormData] = useState<PaymentFormData>({
     cardNumber: '',
     nameOnCard: '',
@@ -187,8 +189,34 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onSubmit, onCancel }) => {
     e.preventDefault();
     
     if (validateForm()) {
-      onSubmit(formData);
+      // Handle both interfaces
+      if (onAddCard) {
+        const cardData = {
+          id: `card_${Date.now()}`,
+          cardNumber: formData.cardNumber,
+          cardHolder: formData.nameOnCard,
+          expiryDate: formData.expiryDate,
+          isDefault: false,
+          last4: formData.cardNumber.replace(/\s/g, '').slice(-4),
+          brand: detectCardBrand(formData.cardNumber)
+        };
+        onAddCard(cardData);
+      } else {
+        onSubmit(formData);
+      }
     }
+  };
+
+  const detectCardBrand = (cardNumber: string): string => {
+    const cleanNumber = cardNumber.replace(/\s+/g, '');
+    
+    // Simple detection based on card number prefixes
+    if (/^4/.test(cleanNumber)) return 'Visa';
+    if (/^5[1-5]/.test(cleanNumber)) return 'Mastercard';
+    if (/^3[47]/.test(cleanNumber)) return 'American Express';
+    if (/^6(?:011|5)/.test(cleanNumber)) return 'Discover';
+    
+    return 'Card';
   };
 
   return (
@@ -310,6 +338,7 @@ const FormContainer = styled.div`
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   padding: 24px;
   margin-top: 20px;
+  border: 1px solid ${Theme.colors.tertiary};
 `;
 
 const FormHeader = styled.div`
@@ -322,6 +351,7 @@ const FormHeader = styled.div`
     margin: 0;
     font-size: 18px;
     color: #333;
+    font: ${Theme.typography.fonts.largeB};
   }
 `;
 
@@ -354,6 +384,7 @@ const Label = styled.label`
   font-weight: 500;
   margin-bottom: 6px;
   color: #333;
+  font: ${Theme.typography.fonts.smallB};
 `;
 
 const InputWrapper = styled.div`
@@ -365,27 +396,27 @@ const InputWrapper = styled.div`
 const IconWrapper = styled.div`
   position: absolute;
   left: 12px;
-  color: #777;
+  color: ${Theme.colors.gray2};
   font-size: 16px;
 `;
 
 const Input = styled.input<{ hasError?: boolean }>`
   width: 100%;
   padding: 12px 12px 12px 40px;
-  border: 1px solid ${props => props.hasError ? '#e74c3c' : '#ddd'};
-  border-radius: 4px;
+  border: 1px solid ${props => props.hasError ? '#e74c3c' : Theme.colors.tertiary};
+  border-radius: ${Theme.borders.radius.md};
   font-size: 16px;
   color: #333;
   transition: border-color 0.2s;
   
   &:focus {
     outline: none;
-    border-color: ${props => props.hasError ? '#e74c3c' : '#6d28d9'};
-    box-shadow: 0 0 0 2px ${props => props.hasError ? 'rgba(231, 76, 60, 0.2)' : 'rgba(109, 40, 217, 0.2)'};
+    border-color: ${props => props.hasError ? '#e74c3c' : Theme.colors.secondary};
+    box-shadow: 0 0 0 2px ${props => props.hasError ? 'rgba(231, 76, 60, 0.2)' : 'rgba(143, 39, 206, 0.2)'};
   }
   
   &::placeholder {
-    color: #aaa;
+    color: ${Theme.colors.gray1};
   }
 `;
 
@@ -393,6 +424,7 @@ const ErrorMessage = styled.div`
   color: #e74c3c;
   font-size: 12px;
   margin-top: 4px;
+  font: ${Theme.typography.fonts.smallM};
 `;
 
 const ExpiryAndCvvContainer = styled.div`
@@ -410,11 +442,11 @@ const FormActions = styled.div`
 
 const CancelButton = styled.button`
   background-color: transparent;
-  border: 1px solid #ddd;
-  color: #555;
+  border: 1px solid ${Theme.colors.tertiary};
+  color: ${Theme.colors.gray2};
   padding: 10px 16px;
-  border-radius: 4px;
-  font-weight: 500;
+  border-radius: ${Theme.borders.radius.md};
+  font: ${Theme.typography.fonts.smallB};
   cursor: pointer;
   transition: all 0.2s;
   
@@ -424,17 +456,17 @@ const CancelButton = styled.button`
 `;
 
 const SubmitButton = styled.button`
-  background-color: #6d28d9;
+  background-color: ${Theme.colors.secondary};
   color: white;
   border: none;
   padding: 10px 16px;
-  border-radius: 4px;
-  font-weight: 500;
+  border-radius: ${Theme.borders.radius.md};
+  font: ${Theme.typography.fonts.smallB};
   cursor: pointer;
   transition: all 0.2s;
   
   &:hover {
-    background-color: #5b21b6;
+    background-color: ${Theme.colors.primary};
   }
 `;
 

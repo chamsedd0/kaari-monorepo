@@ -19,14 +19,45 @@ type SuccessStatusType = 'success' | 'pending' | 'rejected' | 'payment_failed' |
 interface CheckoutProcessContainerProps {
   initialStep?: number;
   successStatus?: SuccessStatusType;
+  propertyData?: {
+    id: string;
+    title: string;
+    image: string;
+    moveInDate: string;
+    lengthOfStay: string;
+    profileImage: string;
+    profileName: string;
+    monthlyRent: string;
+    securityDeposit: string;
+    serviceFee: string;
+    total: string;
+  };
 }
 
 const CheckoutProcessContainer: React.FC<CheckoutProcessContainerProps> = ({ 
   initialStep = 1,
-  successStatus = 'success'
+  successStatus = 'success',
+  propertyData
 }) => {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [status, setStatus] = useState<SuccessStatusType>(successStatus);
+  
+  // Default property data if none provided
+  const defaultPropertyData = {
+    id: '1',
+    title: "Modern Apartment in Agadir",
+    image: PropertyImage,
+    moveInDate: "05.09.2024",
+    lengthOfStay: "1 month",
+    profileImage: ProfileImage,
+    profileName: "Leonardo V.",
+    monthlyRent: "2000€",
+    securityDeposit: "0€",
+    serviceFee: "400€",
+    total: "2400€"
+  };
+  
+  const property = propertyData || defaultPropertyData;
   
   const handleNext = () => {
     setCurrentStep(prev => Math.min(prev + 1, 4));
@@ -65,49 +96,49 @@ const CheckoutProcessContainer: React.FC<CheckoutProcessContainerProps> = ({
   };
   
   return (
-    <>
-      <CheckoutProcessStyle>
-        <div className="checkout-process-header">
-          <img src={Logo} alt="Logo" />
-          <CheckoutProgressBar currentStep={currentStep === 4 ? 3 : currentStep} />
-        </div>
-        
-        <CheckoutProvider onNavigate={(step) => setCurrentStep(step)}>
-          <div className="checkout-process-content">
+    <CheckoutProcessStyle>
+      <div className="checkout-process-header">
+        <img src={Logo} alt="Logo" className="logo" />
+        <CheckoutProgressBar currentStep={currentStep === 4 ? 3 : currentStep} />
+      </div>
+      
+      <CheckoutProvider onNavigate={(step) => setCurrentStep(step)}>
+        <div className="checkout-process-content">
+          <div className="checkout-process-form">
             {renderCurrentStep()}
-            
-            <div className="checkout-process-property-card">
-              <CheckoutCard
-                image={PropertyImage}
-                title="Modern Apartment in Agadir"
-                moveInDate="05.09.2024"
-                lengthOfStay="1 month"
-                profileImage={ProfileImage}
-                profileName="Leonardo V."
-                monthlyRent="2000€"
-                securityDeposit="0€"
-                serviceFee="400€"
-                total="2400€"
-              />
-            </div>
           </div>
-        </CheckoutProvider>
-        
-        {/* Demo controls for changing status - REMOVE IN PRODUCTION */}
-        {process.env.NODE_ENV === 'development' && (
-          <div style={{ marginTop: '32px', padding: '16px', backgroundColor: '#f0f0f0', borderRadius: '8px' }}>
-            <h3>Demo Controls (Development Only)</h3>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-              <button onClick={() => changeStatus('success')}>Success</button>
-              <button onClick={() => changeStatus('pending')}>Pending</button>
-              <button onClick={() => changeStatus('rejected')}>Rejected</button>
-              <button onClick={() => changeStatus('payment_failed')}>Payment Failed</button>
-              <button onClick={() => changeStatus('refund_processing')}>Refund Processing</button>
-            </div>
+          
+          <div className="checkout-process-property-card">
+            <CheckoutCard
+              image={property.image}
+              title={property.title}
+              moveInDate={property.moveInDate}
+              lengthOfStay={property.lengthOfStay}
+              profileImage={property.profileImage}
+              profileName={property.profileName}
+              monthlyRent={property.monthlyRent}
+              securityDeposit={property.securityDeposit}
+              serviceFee={property.serviceFee}
+              total={property.total}
+            />
           </div>
-        )}
-      </CheckoutProcessStyle>
-    </>
+        </div>
+      </CheckoutProvider>
+      
+      {/* Demo controls for changing status - REMOVE IN PRODUCTION */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="demo-controls">
+          <h3>Demo Controls (Development Only)</h3>
+          <div className="button-group">
+            <button onClick={() => changeStatus('success')}>Success</button>
+            <button onClick={() => changeStatus('pending')}>Pending</button>
+            <button onClick={() => changeStatus('rejected')}>Rejected</button>
+            <button onClick={() => changeStatus('payment_failed')}>Payment Failed</button>
+            <button onClick={() => changeStatus('refund_processing')}>Refund Processing</button>
+          </div>
+        </div>
+      )}
+    </CheckoutProcessStyle>
   );
 };
 

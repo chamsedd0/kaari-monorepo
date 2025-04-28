@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import PropertyPageComponent from './pages/property-page/page';
-import CheckoutProcess from './pages/checkout-process/page';
+import CheckoutPage from './pages/checkout/page';
 import UsersLanding from './pages/users-landing/page';
 import AdvertisersLanding from './pages/advertisers-landing/page';
 import PropertyList from './pages/property-list/page';
@@ -113,8 +113,8 @@ function App() {
       <Route path="/property/:id" element={<PropertyPageComponent />} />
       <Route path="/advertiser-profile/:id" element={<ProfileShowcasePage />} />
       
-      {/* Checkout Process with status handling */}
-      <Route path="/checkout-process" element={<CheckoutProcess />} />
+      {/* New Checkout Page */}
+      <Route path="/checkout" element={<CheckoutPage />} />
       
       {/* Protected Routes - redirect to home if not authenticated */}
       <Route 

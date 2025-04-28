@@ -21,7 +21,8 @@ const TenantsPage: React.FC = () => {
     const fetchTenants = async () => {
       try {
         const data = await getAdvertiserReservationRequests();
-        setTenants(data.filter(res => res.reservation.status === 'accepted'));
+        // Only show completed reservations (tenants who have paid)
+        setTenants(data.filter(res => res.reservation.status === 'completed'));
         setError(null);
       } catch (err) {
         setError('Failed to load tenants.');
@@ -37,25 +38,28 @@ const TenantsPage: React.FC = () => {
     return new Date(date).toLocaleDateString('en-GB');
   };
 
-  // Helper to determine if tenant is upcoming, current, or past
+  // Helper to determine if tenant is current or upcoming based on move-in date
   const getTenantStatus = (moveInDate: Date | undefined) => {
-    if (!moveInDate) return null;
+    if (!moveInDate) return 'Current'; // Default to current if no date
     const now = new Date();
     const moveIn = new Date(moveInDate);
-    // For demo, assume tenancy is current if move-in is today or in the past (no move-out info)
+    // If move-in date is in the future, it's upcoming
     if (moveIn > now) return 'Upcoming';
+    // Otherwise it's a current tenant
     return 'Current';
   };
 
-  // For past tenants, you would ideally have a move-out date. For now, demo logic:
-  const getPastTenants = () => {
-    // If you add moveOutDate to reservation, use it here
-    // For now, just return []
-    return [];
-  };
+  // Split into current and upcoming tenants
+  const currentTenants = tenants.filter(tenant => 
+    getTenantStatus(tenant.reservation.scheduledDate) === 'Current'
+  );
+  
+  const upcomingTenants = tenants.filter(tenant => 
+    getTenantStatus(tenant.reservation.scheduledDate) === 'Upcoming'
+  );
 
-  // Show all accepted tenants as current or upcoming
-  const currentAndUpcomingTenants = tenants;
+  // Combine both for display
+  const allActiveTenants = [...currentTenants, ...upcomingTenants];
 
   return (
     <TenantsPageStyle>
@@ -76,7 +80,7 @@ const TenantsPage: React.FC = () => {
                 <tr><td colSpan={3}>Loading...</td></tr>
               ) : error ? (
                 <tr><td colSpan={3}>{error}</td></tr>
-              ) : currentAndUpcomingTenants.length === 0 ? (
+              ) : allActiveTenants.length === 0 ? (
                 <tr>
                   <td colSpan={3} style={{ textAlign: 'center', padding: '40px 0' }}>
                     <img src={emptyBox} alt="No tenants" style={{ width: 80, marginBottom: 12 }} />
@@ -84,7 +88,7 @@ const TenantsPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                currentAndUpcomingTenants.map((tenant) => (
+                allActiveTenants.map((tenant) => (
                   <tr key={tenant.reservation.id}>
                     <td>
                       <div className="tenant-info">
@@ -151,49 +155,12 @@ const TenantsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {getPastTenants().length === 0 ? (
-                <tr>
-                  <td colSpan={3} style={{ textAlign: 'center', padding: '40px 0' }}>
-                    <img src={emptyBox} alt="No tenants" style={{ width: 80, marginBottom: 12 }} />
-                    <div style={{ color: '#888', fontSize: 16, marginTop: 8 }}>No tenants found.</div>
-                  </td>
-                </tr>
-              ) : (
-                getPastTenants().map((tenant) => (
-                  <tr key={tenant.reservation.id}>
-                    <td>
-                      <div className="tenant-info">
-                        <img src={tenant.client?.profilePicture || tenantAvatar} alt="Tenant" />
-                        <span className="tenant-name">{tenant.client ? `${tenant.client.name} ${tenant.client.surname || ''}` : 'Unknown Tenant'}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="property-info">
-                        <span className="property-name">{tenant.property?.title || 'Unknown Property'}</span>
-                        {tenant.property?.address && (
-                          <span className="property-location">
-                            {tenant.property.address.city}, {tenant.property.address.country}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="move-in-date">
-                      {formatDate(tenant.reservation.scheduledDate)}
-                      <span style={{
-                        color: '#b80000',
-                        background: '#ffebee',
-                        borderRadius: 12,
-                        padding: '2px 10px',
-                        marginLeft: 8,
-                        fontSize: 13,
-                        fontWeight: 500
-                      }}>
-                        Past
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
+              <tr>
+                <td colSpan={3} style={{ textAlign: 'center', padding: '40px 0' }}>
+                  <img src={emptyBox} alt="No tenants" style={{ width: 80, marginBottom: 12 }} />
+                  <div style={{ color: '#888', fontSize: 16, marginTop: 8 }}>No past tenants found.</div>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

@@ -345,6 +345,7 @@ const PropertyPageComponent = () => {
           priceFor30Days={property.price || 0}
           serviceFee={0}
           totalPrice={property.price || 0}
+          propertyId={property.id}
         />
       </div>
     </PropertyPage>

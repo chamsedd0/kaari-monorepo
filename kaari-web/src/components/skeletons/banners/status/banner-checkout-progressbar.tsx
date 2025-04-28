@@ -1,8 +1,6 @@
 import React from 'react';
 import { CheckoutProgressBarStyle, ProgressStep } from '../../../styles/banners/status/banner-checkout-progressbar-style';
-import Step1 from '../../checkoutprocess/step1.svg'
-import Step2 from '../../checkoutprocess/step2.svg'
-import Step3 from '../../checkoutprocess/step3.svg'
+import { Step1Icon, Step2Icon, Step3Icon, Step1Inactive, Step2Inactive, Step3Inactive } from '../../checkoutprocess/StepIcons';
 import { Theme } from '../../../../theme/theme';
 
 interface CheckoutProgressBarProps {
@@ -24,30 +22,25 @@ export const CheckoutProgressBar: React.FC<CheckoutProgressBarProps> = ({ curren
                         isActive={step.number === currentStep}
                         isPassed={step.number < currentStep}
                     >
-                        <img className={`step-number ${step.number === 1 ? 'first' : ''} ${step.number === 2 ? 'second' : ''} ${step.number === 3 ? 'third' : ''}`} src={step.number === 1 ? Step1 : step.number === 2 ? Step2 : Step3} alt={step.label} />
+                        <div className="step-icon">
+                            {step.number === 1 && (
+                                step.number <= currentStep ? <Step1Icon /> : <Step1Inactive />
+                            )}
+                            {step.number === 2 && (
+                                step.number <= currentStep ? <Step2Icon /> : <Step2Inactive />
+                            )}
+                            {step.number === 3 && (
+                                step.number <= currentStep ? <Step3Icon /> : <Step3Inactive />
+                            )}
+                        </div>
                     </ProgressStep>
-
                 </React.Fragment>
             ))}
-            <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                width: '112%',
-                position: 'absolute', 
-                top: '100%', 
-                marginTop: '8px',
-            }}>
+            <div className="step-labels">
                 {steps.map((step) => (
                     <div 
                         key={`label-${step.number}`} 
-                        style={{ 
-                            textAlign: 'center',
-                            maxWidth: '75px',
-                            color: Theme.colors.secondary,
-                            opacity: step.number <= currentStep ? 1 : 0.5,
-                            transition: 'all 0.3s ease',
-                            font: Theme.typography.fonts.smallB
-                        }}
+                        className={`step-label ${step.number <= currentStep ? 'active' : ''}`}
                     >
                         {step.label}
                     </div>

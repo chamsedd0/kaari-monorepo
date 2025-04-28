@@ -100,7 +100,7 @@ interface PropertyRequestCardProps {
     priceFor30Days: number;
     serviceFee: number;
     totalPrice: number;
-    propertyId?: string;
+    propertyId: string;
   }
   
   const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({ 
@@ -112,7 +112,7 @@ interface PropertyRequestCardProps {
     priceFor30Days, 
     serviceFee, 
     totalPrice,
-    propertyId = '123' // Default value for demo
+    propertyId
   }) => {
   const navigate = useNavigate();
 
@@ -219,16 +219,10 @@ interface PropertyRequestCardProps {
 
   const handleSendRequest = () => {
     if (!date) return;
-    sessionStorage.setItem('checkoutPropertyDetails', JSON.stringify({
-      propertyId,
-      title,
-      advertiserName,
-      moveInDate: date,
-      priceFor30Days,
-      serviceFee,
-      totalPrice
-    }));
-    navigate('/checkout-process');
+    
+    console.log(`Navigating to checkout with propertyId=${propertyId} and moveInDate=${date}`);
+    // Navigate to the new checkout page with propertyId as a query parameter
+    navigate(`/checkout?propertyId=${propertyId}&moveInDate=${date}`);
   };
 
   function getTomorrowISO() {

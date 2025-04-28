@@ -214,4 +214,60 @@ export async function getClientStatistics(): Promise<{
     console.error('Error getting client statistics:', error);
     throw new Error('Failed to get client statistics');
   }
+}
+
+/**
+ * Process payment for an accepted reservation
+ * This is called when the tenant confirms payment after advertiser acceptance
+ */
+export async function processPayment(reservationId: string): Promise<boolean> {
+  try {
+    // Check if user is authenticated
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Get the reservation
+    const reservation = await getDocumentById<Request>(REQUESTS_COLLECTION, reservationId);
+    if (!reservation) {
+      throw new Error('Reservation not found');
+    }
+    
+    // Verify that the reservation belongs to the current user
+    if (reservation.userId !== currentUser.id) {
+      throw new Error('Not authorized to process payment for this reservation');
+    }
+    
+    // Verify that the reservation is in 'accepted' status
+    if (reservation.status !== 'accepted') {
+      throw new Error('Cannot process payment for a reservation that is not accepted');
+    }
+    
+    // Check if payment deadline has passed (24 hours after acceptance)
+    const paymentDeadline = new Date(reservation.updatedAt);
+    paymentDeadline.setHours(paymentDeadline.getHours() + 24);
+    
+    if (new Date() > paymentDeadline) {
+      throw new Error('Payment deadline has passed. Please contact the advertiser to extend the reservation.');
+    }
+    
+    // In a real application, you would:
+    // 1. Retrieve the payment method details from the reservation
+    // 2. Make a call to your payment processor to charge the card
+    // 3. Update the reservation status based on payment success/failure
+    
+    // For this implementation, we'll simulate a successful payment
+    
+    // Update the reservation status to 'completed'
+    await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
+      status: 'completed',
+      updatedAt: new Date()
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error processing payment:', error);
+    throw new Error('Failed to process payment');
+  }
 } 

@@ -15,10 +15,29 @@ export const CheckoutProgressBarStyle = styled.div`
     margin: 0 auto;
     position: relative;
     padding: 0 10px;
-    margin: 0 auto;
+    margin-bottom: 48px;
 
-    margin-bottom: 30px;
+    .step-labels {
+        display: flex;
+        justify-content: space-between;
+        width: 112%;
+        position: absolute;
+        top: 100%;
+        margin-top: 8px;
 
+        .step-label {
+            text-align: center;
+            max-width: 120px;
+            color: ${Theme.colors.secondary};
+            opacity: 0.5;
+            transition: all 0.3s ease;
+            font: ${Theme.typography.fonts.smallB};
+            
+            &.active {
+                opacity: 1;
+            }
+        }
+    }
 `;
 
 export const ProgressStep = styled.div<ProgressStepProps>`
@@ -26,23 +45,13 @@ export const ProgressStep = styled.div<ProgressStepProps>`
     flex-direction: column;
     align-items: center;
     position: relative;
-    z-index: 2;
     width: 100%;
 
-    .step-number {
-
-        opacity: ${props => props.isActive || props.isPassed ? 1 : 0.5};
-
+    .step-icon {
         transition: all 0.3s ease;
-
+        
+        svg {
+            display: block;
+        }
     }
-
-    .second, .third {
-        margin-left: -1px;
-    }
-
-
-
-
-
 `;
