@@ -14,8 +14,9 @@ import PerksPage from './perks/page';
 import SettingsPage from './settings/page';
 import ContactsPage from './contacts/page';
 import FAQsPage from './FAQs/page';
+import ReservationStatusPage from './reservation-status/page';
 
-type Section = 'profile' | 'messages' | 'reservations' | 'reviews' | 'payments' | 'perks' | 'settings' | 'contacts' | 'faq';
+type Section = 'profile' | 'messages' | 'reservations' | 'reviews' | 'payments' | 'perks' | 'settings' | 'contacts' | 'faq' | 'reservation-status';
 
 // Map URL segments to section names for better readability in the URL
 const URL_TO_SECTION: Record<string, Section> = {
@@ -28,7 +29,8 @@ const URL_TO_SECTION: Record<string, Section> = {
     'perks': 'perks',
     'settings': 'settings',
     'contacts': 'contacts',
-    'faq': 'faq'
+    'faq': 'faq',
+    'reservation-status': 'reservation-status'
 };
 
 const UserDashboard: React.FC = () => {
@@ -130,6 +132,8 @@ const UserDashboard: React.FC = () => {
                 return <ContactsPage />;
             case 'faq':
                 return <FAQsPage />;
+            case 'reservation-status':
+                return <ReservationStatusPage />;
             default:
                 return <ProfilePage />;
         }

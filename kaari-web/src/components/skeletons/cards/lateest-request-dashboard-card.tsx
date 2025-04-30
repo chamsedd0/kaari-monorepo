@@ -3,6 +3,8 @@ import { CardBaseModelStyleLatestRequestDashboard } from '../../styles/cards/car
 import { PurpleButtonMB48 } from '../buttons/purple_MB48';
 import { BpurpleButtonMB48 } from '../buttons/border_purple_MB48';
 import { useTranslation } from 'react-i18next';
+import propertyPlaceholder from '../../../assets/images/propertyExamplePic.png';
+import profilePlaceholder from '../../../assets/images/ProfilePicture.png';
 
 interface LatestRequestDashboardCardProps {
   title?: string;
@@ -19,9 +21,11 @@ interface LatestRequestDashboardCardProps {
   date?: string;
   time?: string;
   requestCount?: number;
+  requestStatus?: string;
   onViewMore?: () => void;
   onDetails?: () => void;
   onAccept?: () => void;
+  onReject?: () => void;
 }
 
 const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
@@ -39,15 +43,19 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
   date = '',
   time = '',
   requestCount = 0,
+  requestStatus = 'pending',
   onViewMore,
   onDetails,
+  onAccept,
+  onReject,
 }) => {
   const { t } = useTranslation();
   
   // Use either traditional props or the newer dashboard props
   const displayName = name || photographerName;
-  const displayImage = img || photographerImage;
+  const displayImage = img || photographerImage || profilePlaceholder;
   const displayTitle = title || t('advertiser_dashboard.dashboard.latest_request', 'Latest Request');
+  const isPending = requestStatus === 'pending';
   
   return (
     <CardBaseModelStyleLatestRequestDashboard>
@@ -59,7 +67,11 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
       </div>
       
       <div className="latest-request-container">
-        <img src={requestImage} alt={t('advertiser_dashboard.dashboard.property_alt', 'Property')} className="latest-request-image" />
+        <img 
+          src={requestImage || propertyPlaceholder} 
+          alt={t('advertiser_dashboard.dashboard.property_alt', 'Property')} 
+          className="latest-request-image" 
+        />
         
         <div className="latest-request-info-container">
           <div className="latest-request-title">{requestTitle || name}</div>
@@ -67,7 +79,16 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
           <div className="latest-request-info">
             <div className="latest-request-picture-name-details">
               <div className="latest-request-picture-name-container">
-                <img src={displayImage} alt={t('advertiser_dashboard.dashboard.requester_alt', 'Requester')} className="latest-request-picture" />
+                <img 
+                  src={displayImage} 
+                  alt={t('advertiser_dashboard.dashboard.requester_alt', 'Requester')} 
+                  className="latest-request-picture"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = profilePlaceholder;
+                  }}
+                />
                 <div className="latest-request-name-container">
                   <div className="latest-request-name">{displayName}</div>
                   <div className="latest-request-info">
@@ -102,11 +123,18 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
             </div>
           </div>
           
-          <div className="button-container">
-            <BpurpleButtonMB48 text={t('advertiser_dashboard.reservations.reject_request', 'Reject Request')} />
-            <PurpleButtonMB48 text={t('advertiser_dashboard.reservations.accept_request', 'Accept Request')} />
-            
-          </div>
+          {isPending && (
+            <div className="button-container">
+              <BpurpleButtonMB48 
+                text={t('advertiser_dashboard.reservations.reject_request', 'Reject Request')} 
+                onClick={onReject}
+              />
+              <PurpleButtonMB48 
+                text={t('advertiser_dashboard.reservations.accept_request', 'Accept Request')} 
+                onClick={onAccept}
+              />
+            </div>
+          )}
         </div>
       </div>
     </CardBaseModelStyleLatestRequestDashboard>

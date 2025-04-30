@@ -34,9 +34,9 @@ interface AuthContextType {
   user: User | null;
   status: AuthStatus;
   error: AuthError | null;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string, role?: 'client' | 'advertiser') => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
-  signInWithGooglePopup: () => Promise<User | void>;
+  signInWithGooglePopup: (role?: 'client' | 'advertiser', isNewAdvertiser?: boolean) => Promise<User | void>;
   signOutUser: () => Promise<void>;
   sendPasswordResetEmail: (email: string) => Promise<void>;
   clearError: () => void;
@@ -165,11 +165,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Sign up with email, password and name
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string, name: string, role?: 'client' | 'advertiser') => {
     try {
       setStatus('loading');
       setError(null);
-      await signup(email, password, name);
+      await signup(email, password, name, role);
       setStatus('authenticated');
       
       // Emit auth state changed
@@ -202,13 +202,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Sign in with Google
-  const signInWithGooglePopup = async () => {
+  const signInWithGooglePopup = async (role?: 'client' | 'advertiser', isNewAdvertiser?: boolean) => {
     try {
       setStatus('loading');
       setError(null);
       
       // Call the store method but don't do additional redirects
-      const user = await loginWithGoogle();
+      const user = await loginWithGoogle(role, isNewAdvertiser);
       
       // Update the local state
       setStatus('authenticated');

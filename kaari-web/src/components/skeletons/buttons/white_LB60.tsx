@@ -1,7 +1,8 @@
 import { WhiteLB60 } from "../../styles/buttons/white_LB60_style";
+import React, { ReactNode } from "react";
 
 interface WhiteButtonLB60Props {
-  text: string;
+  text: string | ReactNode;
   onClick?: () => void;
   disabled?: boolean;
 }

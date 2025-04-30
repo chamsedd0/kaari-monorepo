@@ -159,6 +159,14 @@ export const CardBaseModelStyleLatestRequestDashboard = styled.div`
             display: flex;
             gap: 12px;
             align-items: center;
+            width: 100%;
+
+            & > button,
+            & > div {
+                flex: 1;
+                min-width: 0;
+                max-width: none;
+            }
         }
     }
    }

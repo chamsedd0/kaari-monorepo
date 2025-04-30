@@ -44,9 +44,9 @@ interface StoreState {
   setSelectedRequest: (request: Request | null) => void;
   
   // User actions
-  signUp: (email: string, password: string, name: string) => Promise<User>;
+  signUp: (email: string, password: string, name: string, role?: 'client' | 'advertiser') => Promise<User>;
   login: (email: string, password: string) => Promise<User>;
-  loginWithGoogle: () => Promise<User>;
+  loginWithGoogle: (role?: 'client' | 'advertiser', isNewAdvertiser?: boolean) => Promise<User>;
   logout: () => Promise<void>;
   initAuth: () => Promise<void>;
 }
@@ -81,10 +81,10 @@ export const useStore = create<StoreState>()(
         setSelectedRequest: (request) => set({ selectedRequest: request }),
         
         // User actions
-        signUp: async (email, password, name) => {
+        signUp: async (email, password, name, role) => {
           try {
             set({ authLoading: true });
-            const user = await signUpWithEmail(email, password, name);
+            const user = await signUpWithEmail(email, password, name, role);
             set({ user, isAuthenticated: true, authLoading: false });
             return user;
           } catch (error) {
@@ -105,10 +105,10 @@ export const useStore = create<StoreState>()(
           }
         },
         
-        loginWithGoogle: async () => {
+        loginWithGoogle: async (role, isNewAdvertiser) => {
           try {
             set({ authLoading: true });
-            const user = await signInWithGoogle();
+            const user = await signInWithGoogle(role, isNewAdvertiser);
             set({ user, isAuthenticated: true, authLoading: false });
             return user;
           } catch (error) {

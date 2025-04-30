@@ -12,6 +12,7 @@ import ProfileShowcasePage from './pages/profile-advertiser-showcase/page';
 import PhotoshootBookingPage from './pages/photoshoot-booking/page';
 import ThankYouPage from './pages/photoshoot-booking/thank-you';
 import HelpPage from './pages/help/page';
+import ReservationStatusPage from './pages/dashboards/user-dashboard/reservation-status/page';
 import { useStore } from './backend/store';
 import { useMemo, useEffect, useState } from 'react';
 import MainLayout from './layouts/MainLayout';
@@ -325,6 +326,38 @@ function App() {
       
       {/* Help Page Route */}
       <Route path="/help" element={<HelpPage />} />
+      
+      {/* Reservation Status Page Routes */}
+      <Route 
+        path="/reservation-status" 
+        element={
+          isAuthenticated ? 
+            <ReservationStatusPage /> : 
+            (() => {
+              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                path: '/reservation-status',
+                redirectTo: '/',
+                isAuthenticated: false
+              });
+              return <Navigate to="/" replace />;
+            })()
+        } 
+      />
+      <Route 
+        path="/reservation-status/:reservationId" 
+        element={
+          isAuthenticated ? 
+            <ReservationStatusPage /> : 
+            (() => {
+              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                path: '/reservation-status',
+                redirectTo: '/',
+                isAuthenticated: false
+              });
+              return <Navigate to="/" replace />;
+            })()
+        } 
+      />
       
       {/* Fallback route for 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />

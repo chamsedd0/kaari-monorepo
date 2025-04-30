@@ -61,7 +61,7 @@ const ReservationsContainer = styled.div`
     
     > div {
       flex: 1;
-      min-height: 300px;
+      min-height: 330px;
       max-width: calc(50% - 0.75rem);
       
       @media (max-width: 768px) {
@@ -263,7 +263,7 @@ const EmptyLatestRequests = styled.div`
   border-radius: ${Theme.borders.radius.lg};
   padding: 3rem;
   width: 100%;
-  min-height: 300px;
+  min-height: 330px;
       border: ${Theme.borders.primary};
 
   
@@ -374,7 +374,7 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
   
   const handleViewDetails = () => {
     // Navigate to property details page
-    navigate(`/checkout-process?status=${status.toLowerCase()}`);
+    navigate(`/dashboard/user/reservation-status?id=${reservationId}&status=${status.toLowerCase()}`);
   };
   
   // Custom styled container for the timer/date info
@@ -607,9 +607,15 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
             </CustomTimerContainer>
           )}
           <div className="text-content">
-            <div className="title">
+            <div className="title" style={{ maxWidth: '65%' }}>
               <b>{title}</b>
-              <span>{details}</span>
+              <span style={{
+                display: 'block',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '100%'
+              }}>{details}</span>
             </div>
             <div className="info">
               <div className="date">{date}</div>
@@ -732,8 +738,8 @@ const CountdownTimer = ({ updatedAt }: CountdownTimerProps) => {
 
 const ReservationsPage: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
@@ -1136,7 +1142,7 @@ const ReservationsPage: React.FC = () => {
               />
             );
           })}
-        </div>
+                  </div>
       ) : (
         <EmptyLatestRequests>
           <img src={emptyBoxSvg} alt="No latest requests" />
@@ -1145,10 +1151,10 @@ const ReservationsPage: React.FC = () => {
         </EmptyLatestRequests>
       )}
             
-      {otherReservations.length > 0 && (
+      {otherReservations.length > 0 ? (
         <div className="other-reservations">
           <div className="table-header">
-            <h2>Other Reservations</h2>
+            <h2>Past Reservations</h2>
           </div>
           
           <table>
@@ -1204,6 +1210,36 @@ const ReservationsPage: React.FC = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      ) : reservations.length > 0 && (
+        <div className="other-reservations" style={{ padding: '2rem', textAlign: 'left' }}>
+          <div className="table-header">
+            <h2>Past Reservations</h2>
+          </div>
+          
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            padding: '3rem',
+            borderTop: Theme.borders.primary
+          }}>
+            <img src={emptyBoxSvg} alt="No past reservations" style={{ width: '80px', marginBottom: '1.5rem' }} />
+            <h3 style={{ 
+              font: Theme.typography.fonts.h4B, 
+              color: Theme.colors.black, 
+              marginBottom: '0.5rem' 
+            }}>No Past Reservations</h3>
+            <p style={{ 
+              font: Theme.typography.fonts.mediumM, 
+              color: Theme.colors.gray2, 
+              textAlign: 'center',
+              maxWidth: '400px'
+            }}>
+              You don't have any past or inactive reservations.
+            </p>
+          </div>
         </div>
       )}
 

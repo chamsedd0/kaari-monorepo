@@ -30,6 +30,8 @@ const PropertiesPage: React.FC = () => {
     const [reservationsWarningModalOpen, setReservationsWarningModalOpen] = useState(false);
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    // Add state for the reservation reason
+    const [reservationReason, setReservationReason] = useState<'completed' | 'pending' | 'accepted' | 'none'>('none');
     
     // Add navigate
     const navigate = useNavigate();
@@ -92,11 +94,12 @@ const PropertiesPage: React.FC = () => {
             setIsSubmitting(true);
             
             // Check if the property has active reservations first
-            const hasActiveReservations = await checkPropertyHasActiveReservations(property.id);
+            const { hasActiveReservations, reason } = await checkPropertyHasActiveReservations(property.id);
             
             if (hasActiveReservations) {
                 // Show warning modal instead of listing
                 setSelectedProperty(property);
+                setReservationReason(reason);
                 setReservationsWarningModalOpen(true);
             } else {
                 // No reservations, update status to available
@@ -255,6 +258,7 @@ const PropertiesPage: React.FC = () => {
                             }}
                             onViewReservations={navigateToReservations}
                             propertyTitle={selectedProperty.title}
+                            reason={reservationReason}
                         />
                     </>
                 )}

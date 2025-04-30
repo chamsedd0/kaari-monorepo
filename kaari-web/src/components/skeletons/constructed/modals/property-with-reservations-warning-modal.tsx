@@ -9,15 +9,44 @@ interface PropertyReservationsWarningModalProps {
   onClose: () => void;
   onViewReservations: () => void;
   propertyTitle: string;
+  reason: 'completed' | 'pending' | 'accepted' | 'none';
 }
 
 export const PropertyReservationsWarningModal: React.FC<PropertyReservationsWarningModalProps> = ({
   isOpen,
   onClose,
   onViewReservations,
-  propertyTitle
+  propertyTitle,
+  reason = 'none'
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // Generate title based on reason
+  const getTitle = () => {
+    switch(reason) {
+      case 'completed':
+        return 'Property Occupied';
+      case 'accepted':
+      case 'pending':
+        return 'Active Reservations';
+      default:
+        return 'Cannot List Property';
+    }
+  };
+
+  // Generate specific message based on reason
+  const getMessage = () => {
+    switch(reason) {
+      case 'completed':
+        return `${propertyTitle} currently has a tenant living there. This property cannot be listed as available until the reservation is marked as completed and the tenant has moved out.`;
+      case 'accepted':
+        return `${propertyTitle} has accepted reservation requests that need to be addressed before listing.`;
+      case 'pending':
+        return `${propertyTitle} has pending reservation requests that need to be addressed before listing.`;
+      default:
+        return `${propertyTitle} cannot be listed at this time.`;
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -53,10 +82,10 @@ export const PropertyReservationsWarningModal: React.FC<PropertyReservationsWarn
             </div>
           </div>
           
-          <h2 className="confirmation-title">Active Reservations</h2>
+          <h2 className="confirmation-title">{getTitle()}</h2>
           
           <p className="confirmation-message">
-            <strong>{propertyTitle}</strong> has active reservation requests. You need to cancel or reject these reservations before you can list this property as available.
+            {getMessage()}
           </p>
           
           <div className="button-container">

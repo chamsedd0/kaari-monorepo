@@ -13,7 +13,8 @@ import {
     getAdvertiserStatistics, 
     getAdvertiserProperties, 
     getAdvertiserListings, 
-    getAdvertiserRequests, 
+    getAdvertiserRequests,
+    getAdvertiserReservationRequests,
     getAdvertiserPhotoshoots,
     Photoshoot,
     Request
@@ -40,6 +41,12 @@ const DashboardPage: React.FC = () => {
     const [listings, setListings] = useState<Listing[]>([]);
     const [requests, setRequests] = useState<Request[]>([]);
     const [photoshoots, setPhotoshoots] = useState<Photoshoot[]>([]);
+    const [reservationRequests, setReservationRequests] = useState<{
+        reservation: Request;
+        listing?: any;
+        property?: any;
+        client?: any;
+    }[]>([]);
     
     useEffect(() => {
         // Load data when component mounts
@@ -47,11 +54,12 @@ const DashboardPage: React.FC = () => {
             setLoading(true);
             try {
                 // Fetch statistics, properties, listings, requests, and photoshoots in parallel
-                const [stats, props, lists, reqs, shoots] = await Promise.all([
+                const [stats, props, lists, reqs, reservationReqs, shoots] = await Promise.all([
                     getAdvertiserStatistics(),
                     getAdvertiserProperties(),
                     getAdvertiserListings(),
                     getAdvertiserRequests(),
+                    getAdvertiserReservationRequests(),
                     getAdvertiserPhotoshoots()
                 ]);
                 
@@ -59,6 +67,7 @@ const DashboardPage: React.FC = () => {
                 setProperties(props);
                 setListings(lists);
                 setRequests(reqs);
+                setReservationRequests(reservationReqs);
                 setPhotoshoots(shoots);
             } catch (error) {
                 console.error(t('advertiser_dashboard.dashboard.errors.loading_data', 'Error loading dashboard data:'), error);
@@ -119,10 +128,10 @@ const DashboardPage: React.FC = () => {
     });
     
     // Get latest request if available (only show if not accepted)
-    const latestRequest = requests.length > 0 
-        ? requests
-            .filter(req => req.status !== 'accepted')
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0] 
+    const latestReservationRequest = reservationRequests.length > 0 
+        ? reservationRequests
+            .filter(req => req.reservation.status === 'pending')
+            .sort((a, b) => new Date(b.reservation.createdAt).getTime() - new Date(a.reservation.createdAt).getTime())[0] 
         : null;
     
     // Get next upcoming photoshoot
@@ -160,24 +169,46 @@ const DashboardPage: React.FC = () => {
                     loading={loading}
                     data={chartData}
                 />
-                {/* Listing Performance Empty State removed, handled inside PerformanceChart */}
-                {latestRequest && (
+                {latestReservationRequest && (
                     <LatestRequestDashboardCard 
                         title={t('advertiser_dashboard.dashboard.latest_request')}
-                        name={typeof latestRequest.message === 'string' 
-                            ? latestRequest.message.substring(0, 20) + (latestRequest.message.length > 20 ? '...' : '') 
-                            : t('advertiser_dashboard.dashboard.new_request')}
-                        img={user?.profilePicture || ''}
-                        date={new Date(latestRequest.createdAt).toLocaleDateString(locale, {
+                        requestImage={latestReservationRequest.property?.images[0] || ''}
+                        requestTitle={latestReservationRequest.property?.title || t('advertiser_dashboard.dashboard.property_request')}
+                        name={latestReservationRequest.client 
+                            ? `${latestReservationRequest.client.name || ''} ${latestReservationRequest.client.surname || ''}`.trim() 
+                            : t('advertiser_dashboard.dashboard.anonymous_user')}
+                        img={latestReservationRequest.client?.profilePicture || ''}
+                        date={new Date(latestReservationRequest.reservation.createdAt).toLocaleDateString(locale, {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric'
                         })}
-                        time={new Date(latestRequest.createdAt).toLocaleTimeString(locale, {
+                        time={new Date(latestReservationRequest.reservation.createdAt).toLocaleTimeString(locale, {
                             hour: '2-digit',
                             minute: '2-digit'
                         })}
+                        moveInDate={latestReservationRequest.reservation.movingDate 
+                            ? new Date(latestReservationRequest.reservation.movingDate).toLocaleDateString(locale, {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              }) 
+                            : undefined}
+                        photographerInfo={latestReservationRequest.reservation.numPeople 
+                            ? t('advertiser_dashboard.dashboard.occupants', 'Occupants: {{count}}', { count: latestReservationRequest.reservation.numPeople })
+                            : undefined}
                         requestCount={statistics.inquiriesCount}
+                        requestStatus={latestReservationRequest.reservation.status}
+                        onDetails={() => navigate('/dashboard/advertiser/reservations')}
+                        onViewMore={() => navigate('/dashboard/advertiser/reservations')}
+                        onAccept={() => {
+                            // Handle accepting the reservation request
+                            navigate('/dashboard/advertiser/reservations');
+                        }}
+                        onReject={() => {
+                            // Handle rejecting the reservation request
+                            navigate('/dashboard/advertiser/reservations');
+                        }}
                     />
                 )}
                 {/* Messages Section with Empty State */}
@@ -185,11 +216,13 @@ const DashboardPage: React.FC = () => {
                     {hasMessages ? (
                         <MessagesCard 
                             title={t('advertiser_dashboard.dashboard.messages')}
-                            name={user?.name || t('advertiser_dashboard.dashboard.user')}
-                            img={user?.profilePicture || ''}
+                            name={latestReservationRequest?.client 
+                                ? `${latestReservationRequest.client.name || ''} ${latestReservationRequest.client.surname || ''}`.trim() 
+                                : user?.name || t('advertiser_dashboard.dashboard.user')}
+                            img={latestReservationRequest?.client?.profilePicture || user?.profilePicture || ''}
                             messageCount={requests.length}
-                            message={latestRequest && typeof latestRequest.message === 'string' 
-                                ? latestRequest.message 
+                            message={latestReservationRequest && typeof latestReservationRequest.reservation.message === 'string' 
+                                ? latestReservationRequest.reservation.message 
                                 : t('advertiser_dashboard.dashboard.no_messages')}
                             onViewMore={() => {
                                 navigate('/dashboard/advertiser/messages');

@@ -19,7 +19,8 @@ import { User } from '../entities';
 export const signUpWithEmail = async (
   email: string, 
   password: string, 
-  name: string
+  name: string,
+  role: 'client' | 'advertiser' = 'client'
 ): Promise<User> => {
   try {
     // Create the user in Firebase Auth
@@ -33,7 +34,7 @@ export const signUpWithEmail = async (
     const newUser: Omit<User, 'id'> = {
       email: email,
       name: name,
-      role: 'client', // Default role for new users
+      role: role, // Use the provided role (client or advertiser)
       createdAt: new Date(),
       updatedAt: new Date(),
       properties: [],
@@ -86,7 +87,7 @@ export const signInWithEmail = async (email: string, password: string): Promise<
 /**
  * Sign in with Google
  */
-export const signInWithGoogle = async (): Promise<User> => {
+export const signInWithGoogle = async (role: 'client' | 'advertiser' = 'client', isNewAdvertiser: boolean = false): Promise<User> => {
   try {
     const provider = new GoogleAuthProvider();
     const userCredential = await signInWithPopup(auth, provider);
@@ -97,6 +98,12 @@ export const signInWithGoogle = async (): Promise<User> => {
     const userDoc = await getDoc(userDocRef);
     
     if (userDoc.exists()) {
+      // If this is supposed to be a new advertiser registration but the account already exists,
+      // throw an error to prevent existing accounts from being converted
+      if (isNewAdvertiser && role === 'advertiser') {
+        throw new Error('This email is already registered. Please use a different email to create an advertiser account.');
+      }
+      
       // User exists, update last login
       await setDoc(userDocRef, { updatedAt: serverTimestamp() }, { merge: true });
       
@@ -109,7 +116,7 @@ export const signInWithGoogle = async (): Promise<User> => {
       const newUser: Omit<User, 'id'> = {
         email: firebaseUser.email || '',
         name: firebaseUser.displayName || '',
-        role: 'client', // Default role
+        role: role, // Use provided role instead of defaulting to 'client'
         createdAt: new Date(),
         updatedAt: new Date(),
         properties: [],

@@ -814,7 +814,7 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ userData, propert
                 }}
                 required
               />
-            </div>
+          </div>
         </div>
         
           <div className="form-row">

@@ -18,4 +18,9 @@ export const BpurpleMB48 = styled(PurpleBorderButton)`
         height: 20px;
         fill: ${Theme.colors.primary};
     }
+    
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 `

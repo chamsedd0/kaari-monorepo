@@ -652,8 +652,12 @@ export async function rejectReservationRequest(requestId: string): Promise<boole
 
 /**
  * Check if a property has active reservations
+ * @returns An object with hasActiveReservations flag and reason
  */
-export async function checkPropertyHasActiveReservations(propertyId: string): Promise<boolean> {
+export async function checkPropertyHasActiveReservations(propertyId: string): Promise<{
+  hasActiveReservations: boolean;
+  reason: 'none' | 'completed' | 'pending' | 'accepted';
+}> {
   try {
     // Check if user is authenticated and an advertiser
     const currentUser = await getCurrentUserProfile();
@@ -673,11 +677,35 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
       propertyId
     );
     
-    // Check if there are any active reservations (pending or accepted)
-    return requests.some(req => 
-      req.requestType === 'viewing' && 
-      (req.status === 'pending' || req.status === 'accepted')
+    // Check for completed reservations first (highest priority - tenant has moved in)
+    const hasCompletedReservation = requests.some(req => 
+      req.requestType === 'viewing' && req.status === 'completed'
     );
+    
+    if (hasCompletedReservation) {
+      return { hasActiveReservations: true, reason: 'completed' };
+    }
+    
+    // Check for accepted reservations
+    const hasAcceptedReservation = requests.some(req => 
+      req.requestType === 'viewing' && req.status === 'accepted'
+    );
+    
+    if (hasAcceptedReservation) {
+      return { hasActiveReservations: true, reason: 'accepted' };
+    }
+    
+    // Check for pending reservations
+    const hasPendingReservation = requests.some(req => 
+      req.requestType === 'viewing' && req.status === 'pending'
+    );
+    
+    if (hasPendingReservation) {
+      return { hasActiveReservations: true, reason: 'pending' };
+    }
+    
+    // No active reservations
+    return { hasActiveReservations: false, reason: 'none' };
   } catch (error) {
     console.error('Error checking if property has active reservations:', error);
     throw new Error('Failed to check property reservations');

@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaCheckCircle, FaTimesCircle, FaInfoCircle } from 'react-icons/fa';
 import { getAdvertiserReservationRequests, approveReservationRequest, rejectReservationRequest } from '../../../../backend/server-actions/AdvertiserServerActions';
-import { ReservationsTable } from '../../../../components/reservations/ReservationsTable';
+import { ReservationDetailsModal } from '../../../../components/reservations/ReservationDetailsModal';
+import EmptyBox from '../../../../assets/images/emptybox.svg';
+import SelectFieldBaseModelVariant2 from '../../../../components/skeletons/inputs/select-fields/select-field-base-model-variant-2';
 
 const ReservationsContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  background-color: #f9fafc;
+  background-color: white;
   min-height: 100vh;
   padding: 32px;
   
@@ -19,117 +21,179 @@ const ReservationsContainer = styled.div`
     margin-bottom: 1.5rem;
   }
   
-  .page-description {
-    font: ${Theme.typography.fonts.mediumM};
-    color: ${Theme.colors.gray2};
-    margin-bottom: 2rem;
-  }
-  
-  .filters-container {
+  .filters-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+    justify-content: flex-start;
     margin-bottom: 1.5rem;
+    gap: 1rem;
     
-    .filters {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      
-      .filter-button {
-        padding: 0.5rem 1rem;
-        border-radius: ${Theme.borders.radius.md};
-        font: ${Theme.typography.fonts.smallB};
-        background-color: ${Theme.colors.white};
-        color: ${Theme.colors.gray2};
-        border: none;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        
-        &.active {
-          background-color: ${Theme.colors.secondary};
-          color: white;
-        }
-        
-        &:hover:not(.active) {
-          background-color: ${Theme.colors.tertiary};
-        }
-      }
+    > div {
+      width: 180px;
+    }
+  }
+  
+  .reservations-table-container {
+    background-color: white;
+    border-radius: ${Theme.borders.radius.lg};
+    overflow: hidden;
+    border: ${Theme.borders.primary};
+  }
+  
+  .reservations-table {
+    width: 100%;
+    border-collapse: collapse;
+    
+    th {
+      text-align: left;
+      padding: 16px;
+      font: ${Theme.typography.fonts.smallB};
+    color: ${Theme.colors.gray2};
+      background-color: #f9fafc;
+      border-bottom: 1px solid ${Theme.colors.gray5};
     }
     
-    .select-container {
-      position: relative;
-      margin-right: 1rem;
-      
-      select {
-        padding: 0.5rem 1rem;
-        border-radius: ${Theme.borders.radius.md};
-        font: ${Theme.typography.fonts.smallM};
-        border: 1px solid ${Theme.colors.gray5};
-        background-color: white;
-        width: 180px;
-        appearance: none;
-        background-position: right 10px center;
-        background-repeat: no-repeat;
-        background-size: 12px;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23718096'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-        
-        &:focus {
-          outline: none;
-          border-color: ${Theme.colors.secondary};
-        }
-      }
+    td {
+      padding: 16px;
+      font: ${Theme.typography.fonts.smallM};
+      color: ${Theme.colors.black};
+      border-bottom: 1px solid ${Theme.colors.gray5};
     }
     
-    .search-container {
-      position: relative;
+    tr:last-child td {
+      border-bottom: none;
+    }
+    
+    tr:hover {
+      background-color: #f9fafc;
+    }
+  }
+  
+  .applicant-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    
+    .info-icon {
+      color: ${Theme.colors.gray3};
+      cursor: pointer;
+      margin-left: 5px;
       
-      .search-input {
-        padding: 0.5rem 1rem 0.5rem 2.5rem;
-        border-radius: ${Theme.borders.radius.md};
-        font: ${Theme.typography.fonts.smallM};
-        border: 1px solid ${Theme.colors.gray5};
-        background-color: white;
-        width: 250px;
-        
-        &:focus {
-          outline: none;
-          border-color: ${Theme.colors.secondary};
-        }
-      }
-      
-      .search-icon {
-        position: absolute;
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: ${Theme.colors.gray2};
+      &:hover {
+        color: ${Theme.colors.secondary};
       }
     }
   }
   
-  .no-reservations {
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    
+    button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      
+      &.approve {
+        background-color: #1db954;
+        color: white;
+        
+        &:hover {
+          background-color: #19a449;
+        }
+        
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+      
+      &.reject {
+        background-color: #e74c3c;
+        color: white;
+        
+        &:hover {
+          background-color: #c0392b;
+        }
+        
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+  
+  .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    
+    &.pending {
+      background-color: #fff3e0;
+      color: #ff9800;
+    }
+    
+    &.accepted {
+      background-color: #e8f5e9;
+      color: #1db954;
+    }
+    
+    &.rejected {
+      background-color: #fdecec;
+      color: #e74c3c;
+    }
+    
+    &.completed {
+      background-color: #e8eaf6;
+      color: #3f51b5;
+    }
+  }
+  
+  .remaining-hours {
+    font-weight: 500;
+  }
+  
+  .empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem;
+    padding: 60px;
     text-align: center;
     background-color: white;
-    border-radius: ${Theme.borders.radius.md};
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: ${Theme.borders.radius.lg};
+    
+    img {
+      width: 80px;
+      margin-bottom: 20px;
+    }
     
     .empty-title {
       font: ${Theme.typography.fonts.h4B};
+      margin-bottom: 12px;
       color: ${Theme.colors.black};
-      margin-bottom: 0.5rem;
     }
     
-    .empty-message {
+    .empty-description {
       font: ${Theme.typography.fonts.mediumM};
       color: ${Theme.colors.gray2};
+      max-width: 400px;
     }
   }
 `;
@@ -144,6 +208,8 @@ interface Reservation {
     createdAt: Date;
     updatedAt: Date;
     scheduledDate?: Date;
+    numPeople?: string;
+    movingDate?: Date;
   };
   listing?: {
     id: string;
@@ -178,11 +244,12 @@ const ReservationsPage: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('All');
     const [applicantFilter, setApplicantFilter] = useState<string>('All Applicants');
     const [propertyFilter, setPropertyFilter] = useState<string>('All Properties');
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   useEffect(() => {
     loadReservations();
@@ -242,13 +309,13 @@ const ReservationsPage: React.FC = () => {
       .map(res => res.property?.title || 'Unknown Property')
   )];
   
-  // Filter reservations
+  // Filter reservations - now show all requests and apply status filter
   let filteredReservations = reservations;
   
   // Apply status filter
-  if (statusFilter !== 'all') {
+  if (statusFilter !== 'All') {
     filteredReservations = filteredReservations.filter(res => 
-      res.reservation.status === statusFilter
+      res.reservation.status === statusFilter.toLowerCase()
     );
   }
   
@@ -266,18 +333,68 @@ const ReservationsPage: React.FC = () => {
     );
   }
   
-  // Apply search query
-  if (searchQuery) {
-    const query = searchQuery.toLowerCase();
-    filteredReservations = filteredReservations.filter(res => 
-      (res.client?.name || '').toLowerCase().includes(query) ||
-      (res.client?.surname || '').toLowerCase().includes(query) ||
-      (res.client?.email || '').toLowerCase().includes(query) ||
-      (res.property?.title || '').toLowerCase().includes(query) ||
-      (res.property?.address?.street || '').toLowerCase().includes(query) ||
-      (res.property?.address?.city || '').toLowerCase().includes(query)
-    );
-  }
+  // Format date (DD/MM/YYYY)
+  const formatDate = (date: Date | undefined | string) => {
+    if (!date) return 'N/A';
+    
+    let dateObj: Date;
+    
+    if (date instanceof Date) {
+      dateObj = date;
+    } else if (typeof date === 'object' && 'seconds' in (date as any)) {
+      // Handle Firestore timestamp
+      dateObj = new Date((date as any).seconds * 1000);
+    } else {
+      dateObj = new Date(date);
+    }
+    
+    if (isNaN(dateObj.getTime())) return 'N/A';
+    
+    const day = dateObj.getDate().toString().padStart(2, '0');
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const year = dateObj.getFullYear();
+    
+    return `${day}/${month}/${year}`;
+  };
+  
+  // Calculate 24 hours remaining
+  const getRemainingHours = (createdDate: Date | undefined | string) => {
+    if (!createdDate) return 'N/A';
+    
+    let dateObj: Date;
+    
+    if (createdDate instanceof Date) {
+      dateObj = createdDate;
+    } else if (typeof createdDate === 'object' && 'seconds' in (createdDate as any)) {
+      // Handle Firestore timestamp
+      dateObj = new Date((createdDate as any).seconds * 1000);
+    } else {
+      dateObj = new Date(createdDate);
+    }
+    
+    if (isNaN(dateObj.getTime())) return 'N/A';
+    
+    // 24 hours response window
+    const deadlineTime = dateObj.getTime() + (24 * 60 * 60 * 1000);
+    const currentTime = new Date().getTime();
+    
+    if (currentTime > deadlineTime) {
+      return 'Expired';
+    }
+    
+    const hoursLeft = Math.round((deadlineTime - currentTime) / (60 * 60 * 1000));
+    return `${hoursLeft}h remaining`;
+  };
+  
+  const openDetailsModal = (reservation: Reservation) => {
+    setSelectedReservation(reservation);
+    setIsModalOpen(true);
+  };
+  
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedReservation(null);
+  };
   
   if (loading) {
     return <div>Loading reservation requests...</div>;
@@ -291,80 +408,128 @@ const ReservationsPage: React.FC = () => {
     <ReservationsContainer>
       <h1 className="page-title">Reservation requests</h1>
       
-      <div className="filters-container">
-        <div className="filters">
-          <button 
-            className={`filter-button ${statusFilter === 'all' ? 'active' : ''}`}
-            onClick={() => setStatusFilter('all')}
-          >
-            All
-          </button>
-          <button 
-            className={`filter-button ${statusFilter === 'pending' ? 'active' : ''}`}
-            onClick={() => setStatusFilter('pending')}
-          >
-            Pending
-          </button>
-          <button 
-            className={`filter-button ${statusFilter === 'accepted' ? 'active' : ''}`}
-            onClick={() => setStatusFilter('accepted')}
-          >
-            Accepted
-          </button>
-          <button 
-            className={`filter-button ${statusFilter === 'rejected' ? 'active' : ''}`}
-            onClick={() => setStatusFilter('rejected')}
-          >
-            Rejected
-          </button>
-        </div>
+      <div className="filters-row">
+        <SelectFieldBaseModelVariant2
+          options={['All', 'Pending', 'Accepted', 'Rejected', 'Completed']}
+          value={statusFilter}
+          onChange={(value) => setStatusFilter(value)}
+        />
         
-        <div className="select-container">
-          <select 
+        <SelectFieldBaseModelVariant2
+          options={uniqueApplicants}
             value={applicantFilter} 
-            onChange={(e) => setApplicantFilter(e.target.value)}
-          >
-            {uniqueApplicants.map((name) => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
-        </div>
+          onChange={(value) => setApplicantFilter(value)}
+        />
         
-        <div className="select-container">
-          <select 
+        <SelectFieldBaseModelVariant2
+          options={uniqueProperties}
             value={propertyFilter} 
-            onChange={(e) => setPropertyFilter(e.target.value)}
-          >
-            {uniqueProperties.map((name) => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
-        </div>
-        
-        <div className="search-container">
-          <FaSearch className="search-icon" />
-          <input
-            type="text"
-            placeholder="Search reservations..."
-            className="search-input"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
+          onChange={(value) => setPropertyFilter(value)}
+        />
             </div>
       
       {filteredReservations.length === 0 ? (
-        <div className="no-reservations">
+        <div className="empty-state">
+          <img src={EmptyBox} alt="No reservations" />
           <h2 className="empty-title">No Reservation Requests Found</h2>
-          <p className="empty-message">
-            {statusFilter === 'all' 
-              ? "You don't have any reservation requests yet."
-              : `You don't have any ${statusFilter} reservation requests.`}
+          <p className="empty-description">
+            {statusFilter === 'All'
+              ? "You don't have any reservation requests at the moment."
+              : `You don't have any ${statusFilter.toLowerCase()} reservation requests.`}
           </p>
         </div>
       ) : (
-        <ReservationsTable 
-          reservations={filteredReservations}
+        <div className="reservations-table-container">
+          <table className="reservations-table">
+            <thead>
+              <tr>
+                <th>Applicant</th>
+                <th>Property</th>
+                <th>Applied</th>
+                <th>Occupants</th>
+                <th>Move-in date</th>
+                <th>24 Hours</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredReservations.map((reservation) => (
+                <tr key={reservation.reservation.id}>
+                  <td>
+                    <div className="applicant-cell">
+                      <img 
+                        src={reservation.client?.profilePicture || "https://via.placeholder.com/40"} 
+                        alt={`${reservation.client?.name || 'Unknown'}`} 
+                      />
+                      <span>
+                        {reservation.client ? `${reservation.client.name || ''} ${reservation.client.surname || ''}`.trim() : 'Unknown'}
+                        {reservation.client?.age && `, ${reservation.client.age}`}
+                      </span>
+                      <FaInfoCircle 
+                        className="info-icon" 
+                        onClick={() => openDetailsModal(reservation)} 
+                        title="View details"
+                      />
+                    </div>
+                  </td>
+                  <td>
+                    {reservation.property?.title || 'Unknown Property'}
+                  </td>
+                  <td>
+                    {formatDate(reservation.reservation.createdAt)}
+                  </td>
+                  <td>
+                    {reservation.reservation.numPeople || '1'}
+                  </td>
+                  <td>
+                    {formatDate(reservation.reservation.movingDate || reservation.reservation.scheduledDate)}
+                  </td>
+                  <td className="remaining-hours">
+                    {reservation.reservation.status === 'pending' ? 
+                      getRemainingHours(reservation.reservation.createdAt) : '-'}
+                  </td>
+                  <td>
+                    <span className={`status-badge ${reservation.reservation.status}`}>
+                      {reservation.reservation.status.charAt(0).toUpperCase() + reservation.reservation.status.slice(1)}
+                    </span>
+                  </td>
+                  <td>
+                    {reservation.reservation.status === 'pending' ? (
+                      <div className="action-buttons">
+                        <button 
+                          className="approve"
+                          onClick={() => handleApprove(reservation.reservation.id)}
+                          disabled={processingRequest === reservation.reservation.id}
+                          title="Approve"
+                        >
+                          <FaCheckCircle size={20} />
+                        </button>
+                        <button 
+                          className="reject"
+                          onClick={() => handleReject(reservation.reservation.id)}
+                          disabled={processingRequest === reservation.reservation.id}
+                          title="Reject"
+                        >
+                          <FaTimesCircle size={20} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div>-</div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      
+      {selectedReservation && (
+        <ReservationDetailsModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          reservation={selectedReservation}
           onApprove={handleApprove}
           onReject={handleReject}
           isProcessing={processingRequest}

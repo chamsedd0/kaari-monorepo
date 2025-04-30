@@ -12,6 +12,8 @@ export const CheckoutCard = ({
   securityDeposit,
   serviceFee,
   total,
+  onViewProfile,
+  onReadCancellationPolicy,
 
 }: {
   title: string;
@@ -24,6 +26,8 @@ export const CheckoutCard = ({
   securityDeposit: string;
   serviceFee: string;
   total: string;
+  onViewProfile?: () => void;
+  onReadCancellationPolicy?: () => void;
 
 }) => {
   return (
@@ -42,7 +46,7 @@ export const CheckoutCard = ({
           <div className="profile-name">{profileName}</div>
         </div>
         <div className="profile-actions">
-          <button className="button">
+          <button className="button" onClick={onViewProfile}>
             View Profile
           </button>
         </div>
@@ -73,12 +77,11 @@ export const CheckoutCard = ({
       </div>
 
       <div className="actions">
-
         <div className="cancellation-policy">
             Cancellation Policy for Tenants
         </div>
 
-        <button className="button">
+        <button className="button" onClick={onReadCancellationPolicy}>
           Read More
         </button>
       </div>

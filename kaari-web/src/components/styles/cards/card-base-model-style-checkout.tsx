@@ -7,14 +7,19 @@ export const CardBaseModelStyleCheckout = styled.div`
     align-items: center;
     justify-content: space-between;
     min-height: 600px;
-    max-width: 350px;
+    max-width: 100%;
     overflow: hidden;
     
     border-radius: ${Theme.borders.radius.lg};
     border: ${Theme.borders.primary};
     background-color: ${Theme.colors.white};
     width: 100%;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: none;
+    transition: transform 0.3s ease;
+    
+    &:hover {
+        transform: translateY(-5px);
+    }
 
     img {
         width: 100%;
@@ -67,6 +72,9 @@ export const CardBaseModelStyleCheckout = styled.div`
             justify-content: space-between;
             width: 100%;
             margin: 8px 0;
+            padding: 12px 0;
+            border-top: 1px solid ${Theme.colors.tertiary};
+            border-bottom: 1px solid ${Theme.colors.tertiary};
 
             .profile-info {
                 display: flex;
