@@ -529,11 +529,22 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ userData, propert
     const rentalData = {
       firstName: personalInfo.firstName,
       lastName: personalInfo.lastName,
+      fullName: `${personalInfo.firstName} ${personalInfo.lastName}`.trim(),
       email: personalInfo.email,
       phoneNumber: personalInfo.phoneNumber,
       gender: personalInfo.gender,
       dateOfBirth: personalInfo.dateOfBirth,
-      ...stayInfo,
+      numPeople: stayInfo.numPeople,
+      roommates: stayInfo.roommates,
+      occupationType: stayInfo.occupationType,
+      studyPlace: stayInfo.studyPlace,
+      workPlace: stayInfo.workPlace,
+      occupationRole: stayInfo.occupationRole,
+      funding: stayInfo.funding,
+      hasPets: stayInfo.hasPets,
+      hasSmoking: stayInfo.hasSmoking,
+      aboutMe: stayInfo.aboutMe,
+      leavingDate: stayInfo.leavingDate,
       movingDate: new Date().toISOString().split('T')[0] // Current date as default
     };
     

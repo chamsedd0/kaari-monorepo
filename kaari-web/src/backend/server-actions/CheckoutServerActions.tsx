@@ -197,11 +197,11 @@ export async function createCheckoutReservation(data: {
     
     // Extract all rental data with defaults for required fields
     const {
-      fullName = `${currentUser.firstName} ${currentUser.lastName}`,
+      fullName = currentUser.name && currentUser.surname ? `${currentUser.name} ${currentUser.surname}` : currentUser.name || '',
       email = currentUser.email,
-      phoneNumber = '',
-      gender = '',
-      dateOfBirth = null,
+      phoneNumber = currentUser.phoneNumber || '',
+      gender = currentUser.gender || '',
+      dateOfBirth = currentUser.dateOfBirth ? new Date(currentUser.dateOfBirth) : null,
       movingDate = new Date(),
       leavingDate = null,
       numPeople = '1',
@@ -213,7 +213,7 @@ export async function createCheckoutReservation(data: {
       funding = '',
       hasPets = false,
       hasSmoking = false,
-      aboutMe = '',
+      aboutMe = currentUser.aboutMe || '',
       message = ''
     } = data.rentalData;
     

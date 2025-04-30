@@ -109,8 +109,18 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
   useEffect(() => {
     // Retrieve rental application data from localStorage
     const savedData = localStorage.getItem('rentalApplicationData');
+    console.log('Loaded rental data from localStorage:', savedData);
+    
     if (savedData) {
-      setRentalData(JSON.parse(savedData));
+      try {
+        const parsedData = JSON.parse(savedData);
+        console.log('Parsed rental data:', parsedData);
+        setRentalData(parsedData);
+      } catch (error) {
+        console.error('Error parsing rental application data:', error);
+      }
+    } else {
+      console.warn('No rental application data found in localStorage');
     }
   }, []);
 
@@ -153,28 +163,28 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
       // Prepare a complete set of rental data with proper defaults
       const formattedRentalData = {
         // Personal information
-        fullName: rentalData.fullName || `${userData.firstName} ${userData.lastName}`,
-        email: rentalData.email || userData.email,
-        phoneNumber: rentalData.phoneNumber || '',
-        gender: rentalData.gender || '',
-        dateOfBirth: rentalData.dateOfBirth || null,
+        fullName: rentalData.fullName,
+        email: rentalData.email,
+        phoneNumber: rentalData.phoneNumber,
+        gender: rentalData.gender,
+        dateOfBirth: rentalData.dateOfBirth,
         
         // Stay information
         movingDate: rentalData.movingDate ? new Date(rentalData.movingDate) : new Date(),
         leavingDate: rentalData.leavingDate ? new Date(rentalData.leavingDate) : null,
-        numPeople: rentalData.numPeople || '1',
-        roommates: rentalData.roommates || '',
-        occupationType: rentalData.occupationType || 'work',
-        studyPlace: rentalData.studyPlace || '',
-        workPlace: rentalData.workPlace || '',
-        occupationRole: rentalData.occupationRole || '',
-        funding: rentalData.funding || '',
+        numPeople: rentalData.numPeople,
+        roommates: rentalData.roommates,
+        occupationType: rentalData.occupationType,
+        studyPlace: rentalData.studyPlace,
+        workPlace: rentalData.workPlace,
+        occupationRole: rentalData.occupationRole,
+        funding: rentalData.funding,
         hasPets: Boolean(rentalData.hasPets),
         hasSmoking: Boolean(rentalData.hasSmoking),
-        aboutMe: rentalData.aboutMe || '',
+        aboutMe: rentalData.aboutMe,
         message: rentalData.message || '',
         
-        // Payment information (processed separately)
+        // Payment information
         price: pricePerMonth,
         serviceFee: serviceFee,
         totalPrice: totalPrice
@@ -229,17 +239,22 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
             
             <div className="detail-row">
               <span className="detail-label">Full Name</span>
-              <span className="detail-value">{rentalData.fullName || `${userData.firstName} ${userData.lastName}`}</span>
+              <span className="detail-value">{rentalData.fullName}</span>
             </div>
             
             <div className="detail-row">
               <span className="detail-label">Email</span>
-              <span className="detail-value">{rentalData.email || userData.email}</span>
+              <span className="detail-value">{rentalData.email}</span>
             </div>
             
             <div className="detail-row">
               <span className="detail-label">Phone Number</span>
               <span className="detail-value">{rentalData.phoneNumber || 'Not provided'}</span>
+            </div>
+            
+            <div className="detail-row">
+              <span className="detail-label">Gender</span>
+              <span className="detail-value">{rentalData.gender || 'Not provided'}</span>
             </div>
           </div>
           
@@ -350,7 +365,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
           <BookingSummary
             propertyData={propertyData}
             moveInDate={rentalData.movingDate}
-            lengthOfStay="1 month"
+            lengthOfStay={rentalData.leavingDate ? `Until ${formatDate(rentalData.leavingDate)}` : "Indefinite"}
             price={pricePerMonth}
             serviceFee={serviceFee}
             total={totalPrice}
