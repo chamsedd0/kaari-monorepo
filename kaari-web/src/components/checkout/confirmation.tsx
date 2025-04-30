@@ -4,6 +4,7 @@ import { Theme } from '../../theme/theme';
 import { User, Property } from '../../backend/entities';
 import { useCheckoutContext } from '../../contexts/checkout-process';
 import { createCheckoutReservation } from '../../backend/server-actions/CheckoutServerActions';
+import BookingSummary from './BookingSummary';
 
 const ConfirmationContainer = styled.div`
   display: flex;
@@ -31,20 +32,29 @@ const ConfirmationContainer = styled.div`
         margin-bottom: 2rem;
         padding: 1.5rem;
         border-radius: ${Theme.borders.radius.md};
-        background-color: ${Theme.colors.tertiary};
+        background-color: white;
+        border: 1px solid ${Theme.colors.tertiary};
         
         .section-heading {
           font: ${Theme.typography.fonts.largeB};
           color: ${Theme.colors.black};
           margin-bottom: 1rem;
-          padding-bottom: 0.5rem;
-          border-bottom: 1px solid ${Theme.colors.gray};
+          padding-bottom: 0.75rem;
+          border-bottom: 1px solid ${Theme.colors.tertiary};
         }
         
         .detail-row {
           display: flex;
           justify-content: space-between;
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.75rem;
+          padding-bottom: 0.75rem;
+          border-bottom: 1px dashed ${Theme.colors.tertiary};
+          
+          &:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+          }
           
           .detail-label {
             font: ${Theme.typography.fonts.mediumM};
@@ -59,137 +69,27 @@ const ConfirmationContainer = styled.div`
         }
       }
     }
+  }
+  
+  .navigation-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+  }
+  
+  .back-button {
+    background-color: white;
+    color: ${Theme.colors.gray2};
+    border: 1px solid ${Theme.colors.tertiary};
+    padding: 16px 32px;
+    border-radius: 100px;
+    font: ${Theme.typography.fonts.mediumB};
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 140px;
     
-    .confirmation-summary {
-      width: 350px;
-      
-      @media (max-width: 992px) {
-        width: 100%;
-      }
-      
-      .summary-section {
-        position: sticky;
-        top: 2rem;
-        padding: 1.5rem;
-        border-radius: ${Theme.borders.radius.md};
-        background-color: ${Theme.colors.secondary};
-        color: white;
-        
-        .summary-heading {
-          font: ${Theme.typography.fonts.largeB};
-          margin-bottom: 1.5rem;
-          padding-bottom: 0.5rem;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .property-details {
-          margin-bottom: 1.5rem;
-          
-          .property-image {
-            width: 100%;
-            height: 150px;
-            border-radius: ${Theme.borders.radius.sm};
-            object-fit: cover;
-            margin-bottom: 1rem;
-          }
-          
-          .property-title {
-            font: ${Theme.typography.fonts.mediumB};
-            margin-bottom: 0.5rem;
-          }
-          
-          .property-address {
-            font: ${Theme.typography.fonts.smallM};
-            opacity: 0.8;
-          }
-        }
-        
-        .summary-row {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 0.5rem;
-          
-          .summary-label {
-            font: ${Theme.typography.fonts.smallM};
-            opacity: 0.8;
-          }
-          
-          .summary-value {
-            font: ${Theme.typography.fonts.smallB};
-          }
-        }
-        
-        .summary-divider {
-          height: 1px;
-          background-color: rgba(255, 255, 255, 0.2);
-          margin: 1rem 0;
-        }
-        
-        .total-row {
-          display: flex;
-          justify-content: space-between;
-          margin: 1rem 0;
-          
-          .total-label {
-            font: ${Theme.typography.fonts.mediumB};
-          }
-          
-          .total-value {
-            font: ${Theme.typography.fonts.largeB};
-          }
-        }
-        
-        .terms-checkbox {
-          display: flex;
-          align-items: flex-start;
-          gap: 0.5rem;
-          margin: 1.5rem 0;
-          
-          input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            margin-top: 3px;
-          }
-          
-          label {
-            font: ${Theme.typography.fonts.smallM};
-            opacity: 0.9;
-          }
-        }
-        
-        .submit-button {
-          width: 100%;
-          background-color: white;
-          color: ${Theme.colors.secondary};
-          border: none;
-          padding: 12px;
-          border-radius: ${Theme.borders.radius.md};
-          font: ${Theme.typography.fonts.mediumB};
-          cursor: pointer;
-          transition: all 0.3s ease;
-          
-          &:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-          }
-          
-          &:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-          }
-        }
-        
-        .error-message {
-          margin-top: 1rem;
-          color: white;
-          background-color: rgba(255, 0, 0, 0.2);
-          padding: 0.5rem;
-          border-radius: ${Theme.borders.radius.sm};
-          font: ${Theme.typography.fonts.smallM};
-        }
-      }
+    &:hover {
+      border-color: ${Theme.colors.gray2};
     }
   }
 `;
@@ -200,7 +100,7 @@ interface ConfirmationProps {
 }
 
 const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) => {
-  const { navigateToSuccess, selectedPaymentMethod } = useCheckoutContext();
+  const { navigateToSuccess, navigateToPaymentMethod, selectedPaymentMethod } = useCheckoutContext();
   const [rentalData, setRentalData] = useState<any>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -241,7 +141,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
       return;
     }
     
-    if (!rentalData || !rentalData.visitDate) {
+    if (!rentalData) {
       setError('Rental application data is missing');
       return;
     }
@@ -250,34 +150,73 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
     setError(null);
     
     try {
-      // Create reservation using server action
-      const reservation = await createCheckoutReservation(
-        propertyData.id,
-        undefined,
-        new Date(rentalData.visitDate),
-        rentalData.message || 'No additional message provided.',
-        selectedPaymentMethod.id
-      );
+      // Prepare a complete set of rental data with proper defaults
+      const formattedRentalData = {
+        // Personal information
+        fullName: rentalData.fullName || `${userData.firstName} ${userData.lastName}`,
+        email: rentalData.email || userData.email,
+        phoneNumber: rentalData.phoneNumber || '',
+        gender: rentalData.gender || '',
+        dateOfBirth: rentalData.dateOfBirth || null,
+        
+        // Stay information
+        movingDate: rentalData.movingDate ? new Date(rentalData.movingDate) : new Date(),
+        leavingDate: rentalData.leavingDate ? new Date(rentalData.leavingDate) : null,
+        numPeople: rentalData.numPeople || '1',
+        roommates: rentalData.roommates || '',
+        occupationType: rentalData.occupationType || 'work',
+        studyPlace: rentalData.studyPlace || '',
+        workPlace: rentalData.workPlace || '',
+        occupationRole: rentalData.occupationRole || '',
+        funding: rentalData.funding || '',
+        hasPets: Boolean(rentalData.hasPets),
+        hasSmoking: Boolean(rentalData.hasSmoking),
+        aboutMe: rentalData.aboutMe || '',
+        message: rentalData.message || '',
+        
+        // Payment information (processed separately)
+        price: pricePerMonth,
+        serviceFee: serviceFee,
+        totalPrice: totalPrice
+      };
       
-      // Save reservation ID to localStorage for the success page
-      localStorage.setItem('lastReservationId', reservation.id);
+      // Create the reservation
+      const reservation = await createCheckoutReservation({
+        propertyId: propertyData.id,
+        userId: userData.id,
+        rentalData: formattedRentalData,
+        paymentMethodId: selectedPaymentMethod.id
+      });
       
-      // Clear rental application data from localStorage
-      localStorage.removeItem('rentalApplicationData');
+      console.log('Reservation created:', reservation);
       
       // Navigate to success page
       navigateToSuccess();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error creating reservation:', err);
-      setError(err.message || 'Failed to create reservation. Please try again.');
+      setError('Failed to create reservation. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
   
+  const handleTermsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTermsAccepted(e.target.checked);
+    if (error) setError(null);
+  };
+  
+  const handleBack = () => {
+    navigateToPaymentMethod(); // Navigate back to the payment method step
+  };
+  
   if (!rentalData) {
     return <div>Loading application data...</div>;
   }
+  
+  // Calculate fees
+  const pricePerMonth = propertyData.price;
+  const serviceFee = Math.round(pricePerMonth * 0.2);
+  const totalPrice = pricePerMonth + serviceFee;
   
   return (
     <ConfirmationContainer>
@@ -286,37 +225,89 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
       <div className="confirmation-sections">
         <div className="confirmation-details">
           <div className="detail-section">
-            <h3 className="section-heading">Rental Application Details</h3>
+            <h3 className="section-heading">Personal Information</h3>
             
             <div className="detail-row">
               <span className="detail-label">Full Name</span>
-              <span className="detail-value">{rentalData.fullName}</span>
+              <span className="detail-value">{rentalData.fullName || `${userData.firstName} ${userData.lastName}`}</span>
             </div>
             
             <div className="detail-row">
               <span className="detail-label">Email</span>
-              <span className="detail-value">{rentalData.email}</span>
+              <span className="detail-value">{rentalData.email || userData.email}</span>
             </div>
             
             <div className="detail-row">
               <span className="detail-label">Phone Number</span>
-              <span className="detail-value">{rentalData.phoneNumber}</span>
+              <span className="detail-value">{rentalData.phoneNumber || 'Not provided'}</span>
+            </div>
+          </div>
+          
+          <div className="detail-section">
+            <h3 className="section-heading">Stay Information</h3>
+            
+            <div className="detail-row">
+              <span className="detail-label">Move-in Date</span>
+              <span className="detail-value">{formatDate(rentalData.movingDate)}</span>
             </div>
             
             <div className="detail-row">
-              <span className="detail-label">Visit Date</span>
-              <span className="detail-value">{formatDate(rentalData.visitDate)}</span>
+              <span className="detail-label">Number of People</span>
+              <span className="detail-value">{rentalData.numPeople || '1'}</span>
             </div>
             
-            <div className="detail-row">
-              <span className="detail-label">Moving Date</span>
-              <span className="detail-value">{rentalData.movingDate ? formatDate(rentalData.movingDate) : 'Not specified'}</span>
-            </div>
-            
-            {rentalData.message && (
+            {rentalData.roommates && (
               <div className="detail-row">
-                <span className="detail-label">Additional Information</span>
-                <span className="detail-value">{rentalData.message}</span>
+                <span className="detail-label">Will Live With</span>
+                <span className="detail-value">{rentalData.roommates}</span>
+              </div>
+            )}
+            
+            <div className="detail-row">
+              <span className="detail-label">Occupation</span>
+              <span className="detail-value">{rentalData.occupationType === 'study' ? 'Student' : 'Working Professional'}</span>
+            </div>
+            
+            {rentalData.occupationType === 'study' && rentalData.studyPlace && (
+              <div className="detail-row">
+                <span className="detail-label">Institution</span>
+                <span className="detail-value">{rentalData.studyPlace}</span>
+              </div>
+            )}
+            
+            {rentalData.occupationType === 'work' && rentalData.workPlace && (
+              <div className="detail-row">
+                <span className="detail-label">Workplace</span>
+                <span className="detail-value">{rentalData.workPlace}</span>
+              </div>
+            )}
+            
+            {rentalData.occupationRole && (
+              <div className="detail-row">
+                <span className="detail-label">{rentalData.occupationType === 'study' ? 'Field of Study' : 'Role'}</span>
+                <span className="detail-value">{rentalData.occupationRole}</span>
+              </div>
+            )}
+            
+            <div className="detail-row">
+              <span className="detail-label">Funding Source</span>
+              <span className="detail-value">{rentalData.funding || 'Not specified'}</span>
+            </div>
+            
+            <div className="detail-row">
+              <span className="detail-label">Has Pets</span>
+              <span className="detail-value">{rentalData.hasPets ? 'Yes' : 'No'}</span>
+            </div>
+            
+            <div className="detail-row">
+              <span className="detail-label">Has Smoking Habits</span>
+              <span className="detail-value">{rentalData.hasSmoking ? 'Yes' : 'No'}</span>
+            </div>
+            
+            {rentalData.leavingDate && (
+              <div className="detail-row">
+                <span className="detail-label">Approximate Leaving Date</span>
+                <span className="detail-value">{formatDate(rentalData.leavingDate)}</span>
               </div>
             )}
           </div>
@@ -347,75 +338,40 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
               </div>
             )}
           </div>
+          
+          <div className="navigation-buttons">
+            <button className="back-button" onClick={handleBack}>
+              Back
+            </button>
+          </div>
         </div>
         
         <div className="confirmation-summary">
-          <div className="summary-section">
-            <h3 className="summary-heading">Reservation Summary</h3>
-            
-            <div className="property-details">
-              <img 
-                src={propertyData.images[0] || 'https://via.placeholder.com/300x150'} 
-                alt={propertyData.title} 
-                className="property-image" 
-              />
-              <h4 className="property-title">{propertyData.title}</h4>
-              <p className="property-address">{formatAddress(propertyData.address)}</p>
+          <BookingSummary
+            propertyData={propertyData}
+            moveInDate={rentalData.movingDate}
+            lengthOfStay="1 month"
+            price={pricePerMonth}
+            serviceFee={serviceFee}
+            total={totalPrice}
+            termsAgreed={termsAccepted}
+            onTermsChange={handleTermsChange}
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+            buttonText="Confirm Booking"
+          />
+          {error && (
+            <div style={{ 
+              marginTop: '1rem', 
+              color: Theme.colors.error, 
+              backgroundColor: 'rgba(255, 0, 0, 0.1)', 
+              padding: '0.75rem', 
+              borderRadius: '0.5rem',
+              fontSize: '0.875rem' 
+            }}>
+              {error}
             </div>
-            
-            <div className="summary-row">
-              <span className="summary-label">Visit Date</span>
-              <span className="summary-value">{formatDate(rentalData.visitDate)}</span>
-            </div>
-            
-            {rentalData.movingDate && (
-              <div className="summary-row">
-                <span className="summary-label">Expected Move-in</span>
-                <span className="summary-value">{formatDate(rentalData.movingDate)}</span>
-              </div>
-            )}
-            
-            <div className="summary-divider"></div>
-            
-            <div className="summary-row">
-              <span className="summary-label">Property Price</span>
-              <span className="summary-value">${propertyData.price.toLocaleString()}/month</span>
-            </div>
-            
-            <div className="summary-row">
-              <span className="summary-label">Security Deposit</span>
-              <span className="summary-value">$0 (due upon acceptance)</span>
-            </div>
-            
-            <div className="summary-divider"></div>
-            
-            <div className="total-row">
-              <span className="total-label">Total Due Now</span>
-              <span className="total-value">$0</span>
-            </div>
-            
-            <div className="terms-checkbox">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-              />
-              <label htmlFor="terms">
-                I agree to the terms and conditions and understand that this is a request for viewing and/or application for rental pending owner approval.
-              </label>
-            </div>
-            
-            <button
-              className="submit-button"
-              onClick={handleSubmit}
-              disabled={isSubmitting || !termsAccepted}
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Reservation Request'}
-            </button>
-            
-            {error && <div className="error-message">{error}</div>}
-          </div>
+          )}
         </div>
       </div>
     </ConfirmationContainer>

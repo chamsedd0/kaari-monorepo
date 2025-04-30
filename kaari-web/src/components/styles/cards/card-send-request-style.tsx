@@ -15,6 +15,7 @@ export const PropertyRequestCardStyle = styled.div`
 
     gap: 28px;
     z-index: 2;
+    padding-top: 80px;
 
 
     .title {
@@ -182,7 +183,7 @@ export const PropertyRequestCardStyle = styled.div`
         color: ${Theme.colors.primary};
         font: ${Theme.typography.fonts.mediumM};
         text-align: center;
-        margin: auto;
+        margin: 0 auto;
     }
 
 `

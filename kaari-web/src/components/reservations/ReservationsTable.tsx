@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../theme/theme';
-import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaTimesCircle, FaEye } from 'react-icons/fa';
 import { Request, Property, User } from '../../backend/entities';
+import { ReservationDetailsModal } from './ReservationDetailsModal';
 
 interface ReservationWithDetails {
   reservation: Request;
@@ -24,11 +25,13 @@ const ReservationsTableStyle = styled.div`
     border-radius: ${Theme.borders.radius.lg};
     border: ${Theme.borders.primary};
     overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
 
     h2 {
         font: ${Theme.typography.fonts.h4B};
         color: ${Theme.colors.black};
-        padding: 24px;
+        padding: 24px 32px;
         margin: 0;
         border-bottom: 1px solid ${Theme.colors.gray5};
     }
@@ -47,6 +50,7 @@ const ReservationsTableStyle = styled.div`
         padding: 16px 24px;
         font: ${Theme.typography.fonts.smallB};
         color: ${Theme.colors.gray2};
+        border-bottom: 1px solid ${Theme.colors.gray5};
     }
 
     td {
@@ -57,8 +61,16 @@ const ReservationsTableStyle = styled.div`
         vertical-align: middle;
     }
 
-    tr:last-child td {
-        border-bottom: none;
+    tr {
+        transition: background-color 0.2s ease;
+        
+        &:hover {
+            background-color: #F9FAFC;
+        }
+        
+        &:last-child td {
+            border-bottom: none;
+        }
     }
 
     .applicant {
@@ -67,15 +79,16 @@ const ReservationsTableStyle = styled.div`
         gap: 12px;
 
         img {
-            width: 28px;
-            height: 28px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             object-fit: cover;
+            border: 2px solid ${Theme.colors.tertiary};
         }
 
         .initials {
-            width: 28px;
-            height: 28px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background-color: ${Theme.colors.tertiary};
             display: flex;
@@ -84,17 +97,31 @@ const ReservationsTableStyle = styled.div`
             font: ${Theme.typography.fonts.smallB};
             color: ${Theme.colors.gray2};
         }
+        
+        span {
+            font: ${Theme.typography.fonts.smallM};
+            color: ${Theme.colors.black};
+            
+            .age {
+                color: ${Theme.colors.gray2};
+                margin-left: 4px;
+            }
+        }
     }
 
     .hour-indicator {
         font: ${Theme.typography.fonts.smallB};
-            color: ${Theme.colors.black};
+        color: ${Theme.colors.black};
+        
+        &.urgent {
+            color: ${Theme.colors.error};
         }
+    }
 
     .action-buttons {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
 
         button {
             width: 36px;
@@ -105,6 +132,17 @@ const ReservationsTableStyle = styled.div`
             justify-content: center;
             cursor: pointer;
             border: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            }
+            
+            &:active {
+                transform: translateY(0);
+            }
             
             &.approve {
                 background-color: ${Theme.colors.success};
@@ -117,6 +155,8 @@ const ReservationsTableStyle = styled.div`
                 &:disabled {
                     opacity: 0.6;
                     cursor: not-allowed;
+                    transform: none;
+                    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
                 }
             }
             
@@ -131,17 +171,29 @@ const ReservationsTableStyle = styled.div`
                 &:disabled {
                     opacity: 0.6;
                     cursor: not-allowed;
+                    transform: none;
+                    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                }
+            }
+            
+            &.view {
+                background-color: ${Theme.colors.secondary};
+                color: white;
+                
+                &:hover {
+                    background-color: #5d3fd3;
                 }
             }
         }
     }
 
     .status-badge {
-        display: inline-block;
-        padding: 4px 12px;
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
         border-radius: 16px;
-        font-size: 12px;
-        font-weight: 600;
+        font: ${Theme.typography.fonts.smallB};
+        margin-right: 10px;
         
         &.accepted {
             background-color: #E6F5F0;
@@ -166,6 +218,9 @@ export const ReservationsTable: React.FC<ReservationsTableProps> = ({
     onReject,
     isProcessing 
 }) => {
+    const [selectedReservation, setSelectedReservation] = useState<ReservationWithDetails | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    
     // Sort reservations by scheduled date
     const sortedReservations = [...reservations].sort((a, b) => {
         const dateA = a.reservation.createdAt ? new Date(a.reservation.createdAt).getTime() : 0;
@@ -248,7 +303,13 @@ export const ReservationsTable: React.FC<ReservationsTableProps> = ({
             if (diffMs <= 0) return '0h';
             
             const hours = Math.floor(diffMs / (1000 * 60 * 60));
-            return `${hours}h remaining`;
+            
+            // Return with urgent class indicator if less than 6 hours
+            const isUrgent = hours < 6;
+            return { 
+                text: `${hours}h remaining`,
+                isUrgent
+            };
         } catch (error) {
             console.error('Error calculating time remaining:', error, updatedAt);
             return 'N/A';
@@ -258,13 +319,43 @@ export const ReservationsTable: React.FC<ReservationsTableProps> = ({
     // Get status badge
     const getStatusBadge = (status: string) => {
         if (status === 'accepted') {
-            return <span className="status-badge accepted">Approved</span>;
+            return <span className="status-badge accepted">
+                <FaCheckCircle size={12} style={{ marginRight: '6px' }} /> Approved
+            </span>;
         } else if (status === 'rejected') {
-            return <span className="status-badge rejected">Rejected</span>;
+            return <span className="status-badge rejected">
+                <FaTimesCircle size={12} style={{ marginRight: '6px' }} /> Rejected
+            </span>;
         } else if (status === 'completed') {
-            return <span className="status-badge completed">Completed</span>;
+            return <span className="status-badge completed">
+                <FaCheckCircle size={12} style={{ marginRight: '6px' }} /> Completed
+            </span>;
         }
         return null;
+    };
+
+    // Function to open the modal with selected reservation
+    const openDetailsModal = (reservation: ReservationWithDetails) => {
+        setSelectedReservation(reservation);
+        setIsModalOpen(true);
+    };
+
+    // Function to handle approval from modal
+    const handleModalApprove = (id: string) => {
+        onApprove(id);
+        // Keep modal open to see status change
+    };
+
+    // Function to handle rejection from modal
+    const handleModalReject = (id: string) => {
+        onReject(id);
+        // Keep modal open to see status change
+    };
+
+    // Function to close the modal
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setSelectedReservation(null);
     };
 
     return (
@@ -293,23 +384,33 @@ export const ReservationsTable: React.FC<ReservationsTableProps> = ({
                                     ) : (
                                         <div className="initials">{getClientInitials(res.client)}</div>
                                     )}
-                                    <span>{res.client?.name || 'Unknown'}, {res.client?.age || 20}</span>
-            </div>
+                                    <span>
+                                        {res.client?.name || 'Unknown'}
+                                        <span className="age">{res.client?.age ? `, ${res.client.age}` : ''}</span>
+                                    </span>
+                                </div>
                             </td>
                             <td>{res.property?.title || 'Apartment - flat in Agadir'}</td>
                             <td>{formatDate(res.reservation.createdAt)}</td>
-                            <td>{res.property?.occupants || 2}</td>
-                            <td>{formatDate(res.reservation.scheduledDate || res.reservation.createdAt)}</td>
-                            <td className="hour-indicator">
+                            <td>{res.property?.occupants || res.reservation.numPeople || 2}</td>
+                            <td>{formatDate(res.reservation.scheduledDate || res.reservation.movingDate || res.reservation.createdAt)}</td>
+                            <td>
                                 {res.reservation.status === 'accepted' ? 
-                                    get24hRemaining(res.reservation.updatedAt) : ''}
+                                    (() => {
+                                        const timeRemaining = get24hRemaining(res.reservation.updatedAt);
+                                        return typeof timeRemaining === 'string' ? 
+                                            timeRemaining : 
+                                            <span className={`hour-indicator ${timeRemaining.isUrgent ? 'urgent' : ''}`}>
+                                                {timeRemaining.text}
+                                            </span>;
+                                    })() : ''}
                             </td>
                             <td>
                                 {res.reservation.status === 'pending' ? (
                                     <div className="action-buttons">
                                         <button 
                                             className="approve"
-                                            onClick={() => onApprove(res.reservation.id)}
+                                            onClick={() => openDetailsModal(res)}
                                             disabled={isProcessing === res.reservation.id}
                                             title="Approve"
                                         >
@@ -317,21 +418,46 @@ export const ReservationsTable: React.FC<ReservationsTableProps> = ({
                                         </button>
                                         <button 
                                             className="reject"
-                                            onClick={() => onReject(res.reservation.id)}
+                                            onClick={() => openDetailsModal(res)}
                                             disabled={isProcessing === res.reservation.id}
                                             title="Reject"
                                         >
                                             <FaTimesCircle size={16} />
                                         </button>
-                    </div>
+                                        <button
+                                            className="view"
+                                            onClick={() => openDetailsModal(res)}
+                                            title="View Details"
+                                        >
+                                            <FaEye size={16} />
+                                        </button>
+                                    </div>
                                 ) : (
-                                    getStatusBadge(res.reservation.status)
+                                    <div className="action-buttons">
+                                        {getStatusBadge(res.reservation.status)}
+                                        <button
+                                            className="view"
+                                            onClick={() => openDetailsModal(res)}
+                                            title="View Details"
+                                        >
+                                            <FaEye size={16} />
+                                        </button>
+                                    </div>
                                 )}
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
+            
+            <ReservationDetailsModal
+                isOpen={isModalOpen}
+                onClose={closeModal}
+                reservation={selectedReservation}
+                onApprove={handleModalApprove}
+                onReject={handleModalReject}
+                isProcessing={isProcessing}
+            />
         </ReservationsTableStyle>
     );
 }; 

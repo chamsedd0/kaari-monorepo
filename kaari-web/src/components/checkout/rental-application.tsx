@@ -1,10 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../theme/theme';
 import { User, Property } from '../../backend/entities';
 import { useCheckoutContext } from '../../contexts/checkout-process';
+import { FiInfo } from 'react-icons/fi';
+import CheckoutInput from './input-fields/CheckoutInput';
+import CheckoutTextArea from './input-fields/CheckoutTextArea';
+import { CheckoutButton } from '../styles/inputs/checkout/checkout-input-style';
+import CustomSelect from './input-fields/CustomSelect';
+import CustomCheckbox from './input-fields/CustomCheckbox';
+import EnhancedCustomSelect from './input-fields/EnhancedCustomSelect';
+import EnhancedDatePicker from './input-fields/EnhancedDatePicker';
+import BirthDatePicker from './input-fields/BirthDatePicker';
+import IDDocumentUpload from './input-fields/IDDocumentUpload';
 
-const ApplicationContainer = styled.div`
+const ApplicationContainer = styled.div<{step: number}>`
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -15,59 +25,24 @@ const ApplicationContainer = styled.div`
     margin-bottom: 1.5rem;
   }
   
-  .property-summary {
+  .checkout-page-layout {
     display: flex;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-    padding: 1.5rem;
-    border-radius: ${Theme.borders.radius.md};
-    background-color: ${Theme.colors.tertiary};
+    gap: 2rem;
     
     @media (max-width: 768px) {
       flex-direction: column;
     }
-    
-    .property-image {
-      width: 200px;
-      height: 150px;
-      border-radius: ${Theme.borders.radius.md};
-      object-fit: cover;
-      
-      @media (max-width: 768px) {
-        width: 100%;
-      }
-    }
-    
-    .property-details {
+  }
+  
+  .form-side {
       flex: 1;
-      
-      .property-title {
-        font: ${Theme.typography.fonts.h5B};
-        color: ${Theme.colors.black};
-        margin-bottom: 0.5rem;
-      }
-      
-      .property-address {
-        font: ${Theme.typography.fonts.mediumM};
-        color: ${Theme.colors.gray2};
-        margin-bottom: 1rem;
-      }
-      
-      .property-price {
-        font: ${Theme.typography.fonts.largeB};
-        color: ${Theme.colors.secondary};
-        margin-bottom: 1rem;
-      }
-      
-      .property-features {
-        display: flex;
-        gap: 1rem;
-        
-        .feature {
-          font: ${Theme.typography.fonts.smallM};
-          color: ${Theme.colors.gray2};
-        }
-      }
+  }
+  
+  .property-side {
+    width: 300px;
+    
+    @media (max-width: 768px) {
+      width: 100%;
     }
   }
   
@@ -75,49 +50,25 @@ const ApplicationContainer = styled.div`
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    margin-bottom: 2rem;
     
-    .form-group {
+    .form-row {
       display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      
-      label {
-        font: ${Theme.typography.fonts.mediumM};
-        color: ${Theme.colors.black};
-      }
-      
-      input, textarea, select {
-        padding: 12px 16px;
-        border: 1px solid ${Theme.colors.tertiary};
-        border-radius: ${Theme.borders.radius.md};
-        font: ${Theme.typography.fonts.mediumM};
-        transition: border-color 0.3s ease;
-        
-        &:focus {
-          outline: none;
-          border-color: ${Theme.colors.secondary};
-        }
-      }
-      
-      textarea {
-        min-height: 120px;
-        resize: vertical;
-      }
-      
-      &.form-row {
-        display: flex;
-        flex-direction: row;
-        gap: 1rem;
+      gap: 1.5rem;
+      width: 100%;
         
         @media (max-width: 768px) {
           flex-direction: column;
         }
         
-        .form-group {
+      .form-field {
           flex: 1;
         }
       }
+    
+    .button-container {
+      display: flex;
+      justify-content: ${props => props.step === 1 ? 'flex-end' : 'space-between'};
+      margin-top: 1.5rem;
     }
   }
   
@@ -127,20 +78,44 @@ const ApplicationContainer = styled.div`
     margin-top: 0.5rem;
   }
   
+  .form-navigation {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    
+    .back-button {
+      background-color: white;
+      color: ${Theme.colors.gray2};
+      border: 1px solid ${Theme.colors.tertiary};
+      padding: 16px 32px;
+      border-radius: 100px;
+      font: ${Theme.typography.fonts.mediumB};
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 140px;
+      
+      &:hover {
+        border-color: ${Theme.colors.gray2};
+      }
+    }
+  }
+  
   .actions {
     display: flex;
     justify-content: flex-end;
     margin-top: 2rem;
+  }
     
     .next-button {
       background-color: ${Theme.colors.secondary};
       color: white;
       border: none;
-      padding: 12px 24px;
-      border-radius: ${Theme.borders.radius.md};
+    padding: 16px 32px;
+    border-radius: 100px;
       font: ${Theme.typography.fonts.mediumB};
       cursor: pointer;
       transition: background-color 0.3s ease;
+    width: 140px;
       
       &:hover {
         background-color: ${Theme.colors.primary};
@@ -150,6 +125,143 @@ const ApplicationContainer = styled.div`
         background-color: ${Theme.colors.tertiary};
         color: ${Theme.colors.gray2};
         cursor: not-allowed;
+    }
+  }
+  
+  .optional-label {
+    color: ${Theme.colors.gray2};
+    font-size: 12px;
+    margin-left: 8px;
+  }
+  
+  // Property card styling
+  .property-card {
+    background-color: ${Theme.colors.white};
+    border-radius: ${Theme.borders.radius.md};
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 100px;
+    
+    .property-image {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+    
+    .property-content {
+      padding: 1.5rem;
+      
+      .property-title {
+        font: ${Theme.typography.fonts.h5B};
+        color: ${Theme.colors.black};
+        margin-bottom: 0.75rem;
+      }
+      
+      .property-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        
+        .meta-item {
+          font: ${Theme.typography.fonts.smallM};
+          color: ${Theme.colors.gray2};
+        }
+      }
+      
+      .host-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid ${Theme.colors.tertiary};
+        
+        .host-image {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+        
+        .host-name {
+          font: ${Theme.typography.fonts.mediumB};
+          color: ${Theme.colors.black};
+        }
+        
+        .view-profile {
+          margin-left: auto;
+          color: ${Theme.colors.secondary};
+          font: ${Theme.typography.fonts.smallM};
+          text-decoration: none;
+          
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+      
+      .price-breakdown {
+        .price-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 0.75rem;
+          
+          .price-label {
+            font: ${Theme.typography.fonts.mediumM};
+            color: ${Theme.colors.gray2};
+          }
+          
+          .price-value {
+            font: ${Theme.typography.fonts.mediumM};
+            color: ${Theme.colors.black};
+            
+            &.total {
+              font: ${Theme.typography.fonts.largeB};
+              color: ${Theme.colors.secondary};
+            }
+          }
+        }
+        
+        .total-row {
+          margin-top: 1rem;
+          padding-top: 0.75rem;
+          border-top: 1px solid ${Theme.colors.tertiary};
+        }
+      }
+      
+      .info-tooltip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.5rem;
+        color: ${Theme.colors.gray2};
+        cursor: help;
+      }
+      
+      .cancellation-policy {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid ${Theme.colors.tertiary};
+        
+        .policy-title {
+          font: ${Theme.typography.fonts.smallB};
+          margin-bottom: 0.25rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        
+        .read-more {
+          color: ${Theme.colors.secondary};
+          font: ${Theme.typography.fonts.smallM};
+          text-decoration: none;
+          
+          &:hover {
+            text-decoration: underline;
+          }
+        }
       }
     }
   }
@@ -160,213 +272,615 @@ interface RentalApplicationProps {
   propertyData: Property;
 }
 
-interface FormData {
-  fullName: string;
+interface PersonalInfo {
+  firstName: string;
+  lastName: string;
   email: string;
   phoneNumber: string;
-  movingDate: string;
-  visitDate: string;
-  message: string;
+  gender: string;
+  dateOfBirth: string;
+  identificationDocument: FileList | null;
+}
+
+interface StayInfo {
+  numPeople: string;
+  roommates: string;
+  occupationType: 'study' | 'work';
+  studyPlace: string;
+  workPlace: string;
+  occupationRole: string;
+  funding: string;
+  hasPets: boolean;
+  hasSmoking: boolean;
+  aboutMe: string;
+  leavingDate: string;
+}
+
+interface FormErrors {
+  [key: string]: string;
 }
 
 const RentalApplication: React.FC<RentalApplicationProps> = ({ userData, propertyData }) => {
   const { navigateToPaymentMethod } = useCheckoutContext();
+  const [currentStep, setCurrentStep] = useState(1);
   
-  // Initialize form with user data
-  const [formData, setFormData] = useState<FormData>(() => {
-    // Try to get saved data from localStorage
+  // Personal info for step 1
+  const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
+    firstName: userData?.name || '',
+    lastName: userData?.surname || '',
+    email: userData?.email || '',
+    phoneNumber: userData?.phoneNumber || '',
+    gender: userData?.gender || '',
+    dateOfBirth: userData?.dateOfBirth || '',
+    identificationDocument: null
+  });
+  
+  // Stay info for step 2
+  const [stayInfo, setStayInfo] = useState<StayInfo>({
+    numPeople: '1',
+    roommates: '',
+    occupationType: 'study',
+    studyPlace: '',
+    workPlace: '',
+    occupationRole: '',
+    funding: 'Myself (from salary)',
+    hasPets: false,
+    hasSmoking: false,
+    aboutMe: userData?.aboutMe || '',
+    leavingDate: ''
+  });
+  
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Load saved form data from localStorage if it exists
+  useEffect(() => {
     const savedData = localStorage.getItem('rentalApplicationData');
-    const defaultData = {
-      fullName: `${userData.name} ${userData.surname || ''}`.trim(),
-      email: userData.email,
-      phoneNumber: userData.phoneNumber || '',
-      movingDate: '',
-      visitDate: '',
-      message: ''
-    };
-    
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
-        return {
-          ...defaultData,
-          ...parsedData
+        
+        // Split data between personal and stay info
+        const personal: PersonalInfo = {
+          firstName: parsedData.firstName || personalInfo.firstName,
+          lastName: parsedData.lastName || personalInfo.lastName,
+          email: parsedData.email || personalInfo.email,
+          phoneNumber: parsedData.phoneNumber || personalInfo.phoneNumber,
+          gender: parsedData.gender || personalInfo.gender,
+          dateOfBirth: parsedData.dateOfBirth || personalInfo.dateOfBirth,
+          identificationDocument: null // Cannot restore file input from localStorage
         };
-      } catch (e) {
-        console.error('Error parsing saved rental data:', e);
+        
+        const stay: StayInfo = {
+          numPeople: parsedData.numPeople || stayInfo.numPeople,
+          roommates: parsedData.roommates || stayInfo.roommates,
+          occupationType: parsedData.occupationType || stayInfo.occupationType,
+          studyPlace: parsedData.studyPlace || stayInfo.studyPlace,
+          workPlace: parsedData.workPlace || stayInfo.workPlace,
+          occupationRole: parsedData.occupationRole || stayInfo.occupationRole,
+          funding: parsedData.funding || stayInfo.funding,
+          hasPets: Boolean(parsedData.hasPets),
+          hasSmoking: Boolean(parsedData.hasSmoking),
+          aboutMe: parsedData.aboutMe || stayInfo.aboutMe,
+          leavingDate: parsedData.leavingDate || stayInfo.leavingDate
+        };
+        
+        setPersonalInfo(personal);
+        setStayInfo(stay);
+      } catch (error) {
+        console.error('Error parsing saved form data:', error);
       }
     }
-    
-    return defaultData;
-  });
+  }, []);
   
-  const [errors, setErrors] = useState<Partial<FormData>>({});
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handlePersonalInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Clear the error for this field when the user starts typing
-    if (errors[name as keyof FormData]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
+    setPersonalInfo(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error when field is being edited
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
     }
   };
   
-  const validateForm = (): boolean => {
-    const newErrors: Partial<FormData> = {};
+  const handlePersonalInfoSelectChange = (name: string, value: string) => {
+    setPersonalInfo(prev => ({
+      ...prev,
+      [name]: value
+    }));
     
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
+    // Clear error when field is being edited
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+  
+  const handleDocumentUpload = (files: FileList | null) => {
+    setPersonalInfo(prev => ({
+      ...prev,
+      identificationDocument: files
+    }));
+    
+    // Clear error when field is being edited
+    if (formErrors['identificationDocument']) {
+      setFormErrors(prev => ({
+        ...prev,
+        identificationDocument: ''
+      }));
+    }
+  };
+  
+  const handleStayInfoChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target as HTMLInputElement;
+    
+    // Handle checkbox inputs
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setStayInfo(prev => ({
+        ...prev,
+        [name]: checked
+      }));
+    } else {
+      setStayInfo(prev => ({
+        ...prev,
+        [name]: value
+      }));
     }
     
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+    // Clear error when field is being edited
+    if (formErrors[name]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+  
+  const validateStep1 = (): boolean => {
+    const errors: FormErrors = {};
+    
+    if (!personalInfo.firstName.trim()) {
+      errors.firstName = 'First name is required';
     }
     
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'Phone number is required';
+    if (!personalInfo.lastName.trim()) {
+      errors.lastName = 'Last name is required';
     }
     
-    if (!formData.visitDate) {
-      newErrors.visitDate = 'Visit date is required';
+    if (!personalInfo.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(personalInfo.email)) {
+      errors.email = 'Email is invalid';
     }
     
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (!personalInfo.phoneNumber.trim()) {
+      errors.phoneNumber = 'Phone number is required';
+    }
+    
+    if (!personalInfo.gender) {
+      errors.gender = 'Gender is required';
+    }
+    
+    if (!personalInfo.dateOfBirth) {
+      errors.dateOfBirth = 'Date of birth is required';
+    }
+    
+    if (!personalInfo.identificationDocument || personalInfo.identificationDocument.length === 0) {
+      errors.identificationDocument = 'ID document is required';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+  
+  const validateStep2 = (): boolean => {
+    const errors: FormErrors = {};
+    
+    if (stayInfo.numPeople !== '1' && !stayInfo.roommates.trim()) {
+      errors.roommates = 'Please specify who will live with you';
+    }
+    
+    if (stayInfo.occupationType === 'study' && !stayInfo.studyPlace.trim()) {
+      errors.studyPlace = 'Please specify where you study';
+    }
+    
+    if (stayInfo.occupationType === 'work' && !stayInfo.workPlace.trim()) {
+      errors.workPlace = 'Please specify where you work';
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+  
+  const handleNextStep = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (validateStep1()) {
+      setCurrentStep(2);
+    }
+  };
+  
+  const handleBack = () => {
+    setCurrentStep(1);
   };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (validateForm()) {
-      // If validation passes, save the form data to the context and proceed
-      localStorage.setItem('rentalApplicationData', JSON.stringify(formData));
-      navigateToPaymentMethod();
+    if (!validateStep2()) {
+      return;
     }
+    
+    setIsSubmitting(true);
+    
+    // Combine personal and stay info into a single object (excluding files which can't be serialized)
+    const rentalData = {
+      firstName: personalInfo.firstName,
+      lastName: personalInfo.lastName,
+      email: personalInfo.email,
+      phoneNumber: personalInfo.phoneNumber,
+      gender: personalInfo.gender,
+      dateOfBirth: personalInfo.dateOfBirth,
+      ...stayInfo,
+      movingDate: new Date().toISOString().split('T')[0] // Current date as default
+    };
+    
+    // Save combined data to localStorage
+    localStorage.setItem('rentalApplicationData', JSON.stringify(rentalData));
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      setIsSubmitting(false);
+      navigateToPaymentMethod();
+    }, 500);
   };
   
-  // Format address
-  const formatAddress = (address: Property['address']) => {
-    return `${address.street}, ${address.city}, ${address.state} ${address.zipCode}, ${address.country}`;
-  };
+  // Options for the select dropdowns
+  const genderOptions = [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+    { value: 'other', label: 'Other' },
+    { value: 'prefer_not_to_say', label: 'Prefer not to say' }
+  ];
+  
+  const peopleOptions = [
+    { value: '1', label: '1' },
+    { value: '2', label: '2' },
+    { value: '3', label: '3' },
+    { value: '4', label: '4' },
+    { value: '5+', label: '5+' }
+  ];
+  
+  const occupationOptions = [
+    { value: 'study', label: 'Study' },
+    { value: 'work', label: 'Work' }
+  ];
+  
+  const fundingOptions = [
+    { value: 'Myself (from salary)', label: 'Myself (from salary)' },
+    { value: 'Parents', label: 'Parents' },
+    { value: 'Scholarship', label: 'Scholarship' },
+    { value: 'Other', label: 'Other' }
+  ];
   
   return (
-    <ApplicationContainer>
-      <h2 className="section-title">Rental Application</h2>
+    <ApplicationContainer step={currentStep}>
+      <h2 className="section-title">Your Information</h2>
       
-      <div className="property-summary">
-        <img 
-          src={propertyData.images[0] || 'https://via.placeholder.com/200x150'} 
-          alt={propertyData.title} 
-          className="property-image" 
-        />
-        
-        <div className="property-details">
-          <h3 className="property-title">{propertyData.title}</h3>
-          <p className="property-address">{formatAddress(propertyData.address)}</p>
-          <p className="property-price">${propertyData.price.toLocaleString()}</p>
-          
-          <div className="property-features">
-            {propertyData.bedrooms && (
-              <span className="feature">{propertyData.bedrooms} Beds</span>
-            )}
-            {propertyData.bathrooms && (
-              <>
-                <span className="feature">•</span>
-                <span className="feature">{propertyData.bathrooms} Baths</span>
-              </>
-            )}
-            <span className="feature">•</span>
-            <span className="feature">{propertyData.area} sq ft</span>
+      {currentStep === 1 ? (
+        // Step 1: Personal Information with enhanced fields
+        <form className="form-container" onSubmit={handleNextStep}>
+          <div className="form-row">
+            <div className="form-field">
+              <CheckoutInput
+                label="First Name"
+                name="firstName"
+                value={personalInfo.firstName}
+                onChange={handlePersonalInfoChange}
+                placeholder="Enter your first name"
+                required
+                error={formErrors.firstName}
+              />
+            </div>
+            
+            <div className="form-field">
+              <CheckoutInput
+                label="Last Name"
+                name="lastName"
+                value={personalInfo.lastName}
+                onChange={handlePersonalInfoChange}
+                placeholder="Enter your last name"
+                required
+                error={formErrors.lastName}
+              />
+            </div>
           </div>
+          
+          <div className="form-row">
+            <div className="form-field">
+              <CheckoutInput
+                label="Email"
+                type="email"
+                name="email"
+                value={personalInfo.email}
+                onChange={handlePersonalInfoChange}
+                placeholder="Enter your email"
+                required
+                error={formErrors.email}
+              />
+            </div>
+            
+            <div className="form-field">
+              <CheckoutInput
+                label="Phone Number"
+                type="tel"
+                name="phoneNumber"
+                value={personalInfo.phoneNumber}
+                onChange={handlePersonalInfoChange}
+                placeholder="Enter your phone number"
+                required
+                error={formErrors.phoneNumber}
+              />
+            </div>
+          </div>
+          
+          <div className="form-row">
+            <div className="form-field">
+              <EnhancedCustomSelect
+                label="Gender"
+                name="gender"
+                options={genderOptions}
+                value={personalInfo.gender}
+                onChange={(e) => {
+                  if (typeof e === 'string') {
+                    handlePersonalInfoSelectChange('gender', e);
+                  } else {
+                    handlePersonalInfoSelectChange('gender', e.target.value);
+                  }
+                }}
+                required
+                error={formErrors.gender}
+                placeholder="Select your gender"
+              />
+            </div>
+            
+            <div className="form-field">
+              <BirthDatePicker
+                label="Date of Birth"
+                name="dateOfBirth"
+                value={personalInfo.dateOfBirth}
+                onChange={(e) => {
+                  if (typeof e === 'string') {
+                    handlePersonalInfoSelectChange('dateOfBirth', e);
+                  } else {
+                    handlePersonalInfoChange(e);
+                  }
+                }}
+                required
+                error={formErrors.dateOfBirth}
+                placeholder="Select your date of birth"
+              />
         </div>
       </div>
       
-      <form onSubmit={handleSubmit} className="form-container">
         <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="fullName">Full Name</label>
-            <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-            />
-            {errors.fullName && <p className="error-message">{errors.fullName}</p>}
+            <div className="form-field">
+              <IDDocumentUpload
+                label="Identification Document"
+                name="identificationDocument"
+                value={personalInfo.identificationDocument}
+                onChange={handleDocumentUpload}
+                required
+                error={formErrors.identificationDocument}
+                accept=".jpg,.jpeg,.png,.pdf"
+              />
+            </div>
           </div>
           
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-            />
-            {errors.email && <p className="error-message">{errors.email}</p>}
+          <div className="button-container">
+            <CheckoutButton type="submit">
+              Next Step
+            </CheckoutButton>
+          </div>
+        </form>
+      ) : (
+        // Step 2: Stay Information
+        <form className="form-container" onSubmit={handleSubmit}>
+          <div className="form-row">
+            <div className="form-field">
+              <EnhancedCustomSelect
+                label="How many people will stay at the property?"
+                name="numPeople"
+                options={peopleOptions}
+                value={stayInfo.numPeople}
+                onChange={(e) => {
+                  if (typeof e === 'string') {
+                    handleStayInfoChange({
+                      target: { name: 'numPeople', value: e }
+                    } as React.ChangeEvent<HTMLSelectElement>);
+                  } else {
+                    handleStayInfoChange(e);
+                  }
+                }}
+                required
+              />
+            </div>
+            
+            <div className="form-field">
+              <CheckoutInput
+                label="Who will you live with?"
+                name="roommates"
+                value={stayInfo.roommates}
+                onChange={handleStayInfoChange}
+                placeholder="Friends, family or someone else..."
+                error={formErrors.roommates}
+              />
           </div>
         </div>
         
         <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="phoneNumber">Phone Number</label>
-            <input
-              type="tel"
-              id="phoneNumber"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-            />
-            {errors.phoneNumber && <p className="error-message">{errors.phoneNumber}</p>}
+            <div className="form-field">
+              <EnhancedCustomSelect
+                label="Do you study or work?"
+                name="occupationType"
+                options={occupationOptions}
+                value={stayInfo.occupationType}
+                onChange={(e) => {
+                  if (typeof e === 'string') {
+                    handleStayInfoChange({
+                      target: { name: 'occupationType', value: e }
+                    } as React.ChangeEvent<HTMLSelectElement>);
+                  } else {
+                    handleStayInfoChange(e);
+                  }
+                }}
+                required
+              />
+            </div>
+            
+            <div className="form-field">
+              {stayInfo.occupationType === 'study' ? (
+                <CheckoutInput
+                  label="Where do you study?"
+                  name="studyPlace"
+                  value={stayInfo.studyPlace}
+                  onChange={handleStayInfoChange}
+                  placeholder="Institution name"
+                  error={formErrors.studyPlace}
+                  required
+                />
+              ) : (
+                <CheckoutInput
+                  label="Where do you work?"
+                  name="workPlace"
+                  value={stayInfo.workPlace}
+                  onChange={handleStayInfoChange}
+                  placeholder="Company name"
+                  error={formErrors.workPlace}
+                  required
+                />
+              )}
+            </div>
           </div>
           
-          <div className="form-group">
-            <label htmlFor="visitDate">Preferred Visit Date</label>
-            <input
-              type="date"
-              id="visitDate"
-              name="visitDate"
-              value={formData.visitDate}
-              onChange={handleChange}
-              min={new Date().toISOString().split('T')[0]}
-            />
-            {errors.visitDate && <p className="error-message">{errors.visitDate}</p>}
-          </div>
+          <div className="form-row">
+            <div className="form-field">
+              <CheckoutInput
+                label={stayInfo.occupationType === 'study' ? "What do you study?" : "Who do you work as?"}
+                name="occupationRole"
+                value={stayInfo.occupationRole}
+                onChange={handleStayInfoChange}
+                placeholder={stayInfo.occupationType === 'study' ? "Faculty or Department" : "Computer Engineer"}
+              />
+            </div>
+            
+            <div className="form-field">
+              <EnhancedCustomSelect
+                label="How will you fund your stay?"
+                name="funding"
+                options={fundingOptions}
+                value={stayInfo.funding}
+                onChange={(e) => {
+                  if (typeof e === 'string') {
+                    handleStayInfoChange({
+                      target: { name: 'funding', value: e }
+                    } as React.ChangeEvent<HTMLSelectElement>);
+                  } else {
+                    handleStayInfoChange(e);
+                  }
+                }}
+                required
+              />
+            </div>
         </div>
         
-        <div className="form-group">
-          <label htmlFor="movingDate">Expected Moving Date (optional)</label>
-          <input
-            type="date"
-            id="movingDate"
-            name="movingDate"
-            value={formData.movingDate}
-            onChange={handleChange}
-            min={new Date().toISOString().split('T')[0]}
+          <div className="form-row">
+            <div className="form-field">
+              <CustomCheckbox
+                name="hasPets"
+                label="I have pets with me"
+                checked={stayInfo.hasPets}
+                onChange={handleStayInfoChange}
           />
         </div>
         
-        <div className="form-group">
-          <label htmlFor="message">Additional Information (optional)</label>
-          <textarea
-            id="message"
-            name="message"
-            value={formData.message}
-            onChange={handleChange}
-            placeholder="Tell us anything that might be relevant for your visit or rental application..."
+            <div className="form-field">
+              <CustomCheckbox
+                name="hasSmoking"
+                label="I have smoking habits"
+                checked={stayInfo.hasSmoking}
+                onChange={handleStayInfoChange}
+              />
+            </div>
+          </div>
+          
+          <div className="form-row">
+            <div className="form-field">
+              <EnhancedDatePicker
+                label="Approximate Leaving Date (Optional)"
+                name="leavingDate"
+                value={stayInfo.leavingDate}
+                onChange={(e) => {
+                  if (typeof e === 'string') {
+                    handleStayInfoChange({
+                      target: { name: 'leavingDate', value: e }
+                    } as React.ChangeEvent<HTMLInputElement>);
+                  } else {
+                    handleStayInfoChange(e);
+                  }
+                }}
+                min={new Date().toISOString().split('T')[0]} // Today's date as minimum
+              />
+            </div>
+          </div>
+          
+          <div className="form-row">
+            <div className="form-field">
+              <CheckoutTextArea
+                label="About Me (Optional)"
+                name="aboutMe"
+                value={stayInfo.aboutMe}
+                onChange={handleStayInfoChange}
+                placeholder="Briefly describe yourself (your interests, lifestyle, reason for moving). Do NOT include phone numbers, emails, social media profiles, or other personal contact details."
+                rows={4}
           />
         </div>
-        
-        <div className="actions">
-          <button type="submit" className="next-button">
-            Next: Payment Method
-          </button>
+          </div>
+          
+          <div className="button-container">
+            <CheckoutButton 
+              type="button" 
+              onClick={handleBack}
+              style={{ 
+                backgroundColor: 'white', 
+                color: Theme.colors.gray2,
+                border: `1px solid ${Theme.colors.tertiary}`
+              }}
+            >
+              Back
+            </CheckoutButton>
+            
+            <CheckoutButton 
+              type="submit" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Processing...' : 'Next Step'}
+            </CheckoutButton>
         </div>
       </form>
+      )}
     </ApplicationContainer>
   );
 };

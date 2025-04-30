@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
-import { PropertyPage } from "./styles";
+import { useParams, useNavigate } from "react-router-dom";
+import { PropertyPage, spin } from "./styles";
 import UnifiedHeader from "../../components/skeletons/constructed/headers/unified-header";
 import PhotoSlider from "../../components/skeletons/constructed/slider/photo-slider";
 import pictures from '../../assets/images/propertyExamplePic.png'
@@ -9,7 +9,6 @@ import ProfilePic from '../../assets/images/ProfilePicture.png'
 import LivingRoom from '../../assets/images/livingRoomExample.png'
 import TimeLine from '../../components/skeletons/icons/safeMoneyTimeLine.svg'
 import { CertificationBanner } from "../../components/skeletons/banners/static/certification-banner";
-import Map from '../../assets/images/map2.png'
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
 import ArrowLeftIcon from "../../components/skeletons/icons/Icon_Arrow_Left.svg";
 import ArrowRightIcon from "../../components/skeletons/icons/Icon_Arrow_Right.svg";
@@ -25,29 +24,158 @@ import bathroom from '../../components/skeletons/icons/Bathroom-Icon.svg'
 import { Theme } from "../../theme/theme";
 import { getPropertyById, getProperties } from '../../backend/server-actions/PropertyServerActions';
 import { getUserById } from '../../backend/server-actions/UserServerActions';
+import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { useStore } from "../../backend/store";
+import { IoEyeOutline, IoPersonCircleOutline, IoLogInOutline, IoHomeOutline } from 'react-icons/io5';
+
+// Import additional image examples
+import smallPic1 from '../../assets/images/smallPicCity1.png';
+import smallPic2 from '../../assets/images/smallPicCity2.png';
+import smallPic3 from '../../assets/images/smallPicCity3.png';
+import bigCityPic0 from '../../assets/images/BigCityPic0.png';
+import bigCityPic1 from '../../assets/images/BigCityPic1.png';
+import photoshoot1 from '../../assets/images/photoshoot1.png';
+import photoshoot2 from '../../assets/images/Photoshoot2.png';
+
+// Define types for Property and User
+interface Room {
+  type: 'bedroom' | 'bathroom' | 'kitchen' | 'storage' | 'living';
+  area: number;
+}
+
+interface Address {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
+interface Location {
+  lat: number;
+  lng: number;
+}
+
+interface Property {
+  id: string;
+  ownerId: string;
+  title: string;
+  description: string;
+  price: number;
+  deposit?: number;
+  serviceFee?: number;
+  minstay?: string;
+  availableFrom?: Date;
+  area: number;
+  address: Address;
+  bedrooms?: number;
+  bathrooms?: number;
+  propertyType: 'apartment' | 'house' | 'condo' | 'land' | 'commercial';
+  rooms?: Room[];
+  amenities: string[];
+  features: string[];
+  location?: Location;
+  images: string[];
+  status: 'available' | 'occupied';
+  createdAt: Date;
+  updatedAt: Date;
+  // UI specific properties
+  isRecommended?: boolean;
+  priceType?: string;
+  image?: string;
+}
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  surname?: string;
+  phoneNumber?: string;
+  profilePicture?: string;
+  role: 'admin' | 'advertiser' | 'client';
+  createdAt: Date;
+  updatedAt: Date;
+  aboutMe?: string;
+}
+
+// Google Maps API key
+const GOOGLE_MAPS_API_KEY = 'AIzaSyCqhbPAiPspwgshgE9lzbtkpFZwVMfJoww'; // Should be moved to .env for production
+
+// Default map settings for Morocco
+const DEFAULT_MAP_CENTER = { lat: 34.020882, lng: -6.841650 }; // Rabat, Morocco
+const DEFAULT_MAP_ZOOM = 15;
+
+// Define the map container style
+const mapContainerStyle = {
+  width: '100%',
+  height: '100%',
+  borderRadius: '8px'
+};
+
+// Declare google namespace to fix type errors
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 const PropertyPageComponent = () => {
-  const { id } = useParams();
-  const [property, setProperty] = useState(null);
-  const [advertiser, setAdvertiser] = useState(null);
-  const [recommendations, setRecommendations] = useState([]);
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [property, setProperty] = useState<Property | null>(null);
+  const [advertiser, setAdvertiser] = useState<User | null>(null);
+  const [recommendations, setRecommendations] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const boxRef = useRef(null);
-  const stopRef = useRef(null);
-  const [isFixed, setIsFixed] = useState(true);
-  const [isStopped, setIsStopped] = useState(false);
-  const [stopPosition, setStopPosition] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const stopRef = useRef<HTMLDivElement>(null);
+  const [isBoxFixed, setIsBoxFixed] = useState(false);
+  const [isBoxStopped, setIsBoxStopped] = useState(false);
+  const [boxTopPosition, setBoxTopPosition] = useState(80);
   const [totalHeight, setTotalHeight] = useState(0);
-  const recommendationsRef = useRef(null);
-
+  const recommendationsRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  
+  // Get the current user from store to check role
+  const currentUser = useStore(state => state.user);
+  const isClient = currentUser?.role === 'client';
+  
+  // Load Google Maps API
+  const { isLoaded: mapsLoaded, loadError: mapsError } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: ['places', 'geometry']
+  });
+  
+  // Map configuration
+  const [mapCenter, setMapCenter] = useState(DEFAULT_MAP_CENTER);
+  const [mapZoom, setMapZoom] = useState(DEFAULT_MAP_ZOOM);
+  
+  // Track window width for responsive positioning
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       setError(null);
       try {
+        if (!id) throw new Error("Property ID not found");
         const data = await getPropertyById(id);
-        setProperty(data);
+        
+        // Add default images to the property data
+        if (data) {
+          data.images = [pictures, LivingRoom, smallPic1, smallPic2, smallPic3, bigCityPic0, photoshoot1];
+          setProperty(data);
+          
+          // Set map center if property has address data
+          if (data.address) {
+            // Use the address to create a Location if one doesn't exist
+            // This could be replaced with a geocoding call in a real application
+            setMapCenter(DEFAULT_MAP_CENTER);
+            setMapZoom(15);
+          }
+        }
+        
         if (data && data.ownerId) {
           try {
             const adv = await getUserById(data.ownerId);
@@ -79,26 +207,89 @@ const PropertyPageComponent = () => {
     if (id) fetchData();
   }, [id]);
 
-  const images = property && property.images && property.images.length > 0 ? property.images : [pictures, LivingRoom];
+  // Use default images instead of property.images
+  const images = [pictures, LivingRoom, smallPic1, smallPic2, smallPic3, bigCityPic0, photoshoot1];
 
+  // Handle scroll for checkout box positioning
   useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    
     const handleScroll = () => {
-      setTotalHeight(document.documentElement.scrollHeight || document.body.scrollHeight);
       if (!boxRef.current || !stopRef.current) return;
-      const boxRect = boxRef.current.getBoundingClientRect();
-      const stopRect = stopRef.current.getBoundingClientRect();
-      if (stopRect.top <= boxRect.height) {
-        setIsStopped(true);
-        setIsFixed(false);
-        setStopPosition(window.scrollY + stopRect.top);
-      } else {
-        setIsStopped(false);
-        setIsFixed(true);
+      
+      const scrollY = window.scrollY;
+      const boxHeight = window.innerHeight; // Use viewport height for full-height box
+      const stopPosition = stopRef.current.offsetTop;
+      const gap = 40; // Gap between stopping point and card (40px)
+      const topMargin = 0; // Top margin for the box
+      
+      // When the box should stop at bottom
+      if (scrollY + boxHeight + topMargin >= stopPosition - gap) {
+        setIsBoxFixed(false);
+        setIsBoxStopped(true);
+        setBoxTopPosition(stopPosition - boxHeight - gap);
+      } 
+      // When scrolling
+      else {
+        setIsBoxFixed(true);
+        setIsBoxStopped(false);
       }
     };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    
+    // Run handler on mount and add listeners
+    handleScroll();
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleScroll);
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
+
+  // Apply the appropriate className and style to checkout box
+  const getCheckoutBoxProps = () => {
+    let className = "checkout-box";
+    let style: React.CSSProperties = {};
+    
+    // Calculate right position based on window width and page max width
+    const rightPosition = windowWidth > 1500 ? `${(windowWidth - 1500) / 2}px` : '0';
+    
+    if (isBoxFixed) {
+      className += " fixed";
+      style = { 
+        position: 'fixed', 
+        top: 0,
+        right: rightPosition,
+        height: '100vh',
+        marginTop: '80px'
+      };
+    } else if (isBoxStopped) {
+      className += " stopped";
+      style = { 
+        position: 'absolute', 
+        top: `${boxTopPosition}px`,
+        right: 0,
+        height: '100vh',
+        marginTop: '0' // Remove margin when stopped
+      };
+    } else {
+      // Default position
+      style = {
+        position: 'fixed',
+        top: 0,
+        right: rightPosition,
+        height: '100vh',
+        marginTop: '80px'
+      };
+    }
+    
+    return { className, style };
+  };
 
   if (loading) return <div>Loading...</div>;
   if (error || !property) return <div>{error || "Property not found."}</div>;
@@ -106,19 +297,37 @@ const PropertyPageComponent = () => {
   // Rental conditions
   const price = property.price ? `${property.price} MAD` : 'N/A';
   const deposit = property.deposit ? `${property.deposit} MAD` : 'N/A';
+  const serviceFee = property.serviceFee ? `${property.serviceFee} MAD` : 'N/A';
   const minstay = property.minstay || 'N/A';
   const availableFrom = property.availableFrom ? new Date(property.availableFrom).toLocaleDateString() : 'N/A';
 
   // Address
   const address = property.address ? `${property.address.street || ''}, ${property.address.city || ''}, ${property.address.country || ''}` : 'N/A';
 
-  // Room info
-  const bedrooms = property.bedrooms || 0;
-  const bathrooms = property.bathrooms || 0;
-  const area = property.area || 'N/A';
+  // Room info with fallback to bedrooms/bathrooms for backward compatibility
+  const bedrooms = property.rooms?.filter(room => room.type === 'bedroom')?.length || property.bedrooms || 0;
+  const bathrooms = property.rooms?.filter(room => room.type === 'bathroom')?.length || property.bathrooms || 0;
+  const area = property.area ? `${property.area}` : 'N/A';
+  
+  // Get room types and areas
+  const livingRooms = property.rooms?.filter(room => room.type === 'living') || [];
+  const kitchens = property.rooms?.filter(room => room.type === 'kitchen') || [];
+  const storageRooms = property.rooms?.filter(room => room.type === 'storage') || [];
+  
+  // Calculate area per room type
+  const bedroomsArea = property.rooms?.filter(room => room.type === 'bedroom')?.reduce((sum: number, room: Room) => sum + room.area, 0) || 0;
+  const bathroomsArea = property.rooms?.filter(room => room.type === 'bathroom')?.reduce((sum: number, room: Room) => sum + room.area, 0) || 0;
+  const livingRoomsArea = livingRooms.reduce((sum: number, room: Room) => sum + room.area, 0) || 0;
+  const kitchensArea = kitchens.reduce((sum: number, room: Room) => sum + room.area, 0) || 0;
+  const storageRoomsArea = storageRooms.reduce((sum: number, room: Room) => sum + room.area, 0) || 0;
 
   return (
-    <PropertyPage total_Height={totalHeight} isFixed={isFixed} isStopped={isStopped} stopPosition={stopPosition}>
+    <PropertyPage 
+      total_Height={totalHeight} 
+      isFixed={isBoxFixed} 
+      isStopped={isBoxStopped} 
+      stopPosition={boxTopPosition}
+    >
       <UnifiedHeader variant="white" userType="user" />
       <div className="main-content">
         <div className="photo-slider">
@@ -190,14 +399,37 @@ const PropertyPageComponent = () => {
           <div className="equipment">
             <h2>Equipment</h2>
             <div className="equipment-list">
-              <div className="equipment-group">
-                <h3>Basic furniture</h3>
-                <ul>
-                  {property.features && property.features.length > 0 ? property.features.map((f, i) => (
-                    <li key={i}><img src={check} alt="check" />{f}</li>
-                  )) : <li>No features listed</li>}
-                </ul>
-              </div>
+              {property.amenities && property.amenities.length > 0 && (
+                <div className="equipment-group">
+                  <h3>Amenities</h3>
+                  <ul>
+                    {property.amenities.map((amenity: string, i: number) => (
+                      <li key={i}><img src={check} alt="check" />{amenity}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {property.features && property.features.length > 0 && (
+                <div className="equipment-group">
+                  <h3>Features</h3>
+                  <ul>
+                    {property.features.map((feature: string, i: number) => (
+                      <li key={i}><img src={check} alt="check" />{feature}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {(!property.amenities || property.amenities.length === 0) && 
+               (!property.features || property.features.length === 0) && (
+                <div className="equipment-group">
+                  <h3>Basic furniture</h3>
+                  <ul>
+                    <li>No amenities or features listed</li>
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
           <div className="rooms">
@@ -207,30 +439,51 @@ const PropertyPageComponent = () => {
                 <BedroomIcon color={Theme.colors.secondary} />
                 <div className="text-container">
                   <span className="room-name">Bedroom</span>
-                  <span className="room-description">{bedrooms > 0 ? `${bedrooms} room(s)` : 'N/A'}</span>
+                  <span className="room-description">
+                    {bedrooms > 0 ? `${bedrooms} room(s)${bedroomsArea > 0 ? ` - ${bedroomsArea} sq m` : ''}` : 'N/A'}
+                  </span>
                 </div>
               </div>
               <div className="room">
                 <BathroomIcon color={Theme.colors.secondary} />
                 <div className="text-container">
                   <span className="room-name">Bathroom</span>
-                  <span className="room-description">{bathrooms > 0 ? `${bathrooms} room(s)` : 'N/A'}</span>
+                  <span className="room-description">
+                    {bathrooms > 0 ? `${bathrooms} room(s)${bathroomsArea > 0 ? ` - ${bathroomsArea} sq m` : ''}` : 'N/A'}
+                  </span>
                 </div>
               </div>
               <div className="room">
                 <FurnitureIcon color={Theme.colors.secondary} />
                 <div className="text-container">
                   <span className="room-name">Living Room</span>
-                  <span className="room-description">{area !== 'N/A' ? `${area} m2` : 'N/A'}</span>
+                  <span className="room-description">
+                    {livingRooms.length > 0 
+                      ? `${livingRooms.length} room(s) - ${livingRoomsArea} sq m` 
+                      : area !== 'N/A' ? `${area} m2` : 'N/A'}
+                  </span>
                 </div>
               </div>
               <div className="room">
                 <KitchenIcon color={Theme.colors.secondary} />
                 <div className="text-container">
                   <span className="room-name">Kitchen</span>
-                  <span className="room-description">N/A</span>
+                  <span className="room-description">
+                    {kitchens.length > 0 ? `${kitchens.length} room(s) - ${kitchensArea} sq m` : 'N/A'}
+                  </span>
                 </div>
               </div>
+              {storageRooms.length > 0 && (
+                <div className="room">
+                  <FurnitureIcon color={Theme.colors.secondary} />
+                  <div className="text-container">
+                    <span className="room-name">Storage Room</span>
+                    <span className="room-description">
+                      {`${storageRooms.length} room(s) - ${storageRoomsArea} sq m`}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="rental-conditions">
@@ -242,7 +495,7 @@ const PropertyPageComponent = () => {
               </div>
               <div className="condition">
                 <span className="label">Service fee</span>
-                <span className="value">N/A</span>
+                <span className="value">{serviceFee}</span>
               </div>
               <div className="condition">
                 <span className="label">Deposit</span>
@@ -275,6 +528,56 @@ const PropertyPageComponent = () => {
           <div className="location">
             <h2>Where you will live</h2>
             <div>{address}</div>
+            
+            <div className="location-map" style={{ width: '100%', height: '200px', marginTop: '15px', marginBottom: '15px', borderRadius: '8px', overflow: 'hidden' }}>
+              {!mapsLoaded ? (
+                <div className="map-placeholder" style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  backgroundColor: '#f5f5f5', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  color: '#666'
+                }}>
+                  <p>Loading map...</p>
+                </div>
+              ) : mapsError ? (
+                <div className="map-placeholder" style={{
+                  width: '100%', 
+                  height: '100%', 
+                  backgroundColor: '#f5f5f5', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  color: '#666'
+                }}>
+                  <p>Error loading map</p>
+                </div>
+              ) : (
+                <GoogleMap
+                  mapContainerStyle={{ width: '100%', height: '100%' }}
+                  center={mapCenter}
+                  zoom={mapZoom}
+                  options={{
+                    disableDefaultUI: true,
+                    zoomControl: true,
+                    streetViewControl: false,
+                    mapTypeControl: false,
+                    fullscreenControl: false,
+                  }}
+                >
+                  <Marker
+                    position={mapCenter}
+                    icon={{
+                      url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                      scaledSize: new window.google.maps.Size(30, 30)
+                    }}
+                  />
+                </GoogleMap>
+              )}
+            </div>
+            
             <div className="nearby-places">
               <div className="place">
                 <h4>Workplaces</h4>
@@ -302,7 +605,6 @@ const PropertyPageComponent = () => {
       </div>
       <div ref={stopRef} className="stop-reference"></div>
       <div className="bottom-content">
-        <img src={Map} alt="map" className="map-image" />
         <div className="recommendations">
           <div className="title">
             Other offers you may like
@@ -327,6 +629,10 @@ const PropertyPageComponent = () => {
                   priceType={rec.priceType || ''}
                   minstay={rec.minstay || ''}
                   description={rec.description || ''}
+                  id={rec.id}
+                  propertyType="apartment"
+                  isFavorite={false}
+                  onToggleFavorite={() => {}}
                 />
               </div>
             )) : (
@@ -335,18 +641,54 @@ const PropertyPageComponent = () => {
           </div>
         </div>
       </div>
-      <div ref={boxRef} className={`checkout-box ${isFixed ? "fixed" : ""} ${isStopped ? "stopped" : ""}`}>
-        <PropertyRequestCard
-          title={property.title || 'N/A'}
-          isVerified={true}
-          advertiserName={advertiser?.name || 'N/A'}
-          advertiserImage={advertiser?.profilePicture || ProfilePic}
-          moveInDate={availableFrom}
-          priceFor30Days={property.price || 0}
-          serviceFee={0}
-          totalPrice={property.price || 0}
-          propertyId={property.id}
-        />
+      <div 
+        ref={boxRef} 
+        {...getCheckoutBoxProps()}
+      >
+        {isClient ? (
+          <PropertyRequestCard
+            title={property.title || 'N/A'}
+            isVerified={true}
+            advertiserName={advertiser?.name || 'N/A'}
+            advertiserImage={advertiser?.profilePicture || ProfilePic}
+            moveInDate={availableFrom}
+            priceFor30Days={property.price || 0}
+            serviceFee={property.serviceFee || 0}
+            totalPrice={(property.price || 0) + (property.serviceFee || 0)}
+            propertyId={property.id}
+          />
+        ) : currentUser ? (
+          <div style={{ 
+            padding: '30px', 
+            textAlign: 'center', 
+            marginTop: '120px'
+          }}>
+            <IoEyeOutline size={40} color={Theme.colors.secondary} style={{ marginBottom: '15px' }} />
+            <h3 style={{ margin: '0 0 15px 0', color: Theme.colors.black }}>
+              Admin/Advertiser View
+            </h3>
+            <p style={{ color: Theme.colors.gray2, margin: '0 0 5px 0' }}>
+              Only clients can send property requests.
+            </p>
+            <p style={{ color: Theme.colors.gray2, fontSize: '14px' }}>
+              You are logged in as: <strong>{currentUser.role}</strong>
+            </p>
+          </div>
+        ) : (
+          <div style={{ 
+            padding: '30px', 
+            textAlign: 'center', 
+            marginTop: '120px'
+          }}>
+            <IoLogInOutline size={40} color={Theme.colors.primary} style={{ marginBottom: '15px' }} />
+            <h3 style={{ margin: '0 0 15px 0', color: Theme.colors.black }}>
+              Please Log In
+            </h3>
+            <p style={{ color: Theme.colors.gray2, margin: '0' }}>
+              You need to log in as a client to send property requests.
+            </p>
+          </div>
+        )}
       </div>
     </PropertyPage>
   );

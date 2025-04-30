@@ -155,12 +155,12 @@ const TenantsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td colSpan={3} style={{ textAlign: 'center', padding: '40px 0' }}>
-                  <img src={emptyBox} alt="No tenants" style={{ width: 80, marginBottom: 12 }} />
+                <tr>
+                  <td colSpan={3} style={{ textAlign: 'center', padding: '40px 0' }}>
+                    <img src={emptyBox} alt="No tenants" style={{ width: 80, marginBottom: 12 }} />
                   <div style={{ color: '#888', fontSize: 16, marginTop: 8 }}>No past tenants found.</div>
-                </td>
-              </tr>
+                    </td>
+                  </tr>
             </tbody>
           </table>
         </div>

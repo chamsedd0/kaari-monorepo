@@ -5,6 +5,7 @@ import PaymentForm, { PaymentFormData } from '../payment-form';
 import { FaCreditCard, FaEllipsisH, FaArrowLeft, FaTimes, FaChevronDown } from 'react-icons/fa';
 import MastercardIcon from '/mastercard-icon.svg';
 import VisaIcon from '/visa-icon.svg';
+import { Theme } from '../../../../theme/theme';
 
 interface CardListItemProps {
   card: {
@@ -116,7 +117,7 @@ const PaymentMethod: React.FC = () => {
   
   // Add effect to make the back button more visible after page load
   useEffect(() => {
-    const backButton = document.querySelector('.back-button-container .back-button');
+    const backButton = document.querySelector('.actions-container .back-button');
     if (backButton) {
       backButton.classList.add('highlight');
       setTimeout(() => {
@@ -226,21 +227,12 @@ const PaymentMethod: React.FC = () => {
 
   return (
     <PaymentMethodContainer>
-      <div className="back-button-container">
-        <button 
-          className="back-button" 
-          onClick={navigateToRentalApplication}
-        >
-          <FaArrowLeft /> <span>Back</span>
-        </button>
-      </div>
-      
       <h2>Payment Method</h2>
       
       {errorMessage && (
         <div className="error-message">
           {errorMessage}
-      </div>
+        </div>
       )}
       
       <div className="payment-section">
@@ -250,145 +242,56 @@ const PaymentMethod: React.FC = () => {
           <div className="payment-methods-list">
             {savedCards.map(card => (
               <CardListItem
-              key={card.id}
+                key={card.id}
                 card={card}
                 selected={card.id === selectedCardId}
                 onSelect={() => handleCardSelect(card.id)}
                 onSetDefault={() => {}}
                 onRemove={() => {}}
                 isDefault={card.isDefault}
-            />
-          ))}
-        </div>
+              />
+            ))}
+          </div>
         )}
         
         <button 
-          className="add-card-button-link" 
-          onClick={() => setShowCardForm(true)}
+          className="add-new-button" 
+          onClick={handleAddNewCardClick}
         >
-          Add another payment method +
-            </button>
-          
-          <div className="action-buttons">
-            <button 
-              className="proceed-button"
-              onClick={handleProceed}
-            disabled={savedCards.length === 0}
-            >
-              Proceed
-          </button>
-        </div>
+          + Add New Payment Method
+        </button>
       </div>
       
-      {showCardForm && (
-        <div className="payment-method-popup-overlay">
-          <div className="payment-method-popup">
-            <button className="popup-close" onClick={() => setShowCardForm(false)}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12.5 3.5L3.5 12.5M3.5 3.5L12.5 12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            
-            
-            <div className="popup-header">
-              <h2>Add a payment method</h2>
+      {/* Footer with action buttons */}
+      <div className="actions-container">
+        <button 
+          className="back-button" 
+          onClick={navigateToRentalApplication}
+        >
+          Back
+        </button>
+        <button 
+          className="proceed-button" 
+          onClick={handleProceed}
+        >
+          Proceed
+        </button>
+      </div>
+      
+      {/* Add new card form modal */}
+      {showAddNewCard && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>Add New Payment Method</h3>
+              <button className="close-button" onClick={handleCloseAddCard}>
+                <FaTimes />
+              </button>
             </div>
             
-            <div className="card-brands">
-              <img src="/visa-icon.svg" alt="Visa" className="card-brand-icon" />
-              <img src="/mastercard-icon.svg" alt="MasterCard" className="card-brand-icon" />
+            <div className="modal-body">
+              <PaymentForm onSubmit={handleAddCard} />
             </div>
-            
-            <form onSubmit={handleCardSubmit}>
-              <div className="form-group">
-                <input
-                  type="text"
-                  placeholder="Card number"
-                  value={cardNumber}
-                  onChange={(e) => setCardNumber(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <input
-                  type="text"
-                  placeholder="Cardholder name"
-                  value={cardholderName}
-                  onChange={(e) => setCardholderName(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <div className="select-wrapper">
-                    <select 
-                      className="select-input"
-                      value={expiryMonth}
-                      onChange={(e) => setExpiryMonth(e.target.value)}
-                      required
-                    >
-                      <option value="" disabled>Month</option>
-                      {Array.from({length: 12}, (_, i) => i + 1).map((month) => (
-                        <option key={month} value={month.toString().padStart(2, '0')}>
-                          {month.toString().padStart(2, '0')}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="select-arrow">▼</span>
-                  </div>
-                </div>
-                
-                <div className="form-group">
-                  <div className="select-wrapper">
-                    <select 
-                      className="select-input"
-                      value={expiryYear}
-                      onChange={(e) => setExpiryYear(e.target.value)}
-                      required
-                    >
-                      <option value="" disabled>Year</option>
-                      {Array.from({length: 10}, (_, i) => new Date().getFullYear() + i).map((year) => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                    <span className="select-arrow">▼</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <input
-                  type="text"
-                  placeholder="Security code (CVV)"
-                  value={cvv}
-                  onChange={(e) => setCvv(e.target.value)}
-                  maxLength={4}
-                  required
-                />
-              </div>
-              
-              <div className="remember-details">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={rememberCard}
-                    onChange={(e) => setRememberCard(e.target.checked)}
-                  />
-                  Save card details for future payments
-                </label>
-              </div>
-              
-              <div className="popup-actions">
-                <button type="button" className="cancel-button" onClick={() => setShowCardForm(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="add-card-button">
-                  Add card
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

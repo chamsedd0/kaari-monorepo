@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { Theme } from "../../../../theme/theme";
 
 interface ProgressBannerBaseModelProps {
-  status: 'Pending' | 'Approved' | 'Declined';
+  status: 'Pending' | 'Approved' | 'Declined' | 'Paid';
 }
 
 const ProgressBannerBaseModel = styled.div<ProgressBannerBaseModelProps>`
@@ -14,6 +14,8 @@ const ProgressBannerBaseModel = styled.div<ProgressBannerBaseModelProps>`
         return Theme.colors.success; // Light green background
       case 'Declined':
         return Theme.colors.error; // Light red background
+      case 'Paid':
+        return Theme.colors.secondary; // Purple background for paid status
       default:
         return Theme.colors.white;
     }

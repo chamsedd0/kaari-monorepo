@@ -85,6 +85,7 @@ export async function getProperties(options?: {
   status?: Property['status'];
   minPrice?: number;
   maxPrice?: number;
+  showAllStatuses?: boolean; // New option to override default filtering
 }): Promise<Property[]> {
   try {
     const filters: Array<{
@@ -110,11 +111,20 @@ export async function getProperties(options?: {
       });
     }
     
+    // If a specific status filter is provided, use it
     if (options?.status) {
       filters.push({
         field: 'status',
         operator: '==',
         value: options.status
+      });
+    } 
+    // Otherwise, by default only show available properties unless showAllStatuses is true
+    else if (!options?.showAllStatuses) {
+      filters.push({
+        field: 'status',
+        operator: '==',
+        value: 'available'
       });
     }
     

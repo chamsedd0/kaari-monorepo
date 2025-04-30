@@ -1,6 +1,6 @@
 'use server';
 
-import { User, Property, Listing } from '../entities';
+import { User, Property } from '../entities';
 import { 
   getDocumentById, 
   createDocument,
@@ -11,6 +11,7 @@ import { getCurrentUserProfile } from '../firebase/auth';
 import {
   uploadMultipleFiles
 } from '../firebase/storage';
+import { getProperties } from './PropertyServerActions';
 
 // Collection names
 const USERS_COLLECTION = 'users';
@@ -182,12 +183,12 @@ export async function getAdvertiserProperties(): Promise<Property[]> {
       throw new Error('Only advertisers can access their properties');
     }
     
-    // Get all properties owned by this user
-    const properties = await getDocumentsByField<Property>(
-      PROPERTIES_COLLECTION,
-      'ownerId',
-      currentUser.id
-    );
+    // Get all properties owned by this user with showAllStatuses set to true
+    // to override the default filtering that only shows available properties
+    const properties = await getProperties({
+      ownerId: currentUser.id,
+      showAllStatuses: true
+    });
     
     return properties;
   } catch (error) {
@@ -559,19 +560,12 @@ export async function approveReservationRequest(requestId: string): Promise<bool
       throw new Error('Request not found');
     }
     
-    // Verify that the request is for a property or listing owned by this advertiser
+    // Verify that the request is for a property owned by this advertiser
     let isAuthorized = false;
     
     if (request.propertyId) {
       const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, request.propertyId);
       if (property && property.ownerId === currentUser.id) {
-        isAuthorized = true;
-      }
-    }
-    
-    if (request.listingId) {
-      const listing = await getDocumentById<Listing>(LISTINGS_COLLECTION, request.listingId);
-      if (listing && listing.agentId === currentUser.id) {
         isAuthorized = true;
       }
     }
@@ -586,6 +580,14 @@ export async function approveReservationRequest(requestId: string): Promise<bool
       updatedAt: new Date()
     });
     
+    // Property status should already be 'occupied' at this point, but let's ensure it
+    if (request.propertyId) {
+      await updateDocument<Property>(PROPERTIES_COLLECTION, request.propertyId, {
+        status: 'occupied',
+        updatedAt: new Date()
+      });
+    }
+    
     return true;
   } catch (error) {
     console.error('Error approving reservation request:', error);
@@ -598,7 +600,6 @@ export async function approveReservationRequest(requestId: string): Promise<bool
  */
 export async function rejectReservationRequest(requestId: string): Promise<boolean> {
   try {
-    // Check if user is authenticated and an advertiser
     const currentUser = await getCurrentUserProfile();
     if (!currentUser) {
       throw new Error('User not authenticated');
@@ -614,19 +615,12 @@ export async function rejectReservationRequest(requestId: string): Promise<boole
       throw new Error('Request not found');
     }
     
-    // Verify that the request is for a property or listing owned by this advertiser
+    // Verify that the request is for a property owned by this advertiser
     let isAuthorized = false;
     
     if (request.propertyId) {
       const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, request.propertyId);
       if (property && property.ownerId === currentUser.id) {
-        isAuthorized = true;
-      }
-    }
-    
-    if (request.listingId) {
-      const listing = await getDocumentById<Listing>(LISTINGS_COLLECTION, request.listingId);
-      if (listing && listing.agentId === currentUser.id) {
         isAuthorized = true;
       }
     }
@@ -641,9 +635,51 @@ export async function rejectReservationRequest(requestId: string): Promise<boole
       updatedAt: new Date()
     });
     
+    // Change property status back to 'available' when reservation is rejected
+    if (request.propertyId) {
+      await updateDocument<Property>(PROPERTIES_COLLECTION, request.propertyId, {
+        status: 'available',
+        updatedAt: new Date()
+      });
+    }
+    
     return true;
   } catch (error) {
     console.error('Error rejecting reservation request:', error);
     throw new Error('Failed to reject reservation request');
+  }
+}
+
+/**
+ * Check if a property has active reservations
+ */
+export async function checkPropertyHasActiveReservations(propertyId: string): Promise<boolean> {
+  try {
+    // Check if user is authenticated and an advertiser
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    if (currentUser.role !== 'advertiser') {
+      throw new Error('Only advertisers can access their reservation data');
+    }
+    
+    // Get all requests for this property
+    const REQUESTS_COLLECTION = 'requests';
+    const requests = await getDocumentsByField<Request>(
+      REQUESTS_COLLECTION,
+      'propertyId',
+      propertyId
+    );
+    
+    // Check if there are any active reservations (pending or accepted)
+    return requests.some(req => 
+      req.requestType === 'viewing' && 
+      (req.status === 'pending' || req.status === 'accepted')
+    );
+  } catch (error) {
+    console.error('Error checking if property has active reservations:', error);
+    throw new Error('Failed to check property reservations');
   }
 } 

@@ -36,9 +36,9 @@ interface PropertyType {
   images: string[];
   amenities: string[];
   features: string[];
-  // Only properties with 'available' or 'rented' status are shown in search results
-  // Properties with 'sold' or 'pending' status are considered unlisted and filtered out
-  status: 'available' | 'sold' | 'pending' | 'rented';
+  // Only properties with 'available' status are shown in search results
+  // Properties with 'occupied' status are filtered out
+  status: 'available' | 'occupied';
   createdAt: Date;
   updatedAt: Date;
   listingId?: string;
@@ -50,6 +50,11 @@ interface PropertyType {
   minstay?: string;
   location?: { lat: number; lng: number } | null;
   image?: string;
+  // New rooms property
+  rooms?: Array<{
+    type: 'bedroom' | 'bathroom' | 'kitchen' | 'storage' | 'living';
+    area: number;
+  }>;
 }
 
 // Define sort option type 
@@ -528,12 +533,35 @@ const PropertyMap = memo(({
                     </div>
                     <div className="info-window-features">
                       <span className="feature">
-                        {selectedProperty.bedrooms === 0 ? t('property_list.studio') : 
-                         `${selectedProperty.bedrooms} ${selectedProperty.bedrooms === 1 ? t('property_list.bedroom') : t('property_list.bedrooms')}`}
+                        {selectedProperty.rooms?.filter(room => room.type === 'bedroom')?.length > 0 
+                          ? `${selectedProperty.rooms.filter(room => room.type === 'bedroom').length} ${
+                              selectedProperty.rooms.filter(room => room.type === 'bedroom').length === 1 
+                                ? t('property_list.bedroom') 
+                                : t('property_list.bedrooms')
+                            }`
+                          : selectedProperty.bedrooms === 0 
+                            ? t('property_list.studio') 
+                            : `${selectedProperty.bedrooms} ${
+                                selectedProperty.bedrooms === 1 
+                                  ? t('property_list.bedroom') 
+                                  : t('property_list.bedrooms')
+                              }`
+                        }
                       </span>
                       <span className="feature-divider">•</span>
                       <span className="feature">
-                        {selectedProperty.bathrooms} {selectedProperty.bathrooms === 1 ? t('property_list.bathroom') : t('property_list.bathrooms')}
+                        {selectedProperty.rooms?.filter(room => room.type === 'bathroom')?.length > 0
+                          ? `${selectedProperty.rooms.filter(room => room.type === 'bathroom').length} ${
+                              selectedProperty.rooms.filter(room => room.type === 'bathroom').length === 1 
+                                ? t('property_list.bathroom') 
+                                : t('property_list.bathrooms')
+                            }`
+                          : `${selectedProperty.bathrooms} ${
+                              selectedProperty.bathrooms === 1 
+                                ? t('property_list.bathroom') 
+                                : t('property_list.bathrooms')
+                            }`
+                        }
                       </span>
                       <span className="feature-divider">•</span>
                       <span className="feature">{selectedProperty.area} m²</span>
@@ -710,7 +738,7 @@ export default function PropertyListPage() {
               images: property.images || [],
               amenities: property.amenities || [],
               features: property.features || [],
-              status: (property.status || 'available') as 'available' | 'sold' | 'pending' | 'rented',
+              status: (property.status || 'available') as 'available' | 'occupied',
               createdAt: createdDate,
               updatedAt: updatedDate,
               // UI specific properties
@@ -720,12 +748,17 @@ export default function PropertyListPage() {
               priceType: property.priceType || '/month',
               minstay: property.minstay || '',
               location,
-              image: property.image || defaultImage
+              image: property.image || defaultImage,
+              // New rooms property
+              rooms: property.rooms || []
             } as PropertyType;
           });
           
-          // Filter out unlisted properties (those with status 'sold' or 'pending')
-          const filteredProperties = propertyData.filter(property => property.status === 'available' || property.status === 'rented');
+          // Filter out unlisted properties (those with status 'occupied')
+          const filteredProperties = propertyData.filter(property => {
+            console.log(`Property ${property.id} status: ${property.status}`);
+            return property.status === 'available';
+          });
           
           console.log("Loaded properties from Firestore:", filteredProperties.length);
           setProperties(filteredProperties);
@@ -766,7 +799,9 @@ export default function PropertyListPage() {
               isFavorite: false,
               isRecommended: true,
             image: defaultImage,
-              location: null
+              location: null,
+              // New rooms property
+              rooms: []
             },
             {
               id: '2',
@@ -797,13 +832,15 @@ export default function PropertyListPage() {
               isFavorite: false,
               isRecommended: false,
               image: defaultImage,
-              location: null
+              location: null,
+              // New rooms property
+              rooms: []
             }
           ];
           
           // Filter mock data before setting state
           const availableMockProperties = mockPropertiesBase.filter(
-            property => property.status === 'available' || property.status === 'rented'
+            property => property.status === 'available'
           );
           
           setProperties(availableMockProperties);

@@ -1,6 +1,6 @@
 'use server';
 
-import { User, Request, Property, Listing } from '../entities';
+import { User, Request, Property } from '../entities';
 import { 
   getDocumentById, 
   createDocument, 
@@ -12,7 +12,6 @@ import { getCurrentUserProfile } from '../firebase/auth';
 const USERS_COLLECTION = 'users';
 const REQUESTS_COLLECTION = 'requests';
 const PROPERTIES_COLLECTION = 'properties';
-const LISTINGS_COLLECTION = 'listings';
 const PAYMENT_METHODS_COLLECTION = 'paymentMethods';
 
 /**
@@ -38,14 +37,13 @@ export interface PaymentMethod {
 export interface CheckoutData {
   user: User;
   property: Property;
-  listing?: Listing;
   paymentMethods: PaymentMethod[];
 }
 
 /**
  * Initiate checkout process
  */
-export async function initiateCheckout(propertyId: string, listingId?: string): Promise<CheckoutData> {
+export async function initiateCheckout(propertyId: string): Promise<CheckoutData> {
   try {
     // Check if user is authenticated
     const currentUser = await getCurrentUserProfile();
@@ -59,19 +57,12 @@ export async function initiateCheckout(propertyId: string, listingId?: string): 
       throw new Error('Property not found');
     }
     
-    // Get listing if provided
-    let listing = undefined;
-    if (listingId) {
-      listing = await getDocumentById<Listing>(LISTINGS_COLLECTION, listingId);
-    }
-    
     // Get user's saved payment methods
     const paymentMethods = await getUserPaymentMethods(currentUser.id);
     
     return {
       user: currentUser,
       property,
-      listing,
       paymentMethods
     };
   } catch (error) {
@@ -186,13 +177,12 @@ export async function getUserPaymentMethods(userId?: string): Promise<PaymentMet
 /**
  * Create a new reservation request during checkout
  */
-export async function createCheckoutReservation(
-  propertyId: string,
-  listingId: string | undefined,
-  scheduledDate: Date,
-  message: string,
-  paymentMethodId: string
-): Promise<Request> {
+export async function createCheckoutReservation(data: {
+  propertyId: string;
+  userId: string;
+  rentalData: any;
+  paymentMethodId: string;
+}): Promise<Request> {
   try {
     // Check if user is authenticated
     const currentUser = await getCurrentUserProfile();
@@ -200,28 +190,66 @@ export async function createCheckoutReservation(
       throw new Error('User not authenticated');
     }
     
-    // Verify that either listingId or propertyId is provided
-    if (!propertyId) {
+    // Verify that propertyId is provided
+    if (!data.propertyId) {
       throw new Error('Property ID must be provided');
     }
     
-    // Create the request data - omit listingId if it's undefined
+    // Extract all rental data with defaults for required fields
+    const {
+      fullName = `${currentUser.firstName} ${currentUser.lastName}`,
+      email = currentUser.email,
+      phoneNumber = '',
+      gender = '',
+      dateOfBirth = null,
+      movingDate = new Date(),
+      leavingDate = null,
+      numPeople = '1',
+      roommates = '',
+      occupationType = 'work',
+      studyPlace = '',
+      workPlace = '',
+      occupationRole = '',
+      funding = '',
+      hasPets = false,
+      hasSmoking = false,
+      aboutMe = '',
+      message = ''
+    } = data.rentalData;
+    
+    // Create the request data
     const requestData = {
       userId: currentUser.id,
-      propertyId,
+      propertyId: data.propertyId,
       requestType: 'viewing' as const,
-      message,
       status: 'pending' as const,
-      scheduledDate,
-      paymentMethodId, // Store the selected payment method ID
+      scheduledDate: movingDate, 
+      paymentMethodId: data.paymentMethodId,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      
+      // Personal information
+      fullName,
+      email,
+      phoneNumber,
+      gender,
+      dateOfBirth,
+      
+      // Stay information
+      movingDate,
+      leavingDate,
+      numPeople,
+      roommates,
+      occupationType,
+      studyPlace,
+      workPlace,
+      occupationRole,
+      funding,
+      hasPets,
+      hasSmoking,
+      aboutMe,
+      message
     };
-    
-    // Only include listingId if it exists
-    if (listingId) {
-      Object.assign(requestData, { listingId });
-    }
     
     // Create the request
     const request = await createDocument<Request>(
@@ -233,6 +261,12 @@ export async function createCheckoutReservation(
     const userRequests = currentUser.requests || [];
     await updateDocument<User>(USERS_COLLECTION, currentUser.id, {
       requests: [...userRequests, request.id]
+    });
+    
+    // Update property status to 'occupied' immediately when reservation is created
+    await updateDocument<Property>(PROPERTIES_COLLECTION, data.propertyId, {
+      status: 'occupied',
+      updatedAt: new Date()
     });
     
     return request;

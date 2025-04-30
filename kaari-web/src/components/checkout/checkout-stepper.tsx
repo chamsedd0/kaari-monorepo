@@ -1,18 +1,18 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../theme/theme';
+import { FaCheck } from 'react-icons/fa';
 
 const StepperContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-bottom: 2rem;
   
   .step-circles {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 16px;
     width: 100%;
     position: relative;
     
@@ -21,7 +21,7 @@ const StepperContainer = styled.div`
       top: 50%;
       left: 0;
       right: 0;
-      height: 2px;
+      height: 3px;
       background-color: ${Theme.colors.tertiary};
       z-index: 1;
       transform: translateY(-50%);
@@ -31,17 +31,17 @@ const StepperContainer = styled.div`
       position: absolute;
       top: 50%;
       left: 0;
-      height: 2px;
+      height: 3px;
       background-color: ${Theme.colors.secondary};
       z-index: 2;
       transform: translateY(-50%);
-      transition: width 0.3s ease;
+      transition: width 0.5s ease;
     }
   }
   
   .step-circle {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background-color: ${Theme.colors.tertiary};
     display: flex;
@@ -52,15 +52,23 @@ const StepperContainer = styled.div`
     position: relative;
     z-index: 3;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     
     &.active {
       background-color: ${Theme.colors.secondary};
       color: white;
+      box-shadow: 0 3px 12px ${Theme.colors.secondary}90;
+      transform: scale(1.05);
     }
     
     &.completed {
       background-color: ${Theme.colors.primary};
       color: white;
+      box-shadow: 0 3px 12px ${Theme.colors.primary}90;
+    }
+    
+    .check-icon {
+      font-size: 20px;
     }
   }
   
@@ -68,6 +76,7 @@ const StepperContainer = styled.div`
     display: flex;
     justify-content: space-between;
     width: 100%;
+    padding: 0 8px;
     
     .step-label {
       font: ${Theme.typography.fonts.smallM};
@@ -75,15 +84,17 @@ const StepperContainer = styled.div`
       text-align: center;
       transition: all 0.3s ease;
       max-width: 150px;
-      padding: 0 10px;
+      padding: 0 8px;
       
       &.active {
         color: ${Theme.colors.secondary};
         font: ${Theme.typography.fonts.smallB};
+        transform: translateY(-2px);
       }
       
       &.completed {
         color: ${Theme.colors.primary};
+        font: ${Theme.typography.fonts.smallB};
       }
     }
   }
@@ -119,7 +130,11 @@ const CheckoutStepper: React.FC<CheckoutStepperProps> = ({ activeStep }) => {
               ${step.number < activeStep ? 'completed' : ''}
             `}
           >
-            {step.number}
+            {step.number < activeStep ? (
+              <FaCheck className="check-icon" />
+            ) : (
+              step.number
+            )}
           </div>
         ))}
       </div>

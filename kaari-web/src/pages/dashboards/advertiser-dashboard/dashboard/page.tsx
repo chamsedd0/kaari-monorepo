@@ -138,7 +138,7 @@ const DashboardPage: React.FC = () => {
         : null;
     
     // Empty state helpers
-    const hasMessages = requests.some(req => req.message && req.message.trim() !== '');
+    const hasMessages = requests.some(req => req.message && typeof req.message === 'string' && req.message.trim() !== '');
     const hasStats = propertyDataForChart.some(p => Number(p.views) > 0 || Number(p.clicks) > 0 || Number(p.requests) > 0);
     const hasProperties = properties.length > 0 && propertyDataForChart.some(p => Number(p.views) > 0);
 
@@ -164,7 +164,9 @@ const DashboardPage: React.FC = () => {
                 {latestRequest && (
                     <LatestRequestDashboardCard 
                         title={t('advertiser_dashboard.dashboard.latest_request')}
-                        name={latestRequest.message.substring(0, 20) + (latestRequest.message.length > 20 ? '...' : '')}
+                        name={typeof latestRequest.message === 'string' 
+                            ? latestRequest.message.substring(0, 20) + (latestRequest.message.length > 20 ? '...' : '') 
+                            : t('advertiser_dashboard.dashboard.new_request')}
                         img={user?.profilePicture || ''}
                         date={new Date(latestRequest.createdAt).toLocaleDateString(locale, {
                             day: '2-digit',
@@ -186,7 +188,9 @@ const DashboardPage: React.FC = () => {
                             name={user?.name || t('advertiser_dashboard.dashboard.user')}
                             img={user?.profilePicture || ''}
                             messageCount={requests.length}
-                            message={latestRequest?.message || t('advertiser_dashboard.dashboard.no_messages')}
+                            message={latestRequest && typeof latestRequest.message === 'string' 
+                                ? latestRequest.message 
+                                : t('advertiser_dashboard.dashboard.no_messages')}
                             onViewMore={() => {
                                 navigate('/dashboard/advertiser/messages');
                             }}

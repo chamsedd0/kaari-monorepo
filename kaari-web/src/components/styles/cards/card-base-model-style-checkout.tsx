@@ -43,7 +43,7 @@ export const CardBaseModelStyleCheckout = styled.div`
             width: 100%;
 
             .title {
-                font: ${Theme.typography.fonts.h5};
+                font: ${Theme.typography.fonts.h4B};
                 width: 100%;
                 color: ${Theme.colors.black};
             }

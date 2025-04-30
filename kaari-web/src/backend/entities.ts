@@ -26,7 +26,6 @@ export interface User {
     uploadDate: Date;
   };
   properties?: string[]; // References to property IDs owned by this user
-  listings?: string[]; // References to listing IDs created by this user
   requests?: string[]; // References to request IDs made by this user
 }
 
@@ -47,53 +46,68 @@ export interface Property {
   bathrooms?: number;
   area: number; // in square feet/meters
   price: number;
+  deposit?: number; // Security deposit amount
+  serviceFee?: number; // Service fee amount
+  minstay?: string; // Minimum length of stay (e.g., "6 months")
+  availableFrom?: Date; // Date from which the property is available
   images: string[]; // URLs to property images
   amenities: string[];
   features: string[];
-  status: 'available' | 'sold' | 'pending' | 'rented';
+  status: 'available' | 'occupied';
   createdAt: Date;
   updatedAt: Date;
-  listingId?: string; // Reference to the listing if this property is listed
-}
-
-export interface Listing {
-  id: string;
-  propertyId: string; // Reference to the Property ID
-  agentId: string; // Reference to the User ID (agent) who created this listing
-  title: string;
-  description: string;
-  listingType: 'sale' | 'rent';
-  price: number;
-  deposit?: number; // For rentals
-  leaseTerm?: string; // For rentals
-  featured: boolean;
-  status: 'active' | 'inactive' | 'expired' | 'sold' | 'rented';
-  createdAt: Date;
-  updatedAt: Date;
-  expiresAt?: Date;
-  viewCount: number;
-  contactCount: number;
+  rooms?: Array<{
+    type: 'bedroom' | 'bathroom' | 'kitchen' | 'storage' | 'living';
+    area: number;
+  }>;
 }
 
 export interface Request {
   id: string;
   userId: string; // Reference to the User ID who made the request
-  listingId?: string; // Reference to the Listing ID if related to a specific listing
   propertyId?: string; // Reference to the Property ID if related to a specific property
   requestType: 'viewing' | 'information' | 'offer' | 'general';
   message: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'completed';
+  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
   offerAmount?: number; // In case this is an offer
   createdAt: Date;
   updatedAt: Date;
   scheduledDate?: Date; // For viewings
+  paymentMethodId?: string; // ID of the payment method used
+  movedIn?: boolean; // Whether the client has moved in
+  movedInAt?: Date; // When the client moved in, used for refund eligibility
+  
+  // Personal information
+  fullName?: string;
+  email?: string;
+  phoneNumber?: string;
+  gender?: string;
+  dateOfBirth?: Date | null;
+  
+  // Stay information
+  movingDate?: Date;
+  leavingDate?: Date | null;
+  numPeople?: string;
+  roommates?: string;
+  occupationType?: 'study' | 'work';
+  studyPlace?: string;
+  workPlace?: string;
+  occupationRole?: string;
+  funding?: string;
+  hasPets?: boolean;
+  hasSmoking?: boolean;
+  aboutMe?: string;
+  
+  // Payment information
+  price?: number;
+  serviceFee?: number;
+  totalPrice?: number;
 }
 
 export interface Review {
   id: string;
   userId: string; // Reference to the User ID who wrote the review
   propertyId: string; // Reference to the Property ID
-  listingId?: string; // Reference to the Listing ID, if applicable
   advertiserId: string; // Reference to the User ID (advertiser)
   stayDuration: string; // How long the client stayed (e.g., "3 months")
   reviewText: string; // The main review content

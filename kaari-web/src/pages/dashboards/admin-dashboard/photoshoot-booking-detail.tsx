@@ -48,15 +48,32 @@ interface PropertyFormData {
   bathrooms: number;
   area: number;
   price: number;
+  deposit: number;
+  serviceFee: number;
+  minstay: string;
+  availableFrom: string;
   images: string[];
   amenities: string[];
   features: string[];
-  status: 'available' | 'sold' | 'pending' | 'rented';
+  status: 'available' | 'occupied';
   location: {
     lat: number;
     lng: number;
   } | null;
+  rooms: Array<{
+    type: 'bedroom' | 'bathroom' | 'kitchen' | 'storage' | 'living';
+    area: number;
+  }>;
 }
+
+// Room type options
+const ROOM_TYPES = [
+  { value: 'bedroom', label: 'Bedroom' },
+  { value: 'bathroom', label: 'Bathroom' },
+  { value: 'kitchen', label: 'Kitchen' },
+  { value: 'storage', label: 'Storage Room' },
+  { value: 'living', label: 'Living Room' }
+];
 
 // Common amenities and features
 const COMMON_AMENITIES = [
@@ -120,15 +137,26 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     bathrooms: 1,
     area: 0,
     price: 0,
+    deposit: 0,
+    serviceFee: 0,
+    minstay: '',
+    availableFrom: '',
     images: [],
     amenities: [],
     features: [],
     status: 'available',
     location: null,
+    rooms: [],
   });
   
   const [amenityInput, setAmenityInput] = useState('');
   const [featureInput, setFeatureInput] = useState('');
+  
+  // New state for room management
+  const [roomFormData, setRoomFormData] = useState<{ type: 'bedroom' | 'bathroom' | 'kitchen' | 'storage' | 'living'; area: number }>({
+    type: 'bedroom',
+    area: 0
+  });
   
   // Direct Firebase check utility function
   const checkTeamsInFirebase = async () => {
@@ -189,12 +217,18 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         bathrooms: propertyData.bathrooms,
         area: propertyData.area,
         price: propertyData.price,
+        deposit: propertyData.deposit,
+        serviceFee: propertyData.serviceFee,
+        minstay: propertyData.minstay,
+        availableFrom: propertyData.availableFrom ? propertyData.availableFrom : null,
         images: propertyData.images,
         amenities: propertyData.amenities,
         features: propertyData.features,
         status: propertyData.status,
         // Include location data if available
         location: propertyData.location,
+        // Include rooms array
+        rooms: propertyData.rooms,
       };
       
       // Log the data being sent to Firestore for debugging
@@ -505,6 +539,72 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     }));
   };
   
+  // Function to add a new room
+  const handleAddRoom = () => {
+    if (roomFormData.area <= 0) {
+      alert('Room area must be greater than 0');
+      return;
+    }
+    
+    setPropertyData(prev => ({
+      ...prev,
+      rooms: [...prev.rooms, { ...roomFormData }]
+    }));
+    
+    // Update bedrooms/bathrooms count for backward compatibility
+    if (roomFormData.type === 'bedroom') {
+      setPropertyData(prev => ({
+        ...prev,
+        bedrooms: prev.bedrooms + 1
+      }));
+    } else if (roomFormData.type === 'bathroom') {
+      setPropertyData(prev => ({
+        ...prev,
+        bathrooms: prev.bathrooms + 1
+      }));
+    }
+    
+    // Reset room form
+    setRoomFormData({
+      type: 'bedroom',
+      area: 0
+    });
+  };
+  
+  // Function to remove a room
+  const handleRemoveRoom = (index: number) => {
+    const roomToRemove = propertyData.rooms[index];
+    
+    setPropertyData(prev => {
+      // Update bedrooms/bathrooms count for backward compatibility
+      let updatedBedroomsCount = prev.bedrooms;
+      let updatedBathroomsCount = prev.bathrooms;
+      
+      if (roomToRemove.type === 'bedroom') {
+        updatedBedroomsCount = Math.max(0, updatedBedroomsCount - 1);
+      } else if (roomToRemove.type === 'bathroom') {
+        updatedBathroomsCount = Math.max(0, updatedBathroomsCount - 1);
+      }
+      
+      return {
+        ...prev,
+        rooms: prev.rooms.filter((_, i) => i !== index),
+        bedrooms: updatedBedroomsCount,
+        bathrooms: updatedBathroomsCount
+      };
+    });
+  };
+  
+  // Function to handle room form input changes
+  const handleRoomFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    setRoomFormData(prev => ({
+      ...prev,
+      [name]: name === 'area' ? parseFloat(value) || 0 : value
+    }));
+  };
+  
   const handleCompleteBooking = async () => {
     if (!id || !booking) return;
     
@@ -604,23 +704,229 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
             <div>
               <h3>Property Details</h3>
-              <p><strong>Property Type:</strong> {booking.propertyType || 'N/A'}</p>
-              {booking.propertyAddress ? (
-                <>
-                  <p><strong>Address:</strong> {booking.propertyAddress.street || 'N/A'}, {booking.propertyAddress.streetNumber || 'N/A'}</p>
-                  <p><strong>City:</strong> {booking.propertyAddress.city || 'N/A'}</p>
-                  <p><strong>State/Region:</strong> {booking.propertyAddress.state || 'N/A'}</p>
-                  <p><strong>Postal Code:</strong> {booking.propertyAddress.zipCode || 'N/A'}</p>
-                  <p><strong>Country:</strong> {booking.propertyAddress.country || 'N/A'}</p>
-                  {booking.propertyAddress.floor && <p><strong>Floor:</strong> {booking.propertyAddress.floor}</p>}
-                  {booking.propertyAddress.flat && <p><strong>Flat:</strong> {booking.propertyAddress.flat}</p>}
-                </>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                <FormGroup>
+                  <Label>Total Area (sq m)</Label>
+                  <Input 
+                    type="number" 
+                    min="0"
+                    value={propertyData.area} 
+                    onChange={(e) => handleNumberInput(e, 'area')}
+                  />
+                </FormGroup>
+                
+                <FormGroup>
+                  <Label>Price (per month)</Label>
+                  <Input 
+                    type="number" 
+                    min="0"
+                    value={propertyData.price} 
+                    onChange={(e) => handleNumberInput(e, 'price')}
+                  />
+                </FormGroup>
+                
+                <FormGroup>
+                  <Label>Deposit Amount</Label>
+                  <Input 
+                    type="number" 
+                    min="0"
+                    value={propertyData.deposit} 
+                    onChange={(e) => handleNumberInput(e, 'deposit')}
+                  />
+                </FormGroup>
+                
+                <FormGroup>
+                  <Label>Service Fee</Label>
+                  <Input 
+                    type="number" 
+                    min="0"
+                    value={propertyData.serviceFee} 
+                    onChange={(e) => handleNumberInput(e, 'serviceFee')}
+                  />
+                </FormGroup>
+                
+                <FormGroup>
+                  <Label>Min. Stay Length</Label>
+                  <Input 
+                    type="text" 
+                    name="minstay"
+                    placeholder="e.g., 6 months"
+                    value={propertyData.minstay} 
+                    onChange={handlePropertyInputChange}
+                  />
+                </FormGroup>
+                
+                <FormGroup>
+                  <Label>Available From</Label>
+                  <Input 
+                    type="date" 
+                    name="availableFrom"
+                    value={propertyData.availableFrom} 
+                    onChange={handlePropertyInputChange}
+                  />
+                </FormGroup>
+                
+                <FormGroup>
+                  <Label>Status</Label>
+                  <Select 
+                    name="status"
+                    value={propertyData.status} 
+                    onChange={handlePropertyInputChange}
+                  >
+                    <option value="available">Available</option>
+                    <option value="occupied">Occupied</option>
+                  </Select>
+                </FormGroup>
+              </div>
+              
+              {/* Rooms Management Section */}
+              <h3>Rooms</h3>
+              <div style={{ 
+                padding: '15px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginBottom: '20px'
+              }}>
+                <div style={{ marginBottom: '15px' }}>
+                  <h4 style={{ marginTop: 0 }}>Add a Room</h4>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <FormGroup style={{ flex: 2 }}>
+                      <Label>Room Type</Label>
+                      <Select 
+                        name="type"
+                        value={roomFormData.type} 
+                        onChange={handleRoomFormChange}
+                      >
+                        {ROOM_TYPES.map((type) => (
+                          <option key={type.value} value={type.value}>{type.label}</option>
+                        ))}
+                      </Select>
+                    </FormGroup>
+                    
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Area (sq m)</Label>
+                      <Input 
+                        type="number" 
+                        name="area"
+                        min="0"
+                        step="0.5"
+                        value={roomFormData.area} 
+                        onChange={handleRoomFormChange}
+                      />
+                    </FormGroup>
+                    
+                    <Button onClick={handleAddRoom} style={{ marginBottom: '5px' }}>
+                      <FaPlus /> Add Room
+                    </Button>
+                  </div>
+                </div>
+                
+                {propertyData.rooms.length > 0 ? (
+                  <div>
+                    <h4 style={{ marginTop: 0 }}>Room List</h4>
+                    <div style={{ 
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px'
+                    }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid #ddd' }}>
+                            <th style={{ padding: '8px', textAlign: 'left' }}>Room Type</th>
+                            <th style={{ padding: '8px', textAlign: 'left' }}>Area (sq m)</th>
+                            <th style={{ padding: '8px', textAlign: 'center', width: '80px' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {propertyData.rooms.map((room, index) => (
+                            <tr key={index} style={{ borderBottom: '1px solid #ddd' }}>
+                              <td style={{ padding: '8px' }}>
+                                {ROOM_TYPES.find(type => type.value === room.type)?.label || room.type}
+                              </td>
+                              <td style={{ padding: '8px' }}>{room.area} sq m</td>
+                              <td style={{ padding: '8px', textAlign: 'center' }}>
+                                <button 
+                                  onClick={() => handleRemoveRoom(index)}
+                                  style={{
+                                    background: 'rgba(220, 53, 69, 0.8)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    padding: '5px 10px',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  <FaTimes size={12} /> Remove
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      marginTop: '10px',
+                      padding: '10px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '4px'
+                    }}>
+                      <div>
+                        <strong>Bedrooms:</strong> {propertyData.rooms.filter(room => room.type === 'bedroom').length}
+                      </div>
+                      <div>
+                        <strong>Bathrooms:</strong> {propertyData.rooms.filter(room => room.type === 'bathroom').length}
+                      </div>
+                      <div>
+                        <strong>Total Rooms:</strong> {propertyData.rooms.length}
+                      </div>
+                      <div>
+                        <strong>Total Room Area:</strong> {propertyData.rooms.reduce((total, room) => total + room.area, 0)} sq m
+                      </div>
+                    </div>
+                  </div>
               ) : (
-                <p><strong>Address:</strong> No address information available</p>
+                  <p style={{ color: '#666', fontStyle: 'italic' }}>No rooms added yet. Add rooms to specify bedroom, bathroom, and other room details.</p>
+                )}
+              </div>
+              
+              {/* Legacy Bedrooms/Bathrooms Fields (hidden, maintained for backward compatibility) */}
+              <div style={{ display: 'none' }}>
+                <Input 
+                  type="hidden" 
+                  value={propertyData.bedrooms} 
+                  readOnly
+                />
+                <Input 
+                  type="hidden" 
+                  value={propertyData.bathrooms} 
+                  readOnly
+                />
+              </div>
+              
+              {/* Location Coordinates */}
+              <h3>Location Coordinates</h3>
+              <div style={{ 
+                padding: '10px',
+                backgroundColor: '#f5f5f5', 
+                borderRadius: '4px', 
+                marginBottom: '20px' 
+              }}>
+                {propertyData.location ? (
+                  <div>
+                    <p><strong>Latitude:</strong> {propertyData.location.lat}</p>
+                    <p><strong>Longitude:</strong> {propertyData.location.lng}</p>
+                    <p style={{ fontSize: '0.9em', color: '#666', marginTop: '8px' }}>
+                      Location coordinates from booking will be automatically stored with the property.
+                    </p>
+                  </div>
+                ) : (
+                  <p>No location coordinates available from the booking.</p>
               )}
-              {booking.location && (
-                <p><strong>Location:</strong> Lat: {booking.location.lat}, Lng: {booking.location.lng}</p>
-              )}
+              </div>
             </div>
             
             <div>
@@ -862,28 +1168,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
               <h3>Property Details</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
                 <FormGroup>
-                  <Label>Bedrooms</Label>
-                  <Input 
-                    type="number" 
-                    min="0"
-                    value={propertyData.bedrooms} 
-                    onChange={(e) => handleNumberInput(e, 'bedrooms')}
-                  />
-                </FormGroup>
-                
-                <FormGroup>
-                  <Label>Bathrooms</Label>
-                  <Input 
-                    type="number" 
-                    min="0"
-                    step="0.5"
-                    value={propertyData.bathrooms} 
-                    onChange={(e) => handleNumberInput(e, 'bathrooms')}
-                  />
-                </FormGroup>
-                
-                <FormGroup>
-                  <Label>Area (sq ft/m)</Label>
+                  <Label>Total Area (sq m)</Label>
                   <Input 
                     type="number" 
                     min="0"
@@ -893,12 +1178,53 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                 </FormGroup>
                 
                 <FormGroup>
-                  <Label>Price</Label>
+                  <Label>Price (per month)</Label>
                   <Input 
                     type="number" 
                     min="0"
                     value={propertyData.price} 
                     onChange={(e) => handleNumberInput(e, 'price')}
+                  />
+                </FormGroup>
+                
+                <FormGroup>
+                  <Label>Deposit Amount</Label>
+                  <Input 
+                    type="number" 
+                    min="0"
+                    value={propertyData.deposit} 
+                    onChange={(e) => handleNumberInput(e, 'deposit')}
+                  />
+                </FormGroup>
+                
+                <FormGroup>
+                  <Label>Service Fee</Label>
+                  <Input 
+                    type="number" 
+                    min="0"
+                    value={propertyData.serviceFee} 
+                    onChange={(e) => handleNumberInput(e, 'serviceFee')}
+                  />
+                </FormGroup>
+                
+                <FormGroup>
+                  <Label>Min. Stay Length</Label>
+                  <Input 
+                    type="text" 
+                    name="minstay"
+                    placeholder="e.g., 6 months"
+                    value={propertyData.minstay} 
+                    onChange={handlePropertyInputChange}
+                  />
+                </FormGroup>
+                
+                <FormGroup>
+                  <Label>Available From</Label>
+                  <Input 
+                    type="date" 
+                    name="availableFrom"
+                    value={propertyData.availableFrom} 
+                    onChange={handlePropertyInputChange}
                   />
                 </FormGroup>
                 
@@ -910,11 +1236,137 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                     onChange={handlePropertyInputChange}
                   >
                     <option value="available">Available</option>
-                    <option value="pending">Pending</option>
-                    <option value="sold">Sold</option>
-                    <option value="rented">Rented</option>
+                    <option value="occupied">Occupied</option>
                   </Select>
                 </FormGroup>
+              </div>
+              
+              {/* Rooms Management Section */}
+              <h3>Rooms</h3>
+              <div style={{ 
+                padding: '15px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginBottom: '20px'
+              }}>
+                <div style={{ marginBottom: '15px' }}>
+                  <h4 style={{ marginTop: 0 }}>Add a Room</h4>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <FormGroup style={{ flex: 2 }}>
+                      <Label>Room Type</Label>
+                      <Select 
+                        name="type"
+                        value={roomFormData.type} 
+                        onChange={handleRoomFormChange}
+                      >
+                        {ROOM_TYPES.map((type) => (
+                          <option key={type.value} value={type.value}>{type.label}</option>
+                        ))}
+                      </Select>
+                    </FormGroup>
+                    
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Area (sq m)</Label>
+                      <Input 
+                        type="number" 
+                        name="area"
+                        min="0"
+                        step="0.5"
+                        value={roomFormData.area} 
+                        onChange={handleRoomFormChange}
+                      />
+                    </FormGroup>
+                    
+                    <Button onClick={handleAddRoom} style={{ marginBottom: '5px' }}>
+                      <FaPlus /> Add Room
+                    </Button>
+                  </div>
+                </div>
+                
+                {propertyData.rooms.length > 0 ? (
+                  <div>
+                    <h4 style={{ marginTop: 0 }}>Room List</h4>
+                    <div style={{ 
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px'
+                    }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px solid #ddd' }}>
+                            <th style={{ padding: '8px', textAlign: 'left' }}>Room Type</th>
+                            <th style={{ padding: '8px', textAlign: 'left' }}>Area (sq m)</th>
+                            <th style={{ padding: '8px', textAlign: 'center', width: '80px' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {propertyData.rooms.map((room, index) => (
+                            <tr key={index} style={{ borderBottom: '1px solid #ddd' }}>
+                              <td style={{ padding: '8px' }}>
+                                {ROOM_TYPES.find(type => type.value === room.type)?.label || room.type}
+                              </td>
+                              <td style={{ padding: '8px' }}>{room.area} sq m</td>
+                              <td style={{ padding: '8px', textAlign: 'center' }}>
+                                <button 
+                                  onClick={() => handleRemoveRoom(index)}
+                                  style={{
+                                    background: 'rgba(220, 53, 69, 0.8)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    padding: '5px 10px',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  <FaTimes size={12} /> Remove
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      marginTop: '10px',
+                      padding: '10px',
+                      backgroundColor: '#f8f9fa',
+                      borderRadius: '4px'
+                    }}>
+                      <div>
+                        <strong>Bedrooms:</strong> {propertyData.rooms.filter(room => room.type === 'bedroom').length}
+                      </div>
+                      <div>
+                        <strong>Bathrooms:</strong> {propertyData.rooms.filter(room => room.type === 'bathroom').length}
+                      </div>
+                      <div>
+                        <strong>Total Rooms:</strong> {propertyData.rooms.length}
+                      </div>
+                      <div>
+                        <strong>Total Room Area:</strong> {propertyData.rooms.reduce((total, room) => total + room.area, 0)} sq m
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p style={{ color: '#666', fontStyle: 'italic' }}>No rooms added yet. Add rooms to specify bedroom, bathroom, and other room details.</p>
+                )}
+              </div>
+              
+              {/* Legacy Bedrooms/Bathrooms Fields (hidden, maintained for backward compatibility) */}
+              <div style={{ display: 'none' }}>
+                <Input 
+                  type="hidden" 
+                  value={propertyData.bedrooms} 
+                  readOnly
+                />
+                <Input 
+                  type="hidden" 
+                  value={propertyData.bathrooms} 
+                  readOnly
+                />
               </div>
               
               {/* Location Coordinates */}

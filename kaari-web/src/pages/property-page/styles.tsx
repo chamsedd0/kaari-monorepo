@@ -1,27 +1,25 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { Theme } from "../../theme/theme";
 
+export const spin = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
 
 interface PropertyPageProps {
-    isFixed: boolean;
-    isStopped: boolean;
-    stopPosition: number;
-    total_Height: number;
+  total_Height: number;
+  isFixed: boolean;
+  isStopped: boolean;
+  stopPosition: number;
 }
 
 export const PropertyPage = styled.div<PropertyPageProps>`
   display: flex;
-  justify-content: space-between;
   position: relative;
   width: 100%;
   max-width: 1500px;
-  margin: auto;
-  display: flex;
-  align-items: start;
-  justify-content: start;
+  margin: 0 auto;
   flex-direction: column;
-
-
 
   * {
     transition: all 0.3s ease;
@@ -29,10 +27,10 @@ export const PropertyPage = styled.div<PropertyPageProps>`
 
   .main-content {
     padding: 20px;
-    margin-top: 80px;
     width: 100%;
     padding-right: 475px;
     padding-bottom: 66px;
+    margin-top: 125px;
     
     
     z-index: 0;
@@ -347,6 +345,7 @@ export const PropertyPage = styled.div<PropertyPageProps>`
     height: 1px;
     position: relative;
     z-index: -1;
+    margin-bottom: 40px;
   }
 
   .bottom-content {
@@ -421,35 +420,41 @@ export const PropertyPage = styled.div<PropertyPageProps>`
   .checkout-box {
     max-width: 455px;
     width: 33.3%;
-    min-height: calc(100vh);
-    padding: 80px 20px;
-    padding-top: 108px;
+    min-height: 100vh;
+    height: 100vh;
+    padding: 20px;
+    padding-top: 0px;
+    margin-top: 0px;
     background: ${Theme.colors.white};
     border: ${Theme.borders.primary};
     border-top: none;
     border-right: none;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    z-index: 0;
+    z-index: 10;
+    transition: none;
+    right: 0;
+    position: absolute;
+    top: 0;
+    box-sizing: border-box;
   }
 
   .checkout-box.fixed {
     position: fixed;
-    top: 0px;
-    right: 0px;
-    
+    top: 0;
+    right: 0;
     @media (min-width: 1760px) {
-      right: calc(100vw - 1600px - 160px);
+      right: calc((100vw - 1500px) / 2) !important;
     }
   }
 
   .checkout-box.stopped {
     position: absolute;
-    bottom: calc(${(props) => props.total_Height}px - ${(props) => props.stopPosition}px);
-    right: 0px;
-
-
+    right: 0;
+    @media (min-width: 1760px) {
+      right: 0 !important;
+    }
   }
 
   .stop-point {

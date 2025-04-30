@@ -15,27 +15,85 @@ const CheckoutContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  margin-top: 6rem; /* Increased margin to ensure content is below header */
   
   .checkout-header {
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
     text-align: center;
     
     h1 {
       font: ${Theme.typography.fonts.h2};
       color: ${Theme.colors.black};
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, ${Theme.colors.primary}, ${Theme.colors.secondary});
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     
     p {
       font: ${Theme.typography.fonts.mediumM};
       color: ${Theme.colors.gray2};
+      font-size: 16px;
     }
   }
   
   .checkout-content {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    
+    .stepper-container {
+      margin-bottom: 2rem;
+      padding: 1.5rem 2rem;
+      background-color: ${Theme.colors.white};
+      border-radius: ${Theme.borders.radius.md};
+    }
+    
+    .checkout-form-container {
+      background-color: ${Theme.colors.white};
+      border-radius: ${Theme.borders.radius.md};
+      border: 1px solid ${Theme.colors.tertiary};
+      padding: 2.5rem;
+      margin-bottom: 3rem;
+    }
+  }
+  
+  .error-container {
+    background-color: ${Theme.colors.white};
+    border-radius: ${Theme.borders.radius.md};
+    border: 1px solid ${Theme.colors.tertiary};
+    padding: 2rem;
+    text-align: center;
+    
+    h1 {
+      font: ${Theme.typography.fonts.h4B};
+      color: ${Theme.colors.error};
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      font: ${Theme.typography.fonts.mediumM};
+      color: ${Theme.colors.gray2};
+      margin-bottom: 1.5rem;
+    }
+    
+    button {
+      background-color: ${Theme.colors.secondary};
+      color: ${Theme.colors.white};
+      font: ${Theme.typography.fonts.mediumB};
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: ${Theme.borders.radius.md};
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      
+      &:hover {
+        background-color: ${Theme.colors.primary};
+      }
+    }
   }
 `;
 
@@ -49,7 +107,6 @@ const CheckoutPage: React.FC = () => {
 
   useEffect(() => {
     const propertyId = searchParams.get('propertyId');
-    const listingId = searchParams.get('listingId');
     const moveInDate = searchParams.get('moveInDate');
     
     if (!propertyId) {
@@ -61,7 +118,7 @@ const CheckoutPage: React.FC = () => {
     const loadCheckoutData = async () => {
       try {
         console.log(`Initiating checkout for propertyId=${propertyId}`);
-        const data = await initiateCheckout(propertyId, listingId || undefined);
+        const data = await initiateCheckout(propertyId);
         setCheckoutData(data);
         
         if (moveInDate) {
@@ -105,7 +162,7 @@ const CheckoutPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return <LoadingScreen isLoading={true} />;
+    return <LoadingScreen isLoading={isLoading} />;
   }
 
   if (error) {
@@ -113,6 +170,10 @@ const CheckoutPage: React.FC = () => {
       <CheckoutContainer>
         <div className="checkout-header">
           <h1>Error</h1>
+          <p>{error}</p>
+        </div>
+        <div className="error-container">
+          <h1>Something went wrong</h1>
           <p>{error}</p>
           <button onClick={() => navigate(-1)}>Go Back</button>
         </div>
@@ -129,8 +190,13 @@ const CheckoutPage: React.FC = () => {
         </div>
         
         <div className="checkout-content">
-          <CheckoutStepper activeStep={activeStep} />
-          {renderStep()}
+          <div className="stepper-container">
+            <CheckoutStepper activeStep={activeStep} />
+          </div>
+          
+          <div className="checkout-form-container">
+            {renderStep()}
+          </div>
         </div>
       </CheckoutContainer>
     </CheckoutProvider>

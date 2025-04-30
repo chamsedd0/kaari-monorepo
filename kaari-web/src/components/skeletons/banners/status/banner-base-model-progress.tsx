@@ -6,7 +6,7 @@ export default function ProgressBanner({
   style,
 }: {
   text: string;
-  status: 'Pending' | 'Approved' | 'Declined';
+  status: 'Pending' | 'Approved' | 'Declined' | 'Paid';
   style?: React.CSSProperties;
 }) {
   return (

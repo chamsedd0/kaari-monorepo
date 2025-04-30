@@ -1,6 +1,6 @@
 'use server';
 
-import { User, Request, Listing, Property } from '../entities';
+import { User, Request, Property } from '../entities';
 import { 
   getDocumentById, 
   createDocument, 
@@ -13,14 +13,12 @@ import { getRequestsByUser } from './RequestServerActions';
 const REQUESTS_COLLECTION = 'requests';
 const USERS_COLLECTION = 'users';
 const PROPERTIES_COLLECTION = 'properties';
-const LISTINGS_COLLECTION = 'listings';
 
 /**
  * Get all reservations (viewing requests) for the current client user
  */
 export async function getClientReservations(): Promise<{
   reservation: Request;
-  listing?: Listing | null;
   property?: Property | null;
   advertiser?: User | null;
 }[]> {
@@ -39,25 +37,14 @@ export async function getClientReservations(): Promise<{
     const requests = await getRequestsByUser(currentUser.id);
     const viewingRequests = requests.filter(req => req.requestType === 'viewing');
     
-    // For each request, get associated listing, property, and advertiser info
+    // For each request, get associated property and advertiser info
     const reservationsWithDetails = await Promise.all(
       viewingRequests.map(async (request) => {
-        let listing = null;
         let property = null;
         let advertiser = null;
         
-        // If request has a listing ID, get the listing
-        if (request.listingId) {
-          listing = await getDocumentById<Listing>(LISTINGS_COLLECTION, request.listingId);
-          
-          // If listing found, get the property and advertiser
-          if (listing) {
-            property = await getDocumentById<Property>(PROPERTIES_COLLECTION, listing.propertyId);
-            advertiser = await getDocumentById<User>(USERS_COLLECTION, listing.agentId);
-          }
-        } 
-        // If request has a property ID but no listing ID, get the property directly
-        else if (request.propertyId) {
+        // If request has a property ID, get the property directly
+        if (request.propertyId) {
           property = await getDocumentById<Property>(PROPERTIES_COLLECTION, request.propertyId);
           
           // If property found, get the owner
@@ -68,7 +55,6 @@ export async function getClientReservations(): Promise<{
         
         return {
           reservation: request,
-          listing,
           property,
           advertiser
         };
@@ -86,9 +72,8 @@ export async function getClientReservations(): Promise<{
  * Create a new viewing request (reservation)
  */
 export async function createReservation(
-  listingId: string | undefined,
   propertyId: string | undefined,
-  scheduledDate: Date,
+  scheduledDate: Date | undefined,
   message: string
 ): Promise<Request> {
   try {
@@ -98,20 +83,19 @@ export async function createReservation(
       throw new Error('User not authenticated');
     }
     
-    // Verify that either listingId or propertyId is provided
-    if (!listingId && !propertyId) {
-      throw new Error('Either listing ID or property ID must be provided');
+    // Verify that propertyId is provided
+    if (!propertyId) {
+      throw new Error('Property ID must be provided');
     }
     
     // Create the request data
     const requestData = {
       userId: currentUser.id,
-      listingId,
       propertyId,
       requestType: 'viewing' as const,
       message,
       status: 'pending' as const,
-      scheduledDate,
+      scheduledDate: scheduledDate || new Date(),
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -126,6 +110,12 @@ export async function createReservation(
     const userRequests = currentUser.requests || [];
     await updateDocument<User>(USERS_COLLECTION, currentUser.id, {
       requests: [...userRequests, request.id]
+    });
+    
+    // Update property status to 'occupied' immediately when reservation is created
+    await updateDocument<Property>(PROPERTIES_COLLECTION, propertyId, {
+      status: 'occupied',
+      updatedAt: new Date()
     });
     
     return request;
@@ -157,11 +147,19 @@ export async function cancelReservation(reservationId: string): Promise<boolean>
       throw new Error('Not authorized to cancel this reservation');
     }
     
-    // Update the reservation status to 'cancelled'
+    // Update the reservation status to 'rejected'
     await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
       status: 'rejected',
       updatedAt: new Date()
     });
+    
+    // Change property status back to 'available' when reservation is cancelled
+    if (reservation.propertyId) {
+      await updateDocument<Property>(PROPERTIES_COLLECTION, reservation.propertyId, {
+        status: 'available',
+        updatedAt: new Date()
+      });
+    }
     
     return true;
   } catch (error) {

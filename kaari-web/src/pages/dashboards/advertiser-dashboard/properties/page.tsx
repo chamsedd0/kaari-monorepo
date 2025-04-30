@@ -5,11 +5,12 @@ import picture from '../../../../assets/images/propertyExamplePic.png';
 import PropertyExamplePic from '../../../../assets/images/propertyExamplePic.png';
 import LeftArrow from '../../../../components/skeletons/icons/Icon_Arrow_Left.svg';
 import RightArrow from '../../../../components/skeletons/icons/Icon_Arrow_Right.svg';
-import { getAdvertiserProperties } from '../../../../backend/server-actions/AdvertiserServerActions';
+import { getAdvertiserProperties, checkPropertyHasActiveReservations } from '../../../../backend/server-actions/AdvertiserServerActions';
 import { updateProperty } from '../../../../backend/server-actions/PropertyServerActions';
 import { Property } from '../../../../backend/entities';
 import { useAuth } from '../../../../contexts/auth';
 import PropertyUnlistConfirmationModal from '../../../../components/skeletons/constructed/modals/property-unlist-confirmation-modal';
+import PropertyReservationsWarningModal from '../../../../components/skeletons/constructed/modals/property-with-reservations-warning-modal';
 import EmptyBox from '../../../../assets/images/emptybox.svg';
 import { PurpleButtonLB40 } from '../../../../components/skeletons/buttons/purple_LB40';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +27,7 @@ const PropertiesPage: React.FC = () => {
     
     // Modal states
     const [unlistModalOpen, setUnlistModalOpen] = useState(false);
+    const [reservationsWarningModalOpen, setReservationsWarningModalOpen] = useState(false);
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
@@ -53,14 +55,14 @@ const PropertiesPage: React.FC = () => {
     
     // Filter properties by status
     const listedProperties = properties.filter(
-        property => property.status === 'available' || property.status === 'rented'
+        property => property.status === 'available'
     );
     
     const unlistedProperties = properties.filter(
-        property => property.status === 'sold' || property.status === 'pending'
+        property => property.status === 'occupied'
     );
     
-    const handleChangePropertyStatus = async (propertyId: string, newStatus: 'available' | 'sold' | 'pending' | 'rented') => {
+    const handleChangePropertyStatus = async (propertyId: string, newStatus: 'available' | 'occupied') => {
         try {
             setIsSubmitting(true);
             await updateProperty(propertyId, { status: newStatus });
@@ -83,6 +85,33 @@ const PropertiesPage: React.FC = () => {
         } finally {
             setIsSubmitting(false);
         }
+    };
+    
+    const handleListProperty = async (property: Property) => {
+        try {
+            setIsSubmitting(true);
+            
+            // Check if the property has active reservations first
+            const hasActiveReservations = await checkPropertyHasActiveReservations(property.id);
+            
+            if (hasActiveReservations) {
+                // Show warning modal instead of listing
+                setSelectedProperty(property);
+                setReservationsWarningModalOpen(true);
+            } else {
+                // No reservations, update status to available
+                await handleChangePropertyStatus(property.id, 'available');
+            }
+        } catch (err) {
+            console.error('Error checking reservations:', err);
+            setError(t('advertiser_dashboard.properties.errors.check_reservations_failed'));
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+    
+    const navigateToReservations = () => {
+        navigate('/dashboard/advertiser/reservations');
     };
     
     const handleAskForEdit = (property: Property) => {
@@ -195,7 +224,7 @@ const PropertiesPage: React.FC = () => {
                                             price={`${property.price} ${t('common.per_month')}`}
                             minStay={t('common.min_stay', { count: 1 })}
                                             propertyId={property.id}
-                                            onList={() => handleChangePropertyStatus(property.id, 'available')}
+                                            onList={() => handleListProperty(property)}
                                             onAskForEdit={() => handleAskForEdit(property)}
                                         />
                                     ))}
@@ -207,15 +236,27 @@ const PropertiesPage: React.FC = () => {
                 
                 {/* Unlist Confirmation Modal */}
                 {selectedProperty && (
-                    <PropertyUnlistConfirmationModal
-                        isOpen={unlistModalOpen}
-                        onClose={() => {
-                            setUnlistModalOpen(false);
-                            setSelectedProperty(null);
-                        }}
-                        onConfirm={() => handleChangePropertyStatus(selectedProperty.id, 'pending')}
-                        propertyTitle={selectedProperty.title}
-                    />
+                    <>
+                        <PropertyUnlistConfirmationModal
+                            isOpen={unlistModalOpen}
+                            onClose={() => {
+                                setUnlistModalOpen(false);
+                                setSelectedProperty(null);
+                            }}
+                            onConfirm={() => handleChangePropertyStatus(selectedProperty.id, 'occupied')}
+                            propertyTitle={selectedProperty.title}
+                        />
+                        
+                        <PropertyReservationsWarningModal
+                            isOpen={reservationsWarningModalOpen}
+                            onClose={() => {
+                                setReservationsWarningModalOpen(false);
+                                setSelectedProperty(null);
+                            }}
+                            onViewReservations={navigateToReservations}
+                            propertyTitle={selectedProperty.title}
+                        />
+                    </>
                 )}
             </div>
         </PropertiesPageStyle>

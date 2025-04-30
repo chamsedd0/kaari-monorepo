@@ -4,17 +4,17 @@ import { FaTimes, FaExclamationTriangle } from 'react-icons/fa';
 import { PurpleButtonLB60 } from '../../buttons/purple_LB60';
 import { WhiteButtonLB60 } from '../../buttons/white_LB60';
 
-interface PropertyUnlistConfirmationModalProps {
+interface PropertyReservationsWarningModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onViewReservations: () => void;
   propertyTitle: string;
 }
 
-export const PropertyUnlistConfirmationModal: React.FC<PropertyUnlistConfirmationModalProps> = ({
+export const PropertyReservationsWarningModal: React.FC<PropertyReservationsWarningModalProps> = ({
   isOpen,
   onClose,
-  onConfirm,
+  onViewReservations,
   propertyTitle
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
@@ -53,18 +53,18 @@ export const PropertyUnlistConfirmationModal: React.FC<PropertyUnlistConfirmatio
             </div>
           </div>
           
-          <h2 className="confirmation-title">Unlist Property?</h2>
+          <h2 className="confirmation-title">Active Reservations</h2>
           
           <p className="confirmation-message">
-            You are about to unlist <strong>{propertyTitle}</strong>. This property will be marked as occupied and no longer appear in search results. You can re-list it anytime when it becomes available again.
+            <strong>{propertyTitle}</strong> has active reservation requests. You need to cancel or reject these reservations before you can list this property as available.
           </p>
           
           <div className="button-container">
             <WhiteButtonLB60 text="Cancel" onClick={onClose} />
             <PurpleButtonLB60
-              text="Unlist Property"
+              text="View Reservations"
               onClick={() => {
-                onConfirm();
+                onViewReservations();
                 onClose();
               }}
             />
@@ -75,4 +75,4 @@ export const PropertyUnlistConfirmationModal: React.FC<PropertyUnlistConfirmatio
   );
 };
 
-export default PropertyUnlistConfirmationModal; 
+export default PropertyReservationsWarningModal; 

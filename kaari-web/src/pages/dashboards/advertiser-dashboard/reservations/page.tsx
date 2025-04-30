@@ -176,11 +176,11 @@ interface Reservation {
 
 const ReservationsPage: React.FC = () => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [applicantFilter, setApplicantFilter] = useState<string>('All Applicants');
-  const [propertyFilter, setPropertyFilter] = useState<string>('All Properties');
+    const [applicantFilter, setApplicantFilter] = useState<string>('All Applicants');
+    const [propertyFilter, setPropertyFilter] = useState<string>('All Properties');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
   
@@ -188,44 +188,44 @@ const ReservationsPage: React.FC = () => {
     loadReservations();
   }, []);
 
-  const loadReservations = async () => {
-    try {
+    const loadReservations = async () => {
+        try {
       setLoading(true);
-      const data = await getAdvertiserReservationRequests();
-      setReservations(data);
-      setError(null);
+            const data = await getAdvertiserReservationRequests();
+            setReservations(data);
+            setError(null);
     } catch (err: any) {
-      console.error('Error loading reservations:', err);
+            console.error('Error loading reservations:', err);
       setError(err.message || 'Failed to load reservations');
-    } finally {
-      setLoading(false);
-    }
-  };
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const handleApprove = async (requestId: string) => {
-    try {
-      setProcessingRequest(requestId);
-      await approveReservationRequest(requestId);
-      await loadReservations();
+    const handleApprove = async (requestId: string) => {
+        try {
+            setProcessingRequest(requestId);
+            await approveReservationRequest(requestId);
+            await loadReservations();
     } catch (err: any) {
-      console.error('Error approving request:', err);
+            console.error('Error approving request:', err);
       setError(err.message || 'Failed to approve request. Please try again.');
-    } finally {
-      setProcessingRequest(null);
-    }
-  };
+        } finally {
+            setProcessingRequest(null);
+        }
+    };
   
-  const handleReject = async (requestId: string) => {
-    try {
-      setProcessingRequest(requestId);
-      await rejectReservationRequest(requestId);
-      await loadReservations();
+    const handleReject = async (requestId: string) => {
+        try {
+            setProcessingRequest(requestId);
+            await rejectReservationRequest(requestId);
+            await loadReservations();
     } catch (err: any) {
-      console.error('Error rejecting request:', err);
+            console.error('Error rejecting request:', err);
       setError(err.message || 'Failed to reject request. Please try again.');
-    } finally {
-      setProcessingRequest(null);
-    }
+        } finally {
+            setProcessingRequest(null);
+        }
   };
   
   // Get unique applicant names for filter
@@ -287,7 +287,7 @@ const ReservationsPage: React.FC = () => {
     return <div>Error: {error}</div>;
   }
 
-  return (
+    return (
     <ReservationsContainer>
       <h1 className="page-title">Reservation requests</h1>
       
@@ -349,9 +349,9 @@ const ReservationsPage: React.FC = () => {
             className="search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
+                    />
+                </div>
+            </div>
       
       {filteredReservations.length === 0 ? (
         <div className="no-reservations">
@@ -371,7 +371,7 @@ const ReservationsPage: React.FC = () => {
         />
       )}
     </ReservationsContainer>
-  );
+    );
 };
 
 export default ReservationsPage;
