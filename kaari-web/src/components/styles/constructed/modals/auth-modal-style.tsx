@@ -248,7 +248,7 @@ export const AuthModalStyle = styled(ModalStyle)`
         display: block;
         font-size: 14px;
         margin-bottom: 8px;
-        color: ${Theme.colors.gray3};
+        color: ${Theme.colors.gray2};
       }
       
       input {

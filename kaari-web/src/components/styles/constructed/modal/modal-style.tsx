@@ -51,7 +51,7 @@ export const ModalHeader = styled.div`
   border-bottom: 1px solid ${Theme.colors.gray}50;
   
   h2 {
-    font: ${Theme.typography.fonts.h4};
+    font: ${Theme.typography.fonts.h4B};
     color: ${Theme.colors.black};
     margin: 0;
   }

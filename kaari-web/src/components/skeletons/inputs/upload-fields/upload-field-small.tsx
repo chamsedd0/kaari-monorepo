@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import UploadFieldBaseModel from '../../../styles/inputs/upload-fields/upload-field-base-model-style';
-import icon from '../../icons/Icon-Attach.svg';
+import { UploadFieldsmallModel, UploadFieldContainersmall } from '../../../styles/inputs/upload-fields/upload-field-small-model-style';
+import icon from '../../icons/Icon-Attach-small.svg';
 import generativeObject from '../../icons/Generative-Object.svg';
-import styled from 'styled-components';
-import { Theme } from '../../../../theme/theme';
+
 
 interface UploadFieldProps {
   label?: string;
@@ -15,50 +14,9 @@ interface UploadFieldProps {
   isProfilePicture?: boolean;
 }
 
-const UploadFieldContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  
-  .head-label {
-    margin-bottom: 12px;
-    font: ${Theme.typography.fonts.largeB};
-    color: ${Theme.colors.black};
-  }
 
-  .illustration {
-    display: flex;
-    justify-content: center;
-    
-    img {
-      width: 24px;
-      height: 24px;
-    }
-  }
-  
-  .file-name {
-    margin-top: 8px;
-    font: ${Theme.typography.fonts.smallM};
-    color: ${Theme.colors.secondary};
-  }
-  
-  .profile-picture-link {
-    color: ${Theme.colors.secondary};
-    font: ${Theme.typography.fonts.link16};
-    text-decoration: underline;
-    cursor: pointer;
-    
-    &:hover {
-      opacity: 0.8;
-    }
-    
-    &:active {
-      opacity: 0.6;
-    }
-  }
-`;
 
-const UploadFieldModel: React.FC<UploadFieldProps> = ({ 
+const UploadFieldSmall: React.FC<UploadFieldProps> = ({ 
   label, 
   hlabel, 
   onClick, 
@@ -98,14 +56,14 @@ const UploadFieldModel: React.FC<UploadFieldProps> = ({
   }
 
   return (
-    <UploadFieldContainer>
+    <UploadFieldContainersmall>
       {hlabel && <div className="head-label">{hlabel}</div>}
       {showIllustration && (
         <div className="illustration">
           <img src={generativeObject} alt="Upload illustration" />
         </div>
       )}
-      <UploadFieldBaseModel onClick={handleClick}>
+      <UploadFieldsmallModel onClick={handleClick}>
         <span>{label}</span>
         <img src={icon} alt="upload" />
         <input 
@@ -114,14 +72,14 @@ const UploadFieldModel: React.FC<UploadFieldProps> = ({
           style={{ display: 'none' }} 
           onChange={handleFileChange}
         />
-      </UploadFieldBaseModel>
+      </UploadFieldsmallModel>
       {selectedFileName && (
         <div className="file-name">
           Selected file: {selectedFileName}
         </div>
       )}
-    </UploadFieldContainer>
+    </UploadFieldContainersmall>
   );
 };
 
-export default UploadFieldModel;
+export default UploadFieldSmall;

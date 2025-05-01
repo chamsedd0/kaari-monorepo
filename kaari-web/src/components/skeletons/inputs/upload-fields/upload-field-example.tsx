@@ -75,11 +75,13 @@ const UploadFieldExample: React.FC = () => {
       <h2>File Upload Examples</h2>
       
       <UploadFieldModel 
-        title="Upload Images"
-        placeholder="Drag and drop or click to select images"
-        accept="image/*"
-        multiple={true}
-        onChange={handleImageChange}
+        label="Drag and drop or click to select images"
+        hlabel="Upload Images"
+        onFileSelect={(file) => {
+          const fileList = new DataTransfer();
+          fileList.items.add(file);
+          handleImageChange(fileList.files);
+        }}
       />
       
       {uploadedFiles.length > 0 && (
@@ -97,10 +99,13 @@ const UploadFieldExample: React.FC = () => {
       )}
       
       <UploadFieldModel 
-        title="Upload Document"
-        placeholder="Select a PDF or DOC file"
-        accept=".pdf,.doc,.docx"
-        onChange={handleDocumentChange}
+        label="Select a PDF or DOC file"
+        hlabel="Upload Document"
+        onFileSelect={(file) => {
+          const fileList = new DataTransfer();
+          fileList.items.add(file);
+          handleDocumentChange(fileList.files);
+        }}
       />
       
       {documentFiles.length > 0 && (

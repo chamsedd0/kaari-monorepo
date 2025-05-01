@@ -142,6 +142,7 @@ const HelpPage: React.FC = () => {
         </div>
 
         
+        
       </HelpStyle>
     </>
   );
