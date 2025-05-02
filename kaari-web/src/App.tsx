@@ -395,6 +395,23 @@ function App() {
         } 
       />
       
+      {/* Reservation Status Page Route */}
+      <Route 
+        path="/dashboard/user/reservation-status" 
+        element={
+          isAuthenticated && userIsRegular ? 
+            <ReservationStatusPage /> : 
+            (() => {
+              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                path: '/dashboard/user/reservation-status',
+                redirectTo: '/',
+                isAuthenticated: isAuthenticated
+              });
+              return <Navigate to="/" replace />;
+            })()
+        } 
+      />
+      
       {/* Fallback route for 404 */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

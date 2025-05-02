@@ -375,8 +375,8 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
   const navigate = useNavigate();
   
   const handleViewDetails = () => {
-    // Navigate to property details page
-    navigate(`/dashboard/user/reservation-status?id=${reservationId}&status=${status.toLowerCase()}`);
+    // Navigate to reservation status page
+    navigate(`/dashboard/user/reservation-status?id=${reservationId}`);
   };
   
   // Get the appropriate button text based on status
