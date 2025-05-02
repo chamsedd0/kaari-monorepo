@@ -1,6 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { FaHome, FaCalendarAlt, FaUsers, FaCameraRetro, FaBuilding, FaCog, FaSignOutAlt, FaEdit } from 'react-icons/fa';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { 
+  FaHome, 
+  FaCalendarAlt, 
+  FaUsers, 
+  FaCameraRetro, 
+  FaBuilding, 
+  FaCog, 
+  FaSignOutAlt, 
+  FaEdit, 
+  FaTimesCircle, 
+  FaSearch,
+  FaBan,
+  FaPhotoVideo,
+  FaListAlt,
+  FaMoneyBillAlt
+} from 'react-icons/fa';
+import { 
+  MdDashboard, 
+  MdSettings, 
+  MdGroup, 
+  MdList, 
+  MdMoneyOff,
+  MdCancel,
+  MdPhotoCamera
+} from 'react-icons/md';
 
 import {
   AdminDashboardContainer,
@@ -17,11 +41,16 @@ import {
 } from './styles';
 
 import { useStore } from '../../../backend/store';
-import PhotoshootBookingsPage from './photoshoot-bookings';
+import PhotoshootBookings from './photoshoot-bookings';
+import PhotoshootBookingDetail from './photoshoot-booking-detail';
+import PropertyEditRequests from './property-edit-requests';
+import EditRequests from './edit-requests/page';
+import RefundRequests from './refund-requests/page';
+import CancellationRequests from './cancellation-requests/page';
+import AdminControls from './admin-controls';
 import TeamsPage from './teams';
 import OverviewPage from './overview';
-import AdminControls from './admin-controls';
-import PropertyEditRequestsPage from './property-edit-requests';
+import TestDataGenerator from './test-data-generator';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -63,6 +92,98 @@ const AdminDashboard: React.FC = () => {
     }
   };
   
+  // Check for trailing slash and ensure it's removed from the shown path
+  const renderContent = () => {
+    const path = location.pathname.endsWith('/') 
+      ? location.pathname.slice(0, -1) 
+      : location.pathname;
+    
+    // Extract the section from the path
+    if (path.endsWith('admin')) {
+      return <Navigate to="/dashboard/admin/overview" replace />;
+    } else if (path.endsWith('overview')) {
+      return <OverviewPage />;
+    } else if (path.endsWith('admin-controls')) {
+      return <AdminControls />;
+    } else if (path.endsWith('teams')) {
+      return <TeamsPage />;
+    } else if (path.endsWith('photoshoot-bookings')) {
+      return <PhotoshootBookings />;
+    } else if (path.includes('/photoshoot-bookings/')) {
+      return <PhotoshootBookingDetail />;
+    } else if (path.endsWith('property-edit-requests')) {
+      return <PropertyEditRequests />;
+    } else if (path.endsWith('edit-requests')) {
+      return <EditRequests />;
+    } else if (path.endsWith('refund-requests')) {
+      return <RefundRequests />;
+    } else if (path.endsWith('cancellation-requests')) {
+      return <CancellationRequests />;
+    } else if (path.endsWith('test-data-generator')) {
+      return <TestDataGenerator />;
+    } else {
+      return <div>404 not found</div>;
+    }
+  };
+  
+  // Side navigation items for admin dashboard
+  const navItems = [
+    {
+      label: 'Overview',
+      icon: <MdDashboard />,
+      path: '/dashboard/admin/overview',
+      exact: true,
+    },
+    {
+      label: 'Admin Controls',
+      icon: <MdSettings />,
+      path: '/dashboard/admin/admin-controls',
+      exact: true,
+    },
+    {
+      label: 'Teams',
+      icon: <MdGroup />,
+      path: '/dashboard/admin/teams',
+      exact: true,
+    },
+    {
+      label: 'Photoshoot Bookings',
+      icon: <MdPhotoCamera />,
+      path: '/dashboard/admin/photoshoot-bookings',
+      exact: true,
+    },
+    {
+      label: 'Property Edit Requests',
+      icon: <FaEdit />,
+      path: '/dashboard/admin/property-edit-requests',
+      exact: true,
+    },
+    {
+      label: 'Edit Requests',
+      icon: <FaListAlt />,
+      path: '/dashboard/admin/edit-requests',
+      exact: true,
+    },
+    {
+      label: 'Refund Requests',
+      icon: <FaMoneyBillAlt />,
+      path: '/dashboard/admin/refund-requests',
+      exact: true,
+    },
+    {
+      label: 'Cancellation Requests',
+      icon: <FaBan />,
+      path: '/dashboard/admin/cancellation-requests',
+      exact: true,
+    },
+    {
+      label: 'Test Data Generator',
+      icon: <MdList />,
+      path: '/dashboard/admin/test-data-generator',
+      exact: true,
+    },
+  ];
+  
   return (
     <AdminDashboardContainer>
       <Sidebar>
@@ -74,21 +195,21 @@ const AdminDashboard: React.FC = () => {
           $active={activePage === 'overview'} 
           onClick={() => handleNavigation('overview')}
         >
-          <FaHome /> Overview
+          <MdDashboard /> Overview
         </NavItem>
         
         <NavItem 
           $active={activePage === 'photoshoot-bookings'} 
           onClick={() => handleNavigation('photoshoot-bookings')}
         >
-          <FaCalendarAlt /> Photoshoot Bookings
+          <MdPhotoCamera /> Photoshoot Bookings
         </NavItem>
         
         <NavItem 
           $active={activePage === 'teams'} 
           onClick={() => handleNavigation('teams')}
         >
-          <FaUsers /> Teams
+          <MdGroup /> Teams
         </NavItem>
         
         <NavItem 
@@ -106,10 +227,31 @@ const AdminDashboard: React.FC = () => {
         </NavItem>
         
         <NavItem 
+          $active={activePage === 'refund-requests'} 
+          onClick={() => handleNavigation('refund-requests')}
+        >
+          <FaMoneyBillAlt /> Refund Requests
+        </NavItem>
+        
+        <NavItem 
+          $active={activePage === 'cancellation-requests'} 
+          onClick={() => handleNavigation('cancellation-requests')}
+        >
+          <FaBan /> Cancellation Requests
+        </NavItem>
+        
+        <NavItem 
+          $active={activePage === 'test-data-generator'} 
+          onClick={() => handleNavigation('test-data-generator')}
+        >
+          <MdList /> Test Data Generator
+        </NavItem>
+        
+        <NavItem 
           $active={activePage === 'settings'} 
           onClick={() => handleNavigation('settings')}
         >
-          <FaCog /> Settings
+          <MdSettings /> Settings
         </NavItem>
         
         <div style={{ marginTop: 'auto' }}>
@@ -127,6 +269,8 @@ const AdminDashboard: React.FC = () => {
             {activePage === 'teams' && 'Manage Teams'}
             {activePage === 'properties' && 'Properties'}
             {activePage === 'property-edit-requests' && 'Property Edit Requests'}
+            {activePage === 'refund-requests' && 'Refund Requests'}
+            {activePage === 'cancellation-requests' && 'Cancellation Requests'}
             {activePage === 'settings' && 'Admin Controls'}
           </PageTitle>
           
@@ -153,14 +297,16 @@ const AdminDashboard: React.FC = () => {
         </Header>
         
         <Routes>
-          <Route path="/" element={<OverviewPage />} />
-          <Route path="/overview" element={<OverviewPage />} />
-          <Route path="/photoshoot-bookings/*" element={<PhotoshootBookingsPage />} />
-          <Route path="/teams/*" element={<TeamsPage />} />
-          <Route path="/property-edit-requests" element={<PropertyEditRequestsPage />} />
-          <Route path="/settings" element={<AdminControls />} />
+          <Route path="/" element={renderContent()} />
+          <Route path="/overview" element={renderContent()} />
+          <Route path="/photoshoot-bookings/*" element={renderContent()} />
+          <Route path="/teams/*" element={renderContent()} />
+          <Route path="/property-edit-requests" element={renderContent()} />
+          <Route path="/refund-requests" element={renderContent()} />
+          <Route path="/cancellation-requests" element={renderContent()} />
+          <Route path="/settings" element={renderContent()} />
           {/* Additional routes to be implemented */}
-          <Route path="*" element={<OverviewPage />} />
+          <Route path="*" element={renderContent()} />
         </Routes>
       </MainContent>
     </AdminDashboardContainer>

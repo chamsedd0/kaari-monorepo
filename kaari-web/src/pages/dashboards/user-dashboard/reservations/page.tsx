@@ -266,7 +266,7 @@ const EmptyLatestRequests = styled.div`
   padding: 3rem;
   width: 100%;
   min-height: 330px;
-      border: ${Theme.borders.primary};
+  border: ${Theme.borders.primary};
 
   
   img {
@@ -286,6 +286,22 @@ const EmptyLatestRequests = styled.div`
     color: ${Theme.colors.gray2};
     text-align: center;
     max-width: 400px;
+    margin-bottom: 1.5rem;
+  }
+  
+  button {
+    background-color: ${Theme.colors.secondary};
+    color: white;
+    border: none;
+    border-radius: ${Theme.borders.radius.md};
+    padding: 0.75rem 1.5rem;
+    font: ${Theme.typography.fonts.smallB};
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background-color: ${Theme.colors.primary};
+    }
   }
 `;
 
@@ -426,7 +442,7 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
     }
   };
   
-  // Check if the move-in date has arrived
+  // Check if the move-in date has arrived (today or has passed)
   const isMoveInDateReached = () => {
     if (!scheduledDate) return false;
     
@@ -445,7 +461,16 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
       }
       
       const now = new Date();
-      return moveInDate.getTime() <= now.getTime();
+      
+      // Check if it's the same day (today) or has already passed
+      return (
+        // Compare year, month, and day to check if it's today
+        (moveInDate.getFullYear() === now.getFullYear() &&
+        moveInDate.getMonth() === now.getMonth() &&
+        moveInDate.getDate() === now.getDate()) ||
+        // Or check if it's in the past
+        moveInDate.getTime() < now.setHours(0, 0, 0, 0)
+      );
     } catch (error) {
       console.error('Error checking move-in date:', error, scheduledDate);
       return false;
@@ -1308,7 +1333,16 @@ const ReservationsPage: React.FC = () => {
                 }
                 
                 const now = new Date();
-                return moveInDate.getTime() <= now.getTime();
+                
+                // Check if it's the same day (today) or has already passed
+                return (
+                  // Compare year, month, and day to check if it's today
+                  (moveInDate.getFullYear() === now.getFullYear() &&
+                  moveInDate.getMonth() === now.getMonth() &&
+                  moveInDate.getDate() === now.getDate()) ||
+                  // Or check if it's in the past
+                  moveInDate.getTime() < now.setHours(0, 0, 0, 0)
+                );
               } catch (error) {
                 console.error('Error checking move-in date:', error, scheduledDate);
                 return false;
@@ -1345,6 +1379,7 @@ const ReservationsPage: React.FC = () => {
           <img src={emptyBoxSvg} alt="No latest requests" />
           <h3>No Latest Requests</h3>
           <p>You don't have any active reservation requests. Start browsing properties to make a reservation!</p>
+          <button onClick={() => navigate('/properties')}>Browse Properties</button>
         </EmptyLatestRequests>
       )}
             
