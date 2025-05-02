@@ -3,7 +3,7 @@ import { HeadlineTextStyle } from "../../styles/headline-text-style";
 import { Theme } from "../../../theme/theme";
 import styled from "styled-components";
 import infoIcon from "../icons/Icon_Info.svg";
-import xIcon from "../icons/Cross-Icon-W.svg";
+import xIcon from "../icons/Cross-Icon-w.svg";
 
 const InfoHeadlineTextStyle = styled(HeadlineTextStyle)`
   background-color: ${Theme.colors.blue};
