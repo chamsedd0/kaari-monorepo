@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
 import { getClientReservations, cancelReservation, completeReservation, requestRefund } from '../../../../backend/server-actions/ClientServerActions';
@@ -9,6 +9,7 @@ import { CardBaseModelStyleLatestRequest } from '../../../../components/styles/c
 import ProgressBanner from '../../../../components/skeletons/banners/status/banner-base-model-progress';
 import { useNavigate } from 'react-router-dom';
 import emptyBoxSvg from '../../../../assets/images/emptybox.svg';
+import SpinningLoading from '../../../../components/skeletons/icons/SpinningLoading'
 
 const ReservationsContainer = styled.div`
   padding: 2rem;
@@ -260,6 +261,7 @@ const EmptyLatestRequests = styled.div`
   align-items: center;
   justify-content: center;
   background-color: white;
+  border: ${Theme.borders.primary};
   border-radius: ${Theme.borders.radius.lg};
   padding: 3rem;
   width: 100%;
@@ -568,8 +570,9 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
 
       .spinner {
         animation: spin 1.5s linear infinite;
-        font-size: 24px;
-        color: white;
+        position: unset !important;
+
+        filter: brightness(0) invert(1); /* Makes the spinner white */
       }
 
       @keyframes spin {
@@ -755,12 +758,7 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
               <div className="label">
                 {status === 'Refund Processing' ? 'Refund Being Processed' : 'Cancellation Under Review'}
               </div>
-              <div className="spinner">
-                <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity=".25" fill="currentColor"/>
-                  <path d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z" fill="currentColor"/>
-                </svg>
-              </div>
+                <SpinningLoading width="25px" height="25px" className="spinner" />
             </div>
           </CustomTimerContainer>
         );
@@ -780,7 +778,7 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
           <CustomTimerContainer>
             <div className="result-container">
               <div className="label">
-                <span className="error-icon">✗</span> Refund Failed
+                <span className="error-icon"></span> Refund Failed
               </div>
               <div className="message">Please contact support</div>
             </div>
@@ -944,36 +942,52 @@ const CountdownTimer = ({ updatedAt }: CountdownTimerProps) => {
 };
 
 const ReservationsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [reservations, setReservations] = useState<Reservation[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [showRefundModal, setShowRefundModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<string | null>(null);
-  const [cancellingReservation, setCancellingReservation] = useState(false);
+  const [cancellingReservation, setCancellingReservation] = useState<string | null>(null);
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
-  const [processingMoveIn, setProcessingMoveIn] = useState<string | null>(null);
-  const [processingRefund, setProcessingRefund] = useState<string | null>(null);
-    
-    useEffect(() => {
+  
+  // Group reservations into latest and past
+  const latestReservations = useMemo(() => {
+    return reservations.filter(res => {
+      const status = res.reservation.status;
+      return status === 'pending' || status === 'accepted' || status === 'paid' || 
+             status === 'movedIn' || status === 'refundProcessing' ||
+             status === 'cancellationUnderReview';
+    });
+  }, [reservations]);
+  
+  const otherReservations = useMemo(() => {
+    return reservations.filter(res => {
+      const status = res.reservation.status;
+      return status === 'rejected' || status === 'cancelled' || 
+             status === 'refundCompleted' || status === 'refundFailed';
+    });
+  }, [reservations]);
+
+  useEffect(() => {
     loadReservations();
   }, []);
   
-        const loadReservations = async () => {
+  const loadReservations = async () => {
     try {
-            setLoading(true);
-                const data = await getClientReservations();
-                setReservations(data);
+      setLoading(true);
+      const data = await getClientReservations();
+      setReservations(data);
     } catch (err: any) {
-                console.error('Error loading reservations:', err);
+      console.error('Error loading reservations:', err);
       setError(err.message || 'Failed to load reservations');
-            } finally {
-                setLoading(false);
-            }
-        };
-        
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const handleConfirmPayment = async () => {
     if (!selectedReservation) return;
     
@@ -1047,13 +1061,13 @@ const ReservationsPage: React.FC = () => {
     if (expired) return 'Time expired';
     
     return `${hours}h ${minutes}m remaining`;
-        };
-        
+  };
+  
   const handleCancelReservation = async () => {
     if (!selectedReservation) return;
     
     try {
-      setCancellingReservation(true);
+      setCancellingReservation(selectedReservation);
       await cancelReservation(selectedReservation);
       await loadReservations();
       setShowCancelModal(false);
@@ -1061,7 +1075,7 @@ const ReservationsPage: React.FC = () => {
       console.error('Error cancelling reservation:', err);
       setError(err.message || 'Failed to cancel reservation');
     } finally {
-      setCancellingReservation(false);
+      setCancellingReservation(null);
     }
   };
   
@@ -1153,24 +1167,6 @@ const ReservationsPage: React.FC = () => {
     ? reservations
     : reservations.filter(res => res.reservation.status === statusFilter);
   
-  // Include 'completed' status for paid reservations
-  const latestReservations = reservations
-    .filter(res => res.reservation.status !== 'rejected' && res.reservation.status !== 'cancelled')
-    .sort((a, b) => {
-      const dateA = new Date(a.reservation.createdAt).getTime();
-      const dateB = new Date(b.reservation.createdAt).getTime();
-      return dateB - dateA;
-    })
-    .slice(0, 2);
-  
-  const otherReservations = reservations
-    .filter(res => !latestReservations.some(latest => latest.reservation.id === res.reservation.id))
-    .sort((a, b) => {
-      const dateA = new Date(a.reservation.createdAt).getTime();
-      const dateB = new Date(b.reservation.createdAt).getTime();
-      return dateB - dateA;
-    });
-  
   const getTimeLeftForMoveIn = (scheduledDate: Date | FirestoreTimestamp | string | undefined) => {
     if (!scheduledDate) return null;
     
@@ -1219,50 +1215,17 @@ const ReservationsPage: React.FC = () => {
   // Handle move-in action
   const handleMoveIn = async (reservationId: string) => {
     try {
-      setProcessingMoveIn(reservationId);
-      
-      // Call the completeReservation function to mark the reservation as completed
       await completeReservation(reservationId);
       await loadReservations();
     } catch (err: any) {
       console.error('Error marking move-in:', err);
       setError(err.message || 'Failed to process move-in');
-    } finally {
-      setProcessingMoveIn(null);
     }
   };
   
-  // Handle refund request
-  const handleRequestRefund = async () => {
-    if (!selectedReservation) return;
-    
-    try {
-      setProcessingRefund(selectedReservation);
-      
-      // Call the requestRefund function to process the refund
-      await requestRefund(selectedReservation);
-      
-      alert("Your refund request has been submitted and is now being processed.");
-      
-      await loadReservations();
-      setShowRefundModal(false);
-    } catch (err: any) {
-      console.error('Error requesting refund:', err);
-      setError(err.message || 'Failed to request refund');
-    } finally {
-      setProcessingRefund(null);
-      setSelectedReservation(null);
-    }
-  };
-  
+  // Handle refund request navigation
   const openRefundModal = (reservationId: string) => {
-    setSelectedReservation(reservationId);
-    setShowRefundModal(true);
-  };
-  
-  const closeRefundModal = () => {
-    setSelectedReservation(null);
-    setShowRefundModal(false);
+    navigate(`/dashboard/user/refund-request?reservationId=${reservationId}`);
   };
   
   // Helper function to map status to CSS class
@@ -1376,7 +1339,7 @@ const ReservationsPage: React.FC = () => {
               />
             );
           })}
-                  </div>
+        </div>
       ) : (
         <EmptyLatestRequests>
           <img src={emptyBoxSvg} alt="No latest requests" />
@@ -1492,44 +1455,16 @@ const ReservationsPage: React.FC = () => {
               <button 
                 className="modal-button cancel"
                 onClick={closeCancelModal}
-                disabled={cancellingReservation}
+                disabled={cancellingReservation !== null}
               >
                 Keep Request
               </button>
               <button 
                 className="modal-button confirm"
                 onClick={handleCancelReservation}
-                disabled={cancellingReservation}
+                disabled={cancellingReservation !== null}
               >
                 {cancellingReservation ? 'Cancelling...' : 'Yes, Cancel'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showRefundModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 className="modal-title">Request Refund</h2>
-            <p className="modal-message">
-              Are you sure you want to request a refund? If approved, your deposit and first month's rent will be refunded.
-              This action cannot be undone once submitted.
-            </p>
-            <div className="modal-actions">
-              <button 
-                className="modal-button cancel"
-                onClick={closeRefundModal}
-                disabled={processingRefund !== null}
-              >
-                Cancel
-              </button>
-              <button 
-                className="modal-button confirm"
-                onClick={handleRequestRefund}
-                disabled={processingRefund !== null}
-              >
-                {processingRefund ? 'Processing...' : 'Request Refund'}
               </button>
             </div>
           </div>

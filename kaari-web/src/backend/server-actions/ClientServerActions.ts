@@ -136,7 +136,18 @@ export async function completeReservation(reservationId: string): Promise<void> 
 }
 
 // Function to request a refund for a reservation
-export async function requestRefund(reservationId: string): Promise<void> {
+export async function requestRefund(
+  reservationId: string,
+  data?: {
+    reasons: string[];
+    details: string;
+    proofUrls: string[];
+    originalAmount: number;
+    serviceFee: number;
+    refundAmount: number;
+    reasonsText: string;
+  }
+): Promise<void> {
   try {
     // Check if user is authenticated
     const currentUser = await getCurrentUserProfile();
@@ -177,6 +188,26 @@ export async function requestRefund(reservationId: string): Promise<void> {
       status: 'refundProcessing',
       updatedAt: new Date()
     });
+    
+    // If additional data is provided, create a refund request record
+    if (data) {
+      await createDocument(REFUND_REQUESTS_COLLECTION, {
+        reservationId,
+        userId: currentUser.id,
+        reasons: data.reasons,
+        reasonsText: data.reasonsText,
+        details: data.details,
+        proofUrls: data.proofUrls,
+        requestedRefundAmount: data.refundAmount,
+        originalAmount: data.originalAmount,
+        serviceFee: data.serviceFee,
+        propertyId: reservation.propertyId,
+        status: 'pending',
+        adminReviewed: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    }
     
     return;
   } catch (error) {

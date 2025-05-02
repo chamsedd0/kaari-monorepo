@@ -14,6 +14,7 @@ import ThankYouPage from './pages/photoshoot-booking/thank-you';
 import HelpPage from './pages/help/page';
 import ReservationStatusPage from './pages/dashboards/user-dashboard/reservation-status/page';
 import CancellationRequestPage from './pages/dashboards/user-dashboard/cancellation-request/page';
+import RefundRequestPage from './pages/dashboards/user-dashboard/refund-request/page';
 import { useStore } from './backend/store';
 import { useMemo, useEffect, useState } from 'react';
 import MainLayout from './layouts/MainLayout';
@@ -369,6 +370,23 @@ function App() {
             (() => {
               eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
                 path: '/dashboard/user/cancellation-request',
+                redirectTo: '/',
+                isAuthenticated: isAuthenticated
+              });
+              return <Navigate to="/" replace />;
+            })()
+        } 
+      />
+      
+      {/* Refund Request Page Route */}
+      <Route 
+        path="/dashboard/user/refund-request" 
+        element={
+          isAuthenticated && userIsRegular ? 
+            <RefundRequestPage /> : 
+            (() => {
+              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                path: '/dashboard/user/refund-request',
                 redirectTo: '/',
                 isAuthenticated: isAuthenticated
               });
