@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { PayoutMethodStyle } from './styles';
 import Mastercard from '../../../../../../components/skeletons/cards/mastercard';
 import { PurpleButtonMB48 } from '../../../../../../components/skeletons/buttons/purple_MB48';
-import { CompletedPaymentCard } from '../../../../../../components/skeletons/constructed/status-cards/completed-payment-card';
+import { CompletedPaymentCard } from '../../../../../../components/skeletons/cards/completed-payment-card';
 import { useTranslation } from 'react-i18next';
 
 const PayoutMethodPage: React.FC = () => {

@@ -4,7 +4,7 @@ import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purpl
 import SecureIcon from '../../../../components/skeletons/icons/secure-payments.svg';
 import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-help-card';
 import Mastercard from '../../../../components/skeletons/cards/mastercard';
-import { CompletedPaymentCard } from '../../../../components/skeletons/constructed/status-cards/completed-payment-card';
+import { CompletedPaymentCard } from '../../../../components/skeletons/cards/completed-payment-card';
 const PaymentsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'payments' | 'completed'>('payments');
 
