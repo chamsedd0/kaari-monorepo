@@ -210,10 +210,10 @@ const RefundProcessedCard: React.FC<{ onDownload: () => void }> = ({ onDownload 
 const MovedInStatusCard: React.FC<{ 
   onRequestRefund: () => void, 
   movedInAt: Date | FirestoreTimestamp | string,
-  scheduledDate: Date | FirestoreTimestamp | string | undefined,
-  refundPeriodDays: number, // Number of days the refund period lasts
-  isExpiredForTesting: boolean
-}> = ({ onRequestRefund, movedInAt, scheduledDate, refundPeriodDays = 1, isExpiredForTesting }) => {
+  scheduledDate?: Date | FirestoreTimestamp | string | undefined,
+  refundPeriodDays?: number, // Number of days the refund period lasts
+  isExpiredForTesting?: boolean
+}> = ({ onRequestRefund, movedInAt, scheduledDate, refundPeriodDays = 1, isExpiredForTesting = false }) => {
   const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number, seconds: number }>({
     days: 0,
     hours: 0,
@@ -229,18 +229,14 @@ const MovedInStatusCard: React.FC<{
       return;
     }
     
-    // Convert scheduledDate to Date object - this is the move-in date
+    // Convert movedInAt to Date object - this is when the user actually moved in
     const startDate = new Date(
-      typeof scheduledDate === 'object' && 'seconds' in scheduledDate 
-        ? scheduledDate.seconds * 1000 
-        : scheduledDate || (
-            typeof movedInAt === 'object' && 'seconds' in movedInAt 
-              ? movedInAt.seconds * 1000 
-              : movedInAt || Date.now()
-          )
+      typeof movedInAt === 'object' && 'seconds' in movedInAt 
+        ? movedInAt.seconds * 1000 
+        : movedInAt || Date.now()
     );
     
-    // Calculate the refund deadline (24 hours from scheduled date)
+    // Calculate the refund deadline (24 hours from actual move-in date)
     const refundDeadline = new Date(startDate);
     refundDeadline.setHours(refundDeadline.getHours() + 24);
     
@@ -277,7 +273,7 @@ const MovedInStatusCard: React.FC<{
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [scheduledDate, isExpiredForTesting]);
+  }, [movedInAt, isExpiredForTesting]);
   
   // Format the time with leading zeros
   const formatTime = (value: number) => {

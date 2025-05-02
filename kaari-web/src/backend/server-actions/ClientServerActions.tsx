@@ -3,8 +3,11 @@
 import { User, Request, Property } from '../entities';
 import { 
   getDocumentById, 
-  createDocument, 
-  updateDocument
+  getDocumentsByField,
+  queryDocuments,
+  updateDocument,
+  deleteDocument,
+  createDocument
 } from '../firebase/firestore';
 import { getCurrentUserProfile } from '../firebase/auth';
 import { getRequestsByUser } from './RequestServerActions';
@@ -13,6 +16,7 @@ import { getRequestsByUser } from './RequestServerActions';
 const REQUESTS_COLLECTION = 'requests';
 const USERS_COLLECTION = 'users';
 const PROPERTIES_COLLECTION = 'properties';
+const SAVED_PROPERTIES_COLLECTION = 'savedProperties';
 
 /**
  * Get all reservations (viewing requests) for the current client user
@@ -33,13 +37,13 @@ export async function getClientReservations(): Promise<{
       throw new Error('Only clients can access their reservations');
     }
     
-    // Get all requests by this user that are of type 'viewing'
+    // Get all requests by this user that are of type 'rent'
     const requests = await getRequestsByUser(currentUser.id);
-    const viewingRequests = requests.filter(req => req.requestType === 'viewing');
+    const rentRequests = requests.filter(req => req.requestType === 'rent');
     
     // For each request, get associated property and advertiser info
     const reservationsWithDetails = await Promise.all(
-      viewingRequests.map(async (request) => {
+      rentRequests.map(async (request) => {
         let property = null;
         let advertiser = null;
         
@@ -92,7 +96,7 @@ export async function createReservation(
     const requestData = {
       userId: currentUser.id,
       propertyId,
-      requestType: 'viewing' as const,
+      requestType: 'rent' as const,
       message,
       status: 'pending' as const,
       scheduledDate: scheduledDate || new Date(),
@@ -147,14 +151,23 @@ export async function cancelReservation(reservationId: string): Promise<boolean>
       throw new Error('Not authorized to cancel this reservation');
     }
     
-    // Update the reservation status to 'rejected'
-    await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
-      status: 'rejected',
-      updatedAt: new Date()
-    });
+    // Update the reservation status to 'cancelled' for pending reservations
+    // For accepted reservations, set to 'cancellationUnderReview'
+    if (reservation.status === 'pending') {
+      await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
+        status: 'cancelled',
+        updatedAt: new Date()
+      });
+    } else {
+      await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
+        status: 'cancellationUnderReview',
+        updatedAt: new Date()
+      });
+    }
     
     // Change property status back to 'available' when reservation is cancelled
-    if (reservation.propertyId) {
+    // Only do this for 'pending' reservations - for others, admin needs to approve the cancellation
+    if (reservation.status === 'pending' && reservation.propertyId) {
       await updateDocument<Property>(PROPERTIES_COLLECTION, reservation.propertyId, {
         status: 'available',
         updatedAt: new Date()
@@ -176,6 +189,11 @@ export async function getClientStatistics(): Promise<{
   pendingReservations: number;
   approvedReservations: number;
   rejectedReservations: number;
+  paidReservations: number;
+  movedInReservations: number;
+  refundedReservations: number;
+  cancelledReservations: number;
+  underReviewReservations: number;
   savedPropertiesCount: number;
 }> {
   try {
@@ -189,28 +207,42 @@ export async function getClientStatistics(): Promise<{
       throw new Error('Only clients can access their dashboard statistics');
     }
     
-    // Get all viewing requests by this user
+    // Get all rent requests by this user
     const requests = await getRequestsByUser(currentUser.id);
-    const viewingRequests = requests.filter(req => req.requestType === 'viewing');
+    const rentRequests = requests.filter(req => req.requestType === 'rent');
     
     // Calculate statistics
-    const pendingReservations = viewingRequests.filter(req => req.status === 'pending').length;
-    const approvedReservations = viewingRequests.filter(req => req.status === 'accepted').length;
-    const rejectedReservations = viewingRequests.filter(req => req.status === 'rejected').length;
+    const pendingReservations = rentRequests.filter(req => req.status === 'pending').length;
+    const approvedReservations = rentRequests.filter(req => req.status === 'accepted').length;
+    const rejectedReservations = rentRequests.filter(req => req.status === 'rejected').length;
+    const paidReservations = rentRequests.filter(req => req.status === 'paid').length;
+    const movedInReservations = rentRequests.filter(req => req.status === 'movedIn').length;
+    const refundedReservations = rentRequests.filter(req => 
+      req.status === 'refundCompleted' || 
+      req.status === 'refundProcessing' || 
+      req.status === 'refundFailed'
+    ).length;
+    const cancelledReservations = rentRequests.filter(req => req.status === 'cancelled').length;
+    const underReviewReservations = rentRequests.filter(req => req.status === 'cancellationUnderReview').length;
     
-    // Get saved properties count (stored in user document)
-    const savedPropertiesCount = currentUser.properties?.length || 0;
+    // Get saved properties count
+    const savedProperties = await getSavedProperties();
     
     return {
-      reservationsCount: viewingRequests.length,
+      reservationsCount: rentRequests.length,
       pendingReservations,
       approvedReservations,
       rejectedReservations,
-      savedPropertiesCount
+      paidReservations,
+      movedInReservations,
+      refundedReservations,
+      cancelledReservations,
+      underReviewReservations,
+      savedPropertiesCount: savedProperties.length
     };
   } catch (error) {
-    console.error('Error getting client statistics:', error);
-    throw new Error('Failed to get client statistics');
+    console.error('Error fetching client statistics:', error);
+    throw new Error('Failed to fetch client statistics');
   }
 }
 
@@ -257,9 +289,9 @@ export async function processPayment(reservationId: string): Promise<boolean> {
     
     // For this implementation, we'll simulate a successful payment
     
-    // Update the reservation status to 'completed'
+    // Update the reservation status to "paid"
     await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
-      status: 'completed',
+      status: 'paid',
       updatedAt: new Date()
     });
     
@@ -268,4 +300,84 @@ export async function processPayment(reservationId: string): Promise<boolean> {
     console.error('Error processing payment:', error);
     throw new Error('Failed to process payment');
   }
+}
+
+/**
+ * Process a cancellation request (admin/advertiser only)
+ */
+export async function processCancellation(
+  reservationId: string, 
+  approved: boolean, 
+  adminNotes?: string
+): Promise<boolean> {
+  try {
+    // Check if user is authenticated as admin or advertiser
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    if (currentUser.role !== 'admin' && currentUser.role !== 'advertiser') {
+      throw new Error('Only admins and advertisers can process cancellation requests');
+    }
+    
+    // Get the reservation
+    const reservation = await getDocumentById<Request>(REQUESTS_COLLECTION, reservationId);
+    if (!reservation) {
+      throw new Error('Reservation not found');
+    }
+    
+    // Verify that the reservation is in "cancellationUnderReview" status
+    if (reservation.status !== 'cancellationUnderReview') {
+      throw new Error('Cannot process cancellation for a reservation that is not under review');
+    }
+    
+    // If approved, cancel the reservation and set status to cancelled
+    if (approved) {
+      // Update the reservation status
+      await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
+        status: 'cancelled',
+        updatedAt: new Date(),
+        message: reservation.message + (adminNotes ? `\n\nAdmin Notes: ${adminNotes}` : '')
+      });
+      
+      // Change property status back to 'available'
+      if (reservation.propertyId) {
+        await updateDocument<Property>(PROPERTIES_COLLECTION, reservation.propertyId, {
+          status: 'available',
+          updatedAt: new Date()
+        });
+      }
+    } else {
+      // If rejected, revert to previous status
+      const previousStatus = reservation.paymentMethodId ? 'paid' : 'accepted'; // Determine previous status
+      
+      // Update the reservation status
+      await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
+        status: previousStatus,
+        updatedAt: new Date(),
+        message: reservation.message + (adminNotes ? `\n\nAdmin Notes: ${adminNotes}` : '')
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error processing cancellation:', error);
+    throw new Error('Failed to process cancellation');
+  }
+}
+
+// Helper function to get saved properties
+async function getSavedProperties(): Promise<any[]> {
+  const currentUser = await getCurrentUserProfile();
+  if (!currentUser) {
+    throw new Error('User not authenticated');
+  }
+  
+  // Query saved properties where userId matches the current user's ID
+  const savedProperties = await queryDocuments(SAVED_PROPERTIES_COLLECTION, [
+    { field: 'userId', operator: '==', value: currentUser.id }
+  ]);
+  
+  return savedProperties;
 } 

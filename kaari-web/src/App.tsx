@@ -13,6 +13,7 @@ import PhotoshootBookingPage from './pages/photoshoot-booking/page';
 import ThankYouPage from './pages/photoshoot-booking/thank-you';
 import HelpPage from './pages/help/page';
 import ReservationStatusPage from './pages/dashboards/user-dashboard/reservation-status/page';
+import CancellationRequestPage from './pages/dashboards/user-dashboard/cancellation-request/page';
 import { useStore } from './backend/store';
 import { useMemo, useEffect, useState } from 'react';
 import MainLayout from './layouts/MainLayout';
@@ -353,6 +354,23 @@ function App() {
                 path: '/reservation-status',
                 redirectTo: '/',
                 isAuthenticated: false
+              });
+              return <Navigate to="/" replace />;
+            })()
+        } 
+      />
+      
+      {/* Cancellation Request Page Route */}
+      <Route 
+        path="/dashboard/user/cancellation-request" 
+        element={
+          isAuthenticated && userIsRegular ? 
+            <CancellationRequestPage /> : 
+            (() => {
+              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                path: '/dashboard/user/cancellation-request',
+                redirectTo: '/',
+                isAuthenticated: isAuthenticated
               });
               return <Navigate to="/" replace />;
             })()

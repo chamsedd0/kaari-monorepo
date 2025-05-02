@@ -525,8 +525,20 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ userData, propert
     
     setIsSubmitting(true);
     
+    // Try to get the existing rental data to preserve scheduledDate if set
+    let existingData = {};
+    try {
+      const savedData = localStorage.getItem('rentalApplicationData');
+      if (savedData) {
+        existingData = JSON.parse(savedData);
+      }
+    } catch (error) {
+      console.error('Error parsing saved rental data:', error);
+    }
+    
     // Combine personal and stay info into a single object (excluding files which can't be serialized)
     const rentalData = {
+      ...existingData, // Keep existing data, especially scheduledDate
       firstName: personalInfo.firstName,
       lastName: personalInfo.lastName,
       fullName: `${personalInfo.firstName} ${personalInfo.lastName}`.trim(),
@@ -545,7 +557,8 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ userData, propert
       hasSmoking: stayInfo.hasSmoking,
       aboutMe: stayInfo.aboutMe,
       leavingDate: stayInfo.leavingDate,
-      movingDate: new Date().toISOString().split('T')[0] // Current date as default
+      // Only set scheduledDate if it's not already set in existingData
+      scheduledDate: existingData.scheduledDate || new Date().toISOString().split('T')[0]
     };
     
     // Save combined data to localStorage

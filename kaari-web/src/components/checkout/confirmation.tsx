@@ -170,7 +170,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
         dateOfBirth: rentalData.dateOfBirth,
         
         // Stay information
-        movingDate: rentalData.movingDate ? new Date(rentalData.movingDate) : new Date(),
+        scheduledDate: rentalData.scheduledDate ? new Date(rentalData.scheduledDate) : new Date(),
         leavingDate: rentalData.leavingDate ? new Date(rentalData.leavingDate) : null,
         numPeople: rentalData.numPeople,
         roommates: rentalData.roommates,
@@ -263,7 +263,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
             
             <div className="detail-row">
               <span className="detail-label">Move-in Date</span>
-              <span className="detail-value">{formatDate(rentalData.movingDate)}</span>
+              <span className="detail-value">{formatDate(rentalData.scheduledDate)}</span>
             </div>
             
             <div className="detail-row">
@@ -364,7 +364,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
         <div className="confirmation-summary">
           <BookingSummary
             propertyData={propertyData}
-            moveInDate={rentalData.movingDate}
+            moveInDate={rentalData.scheduledDate}
             lengthOfStay={rentalData.leavingDate ? `Until ${formatDate(rentalData.leavingDate)}` : "Indefinite"}
             price={pricePerMonth}
             serviceFee={serviceFee}

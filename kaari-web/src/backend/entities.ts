@@ -66,13 +66,13 @@ export interface Request {
   id: string;
   userId: string; // Reference to the User ID who made the request
   propertyId?: string; // Reference to the Property ID if related to a specific property
-  requestType: 'viewing' | 'information' | 'offer' | 'general';
+  requestType: 'rent' | 'information' | 'offer' | 'general';
   message: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
+  status: 'pending' | 'accepted' | 'rejected' | 'paid' | 'movedIn' | 'cancelled' | 'refundProcessing' | 'refundCompleted' | 'refundFailed' | 'cancellationUnderReview';
   offerAmount?: number; // In case this is an offer
   createdAt: Date;
   updatedAt: Date;
-  scheduledDate?: Date; // For viewings
+  scheduledDate?: Date; // For move-in date
   paymentMethodId?: string; // ID of the payment method used
   movedIn?: boolean; // Whether the client has moved in
   movedInAt?: Date; // When the client moved in, used for refund eligibility
@@ -85,7 +85,6 @@ export interface Request {
   dateOfBirth?: Date | null;
   
   // Stay information
-  movingDate?: Date;
   leavingDate?: Date | null;
   numPeople?: string;
   roommates?: string;

@@ -220,6 +220,14 @@ interface PropertyRequestCardProps {
   const handleSendRequest = () => {
     if (!date) return;
     
+    // Store the selected date in localStorage immediately
+    const rentalData = {
+      scheduledDate: date,
+      visitDate: '',
+      message: ''
+    };
+    localStorage.setItem('rentalApplicationData', JSON.stringify(rentalData));
+    
     console.log(`Navigating to checkout with propertyId=${propertyId} and moveInDate=${date}`);
     // Navigate to the new checkout page with propertyId as a query parameter
     navigate(`/checkout?propertyId=${propertyId}&moveInDate=${date}`);

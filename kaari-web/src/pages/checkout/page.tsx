@@ -121,12 +121,28 @@ const CheckoutPage: React.FC = () => {
         const data = await initiateCheckout(propertyId);
         setCheckoutData(data);
         
+        // Ensure the move-in date is in localStorage
         if (moveInDate) {
-          const rentalData = {
-            movingDate: moveInDate,
+          const savedData = localStorage.getItem('rentalApplicationData');
+          let rentalData = {
+            scheduledDate: moveInDate,
             visitDate: '',
             message: ''
           };
+          
+          // If we have existing data, merge with it
+          if (savedData) {
+            try {
+              const parsedData = JSON.parse(savedData);
+              rentalData = {
+                ...parsedData,
+                scheduledDate: moveInDate // Ensure the moveInDate takes precedence
+              };
+            } catch (err) {
+              console.error('Error parsing existing rental data:', err);
+            }
+          }
+          
           localStorage.setItem('rentalApplicationData', JSON.stringify(rentalData));
         }
       } catch (err) {

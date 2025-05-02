@@ -202,7 +202,7 @@ export async function createCheckoutReservation(data: {
       phoneNumber = currentUser.phoneNumber || '',
       gender = currentUser.gender || '',
       dateOfBirth = currentUser.dateOfBirth ? new Date(currentUser.dateOfBirth) : null,
-      movingDate = new Date(),
+      scheduledDate = new Date(), // Use this instead of movingDate
       leavingDate = null,
       numPeople = '1',
       roommates = '',
@@ -221,9 +221,9 @@ export async function createCheckoutReservation(data: {
     const requestData = {
       userId: currentUser.id,
       propertyId: data.propertyId,
-      requestType: 'viewing' as const,
+      requestType: 'rent' as const,
       status: 'pending' as const,
-      scheduledDate: movingDate, 
+      scheduledDate, // This is the move-in date
       paymentMethodId: data.paymentMethodId,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -236,7 +236,6 @@ export async function createCheckoutReservation(data: {
       dateOfBirth,
       
       // Stay information
-      movingDate,
       leavingDate,
       numPeople,
       roommates,
@@ -311,9 +310,9 @@ export async function processPayment(reservationId: string): Promise<boolean> {
     
     // For this implementation, we'll simulate a successful payment
     
-    // Update the reservation status to "completed"
+    // Update the reservation status to "paid"
     await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
-      status: 'completed',
+      status: 'paid',
       updatedAt: new Date()
     });
     

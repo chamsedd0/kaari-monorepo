@@ -503,10 +503,10 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
             </SectionTitle>
             <InfoItem>
               <div className="label">
-                <FaCalendarAlt /> Moving Date
+                <FaCalendarAlt /> Move-in Date
               </div>
               <div className="value">
-                {formatDate(req.movingDate) || <span className="empty">Not specified</span>}
+                {formatDate(req.scheduledDate) || <span className="empty">Not specified</span>}
               </div>
             </InfoItem>
             <InfoItem>

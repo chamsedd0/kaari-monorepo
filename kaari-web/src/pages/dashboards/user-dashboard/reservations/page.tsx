@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-import { getClientReservations, cancelReservation, completeReservation } from '../../../../backend/server-actions/ClientServerActions';
+import { getClientReservations, cancelReservation, completeReservation, requestRefund } from '../../../../backend/server-actions/ClientServerActions';
 import { processPayment } from '../../../../backend/server-actions/CheckoutServerActions';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import { BpurpleButtonMB48 } from '../../../../components/skeletons/buttons/border_purple_MB48';
@@ -291,7 +291,7 @@ interface Reservation {
   reservation: {
     id: string;
     requestType: string;
-    status: 'pending' | 'accepted' | 'rejected' | 'completed' | 'cancelled';
+    status: 'pending' | 'accepted' | 'rejected' | 'paid' | 'movedIn' | 'cancelled' | 'refundProcessing' | 'refundCompleted' | 'refundFailed' | 'cancellationUnderReview';
     createdAt: Date;
     updatedAt: Date;
     scheduledDate?: Date;
@@ -377,6 +377,115 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
     navigate(`/dashboard/user/reservation-status?id=${reservationId}&status=${status.toLowerCase()}`);
   };
   
+  // Get the appropriate button text based on status
+  const getButtonText = () => {
+    switch (status) {
+      case 'Pending':
+        return 'Cancel Reservation';
+      case 'Approved':
+        return 'Confirm Payment';
+      case 'Paid':
+        // Show "Cancel Reservation" if move-in date hasn't arrived, otherwise "I Moved In"
+        return isMoveInDateReached() ? 'I Moved In' : 'Cancel Reservation';
+      case 'MovedIn':
+        return 'Request Refund';
+      case 'Refund Processing':
+        return 'Processing...';
+      case 'Refund Completed':
+        return 'Completed';
+      case 'Refund Failed':
+        return 'No Refund Available';
+      case 'Cancellation Under Review':
+        return 'Under Review';
+      case 'Cancelled':
+        return 'Remove from Latest';
+      case 'Declined':
+      default:
+        return 'View';
+    }
+  };
+  
+  // Determine if button should be disabled
+  const isButtonDisabled = () => {
+    switch (status) {
+      case 'Paid':
+        // Only disable the "I Moved In" button if move-in date hasn't arrived
+        return isMoveInDateReached() ? moveInDisabled : false;
+      case 'MovedIn':
+        return !canRequestRefund;
+      case 'Refund Processing':
+      case 'Refund Completed':
+      case 'Refund Failed':
+      case 'Cancellation Under Review':
+      case 'Cancelled':
+        return true;
+      default:
+        return false;
+    }
+  };
+  
+  // Check if the move-in date has arrived
+  const isMoveInDateReached = () => {
+    if (!scheduledDate) return false;
+    
+    try {
+      let moveInDate: Date;
+      
+      if (scheduledDate instanceof Date) {
+        moveInDate = scheduledDate;
+      } 
+      else if (typeof scheduledDate === 'object' && 'seconds' in scheduledDate) {
+        const firestoreTimestamp = scheduledDate as FirestoreTimestamp;
+        moveInDate = new Date(firestoreTimestamp.seconds * 1000);
+      }
+      else {
+        moveInDate = new Date(scheduledDate as string);
+      }
+      
+      const now = new Date();
+      return moveInDate.getTime() <= now.getTime();
+    } catch (error) {
+      console.error('Error checking move-in date:', error, scheduledDate);
+      return false;
+    }
+  };
+  
+  // Handle button click based on status
+  const handleButtonClick = () => {
+    switch (status) {
+      case 'Pending':
+        onCancel(reservationId);
+        break;
+      case 'Approved':
+        onConfirmPayment(reservationId);
+        break;
+      case 'Paid':
+        if (isMoveInDateReached() && !moveInDisabled) {
+          // If move-in date has arrived, show the "I Moved In" button
+          if (onMoveIn) {
+            onMoveIn(reservationId);
+          }
+        } else {
+          // If move-in date hasn't arrived, navigate to cancellation request page
+          navigate(`/dashboard/user/cancellation-request?reservationId=${reservationId}`);
+        }
+        break;
+      case 'MovedIn':
+        if (onRequestRefund && canRequestRefund) {
+          onRequestRefund(reservationId);
+        } else {
+          handleViewDetails();
+        }
+        break;
+      case 'Cancelled':
+        // TODO: Implement remove from latest functionality
+        handleViewDetails();
+        break;
+      default:
+        handleViewDetails();
+    }
+  };
+  
   // Custom styled container for the timer/date info
   const CustomTimerContainer = styled.div`
     .timer {
@@ -438,6 +547,72 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
         color: white;
       }
     }
+    
+    .processing-spinner {
+      min-width: 300px !important;
+      height: 72px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(10px);
+      border-radius: ${Theme.borders.radius.lg};
+      padding: 16px 0px !important;
+
+      .label {
+        font: ${Theme.typography.fonts.smallB};
+        color: white;
+        margin-bottom: 8px;
+      }
+
+      .spinner {
+        animation: spin 1.5s linear infinite;
+        font-size: 24px;
+        color: white;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    }
+    
+    .result-container {
+      min-width: 300px !important;
+      height: 72px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(10px);
+      border-radius: ${Theme.borders.radius.lg};
+      padding: 16px 0px !important;
+
+      .label {
+        font: ${Theme.typography.fonts.smallB};
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .message {
+        font: ${Theme.typography.fonts.mediumM};
+        color: white;
+        margin-top: 4px;
+        text-align: center;
+      }
+      
+      .success-icon {
+        color: #4CAF50;
+      }
+      
+      .error-icon {
+        color: #F44336;
+      }
+    }
   `;
   
   // Format move-in date
@@ -473,32 +648,6 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
     }
   };
   
-  // Check if the move-in date has arrived
-  const canMoveIn = () => {
-    if (!scheduledDate) return false;
-    
-    try {
-      let moveInDate: Date;
-      
-      if (scheduledDate instanceof Date) {
-        moveInDate = scheduledDate;
-      } 
-      else if (typeof scheduledDate === 'object' && 'seconds' in scheduledDate) {
-        const firestoreTimestamp = scheduledDate as FirestoreTimestamp;
-        moveInDate = new Date(firestoreTimestamp.seconds * 1000);
-      }
-      else {
-        moveInDate = new Date(scheduledDate as string);
-      }
-      
-      const now = new Date();
-      return moveInDate.getTime() <= now.getTime();
-    } catch (error) {
-      console.error('Error checking move-in date:', error, scheduledDate);
-      return false;
-    }
-  };
-  
   // Check if refund is still available
   const [canRequestRefund, setCanRequestRefund] = useState<boolean>(false);
   const [refundTimeLeft, setRefundTimeLeft] = useState<string>("");
@@ -508,8 +657,8 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
       return;
     }
     
-    // If status is MovedIn but no scheduledDate, use a fallback timestamp
-    if (!scheduledDate) {
+    // If status is MovedIn but no movedInAt, use a fallback timestamp
+    if (!movedInAt) {
       setRefundTimeLeft("24:00:00");
       setCanRequestRefund(true);
       return;
@@ -519,19 +668,19 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
       try {
         let moveInDate: Date;
         
-        if (scheduledDate instanceof Date) {
-          moveInDate = scheduledDate;
+        if (movedInAt instanceof Date) {
+          moveInDate = movedInAt;
         } 
-        else if (typeof scheduledDate === 'object' && 'seconds' in scheduledDate) {
-          const firestoreTimestamp = scheduledDate as FirestoreTimestamp;
+        else if (typeof movedInAt === 'object' && 'seconds' in movedInAt) {
+          const firestoreTimestamp = movedInAt as FirestoreTimestamp;
           moveInDate = new Date(firestoreTimestamp.seconds * 1000);
         }
         else {
-          moveInDate = new Date(scheduledDate as string);
+          moveInDate = new Date(movedInAt as string);
         }
         
         const now = new Date();
-        // Add 24 hours to the scheduled move-in date for the refund deadline
+        // Add 24 hours to the move-in timestamp for the refund deadline
         const deadlineMs = moveInDate.getTime() + 24 * 60 * 60 * 1000;
         const diffMs = deadlineMs - now.getTime();
         
@@ -565,47 +714,125 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
     
     // Clean up interval on unmount
     return () => clearInterval(timer);
-  }, [scheduledDate, status]);
+  }, [movedInAt, status]);
+
+  // Render the appropriate timer/info container based on status
+  const renderTimerContainer = () => {
+    switch (status) {
+      case 'Approved':
+        return (
+          <CustomTimerContainer>
+            <div className="timer">
+              <CountdownTimer updatedAt={updatedAt} />
+            </div>
+          </CustomTimerContainer>
+        );
+      case 'Paid':
+        return (
+          <CustomTimerContainer>
+            <div className="move-in-date">
+              <div className="label">Move-in Date</div>
+              <div className="date">{formatMoveInDate(scheduledDate)}</div>
+            </div>
+          </CustomTimerContainer>
+        );
+      case 'MovedIn':
+        return (
+          <CustomTimerContainer>
+            <div className="refund-timer">
+              <div className="label">Refund Available For</div>
+              <div className="countdown">
+                {movedInAt ? refundTimeLeft : "24:00:00"}
+              </div>
+            </div>
+          </CustomTimerContainer>
+        );
+      case 'Refund Processing':
+      case 'Cancellation Under Review':
+        return (
+          <CustomTimerContainer>
+            <div className="processing-spinner">
+              <div className="label">
+                {status === 'Refund Processing' ? 'Refund Being Processed' : 'Cancellation Under Review'}
+              </div>
+              <div className="spinner">
+                <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity=".25" fill="currentColor"/>
+                  <path d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z" fill="currentColor"/>
+                </svg>
+              </div>
+            </div>
+          </CustomTimerContainer>
+        );
+      case 'Refund Completed':
+        return (
+          <CustomTimerContainer>
+            <div className="result-container">
+              <div className="label">
+                <span className="success-icon">✓</span> Refund Successful
+              </div>
+              <div className="message">Your refund has been processed</div>
+            </div>
+          </CustomTimerContainer>
+        );
+      case 'Refund Failed':
+        return (
+          <CustomTimerContainer>
+            <div className="result-container">
+              <div className="label">
+                <span className="error-icon">✗</span> Refund Failed
+              </div>
+              <div className="message">Please contact support</div>
+            </div>
+          </CustomTimerContainer>
+        );
+      case 'Cancelled':
+        return (
+          <CustomTimerContainer>
+            <div className="result-container">
+              <div className="label">
+                <span className="success-icon">✓</span> Cancelled
+              </div>
+              <div className="message">Your reservation has been cancelled successfully</div>
+            </div>
+          </CustomTimerContainer>
+        );
+      default:
+        return null;
+    }
+  };
+  
+  // Check if the card should display a timer/info container
+  const shouldShowTimer = () => {
+    return status === 'Approved' || status === 'Paid' || status === 'MovedIn' || 
+      status === 'Refund Processing' || status === 'Refund Completed' || 
+      status === 'Refund Failed' || status === 'Cancellation Under Review' || 
+      status === 'Cancelled';
+  };
   
   return (
-    <CardBaseModelStyleLatestRequest timer={timer || status === 'Paid' || status === 'MovedIn'}>
+    <CardBaseModelStyleLatestRequest timer={shouldShowTimer()}>
       <div className="timer-container">
         <img src={image} alt=""/>
         <div className="upper-banner">
           <div className="title-banner">Latest Request</div>
           <div className="status-banner">
             <ProgressBanner 
-              status={(status === 'MovedIn' ? 'Paid' : status) as 'Pending' | 'Approved' | 'Declined' | 'Paid'} 
+              status={
+                status === 'Refund Processing' || status === 'Cancellation Under Review' 
+                  ? 'Pending'
+                  : status === 'Refund Completed' || status === 'MovedIn' || status === 'Paid'
+                    ? 'Approved'
+                    : status === 'Refund Failed' || status === 'Cancelled' || status === 'Declined'
+                      ? 'Declined' 
+                      : (status as 'Pending' | 'Approved' | 'Declined' | 'Paid')
+              } 
               text={status}
-            ></ProgressBanner>
+            />
           </div>
         </div>
         <div className="main-content">
-          {timer && status === 'Approved' && (
-            <CustomTimerContainer>
-              <div className="timer">
-                <CountdownTimer updatedAt={updatedAt} />
-              </div>
-            </CustomTimerContainer>
-          )}
-          {status === 'Paid' && scheduledDate && (
-            <CustomTimerContainer>
-              <div className="move-in-date">
-                <div className="label">Move-in Date</div>
-                <div className="date">{formatMoveInDate(scheduledDate)}</div>
-              </div>
-            </CustomTimerContainer>
-          )}
-          {status === 'MovedIn' && (
-            <CustomTimerContainer>
-              <div className="refund-timer">
-                <div className="label">Refund Available For</div>
-                <div className="countdown">
-                  {scheduledDate ? refundTimeLeft : "24:00:00"}
-                </div>
-              </div>
-            </CustomTimerContainer>
-          )}
+          {renderTimerContainer()}
           <div className="text-content">
             <div className="title" style={{ maxWidth: '65%' }}>
               <b>{title}</b>
@@ -635,29 +862,9 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
           } 
         />
         <PurpleButtonMB48 
-          text={
-            status === 'Pending' ? 'Cancel Reservation' : 
-            status === 'Approved' ? 'Confirm Payment' : 
-            status === 'Paid' ? 'I Moved In' :
-            status === 'MovedIn' ? 'Request Refund' : 'View'
-          }
-          disabled={
-            (status === 'Paid' && moveInDisabled) || 
-            (status === 'MovedIn' && !canRequestRefund)
-          }
-          onClick={() => {
-            if (status === 'Pending') {
-              onCancel(reservationId);
-            } else if (status === 'Approved') {
-              onConfirmPayment(reservationId);
-            } else if (status === 'Paid' && onMoveIn && !moveInDisabled) {
-              onMoveIn(reservationId);
-            } else if (status === 'MovedIn' && onRequestRefund && canRequestRefund) {
-              onRequestRefund(reservationId);
-            } else {
-              handleViewDetails();
-            }
-          }}
+          text={getButtonText()}
+          disabled={isButtonDisabled()}
+          onClick={handleButtonClick}
         />
       </div>
     </CardBaseModelStyleLatestRequest>
@@ -948,8 +1155,7 @@ const ReservationsPage: React.FC = () => {
   
   // Include 'completed' status for paid reservations
   const latestReservations = reservations
-    .filter(res => res.reservation.status !== 'rejected' && res.reservation.status !== 'cancelled' && 
-              !(res.reservation.status === 'completed' && !res.reservation.scheduledDate))
+    .filter(res => res.reservation.status !== 'rejected' && res.reservation.status !== 'cancelled')
     .sort((a, b) => {
       const dateA = new Date(a.reservation.createdAt).getTime();
       const dateB = new Date(b.reservation.createdAt).getTime();
@@ -1026,32 +1232,6 @@ const ReservationsPage: React.FC = () => {
     }
   };
   
-  // Check if the move-in date has arrived
-  const canMoveIn = (scheduledDate?: Date | FirestoreTimestamp | string) => {
-    if (!scheduledDate) return false;
-    
-    try {
-      let moveInDate: Date;
-      
-      if (scheduledDate instanceof Date) {
-        moveInDate = scheduledDate;
-      } 
-      else if (typeof scheduledDate === 'object' && 'seconds' in scheduledDate) {
-        const firestoreTimestamp = scheduledDate as FirestoreTimestamp;
-        moveInDate = new Date(firestoreTimestamp.seconds * 1000);
-      }
-      else {
-        moveInDate = new Date(scheduledDate as string);
-      }
-      
-      const now = new Date();
-      return moveInDate.getTime() <= now.getTime();
-    } catch (error) {
-      console.error('Error checking move-in date:', error, scheduledDate);
-      return false;
-    }
-  };
-  
   // Handle refund request
   const handleRequestRefund = async () => {
     if (!selectedReservation) return;
@@ -1059,12 +1239,10 @@ const ReservationsPage: React.FC = () => {
     try {
       setProcessingRefund(selectedReservation);
       
-      // Call the backend function to process the refund
-      // This should be implemented in ClientServerActions.ts
-      // await requestRefund(selectedReservation);
+      // Call the requestRefund function to process the refund
+      await requestRefund(selectedReservation);
       
-      // For now, just show an alert
-      alert("Your refund request has been submitted. The property will be marked as available once processed.");
+      alert("Your refund request has been submitted and is now being processed.");
       
       await loadReservations();
       setShowRefundModal(false);
@@ -1085,6 +1263,29 @@ const ReservationsPage: React.FC = () => {
   const closeRefundModal = () => {
     setSelectedReservation(null);
     setShowRefundModal(false);
+  };
+  
+  // Helper function to map status to CSS class
+  const formatStatusForClass = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+      case 'cancellationunderreview':
+      case 'refundprocessing':
+        return 'pending';
+      case 'approved':
+      case 'accepted':
+      case 'paid':
+      case 'movedin':
+      case 'refundcompleted':
+        return 'approved';
+      case 'declined':
+      case 'rejected':
+      case 'cancelled':
+      case 'refundfailed':
+        return 'declined';
+      default:
+        return 'pending';
+    }
   };
   
   if (loading) {
@@ -1110,15 +1311,48 @@ const ReservationsPage: React.FC = () => {
           {latestReservations.map(res => {
             const propertyTitle = res.property?.title || "Apartment - flat in the center of Agadir";
             const propertyAddress = res.property ? formatAddress(res.property.address) : "avenue larache, Agadir, Souss-Massa 80000";
-            const status = res.reservation.status === 'accepted' ? 'Approved' : 
-                          res.reservation.status === 'rejected' ? 'Declined' : 
-                          res.reservation.status === 'completed' && (res.reservation.movedIn === true || res.reservation.status === 'completed' && res.reservation.scheduledDate && new Date(res.reservation.scheduledDate) <= new Date()) ? 'MovedIn' :
-                          res.reservation.status === 'completed' ? 'Paid' : 'Pending';
+            const status = 
+              res.reservation.status === 'accepted' ? 'Approved' : 
+              res.reservation.status === 'rejected' ? 'Declined' : 
+              res.reservation.status === 'paid' ? 'Paid' :
+              res.reservation.status === 'movedIn' ? 'MovedIn' :
+              res.reservation.status === 'refundProcessing' ? 'Refund Processing' :
+              res.reservation.status === 'refundCompleted' ? 'Refund Completed' :
+              res.reservation.status === 'refundFailed' ? 'Refund Failed' :
+              res.reservation.status === 'cancellationUnderReview' ? 'Cancellation Under Review' :
+              'Pending';
             const price = `${res.property?.price || 1500}$/month`;
             const date = formatDateShort(res.reservation.scheduledDate || res.reservation.createdAt);
             const imageUrl = "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1";
             const hasTimer = res.reservation.status === 'accepted';
-            const moveInDisabled = !canMoveIn(res.reservation.scheduledDate);
+            
+            // Determine if move-in is disabled based on whether move-in date has arrived
+            const isMoveInDateReached = (scheduledDate?: Date | FirestoreTimestamp | string) => {
+              if (!scheduledDate) return false;
+              
+              try {
+                let moveInDate: Date;
+                
+                if (scheduledDate instanceof Date) {
+                  moveInDate = scheduledDate;
+                } 
+                else if (typeof scheduledDate === 'object' && 'seconds' in scheduledDate) {
+                  const firestoreTimestamp = scheduledDate as FirestoreTimestamp;
+                  moveInDate = new Date(firestoreTimestamp.seconds * 1000);
+                }
+                else {
+                  moveInDate = new Date(scheduledDate as string);
+                }
+                
+                const now = new Date();
+                return moveInDate.getTime() <= now.getTime();
+              } catch (error) {
+                console.error('Error checking move-in date:', error, scheduledDate);
+                return false;
+              }
+            };
+            
+            const moveInDisabled = !isMoveInDateReached(res.reservation.scheduledDate);
             
             return (
               <CustomReservationCard
@@ -1189,12 +1423,16 @@ const ReservationsPage: React.FC = () => {
                   </td>
                   <td>{formatDateShort(res.reservation.scheduledDate)}</td>
                   <td>
-                    <span className={`status ${res.reservation.status === 'accepted' ? 'approved' : 
-                                       res.reservation.status === 'rejected' ? 'declined' : 
-                                       res.reservation.status === 'completed' ? 'completed' : 'pending'}`}>
+                    <span className={`status ${formatStatusForClass(res.reservation.status)}`}>
                       {res.reservation.status === 'accepted' ? 'Approved' : 
                        res.reservation.status === 'rejected' ? 'Declined' : 
-                       res.reservation.status === 'completed' ? 'Completed' : 'Pending'}
+                       res.reservation.status === 'paid' ? 'Paid' :
+                       res.reservation.status === 'movedIn' ? 'Moved In' :
+                       res.reservation.status === 'refundProcessing' ? 'Refund Processing' :
+                       res.reservation.status === 'refundCompleted' ? 'Refund Completed' :
+                       res.reservation.status === 'refundFailed' ? 'Refund Failed' :
+                       res.reservation.status === 'cancellationUnderReview' ? 'Under Review' :
+                       'Pending'}
                     </span>
                   </td>
                   <td>0$</td>
