@@ -3,7 +3,7 @@ import { CardBaseModelStyleUpcomingPhotoshoot } from '../../styles/cards/card-ba
 import { BpurpleButtonMB48 } from '../buttons/border_purple_MB48';
 import {PurpleButtonMB48} from '../buttons/purple_MB48'
 import cancel from '../icons/Cross-Icon.svg'
-import upload from '../icons/icon_download.svg'
+import upload from '../icons/Icon_Download.svg'
 
 interface UpcomingPhotoshootProps {
   date: string;

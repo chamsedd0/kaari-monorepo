@@ -7,7 +7,7 @@ import cancel from '../icons/Cross-Icon.svg';
 import SpinningLoading from '../icons/SpinningLoading';
 import WhatsAppContactModal from '../modals/whatsapp-contact-modal';
 import whatsapp from '../icons/whatsapp-icon.svg';
-import download from '../icons/icon_download.svg';
+import download from '../icons/Icon_Download.svg';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useTranslation } from 'react-i18next';
