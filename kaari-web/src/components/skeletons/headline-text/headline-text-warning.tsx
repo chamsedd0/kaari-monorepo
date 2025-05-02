@@ -3,7 +3,7 @@ import { HeadlineTextStyle } from "../../styles/headline-text-style";
 import { Theme } from "../../../theme/theme";
 import styled from "styled-components";
 import reportIcon from "../icons/Report.svg";
-import xIcon from "../icons/Cross-Icon-W.svg";
+import xIcon from "../icons/Cross-Icon-w.svg";
 
 const WarningHeadlineTextStyle = styled(HeadlineTextStyle)`
   background-color: ${Theme.colors.warning};
