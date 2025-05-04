@@ -266,7 +266,7 @@ const EmptyLatestRequests = styled.div`
   padding: 3rem;
   width: 100%;
   min-height: 330px;
-  border: ${Theme.borders.primary};
+      border: ${Theme.borders.primary};
 
   
   img {
@@ -743,37 +743,37 @@ const CustomReservationCard: React.FC<CustomReservationCardProps> = ({
     // Clean up interval on unmount
     return () => clearInterval(timer);
   }, [movedInAt, status]);
-
+  
   // Render the appropriate timer/info container based on status
   const renderTimerContainer = () => {
     switch (status) {
       case 'Approved':
-        return (
-          <CustomTimerContainer>
-            <div className="timer">
-              <CountdownTimer updatedAt={updatedAt} />
-            </div>
-          </CustomTimerContainer>
+  return (
+            <CustomTimerContainer>
+              <div className="timer">
+                <CountdownTimer updatedAt={updatedAt} />
+              </div>
+            </CustomTimerContainer>
         );
       case 'Paid':
         return (
-          <CustomTimerContainer>
-            <div className="move-in-date">
-              <div className="label">Move-in Date</div>
-              <div className="date">{formatMoveInDate(scheduledDate)}</div>
-            </div>
-          </CustomTimerContainer>
+            <CustomTimerContainer>
+              <div className="move-in-date">
+                <div className="label">Move-in Date</div>
+                <div className="date">{formatMoveInDate(scheduledDate)}</div>
+              </div>
+            </CustomTimerContainer>
         );
       case 'MovedIn':
         return (
-          <CustomTimerContainer>
-            <div className="refund-timer">
-              <div className="label">Refund Available For</div>
-              <div className="countdown">
+            <CustomTimerContainer>
+              <div className="refund-timer">
+                <div className="label">Refund Available For</div>
+                <div className="countdown">
                 {movedInAt ? refundTimeLeft : "24:00:00"}
+                </div>
               </div>
-            </div>
-          </CustomTimerContainer>
+            </CustomTimerContainer>
         );
       case 'Refund Processing':
       case 'Cancellation Under Review':
@@ -969,8 +969,8 @@ const CountdownTimer = ({ updatedAt }: CountdownTimerProps) => {
 const ReservationsPage: React.FC = () => {
   const navigate = useNavigate();
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -995,24 +995,24 @@ const ReservationsPage: React.FC = () => {
              status === 'refundCompleted' || status === 'refundFailed';
     });
   }, [reservations]);
-
-  useEffect(() => {
+    
+    useEffect(() => {
     loadReservations();
   }, []);
   
-  const loadReservations = async () => {
+        const loadReservations = async () => {
     try {
-      setLoading(true);
-      const data = await getClientReservations();
-      setReservations(data);
+            setLoading(true);
+                const data = await getClientReservations();
+                setReservations(data);
     } catch (err: any) {
-      console.error('Error loading reservations:', err);
+                console.error('Error loading reservations:', err);
       setError(err.message || 'Failed to load reservations');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+            } finally {
+                setLoading(false);
+            }
+        };
+        
   const handleConfirmPayment = async () => {
     if (!selectedReservation) return;
     
@@ -1086,8 +1086,8 @@ const ReservationsPage: React.FC = () => {
     if (expired) return 'Time expired';
     
     return `${hours}h ${minutes}m remaining`;
-  };
-  
+        };
+        
   const handleCancelReservation = async () => {
     if (!selectedReservation) return;
     
@@ -1301,7 +1301,7 @@ const ReservationsPage: React.FC = () => {
             const propertyAddress = res.property ? formatAddress(res.property.address) : "avenue larache, Agadir, Souss-Massa 80000";
             const status = 
               res.reservation.status === 'accepted' ? 'Approved' : 
-              res.reservation.status === 'rejected' ? 'Declined' : 
+                          res.reservation.status === 'rejected' ? 'Declined' : 
               res.reservation.status === 'paid' ? 'Paid' :
               res.reservation.status === 'movedIn' ? 'MovedIn' :
               res.reservation.status === 'refundProcessing' ? 'Refund Processing' :
@@ -1373,7 +1373,7 @@ const ReservationsPage: React.FC = () => {
               />
             );
           })}
-        </div>
+                  </div>
       ) : (
         <EmptyLatestRequests>
           <img src={emptyBoxSvg} alt="No latest requests" />

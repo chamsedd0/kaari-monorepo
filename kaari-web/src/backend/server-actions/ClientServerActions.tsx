@@ -159,10 +159,10 @@ export async function cancelReservation(reservationId: string): Promise<boolean>
         updatedAt: new Date()
       });
     } else {
-      await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
+    await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
         status: 'cancellationUnderReview',
-        updatedAt: new Date()
-      });
+      updatedAt: new Date()
+    });
     }
     
     // Change property status back to 'available' when reservation is cancelled

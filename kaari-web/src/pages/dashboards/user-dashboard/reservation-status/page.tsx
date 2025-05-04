@@ -113,40 +113,40 @@ const ReservationStatusPage: React.FC = () => {
   const reservationId = id || new URLSearchParams(location.search).get('id');
   
   useEffect(() => {
-    if (!reservationId) {
-      setError('No reservation ID provided');
-      setLoading(false);
-      return;
-    }
-    
-    loadReservationDetails();
-  }, [reservationId]);
-  
-  const loadReservationDetails = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch all client reservations
-      const reservationsData = await getClientReservations();
-      
-      // Find the specific reservation
-      const foundReservation = reservationsData.find(res => res.reservation.id === reservationId);
-      
-      if (!foundReservation) {
-        setError('Reservation not found');
+      if (!reservationId) {
+        setError('No reservation ID provided');
         setLoading(false);
         return;
       }
       
-      console.log('Loaded reservation data:', foundReservation);
-      setReservation(foundReservation);
+    loadReservationDetails();
+  }, [reservationId]);
+  
+  const loadReservationDetails = async () => {
+      try {
+        setLoading(true);
+      
+      // Fetch all client reservations
+        const reservationsData = await getClientReservations();
+      
+      // Find the specific reservation
+        const foundReservation = reservationsData.find(res => res.reservation.id === reservationId);
+        
+        if (!foundReservation) {
+          setError('Reservation not found');
+          setLoading(false);
+          return;
+        }
+        
+        console.log('Loaded reservation data:', foundReservation);
+        setReservation(foundReservation);
       setLoading(false);
     } catch (err: any) {
-      console.error('Error loading reservation details:', err);
+        console.error('Error loading reservation details:', err);
       setError(err.message || 'Failed to load reservation details');
-      setLoading(false);
-    }
-  };
+        setLoading(false);
+      }
+    };
   
   const handleBack = () => {
     navigate('/dashboard/user/reservations');
@@ -219,7 +219,7 @@ const ReservationStatusPage: React.FC = () => {
   const handleFindHousing = () => {
     navigate('/properties');
   };
-  
+
   // Function to handle 'Download Receipt' button
   const handleDownloadReceipt = () => {
     toast.showToast('info', 'Download Started', 'Your receipt is being downloaded');
@@ -238,12 +238,12 @@ const ReservationStatusPage: React.FC = () => {
     if (!reservation?.advertiser?.id) return;
     window.open(`/advertiser/${reservation.advertiser.id}`, '_blank');
   };
-  
+
   // Function to read cancellation policy
   const handleReadCancellationPolicy = () => {
     window.open('/cancellation-policy', '_blank');
   };
-  
+
   if (loading) {
     return (
       <ReservationStatusContainer>
@@ -334,7 +334,7 @@ const ReservationStatusPage: React.FC = () => {
         {/* Additional Info Sections based on status */}
         {(status === 'accepted' || status === 'paid' || status === 'movedIn') && (
           <div className="section">
-            <div className="info-card">
+          <div className="info-card">
               <div className="card-header">
                 <FaInfoCircle />
                 <h3>Contact Your Advertiser</h3>
@@ -355,12 +355,12 @@ const ReservationStatusPage: React.FC = () => {
                 />
               </div>
             </div>
-          </div>
-        )}
+                    </div>
+      )}
       
         {status === 'rejected' && (
           <div className="section">
-            <div className="info-card">
+              <div className="info-card">
               <div className="card-header">
                 <FaInfoCircle />
                 <h3>What to do next?</h3>
@@ -427,7 +427,7 @@ const ReservationStatusPage: React.FC = () => {
               <div className="card-header">
                 <FaReceipt />
                 <h3>Refund Completed</h3>
-              </div>
+        </div>
               <p>Your refund has been processed successfully on {formatDate(reservation.reservation.updatedAt)}.</p>
               <p>The funds should appear in your account within 5-7 business days, depending on your bank's processing time.</p>
               <div className="card-actions">
@@ -437,7 +437,7 @@ const ReservationStatusPage: React.FC = () => {
                 />
               </div>
             </div>
-          </div>
+            </div>
         )}
         
         {status === 'refundFailed' && (
@@ -526,8 +526,8 @@ const ReservationStatusPage: React.FC = () => {
                   <div className="detail-label">Request Type</div>
                   <div className="detail-value">{reservation.reservation.requestType}</div>
                 </div>
-              )}
-              
+      )}
+      
               {/* User details - In a real implementation, these would come from the user profile or reservation data */}
               {/* Map reservation data dynamically - this assumes reservation.reservation contains booking details */}
               {Object.entries(reservation.reservation).filter(([key, value]) => {
@@ -543,7 +543,7 @@ const ReservationStatusPage: React.FC = () => {
                     {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : 
                      typeof value === 'object' ? JSON.stringify(value) : value.toString()}
                   </div>
-                </div>
+              </div>
               ))}
               
               {/* Display message separately as it might be longer */}
@@ -561,27 +561,27 @@ const ReservationStatusPage: React.FC = () => {
                   <div className="detail-item">
                     <div className="detail-label">Name</div>
                     <div className="detail-value">John</div>
-                  </div>
+            </div>
                   <div className="detail-item">
                     <div className="detail-label">Do you study or work</div>
                     <div className="detail-value">Study</div>
-                  </div>
+          </div>
                   <div className="detail-item">
                     <div className="detail-label">Gender</div>
                     <div className="detail-value">Male</div>
-                  </div>
+        </div>
                   <div className="detail-item">
                     <div className="detail-label">Institution Name</div>
                     <div className="detail-value">NYU</div>
-                  </div>
+                </div>
                   <div className="detail-item">
                     <div className="detail-label">Age</div>
                     <div className="detail-value">20 y.o.</div>
-                  </div>
+              </div>
                   <div className="detail-item">
                     <div className="detail-label">Field of Study</div>
                     <div className="detail-value">Computer Engineering</div>
-                  </div>
+            </div>
                   <div className="detail-item">
                     <div className="detail-label">Length of Stay</div>
                     <div className="detail-value">{lengthOfStay}</div>
@@ -589,15 +589,15 @@ const ReservationStatusPage: React.FC = () => {
                   <div className="detail-item">
                     <div className="detail-label">Funding Source</div>
                     <div className="detail-value">Salary</div>
-                  </div>
+            </div>
                   <div className="detail-item">
                     <div className="detail-label">Nationality</div>
                     <div className="detail-value">Morocco</div>
-                  </div>
+                    </div>
                   <div className="detail-item">
                     <div className="detail-label">Pets</div>
                     <div className="detail-value">Yes</div>
-                  </div>
+                    </div>
                   <div className="detail-item">
                     <div className="detail-label">Number of People</div>
                     <div className="detail-value">2</div>
@@ -605,16 +605,16 @@ const ReservationStatusPage: React.FC = () => {
                   <div className="detail-item">
                     <div className="detail-label">Smoking Habits</div>
                     <div className="detail-value">No</div>
-                  </div>
+                </div>
                   <div className="detail-item">
                     <div className="detail-label">Who will you live with</div>
                     <div className="detail-value">Family</div>
-                  </div>
+              </div>
                 </>
               )}
             </div>
-          </div>
-        )}
+              </div>
+      )}
       </div>
       
       {/* Sidebar with property details */}
@@ -748,7 +748,7 @@ const ReservationStatusPage: React.FC = () => {
             </div>
           )}
         </div>
-      </div>
+              </div>
     </ReservationStatusContainer>
   );
 };
