@@ -160,12 +160,33 @@ export const CardBaseModelStyleLatestRequestDashboard = styled.div`
             gap: 12px;
             align-items: center;
             width: 100%;
+            margin-top: 12px;
+            justify-content: flex-end;  
+
+            button {
+                max-width: 220px !important;
+            }
 
             & > button,
             & > div {
                 flex: 1;
-                min-width: 0;
+                min-width: 120px;
                 max-width: none;
+                width: 50%;
+            }
+            
+            /* Ensure both buttons have exactly equal width */
+            & > button {
+                width: 50%;
+                text-align: center;
+                justify-content: center;
+            }
+            
+            /* Force buttons to maintain equal width even with different text lengths */
+            & > button > span {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
         }
     }

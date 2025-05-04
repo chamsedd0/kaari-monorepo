@@ -260,10 +260,16 @@ export class PhotoshootBookingServerActions {
    */
   static async getBookingsByAdvertiserId(advertiserId: string): Promise<PhotoshootBooking[]> {
     try {
+      if (!advertiserId) {
+        console.error('No advertiserId provided to getBookingsByAdvertiserId');
+        return [];
+      }
+      
       // First, look for bookings with the advertiserId field
       const q1 = query(
         bookingsCollection, 
-        where('advertiserId', '==', advertiserId)
+        where('advertiserId', '==', advertiserId),
+        orderBy('date', 'desc')
       );
       
       const querySnapshot1 = await getDocs(q1);
@@ -271,7 +277,8 @@ export class PhotoshootBookingServerActions {
       // Then look for bookings with the userId field (for backward compatibility)
       const q2 = query(
         bookingsCollection, 
-        where('userId', '==', advertiserId)
+        where('userId', '==', advertiserId),
+        orderBy('date', 'desc')
       );
       
       const querySnapshot2 = await getDocs(q2);
@@ -296,8 +303,7 @@ export class PhotoshootBookingServerActions {
         }
       });
       
-      // Sort by date (newest first)
-      bookings.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      console.log(`Found ${bookings.length} bookings for advertiser ID ${advertiserId}`);
       
       return bookings;
     } catch (error) {

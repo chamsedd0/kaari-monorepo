@@ -46,17 +46,22 @@ const PhotoshootPage: React.FC = () => {
   
   // Helper function to fetch bookings with team data
   const fetchBookingsWithTeamData = async () => {
-    console.log('Fetching bookings with team data');
+    console.log('Fetching bookings with team data for user:', user?.id);
+    
+    if (!user?.id) {
+      console.warn('No user ID available, cannot fetch bookings');
+      return [];
+    }
     
     try {
-      // Get all bookings
-      const allBookings = await PhotoshootBookingServerActions.getAllBookings();
-      console.log('All bookings:', allBookings);
+      // Get bookings for the current user only
+      const userBookings = await PhotoshootBookingServerActions.getBookingsByAdvertiserId(user.id);
+      console.log('User bookings:', userBookings.length);
       
       // Fetch team data for each booking that has a teamId
       const bookingsWithTeam: BookingWithTeamInfo[] = [];
       
-      for (const booking of allBookings) {
+      for (const booking of userBookings) {
         const bookingWithTeam: BookingWithTeamInfo = { ...booking };
         
         if (booking.teamId) {
@@ -92,18 +97,19 @@ const PhotoshootPage: React.FC = () => {
   useEffect(() => {
     const fetchBookings = async () => {
       console.log('Fetching bookings, user:', user?.id);
+      
+      if (!user?.id) {
+        console.warn('User ID is missing, cannot fetch bookings');
+        setBookings([]);
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
       
       try {
         const bookingsWithTeam = await fetchBookingsWithTeamData();
-        
-        if (user?.id) {
-          // Set bookings to all bookings for now (temporary fix)
-          setBookings(bookingsWithTeam);
-        } else {
-          console.warn('User ID is missing');
-          setBookings([]);
-        }
+        setBookings(bookingsWithTeam);
       } catch (error) {
         console.error('Error fetching photoshoot bookings:', error);
         setBookings([]);

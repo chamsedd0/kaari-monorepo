@@ -5,6 +5,60 @@ import { BpurpleButtonMB48 } from '../buttons/border_purple_MB48';
 import { useTranslation } from 'react-i18next';
 import propertyPlaceholder from '../../../assets/images/propertyExamplePic.png';
 import profilePlaceholder from '../../../assets/images/ProfilePicture.png';
+import emptyBoxSvg from '../../../assets/images/emptybox.svg';
+import { format } from 'date-fns';
+import styled from 'styled-components';
+import { Theme } from '../../../theme/theme';
+import { useNavigate } from 'react-router-dom';
+
+// Empty state component for when there are no latest requests
+const EmptyLatestRequests = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: ${Theme.borders.primary};
+  border-radius: ${Theme.borders.radius.lg};
+  padding: 3rem;
+  width: 100%;
+  min-height: 330px;
+  
+  img {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 1.5rem;
+  }
+  
+  h3 {
+    font: ${Theme.typography.fonts.h4B};
+    color: ${Theme.colors.black};
+    margin-bottom: 0.5rem;
+  }
+  
+  p {
+    font: ${Theme.typography.fonts.mediumM};
+    color: ${Theme.colors.gray2};
+    text-align: center;
+    max-width: 400px;
+    margin-bottom: 1.5rem;
+  }
+  
+  button {
+    background-color: ${Theme.colors.secondary};
+    color: ${Theme.colors.white};
+    font: ${Theme.typography.fonts.mediumB};
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: ${Theme.borders.radius.extreme};
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    &:hover {
+      background-color: ${Theme.colors.primary};
+    }
+  }
+`;
 
 interface LatestRequestDashboardCardProps {
   title?: string;
@@ -14,7 +68,7 @@ interface LatestRequestDashboardCardProps {
   photographerInfo?: string;
   photographerImage?: string;
   moveInDate?: string;
-  aplliedon?: string;
+  appliedOn?: string;
   remainingTime?: string;
   name?: string;
   img?: string;
@@ -22,10 +76,12 @@ interface LatestRequestDashboardCardProps {
   time?: string;
   requestCount?: number;
   requestStatus?: string;
+  isEmpty?: boolean;
   onViewMore?: () => void;
   onDetails?: () => void;
   onAccept?: () => void;
   onReject?: () => void;
+  onBrowseProperties?: () => void;
 }
 
 const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
@@ -36,7 +92,7 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
   photographerInfo = '',
   photographerImage = '',
   moveInDate = '',
-  aplliedon = '',
+  appliedOn = '',
   remainingTime = '',
   name = '',
   img = '',
@@ -44,18 +100,81 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
   time = '',
   requestCount = 0,
   requestStatus = 'pending',
+  isEmpty = false,
   onViewMore,
   onDetails,
   onAccept,
   onReject,
+  onBrowseProperties,
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   
   // Use either traditional props or the newer dashboard props
-  const displayName = name || photographerName;
+  const displayName = name || photographerName || 'Guest';
   const displayImage = img || photographerImage || profilePlaceholder;
   const displayTitle = title || t('advertiser_dashboard.dashboard.latest_request', 'Latest Request');
   const isPending = requestStatus === 'pending';
+  
+  // Debug date values
+  console.log('Date values:', { 
+    moveInDate,
+    appliedOn, 
+    date,
+    time
+  });
+  
+  // Format dates properly with fallbacks
+  const formatDate = (dateStr: string) => {
+    // Early return if no date
+    if (!dateStr || dateStr === '') return 'N/A';
+    
+    // Handle dates that are already formatted with slashes or dashes
+    if (dateStr.includes('/') || dateStr.includes('-') || dateStr.includes(',')) {
+      // But still check if it's literally "Invalid Date"
+      return dateStr === 'Invalid Date' ? 'N/A' : dateStr;
+    }
+    
+    try {
+      // Try to create a Date object
+      const date = new Date(dateStr);
+      
+      // Check if the date is valid
+      if (isNaN(date.getTime())) return 'N/A';
+      
+      // Return formatted date
+      return format(date, 'MMM dd, yyyy');
+    } catch (e) {
+      return 'N/A';
+    }
+  };
+  
+  const displayMoveInDate = formatDate(moveInDate);
+  const displayAppliedOn = formatDate(appliedOn || date);
+  
+  const handleBrowseProperties = () => {
+    if (onBrowseProperties) {
+      onBrowseProperties();
+    } else {
+      navigate('/properties');
+    }
+  };
+  
+  // If empty state is requested, show the empty component
+  if (isEmpty) {
+    return (
+      <div className="latest-request-container">
+        <EmptyLatestRequests>
+          <img src={emptyBoxSvg} alt="No requests" />
+          <h3>{t('advertiser_dashboard.dashboard.no_requests_title', 'No Latest Requests')}</h3>
+          <p>{t('advertiser_dashboard.dashboard.no_requests_description', 'You have no latest reservation requests. Browse properties to find potential tenants.')}</p>
+          <button onClick={handleBrowseProperties}>
+            {t('property_list.browse_properties', 'Browse Properties')}
+          </button>
+        </EmptyLatestRequests>
+      </div>
+    );
+  }
   
   return (
     <CardBaseModelStyleLatestRequestDashboard>
@@ -70,11 +189,16 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
         <img 
           src={requestImage || propertyPlaceholder} 
           alt={t('advertiser_dashboard.dashboard.property_alt', 'Property')} 
-          className="latest-request-image" 
+          className="latest-request-image"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.src = propertyPlaceholder;
+          }}
         />
         
         <div className="latest-request-info-container">
-          <div className="latest-request-title">{requestTitle || name}</div>
+          <div className="latest-request-title">{requestTitle || name || 'Property Request'}</div>
           
           <div className="latest-request-info">
             <div className="latest-request-picture-name-details">
@@ -92,13 +216,13 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
                 <div className="latest-request-name-container">
                   <div className="latest-request-name">{displayName}</div>
                   <div className="latest-request-info">
-                    {photographerInfo || t('advertiser_dashboard.dashboard.request_count', 'Request {{count}}', { count: requestCount || '' })}
+                    {photographerInfo || (requestCount > 0 ? t('advertiser_dashboard.dashboard.request_count', 'Request {{count}}', { count: requestCount }) : 'Occupants: 1')}
                   </div>
                 </div>
               </div>
               
-              <div className="details-container">
-                <div className="details-text" onClick={onDetails}>
+              <div className="details-container" onClick={onDetails}>
+                <div className="details-text">
                   {t('common.details', 'Details')}
                 </div>
                 <svg className="details-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -108,18 +232,24 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
             </div>
             
             <div className="move-in-date">
-              {moveInDate ? 
-                t('advertiser_dashboard.reservations.move_in_date_label', 'Move-in date: {{date}}', { date: moveInDate }) : 
-                t('advertiser_dashboard.dashboard.request_time', 'Request time: {{time}}', { time: time || '' })}
+              {moveInDate && moveInDate !== 'Invalid Date' ? 
+                t('advertiser_dashboard.reservations.move_in_date_label', 'Move-in date: {{date}}', { date: displayMoveInDate }) : 
+                time && time !== 'Invalid Date' ?
+                  t('advertiser_dashboard.dashboard.request_time', 'Request time: {{time}}', { time }) :
+                  t('advertiser_dashboard.dashboard.request_time', 'Request time: N/A')
+              }
             </div>
             
             <div className="text-container">
               <div className="text-container-text">
-                {aplliedon ? 
-                  t('advertiser_dashboard.reservations.applied_on', 'Applied on: {{date}}', { date: aplliedon }) : 
-                  t('advertiser_dashboard.dashboard.received_on', 'Received on: {{date}}', { date: date || '' })}
+                {appliedOn && appliedOn !== 'Invalid Date' ? 
+                  t('advertiser_dashboard.reservations.applied_on', 'Applied on: {{date}}', { date: displayAppliedOn }) : 
+                  date && date !== 'Invalid Date' ?
+                    t('advertiser_dashboard.dashboard.received_on', 'Received on: {{date}}', { date: displayAppliedOn }) :
+                    t('advertiser_dashboard.dashboard.received_on', 'Received on: N/A')
+                }
               </div>
-              <div className="text-remaining-time">{remainingTime}</div>
+              <div className="text-remaining-time">{remainingTime || ''}</div>
             </div>
           </div>
           

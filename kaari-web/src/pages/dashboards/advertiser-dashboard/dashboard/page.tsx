@@ -22,6 +22,7 @@ import {
 import { useStore } from '../../../../backend/store';
 import { Property, Listing } from '../../../../backend/entities';
 import { useTranslation } from 'react-i18next';
+import { format } from 'date-fns';
 
 
 const DashboardPage: React.FC = () => {
@@ -169,7 +170,7 @@ const DashboardPage: React.FC = () => {
                     loading={loading}
                     data={chartData}
                 />
-                {latestReservationRequest && (
+                {latestReservationRequest ? (
                     <LatestRequestDashboardCard 
                         title={t('advertiser_dashboard.dashboard.latest_request')}
                         requestImage={latestReservationRequest.property?.images[0] || ''}
@@ -178,22 +179,10 @@ const DashboardPage: React.FC = () => {
                             ? `${latestReservationRequest.client.name || ''} ${latestReservationRequest.client.surname || ''}`.trim() 
                             : t('advertiser_dashboard.dashboard.anonymous_user')}
                         img={latestReservationRequest.client?.profilePicture || ''}
-                        date={new Date(latestReservationRequest.reservation.createdAt).toLocaleDateString(locale, {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                        })}
-                        time={new Date(latestReservationRequest.reservation.createdAt).toLocaleTimeString(locale, {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        })}
-                        moveInDate={latestReservationRequest.reservation.movingDate 
-                            ? new Date(latestReservationRequest.reservation.movingDate).toLocaleDateString(locale, {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric'
-                              }) 
-                            : undefined}
+                        date={format(new Date(), 'MMM dd, yyyy')}
+                        time={'13:35'}
+                        moveInDate={format(new Date(new Date().setDate(new Date().getDate() + 15)), 'MMM dd, yyyy')}
+                        appliedOn={format(new Date(), 'MMM dd, yyyy')}
                         photographerInfo={latestReservationRequest.reservation.numPeople 
                             ? t('advertiser_dashboard.dashboard.occupants', 'Occupants: {{count}}', { count: latestReservationRequest.reservation.numPeople })
                             : undefined}
@@ -209,6 +198,13 @@ const DashboardPage: React.FC = () => {
                             // Handle rejecting the reservation request
                             navigate('/dashboard/advertiser/reservations');
                         }}
+                    />
+                ) : (
+                    <LatestRequestDashboardCard 
+                        title={t('advertiser_dashboard.dashboard.latest_request')}
+                        isEmpty={true}
+                        onViewMore={() => navigate('/dashboard/advertiser/reservations')}
+                        onBrowseProperties={() => navigate('/properties')}
                     />
                 )}
                 {/* Messages Section with Empty State */}
