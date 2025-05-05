@@ -1,11 +1,14 @@
 import styled from "styled-components";
-import { Theme } from "../../../theme/theme";
+import { Theme } from "../../../../theme/theme";
 
-export const SuccessCard = styled.div`
+export const StatusCardStyleApproved = styled.div`
    display: flex;
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
     background: linear-gradient(to right, rgba(3, 148, 201, 1), rgba(100, 194, 6, 1));
     border-radius: ${Theme.borders.radius.lg};
+    padding: 35px 40px;
     max-height: 320px;
 
     .left-container {
@@ -13,35 +16,38 @@ export const SuccessCard = styled.div`
         flex-direction: column;
         align-items: start;
         justify-content: start;
-        gap: 16px;
-        width: 40%;
-        padding: 20px;
+        gap: 20px;
+        width: 70%;
+        
 
-        .confirmation-status-text {
-            font: ${Theme.typography.fonts.largeM};
-            color: ${Theme.colors.white};
-        }
+        .text-container {
+            display: flex;
+            flex-direction: column;
+            align-items: start;
+            justify-content: start;
+            gap: 8px;
+        
+            .confirmation-status-text {
+                font: ${Theme.typography.fonts.largeM};
+                color: ${Theme.colors.white};
+            }
 
-        .h3-text {
-            font: ${Theme.typography.fonts.h3};
-            color: ${Theme.colors.white};
+            .h3-text {
+                font: ${Theme.typography.fonts.h3};
+                color: ${Theme.colors.white};
+            }
         }
 
         .text16-text {
             font: ${Theme.typography.fonts.text16};
             color: ${Theme.colors.white};
         }
-
+        
         .button-container {
             display: flex;
-            align-items: start;
-            justify-content: start;
-            gap: 16px;
-            width: 100%;
-
-            .button {
-                min-width: 200px;
-            }
+            gap: 15px;
+            align-items: center;
+            min-width: 100%;
         }
     }
 
@@ -49,7 +55,7 @@ export const SuccessCard = styled.div`
         display: flex;
         align-items: start;
         justify-content: center;
-        width: 60%;
+        width: 30%;
        
       
         
@@ -64,8 +70,6 @@ export const SuccessCard = styled.div`
         img {
             width: 100%;
             height: 100%;
-            
-           
         }
     }
 `;
