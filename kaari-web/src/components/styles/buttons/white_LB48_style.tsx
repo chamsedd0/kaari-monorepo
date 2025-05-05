@@ -5,6 +5,6 @@ import { WhiteButtonPurpleText } from "./interfaces/white_button_purple_text";
 
 
 export const WhiteLB48 = styled(WhiteButtonPurpleText)`
-    padding: 16px 31px;
+    padding: 16px 30px;
     font: ${Theme.typography.fonts.largeB};
 `;

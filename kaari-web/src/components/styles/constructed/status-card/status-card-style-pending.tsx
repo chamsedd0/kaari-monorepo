@@ -1,15 +1,15 @@
 import styled from 'styled-components';
-import { Theme } from '../../../theme/theme';
+import { Theme } from '../../../../theme/theme';
 
-export const CardBaseModelStyleRefund = styled.div`
+export const StatusCardStylePending = styled.div`
     display: flex;
-    align-items: stretch;
-    justify-content: start;
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
     background: linear-gradient(to right, rgba(158, 49, 225, 1), rgba(68, 13, 175, 1));
     border-radius: ${Theme.borders.radius.lg};
+    padding: 35px 40px;
     max-height: 320px;
-    margin-bottom: 25px;
 
     .left-container {
         display: flex;
@@ -17,53 +17,49 @@ export const CardBaseModelStyleRefund = styled.div`
         align-items: start;
         justify-content: start;
         gap: 20px;
-        width: 60%;
-        padding: 20px;
-    
+        width: 65%;
 
-        .confirmation-status-text {
-            font: ${Theme.typography.fonts.largeM};
-            color: ${Theme.colors.white};
-        }
-
-        .icon-h3-container {
+        .text-container {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            
-
-            img {
-                width: 32px;
-                height: 32px;
+            flex-direction: column;
+            align-items: start;
+            justify-content: start;
+            gap: 8px;
+        
+            .confirmation-status-text {
+                font: ${Theme.typography.fonts.largeM};
+                color: ${Theme.colors.white};
             }
 
             .h3-text {
                 font: ${Theme.typography.fonts.h3};
                 color: ${Theme.colors.white};
             }
-        }   
+        }
 
         .text16-text {
             font: ${Theme.typography.fonts.text16};
             color: ${Theme.colors.white};
-            max-width: 435px;
         }
-
+        
         .button-container {
-            max-width: 200px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            min-width: 100%;
         }
-    }  
+    }
 
     .right-container {
         display: flex;
-        align-items: end;
-        justify-content: end;
+        align-items: start;
+        justify-content: center;
+        width: 35%;
         
+
         img {
             width: 100%;
             height: 100%;
-            align-self: end;
         }
     }
 `;

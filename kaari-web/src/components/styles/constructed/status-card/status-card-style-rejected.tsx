@@ -1,13 +1,14 @@
 import styled from 'styled-components';
-import { Theme } from '../../../theme/theme';
+import { Theme } from '../../../../theme/theme';
 
-export const CardBaseModelStyleRejected = styled.div`
+export const StatusCardStyleRejected = styled.div`
     display: flex;
     justify-content: space-between;
+    align-items: center;
     width: 100%;
     background: linear-gradient(to right, rgba(199, 22, 25, 1), rgba(143, 39, 206, 1));
     border-radius: ${Theme.borders.radius.lg};
-    margin-bottom: 25px;
+    padding: 35px 40px;
     max-height: 320px;
 
     .left-container {
@@ -15,30 +16,24 @@ export const CardBaseModelStyleRejected = styled.div`
         flex-direction: column;
         align-items: start;
         justify-content: start;
-        gap: 25px;
-        width: 60%;
-        padding: 20px;
-        
-        .confirmation-status-text {
-            font: ${Theme.typography.fonts.largeM};
-            color: ${Theme.colors.white};
-        }
+        gap: 20px;
+        width: 65%;
 
-        .text-icon-container {
+        .text-container {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
+            flex-direction: column;
+            align-items: start;
+            justify-content: start;
+            gap: 8px;
+        
+            .confirmation-status-text {
+                font: ${Theme.typography.fonts.largeM};
+                color: ${Theme.colors.white};
+            }
 
             .h3-text {
                 font: ${Theme.typography.fonts.h3};
                 color: ${Theme.colors.white};
-                max-width: 280px;
-            }
-
-            img {
-                width: 56px;
-                height: 56px;
             }
         }
 
@@ -48,21 +43,23 @@ export const CardBaseModelStyleRejected = styled.div`
         }
         
         .button-container {
-                width: 100%;
-            
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            min-width: 100%;
         }
     }
 
     .right-container {
         display: flex;
-        align-items: end;
-        justify-content: end;
+        align-items: start;
+        justify-content: center;
+        width: 35%;
         
 
         img {
             width: 100%;
-            height: 90%;
-            align-self: end;
+            height: 100%;
         }
     }
 `;
