@@ -94,23 +94,24 @@ const AdminDashboard: React.FC = () => {
   
   // Check for trailing slash and ensure it's removed from the shown path
   const renderContent = () => {
-    const path = location.pathname.endsWith('/') 
-      ? location.pathname.slice(0, -1) 
-      : location.pathname;
+    const path = location.pathname;
     
-    // Extract the section from the path
-    if (path.endsWith('admin')) {
-      return <Navigate to="/dashboard/admin/overview" replace />;
-    } else if (path.endsWith('overview')) {
+    console.log('Current path in AdminDashboard:', path);
+    
+    if (path.endsWith('overview') || path === '/dashboard/admin') {
       return <OverviewPage />;
-    } else if (path.endsWith('admin-controls')) {
-      return <AdminControls />;
-    } else if (path.endsWith('teams')) {
-      return <TeamsPage />;
-    } else if (path.endsWith('photoshoot-bookings')) {
+    } else if (path.includes('photoshoot-bookings')) {
+      // Check if this is a view route with an ID
+      const viewMatch = path.match(/\/photoshoot-bookings\/view\/([^\/]+)/);
+      if (viewMatch && viewMatch[1]) {
+        console.log('Found booking ID in path:', viewMatch[1]);
+        return <PhotoshootBookingDetail onUpdateBooking={() => {}} />;
+      }
       return <PhotoshootBookings />;
-    } else if (path.includes('/photoshoot-bookings/')) {
-      return <PhotoshootBookingDetail />;
+    } else if (path.includes('teams')) {
+      return <TeamsPage />;
+    } else if (path.endsWith('settings') || path.endsWith('admin-controls')) {
+      return <AdminControls />;
     } else if (path.endsWith('property-edit-requests')) {
       return <PropertyEditRequests />;
     } else if (path.endsWith('edit-requests')) {
@@ -297,16 +298,19 @@ const AdminDashboard: React.FC = () => {
         </Header>
         
         <Routes>
-          <Route path="/" element={renderContent()} />
-          <Route path="/overview" element={renderContent()} />
-          <Route path="/photoshoot-bookings/*" element={renderContent()} />
-          <Route path="/teams/*" element={renderContent()} />
-          <Route path="/property-edit-requests" element={renderContent()} />
-          <Route path="/refund-requests" element={renderContent()} />
-          <Route path="/cancellation-requests" element={renderContent()} />
-          <Route path="/settings" element={renderContent()} />
-          {/* Additional routes to be implemented */}
-          <Route path="*" element={renderContent()} />
+          <Route path="/" element={<Navigate to="/dashboard/admin/overview" replace />} />
+          <Route path="/overview" element={<OverviewPage />} />
+          <Route path="/photoshoot-bookings" element={<PhotoshootBookings />} />
+          <Route path="/photoshoot-bookings/*" element={<PhotoshootBookings />} />
+          <Route path="/teams/*" element={<TeamsPage />} />
+          <Route path="/property-edit-requests" element={<PropertyEditRequests />} />
+          <Route path="/edit-requests" element={<EditRequests />} />
+          <Route path="/refund-requests" element={<RefundRequests />} />
+          <Route path="/cancellation-requests" element={<CancellationRequests />} />
+          <Route path="/settings" element={<AdminControls />} />
+          <Route path="/admin-controls" element={<AdminControls />} />
+          <Route path="/test-data-generator" element={<TestDataGenerator />} />
+          <Route path="*" element={<Navigate to="/dashboard/admin/overview" replace />} />
         </Routes>
       </MainContent>
     </AdminDashboardContainer>

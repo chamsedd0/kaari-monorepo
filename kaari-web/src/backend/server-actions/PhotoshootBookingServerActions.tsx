@@ -55,45 +55,61 @@ const toFirestoreBooking = (booking: PhotoshootBooking): Omit<FirestorePhotoShoo
 
 // Convert from Firestore format
 const fromFirestoreBooking = (id: string, data: DocumentData): PhotoshootBooking => {
-  // Ensure all required date fields exist before converting
-  if (!data.date || !data.createdAt || !data.updatedAt) {
-    console.warn(`Document ${id} is missing required date fields:`, data);
-    
-    // Create default dates for missing fields to prevent errors
+  try {
+    // Create a deep copy of the data to avoid mutating the original
+    const dataCopy = { ...data };
     const now = new Date();
     
-    // Create base object without completedAt
+    // Safely convert Timestamp fields to Date objects or use defaults
+    // For required date fields
+    if (!dataCopy.date || !(dataCopy.date instanceof Timestamp)) {
+      console.warn(`Document ${id}: Missing or invalid 'date' field, using current date as fallback`);
+      dataCopy.date = Timestamp.fromDate(now);
+    }
+    
+    if (!dataCopy.createdAt || !(dataCopy.createdAt instanceof Timestamp)) {
+      console.warn(`Document ${id}: Missing or invalid 'createdAt' field, using current date as fallback`);
+      dataCopy.createdAt = Timestamp.fromDate(now);
+    }
+    
+    if (!dataCopy.updatedAt || !(dataCopy.updatedAt instanceof Timestamp)) {
+      console.warn(`Document ${id}: Missing or invalid 'updatedAt' field, using current date as fallback`);
+      dataCopy.updatedAt = Timestamp.fromDate(now);
+    }
+    
+    // Create base object with all required fields
     const result: any = {
       id,
-      ...data,
-      date: data.date ? data.date.toDate() : now,
-      createdAt: data.createdAt ? data.createdAt.toDate() : now,
-      updatedAt: data.updatedAt ? data.updatedAt.toDate() : now
+      ...dataCopy,
+      date: dataCopy.date.toDate(),
+      createdAt: dataCopy.createdAt.toDate(),
+      updatedAt: dataCopy.updatedAt.toDate()
     };
     
-    // Only add completedAt if it exists in the data
-    if (data.completedAt) {
-      result.completedAt = data.completedAt.toDate();
+    // Only add completedAt if it exists and is valid
+    if (dataCopy.completedAt && dataCopy.completedAt instanceof Timestamp) {
+      result.completedAt = dataCopy.completedAt.toDate();
+    }
+    
+    // Ensure status has a valid value
+    if (!result.status) {
+      result.status = 'pending';
     }
     
     return result as PhotoshootBooking;
+  } catch (error) {
+    console.error(`Error converting document ${id} from Firestore:`, error);
+    
+    // Return a minimal valid booking object to prevent UI crashes
+    return {
+      id,
+      ...data,
+      date: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      status: 'pending'
+    } as PhotoshootBooking;
   }
-  
-  // Create base object without completedAt
-  const result: any = {
-    id,
-    ...data,
-    date: data.date.toDate(),
-    createdAt: data.createdAt.toDate(),
-    updatedAt: data.updatedAt.toDate()
-  };
-  
-  // Only add completedAt if it exists in the data
-  if (data.completedAt) {
-    result.completedAt = data.completedAt.toDate();
-  }
-  
-  return result as PhotoshootBooking;
 };
 
 // Helper function to initialize some sample data for development
@@ -317,17 +333,35 @@ export class PhotoshootBookingServerActions {
    */
   static async getBookingById(id: string): Promise<PhotoshootBooking | null> {
     try {
-      const docRef = doc(db, COLLECTION_NAME, id);
-      const docSnap = await getDoc(docRef);
+      console.log(`Getting booking with ID: ${id}`);
       
-      if (!docSnap.exists()) {
+      if (!id) {
+        console.error('Invalid booking ID provided');
         return null;
       }
       
-      return fromFirestoreBooking(docSnap.id, docSnap.data());
+      const docRef = doc(db, COLLECTION_NAME, id);
+      console.log(`Created document reference for ${COLLECTION_NAME}/${id}`);
+      
+      const docSnap = await getDoc(docRef);
+      console.log(`Document snapshot fetched, exists: ${docSnap.exists()}`);
+      
+      if (!docSnap.exists()) {
+        console.log(`No booking found with ID: ${id}`);
+        return null;
+      }
+      
+      const data = docSnap.data();
+      console.log(`Raw booking data:`, data);
+      
+      const booking = fromFirestoreBooking(docSnap.id, data);
+      console.log(`Converted booking:`, booking);
+      
+      return booking;
     } catch (error) {
       console.error(`Error getting booking ${id}:`, error);
-      throw error;
+      // Instead of throwing, return null so the UI can handle the error
+      return null;
     }
   }
 

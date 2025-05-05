@@ -86,7 +86,18 @@ const PhotoshootBookingsPage: React.FC = () => {
   };
   
   const viewBookingDetails = (id: string) => {
-    navigate(`/dashboard/admin/photoshoot-bookings/view/${id}`);
+    if (!id) {
+      console.error('Cannot view booking: Booking ID is missing');
+      return;
+    }
+    
+    console.log('Navigating to booking details:', id);
+    
+    // Use a timeout to ensure any pending state updates are completed
+    // before navigating to the detail page
+    setTimeout(() => {
+      navigate(`/dashboard/admin/photoshoot-bookings/view/${id}`);
+    }, 0);
   };
   
   // Format date for display
@@ -215,8 +226,20 @@ const PhotoshootBookingsPage: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<BookingsList />} />
-      <Route path="/view/:id" element={<PhotoshootBookingDetail onUpdateBooking={loadBookings} />} />
-      <Route path="/refresh" element={<BookingsList />} />
+      <Route path="/view/:id" element={
+        <div data-testid="booking-detail-wrapper">
+          <PhotoshootBookingDetail onUpdateBooking={loadBookings} />
+        </div>
+      } />
+      <Route path="/refresh" element={
+        <React.Fragment>
+          {React.useEffect(() => { 
+            console.log('Refresh route - reloading bookings');
+            loadBookings(); 
+          }, [])}
+          <BookingsList />
+        </React.Fragment>
+      } />
     </Routes>
   );
 };

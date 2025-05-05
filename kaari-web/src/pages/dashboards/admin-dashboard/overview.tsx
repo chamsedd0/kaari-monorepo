@@ -16,6 +16,7 @@ import {
   Button,
   StatusBadge,
 } from './styles';
+import { Link } from 'react-router-dom';
 
 import { PhotoshootBookingServerActions } from '../../../backend/server-actions/PhotoshootBookingServerActions';
 import { TeamServerActions } from '../../../backend/server-actions/TeamServerActions';
@@ -147,9 +148,9 @@ const OverviewPage: React.FC = () => {
                       </StatusBadge>
                     </TableCell>
                     <TableCell>
-                      <Button onClick={() => window.location.href = `/dashboard/admin/photoshoot-bookings/view/${booking.id}`}>
-                        View
-                      </Button>
+                      <Link to={`/dashboard/admin/photoshoot-bookings/view/${booking.id}`} style={{ textDecoration: 'none' }}>
+                        <Button>View</Button>
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -160,9 +161,9 @@ const OverviewPage: React.FC = () => {
           )}
           
           <div style={{ marginTop: '20px', textAlign: 'right' }}>
-            <Button onClick={() => window.location.href = '/dashboard/admin/photoshoot-bookings'}>
-              View All Bookings
-            </Button>
+            <Link to="/dashboard/admin/photoshoot-bookings" style={{ textDecoration: 'none' }}>
+              <Button>View All Bookings</Button>
+            </Link>
           </div>
         </CardContent>
       </DashboardCard>

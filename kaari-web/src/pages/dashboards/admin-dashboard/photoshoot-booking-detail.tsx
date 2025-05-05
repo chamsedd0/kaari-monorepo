@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaCalendarAlt, FaUsers, FaUpload, FaCheck, FaPlus, FaTimes } from 'react-icons/fa';
 import {
   DashboardCard,
@@ -103,12 +103,26 @@ const COMMON_FEATURES = [
 ];
 
 const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpdateBooking }) => {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Try to extract ID from URL path if useParams doesn't work
+  const extractIdFromPath = (): string | null => {
+    const match = location.pathname.match(/\/view\/([^\/]+)/);
+    return match ? match[1] : null;
+  };
+  
+  const bookingId = params.id || extractIdFromPath();
+  
+  console.log('PhotoshootBookingDetail: params =', params);
+  console.log('PhotoshootBookingDetail: location =', location);
+  console.log('PhotoshootBookingDetail: extracted bookingId =', bookingId);
   
   const [booking, setBooking] = useState<PhotoshootBooking | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<string>('');
   const [teamDebugInfo, setTeamDebugInfo] = useState<string>('');
   
@@ -281,21 +295,45 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   };
   
   useEffect(() => {
-    loadData();
-  }, [id]);
+    if (bookingId) {
+      console.log('ID for loading data:', bookingId);
+      setLoadError(null);
+      loadData(bookingId);
+    } else {
+      const error = 'ID parameter is missing from URL';
+      console.error(error);
+      setLoadError(error);
+      // Only navigate if we're not already on the main page to avoid loops
+      if (location.pathname.includes('/view/')) {
+        navigate('/dashboard/admin/photoshoot-bookings');
+      }
+    }
+  }, [bookingId, navigate, location.pathname]);
   
-  const loadData = async () => {
-    if (!id) return;
+  const loadData = async (id: string) => {
+    if (!id) {
+      const error = 'Booking ID is missing';
+      console.error(error);
+      setLoadError(error);
+      setLoading(false);
+      return;
+    }
     
     try {
       setLoading(true);
       
+      console.log('Loading booking with ID:', id);
+      
       // Load booking
       const bookingData = await PhotoshootBookingServerActions.getBookingById(id);
       
+      console.log('Booking data received:', bookingData);
+      
       if (!bookingData) {
-        console.error('Booking not found');
-        navigate('/dashboard/admin/photoshoot-bookings');
+        const error = 'Booking not found or data is null';
+        console.error(error);
+        setLoadError(error);
+        setLoading(false);
         return;
       }
       
@@ -399,8 +437,10 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       }
     } catch (error) {
       console.error('Error loading data:', error);
+      setLoadError(`Error loading booking: ${error instanceof Error ? error.message : String(error)}`);
       setTeamDebugInfo(`Error: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
+      console.log('Finished loading data, setting loading to false');
       setLoading(false);
     }
   };
@@ -410,7 +450,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   };
   
   const handleAssignTeam = async () => {
-    if (!id || !selectedTeam || !booking) return;
+    if (!bookingId || !selectedTeam || !booking) return;
     
     try {
       // Get team data to get members
@@ -422,10 +462,10 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       }
       
       // Assign team to booking
-      await PhotoshootBookingServerActions.assignTeamToBooking(id, selectedTeam, team.members);
+      await PhotoshootBookingServerActions.assignTeamToBooking(bookingId, selectedTeam, team.members);
       
       // Refresh booking data
-      loadData();
+      loadData(bookingId);
       onUpdateBooking();
       
       setShowAssignModal(false);
@@ -606,7 +646,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   };
   
   const handleCompleteBooking = async () => {
-    if (!id || !booking) return;
+    if (!bookingId || !booking) return;
     
     // Validate form
     if (!propertyData.title || !propertyData.description || !propertyData.address.street || propertyData.images.length === 0) {
@@ -626,20 +666,20 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     setLoading(true);
     
     try {
-      console.log(`Completing booking ${id} for advertiser/user ID: ${ownerId}`);
+      console.log(`Completing booking ${bookingId} for advertiser/user ID: ${ownerId}`);
       
       // Step 1: Create the property
       const createdPropertyId = await createPropertyAndLinkToAdvertiser(propertyData, ownerId);
       
       // Step 2: Update the booking with the new property ID and mark as completed
       const finalImages = propertyData.images.length > 0 ? propertyData.images : images;
-      await PhotoshootBookingServerActions.completeBooking(id, createdPropertyId, finalImages);
+      await PhotoshootBookingServerActions.completeBooking(bookingId, createdPropertyId, finalImages);
       
       // Show success message
       alert(`Booking completed and property created successfully!\nProperty ID: ${createdPropertyId}\nProperty was added to advertiser's properties.`);
       
       // Refresh booking data
-      loadData();
+      loadData(bookingId);
       onUpdateBooking();
       
       setShowCompleteModal(false);
@@ -652,14 +692,14 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   };
   
   const handleCancelBooking = async () => {
-    if (!id || !booking) return;
+    if (!bookingId || !booking) return;
     
     if (window.confirm('Are you sure you want to cancel this booking?')) {
       try {
-        await PhotoshootBookingServerActions.cancelBooking(id);
+        await PhotoshootBookingServerActions.cancelBooking(bookingId);
         
         // Refresh booking data
-        loadData();
+        loadData(bookingId);
         onUpdateBooking();
       } catch (error) {
         console.error('Error cancelling booking:', error);
@@ -677,11 +717,74 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   };
   
   if (loading) {
-    return <p>Loading booking details...</p>;
+    return (
+      <div>
+        <div style={{ marginBottom: '20px' }}>
+          <Button onClick={handleBackClick}>
+            <FaArrowLeft style={{ marginRight: '5px' }} /> Back to Bookings
+          </Button>
+        </div>
+        
+        <DashboardCard>
+          <CardTitle>Loading Booking Details...</CardTitle>
+          <CardContent>
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ 
+                  border: '4px solid #f3f3f3',
+                  borderTop: '4px solid #6200EA',
+                  borderRadius: '50%',
+                  width: '50px',
+                  height: '50px',
+                  animation: 'spin 2s linear infinite',
+                  margin: '0 auto 20px'
+                }} />
+                <p>Loading booking information for ID: {bookingId}...</p>
+                <p style={{ fontSize: '14px', color: '#666' }}>
+                  This may take a few moments. If it continues loading for more than a minute, 
+                  please try refreshing the page.
+                </p>
+              </div>
+              <style>
+                {`
+                  @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                  }
+                `}
+              </style>
+            </div>
+          </CardContent>
+        </DashboardCard>
+      </div>
+    );
   }
   
-  if (!booking) {
-    return <p>Booking not found.</p>;
+  if (loadError || !booking) {
+    return (
+      <div>
+        <div style={{ marginBottom: '20px' }}>
+          <Button onClick={handleBackClick}>
+            <FaArrowLeft style={{ marginRight: '5px' }} /> Back to Bookings
+          </Button>
+        </div>
+        
+        <DashboardCard>
+          <CardTitle>Error Loading Booking</CardTitle>
+          <CardContent>
+            <div style={{ textAlign: 'center', padding: '30px 0' }}>
+              <p style={{ color: 'red', marginBottom: '15px' }}>
+                {loadError || 'The requested booking could not be found or there was an error loading it.'}
+              </p>
+              <p>Booking ID: {bookingId || 'Not provided'}</p>
+              <Button onClick={handleBackClick} style={{ marginTop: '20px' }}>
+                Return to Bookings List
+              </Button>
+            </div>
+          </CardContent>
+        </DashboardCard>
+      </div>
+    );
   }
   
   return (
@@ -695,9 +798,11 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       <DashboardCard>
         <CardTitle>
           Photoshoot Booking Details
-          <StatusBadge status={booking.status} style={{ marginLeft: '10px' }}>
-            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-          </StatusBadge>
+          {booking && (
+            <StatusBadge $status={booking.status} style={{ marginLeft: '10px' }}>
+              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+            </StatusBadge>
+          )}
         </CardTitle>
         
         <CardContent>
@@ -1009,7 +1114,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                     <Button onClick={() => navigate('/dashboard/admin/teams')}>
                       Go to Teams Management
                     </Button>
-                    <Button onClick={() => loadData()}>
+                    <Button onClick={() => loadData(bookingId)}>
                       Reload Teams
                     </Button>
                     <Button onClick={() => navigate('/dashboard/admin/settings')}>
