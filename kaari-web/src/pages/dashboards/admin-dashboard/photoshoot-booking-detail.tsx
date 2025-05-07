@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { FaArrowLeft, FaCalendarAlt, FaUsers, FaUpload, FaCheck, FaPlus, FaTimes } from 'react-icons/fa';
+import { FaArrowLeft, FaCalendarAlt, FaUsers, FaUpload, FaCheck, FaPlus, FaTimes, FaTrash, FaBan } from 'react-icons/fa';
 import {
   DashboardCard,
   CardTitle,
@@ -64,6 +64,16 @@ interface PropertyFormData {
     type: 'bedroom' | 'bathroom' | 'kitchen' | 'storage' | 'living';
     area: number;
   }>;
+  isFurnished: boolean;
+  capacity: number;
+  rules: Array<{
+    name: string;
+    allowed: boolean;
+  }>;
+  nearbyPlaces: Array<{
+    name: string;
+    timeDistance: string;
+  }>;
 }
 
 // Room type options
@@ -101,6 +111,45 @@ const COMMON_FEATURES = [
   'wifi',
   'women-only'
 ];
+
+// Common rules
+const COMMON_RULES = [
+  { name: 'Smoking', allowed: false },
+  { name: 'Parties', allowed: false },
+  { name: 'Animals/Pets', allowed: false },
+  { name: 'Children', allowed: true },
+  { name: 'Additional guests', allowed: false }
+];
+
+// Common nearby places
+const COMMON_NEARBY_PLACES = [
+  { name: 'Workplaces', timeDistance: '10 minutes' },
+  { name: 'Grocery stores', timeDistance: '15 minutes' },
+  { name: 'Schools', timeDistance: '10 minutes' },
+  { name: 'Supermarkets', timeDistance: '10 minutes' },
+  { name: 'Medical facilities', timeDistance: '15 minutes' },
+  { name: 'Public transport', timeDistance: '5 minutes' },
+  { name: 'Restaurants', timeDistance: '8 minutes' },
+  { name: 'Shopping centers', timeDistance: '20 minutes' },
+  { name: 'Parks', timeDistance: '12 minutes' },
+  { name: 'Gyms', timeDistance: '10 minutes' }
+];
+
+// Helper functions for getting booking address information
+const getBookingStreet = (booking: PhotoshootBooking): string => {
+  if (booking.propertyAddress?.street) {
+    const streetNumber = booking.propertyAddress.streetNumber || '';
+    return `${booking.propertyAddress.street} ${streetNumber}`.trim();
+  } else if (booking.streetName) {
+    const streetNumber = booking.streetNumber || '';
+    return `${booking.streetName} ${streetNumber}`.trim();
+  }
+  return '';
+};
+
+const getBookingCity = (booking: PhotoshootBooking): string => {
+  return booking.propertyAddress?.city || booking.city || '';
+};
 
 const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpdateBooking }) => {
   const params = useParams<{ id: string }>();
@@ -161,6 +210,10 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     status: 'available',
     location: null,
     rooms: [],
+    isFurnished: false,
+    capacity: 0,
+    rules: [],
+    nearbyPlaces: [],
   });
   
   const [amenityInput, setAmenityInput] = useState('');
@@ -171,6 +224,105 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     type: 'bedroom',
     area: 0
   });
+  
+  // New state for rules and nearby places
+  const [ruleInput, setRuleInput] = useState('');
+  const [placeNameInput, setPlaceNameInput] = useState('');
+  const [placeDistanceInput, setPlaceDistanceInput] = useState('');
+  
+  // Add handler for rule toggling
+  const handleRuleToggle = (index: number) => {
+    setPropertyData(prevData => {
+      const updatedRules = [...prevData.rules];
+      updatedRules[index] = {
+        ...updatedRules[index],
+        allowed: !updatedRules[index].allowed
+      };
+      return {
+        ...prevData,
+        rules: updatedRules
+      };
+    });
+  };
+
+  // Add new rule
+  const addRule = () => {
+    if (!ruleInput.trim()) return;
+    
+    setPropertyData(prevData => ({
+      ...prevData,
+      rules: [
+        ...prevData.rules,
+        { name: ruleInput, allowed: false }
+      ]
+    }));
+    
+    setRuleInput('');
+  };
+
+  // Remove rule
+  const removeRule = (index: number) => {
+    setPropertyData(prevData => ({
+      ...prevData,
+      rules: prevData.rules.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Add nearby place
+  const addNearbyPlace = () => {
+    if (!placeNameInput.trim() || !placeDistanceInput.trim()) return;
+    
+    setPropertyData(prevData => ({
+      ...prevData,
+      nearbyPlaces: [
+        ...prevData.nearbyPlaces,
+        { name: placeNameInput, timeDistance: placeDistanceInput }
+      ]
+    }));
+    
+    setPlaceNameInput('');
+    setPlaceDistanceInput('');
+  };
+
+  // Remove nearby place
+  const removeNearbyPlace = (index: number) => {
+    setPropertyData(prevData => ({
+      ...prevData,
+      nearbyPlaces: prevData.nearbyPlaces.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Update nearby place
+  const updateNearbyPlace = (index: number, field: 'name' | 'timeDistance', value: string) => {
+    setPropertyData(prevData => {
+      const updatedPlaces = [...prevData.nearbyPlaces];
+      updatedPlaces[index] = {
+        ...updatedPlaces[index],
+        [field]: value
+      };
+      return {
+        ...prevData,
+        nearbyPlaces: updatedPlaces
+      };
+    });
+  };
+  
+  // Handle capacity change
+  const handleCapacityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    setPropertyData(prevData => ({
+      ...prevData,
+      capacity: isNaN(value) ? 0 : value
+    }));
+  };
+
+  // Handle furnished toggle
+  const handleFurnishedToggle = () => {
+    setPropertyData(prevData => ({
+      ...prevData,
+      isFurnished: !prevData.isFurnished
+    }));
+  };
   
   // Direct Firebase check utility function
   const checkTeamsInFirebase = async () => {
@@ -243,6 +395,10 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         location: propertyData.location,
         // Include rooms array
         rooms: propertyData.rooms,
+        isFurnished: propertyData.isFurnished,
+        capacity: propertyData.capacity,
+        rules: propertyData.rules,
+        nearbyPlaces: propertyData.nearbyPlaces,
       };
       
       // Log the data being sent to Firestore for debugging
@@ -251,6 +407,9 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         createdAt: now.toISOString(),
         updatedAt: now.toISOString()
       }, null, 2));
+      
+      // Specifically log the location data to verify it's being passed correctly
+      console.log('GEOLOCATION DATA BEING SAVED:', propertyWithTimestamps.location);
       
       await setDoc(propertyDocRef, {
         ...propertyWithTimestamps,
@@ -311,136 +470,68 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   }, [bookingId, navigate, location.pathname]);
   
   const loadData = async (id: string) => {
-    if (!id) {
-      const error = 'Booking ID is missing';
-      console.error(error);
-      setLoadError(error);
-      setLoading(false);
-      return;
-    }
-    
-    try {
       setLoading(true);
-      
-      console.log('Loading booking with ID:', id);
-      
-      // Load booking
+    setLoadError(null);
+    try {
       const bookingData = await PhotoshootBookingServerActions.getBookingById(id);
-      
-      console.log('Booking data received:', bookingData);
+      console.log('Loaded booking data:', bookingData);
       
       if (!bookingData) {
-        const error = 'Booking not found or data is null';
-        console.error(error);
-        setLoadError(error);
-        setLoading(false);
-        return;
+        throw new Error('Booking not found');
       }
       
-      console.log('Loaded booking data:', JSON.stringify(bookingData, null, 2));
+      // Debug location information from booking
+      console.log('LOCATION DATA FROM BOOKING:', bookingData.location);
       
-      // Map userId to advertiserId for compatibility with existing code
-      const bookingWithAdvertiserId = {
-        ...bookingData,
-        advertiserId: bookingData.userId // Map userId to advertiserId
-      };
+      setBooking(bookingData);
       
-      // Check if userId exists
-      if (!bookingData.userId) {
-        console.warn('Warning: Booking does not have a user ID');
-      } else {
-        console.log('Using userId as advertiserId:', bookingData.userId);
-      }
-      
-      setBooking(bookingWithAdvertiserId);
-      
-      // Pre-fill property data from booking
-      if (bookingData.propertyAddress || (bookingData.streetName && bookingData.city)) {
-        // Create property address from either the propertyAddress object or the individual fields
-        const streetAddress = bookingData.propertyAddress?.street || bookingData.streetName || '';
-        const streetNumber = bookingData.propertyAddress?.streetNumber || bookingData.streetNumber || '';
-        const fullStreet = streetNumber ? `${streetAddress} ${streetNumber}` : streetAddress;
-        
-        setPropertyData(prevData => ({
-          ...prevData,
-          // Use userId as the ownerId if advertiserId is not available
-          ownerId: bookingData.userId || '',
+      // Initialize property data with booking address
+      setPropertyData({
+        id: '',
+        ownerId: bookingData.advertiserId || bookingData.userId || '',
+        title: `${bookingData.propertyType || 'Property'} in ${getBookingCity(bookingData)}`,
+        description: `A beautiful ${bookingData.propertyType || 'property'} located in ${getBookingCity(bookingData)}.`,
           address: {
-            street: fullStreet,
-            city: bookingData.propertyAddress?.city || bookingData.city || '',
-            state: bookingData.propertyAddress?.state || bookingData.stateRegion || '',
-            zipCode: bookingData.propertyAddress?.zipCode || bookingData.postalCode || '',
-            country: bookingData.propertyAddress?.country || bookingData.country || '',
-          },
-          // Include location data if it exists in the booking
+          street: getBookingStreet(bookingData),
+          city: getBookingCity(bookingData),
+          state: bookingData.stateRegion || bookingData.propertyAddress?.state || '',
+          zipCode: bookingData.postalCode || bookingData.propertyAddress?.zipCode || '',
+          country: bookingData.country || bookingData.propertyAddress?.country || 'Morocco',
+        },
+        propertyType: bookingData.propertyType === 'house' ? 'house' : 'apartment',
+        bedrooms: 1,
+        bathrooms: 1,
+        area: 0,
+        price: 0,
+        deposit: 0,
+        serviceFee: 0,
+        minstay: '',
+        availableFrom: new Date().toISOString().split('T')[0],
+        images: bookingData.images || [],
+        amenities: [],
+        features: [],
+        status: 'available',
           location: bookingData.location || null,
-          propertyType: (bookingData.propertyType?.toLowerCase() === 'apartment' || 
-                        bookingData.propertyType?.toLowerCase() === 'house' || 
-                        bookingData.propertyType?.toLowerCase() === 'condo' || 
-                        bookingData.propertyType?.toLowerCase() === 'land' || 
-                        bookingData.propertyType?.toLowerCase() === 'commercial') 
-                        ? bookingData.propertyType.toLowerCase() as any : 'apartment',
-          title: `Property at ${fullStreet || 'Unknown Location'}`,
-        }));
-      } else {
-        // Even if no property address, still set the ownerId using userId
-        setPropertyData(prevData => ({
-          ...prevData,
-          ownerId: bookingData.userId || ''
-        }));
-      }
+        rooms: [],
+        isFurnished: false,
+        capacity: 2,
+        rules: [...COMMON_RULES], // Use the common rules as defaults
+        nearbyPlaces: [...COMMON_NEARBY_PLACES], // Use the common nearby places as defaults
+      });
       
-      // Load teams - Try to get active teams, if that fails, get all teams
-      try {
-        console.log('Attempting to load active teams...');
-        const teamsData = await TeamServerActions.getActiveTeams();
-        console.log('Active teams loaded:', teamsData);
-        
+      // Load teams for assignment
+      const teamsData = await TeamServerActions.getAllTeams();
+      console.log('Loaded teams data:', teamsData);
+      setTeams(teamsData);
+      
+      // If no teams were found through server actions, try direct Firebase query
         if (!teamsData || teamsData.length === 0) {
-          console.log('No active teams found, getting all teams instead');
-          const allTeams = await TeamServerActions.getAllTeams();
-          console.log('All teams loaded:', allTeams);
-          
-          if (!allTeams || allTeams.length === 0) {
-            console.log('No teams found via server actions, checking Firebase directly');
             await checkTeamsInFirebase();
-          } else {
-            setTeams(allTeams);
-          }
-        } else {
-          setTeams(teamsData);
-        }
-      } catch (teamError) {
-        console.error('Error loading teams:', teamError);
-        // Try getting all teams as fallback
-        try {
-          console.log('Attempting to load all teams as fallback...');
-          const allTeams = await TeamServerActions.getAllTeams();
-          console.log('All teams loaded via fallback:', allTeams);
-          
-          if (!allTeams || allTeams.length === 0) {
-            console.log('No teams found via fallback, checking Firebase directly');
-            await checkTeamsInFirebase();
-          } else {
-            setTeams(allTeams || []);
-          }
-        } catch (fallbackError) {
-          console.error('Error loading teams via fallback:', fallbackError);
-          console.log('Trying direct Firebase access as last resort');
-          await checkTeamsInFirebase();
-        }
-      }
-      
-      // Set selected team if booking already has a team assigned
-      if (bookingData.teamId) {
-        setSelectedTeam(bookingData.teamId);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
-      setLoadError(`Error loading booking: ${error instanceof Error ? error.message : String(error)}`);
-      setTeamDebugInfo(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      console.error('Error loading booking:', error);
+      setLoadError(error instanceof Error ? error.message : 'Failed to load booking data');
     } finally {
-      console.log('Finished loading data, setting loading to false');
       setLoading(false);
     }
   };
@@ -831,6 +922,29 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                 </FormGroup>
                 
                 <FormGroup>
+                  <Label>Capacity (people)</Label>
+                  <Input 
+                    type="number" 
+                    min="0"
+                    value={propertyData.capacity} 
+                    onChange={handleCapacityChange}
+                  />
+                </FormGroup>
+                
+                <FormGroup>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <input 
+                      type="checkbox" 
+                      id="furnished-checkbox"
+                      checked={propertyData.isFurnished}
+                      onChange={handleFurnishedToggle}
+                      style={{ marginRight: '8px' }}
+                    />
+                    <Label htmlFor="furnished-checkbox" style={{ margin: 0 }}>Furnished</Label>
+                  </div>
+                </FormGroup>
+                
+                <FormGroup>
                   <Label>Deposit Amount</Label>
                   <Input 
                     type="number" 
@@ -882,6 +996,136 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                     <option value="occupied">Occupied</option>
                   </Select>
                 </FormGroup>
+                
+                {/* Location display */}
+                {propertyData.location && (
+                  <div style={{ 
+                    padding: '10px 15px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    marginTop: '10px',
+                    background: '#f8f9fa'
+                  }}>
+                    <h4 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>
+                      Property Location Data (for Map Display)
+                    </h4>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span><strong>Latitude:</strong> {propertyData.location.lat}</span>
+                      <span><strong>Longitude:</strong> {propertyData.location.lng}</span>
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                      This geolocation data will be used to display the property on maps and for searches.
+                    </p>
+                  </div>
+                )}
+              </div>
+              
+              <h3>Property Images</h3>
+              <div style={{ 
+                padding: '15px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginBottom: '20px'
+              }}>
+                <p style={{ marginBottom: '15px', color: '#666' }}>
+                  Add images of the property. At least one image is required.
+                </p>
+                
+                {/* Existing images */}
+                {propertyData.images.length > 0 ? (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ marginTop: 0 }}>Current Images</h4>
+                    <div style={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: '10px' 
+                    }}>
+                      {propertyData.images.map((image, index) => (
+                        <div key={index} style={{ 
+                          position: 'relative',
+                          width: '120px', 
+                          height: '120px',
+                          border: '1px solid #eee',
+                          borderRadius: '4px',
+                          overflow: 'hidden'
+                        }}>
+                          <img 
+                            src={image} 
+                            alt={`Property ${index + 1}`} 
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'cover' 
+                            }} 
+                            onError={(e) => {
+                              e.currentTarget.src = 'https://via.placeholder.com/120x120?text=Image+Error';
+                            }}
+                          />
+                          <button 
+                            onClick={() => {
+                              setPropertyData(prev => ({
+                                ...prev,
+                                images: prev.images.filter((_, i) => i !== index)
+                              }));
+                            }}
+                            style={{ 
+                              position: 'absolute',
+                              top: '5px',
+                              right: '5px',
+                              background: 'rgba(255, 0, 0, 0.7)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '50%',
+                              width: '24px',
+                              height: '24px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <FaTimes size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p style={{ color: '#666', fontStyle: 'italic', marginBottom: '15px' }}>
+                    No images added yet. Please add at least one property image.
+                  </p>
+                )}
+                
+                {/* Add new image */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4>Add an Image URL</h4>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Image URL</Label>
+                      <Input 
+                        type="text" 
+                        placeholder="https://example.com/image.jpg"
+                        value={imageInput} 
+                        onChange={(e) => setImageInput(e.target.value)}
+                      />
+                    </FormGroup>
+                    <Button 
+                      onClick={() => {
+                        if (imageInput.trim()) {
+                          setPropertyData(prev => ({
+                            ...prev,
+                            images: [...prev.images, imageInput.trim()]
+                          }));
+                          setImageInput('');
+                        }
+                      }}
+                      style={{ height: '38px' }}
+                      disabled={!imageInput.trim()}
+                    >
+                      Add Image
+                    </Button>
+                  </div>
+                </div>
               </div>
               
               {/* Rooms Management Section */}
@@ -902,135 +1146,523 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                         value={roomFormData.type} 
                         onChange={handleRoomFormChange}
                       >
-                        {ROOM_TYPES.map((type) => (
-                          <option key={type.value} value={type.value}>{type.label}</option>
+                        {ROOM_TYPES.map(type => (
+                          <option key={type.value} value={type.value}>
+                            {type.label}
+                          </option>
                         ))}
                       </Select>
                     </FormGroup>
-                    
                     <FormGroup style={{ flex: 1 }}>
                       <Label>Area (sq m)</Label>
                       <Input 
                         type="number" 
                         name="area"
                         min="0"
-                        step="0.5"
                         value={roomFormData.area} 
                         onChange={handleRoomFormChange}
                       />
                     </FormGroup>
-                    
-                    <Button onClick={handleAddRoom} style={{ marginBottom: '5px' }}>
-                      <FaPlus /> Add Room
+                    <Button 
+                      onClick={handleAddRoom}
+                      style={{ height: '38px' }}
+                    >
+                      Add Room
                     </Button>
                   </div>
                 </div>
                 
                 {propertyData.rooms.length > 0 ? (
                   <div>
-                    <h4 style={{ marginTop: 0 }}>Room List</h4>
+                    <h4>Added Rooms</h4>
                     <div style={{ 
-                      maxHeight: '200px',
-                      overflowY: 'auto',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+                      gap: '10px' 
                     }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                          <tr style={{ borderBottom: '1px solid #ddd' }}>
-                            <th style={{ padding: '8px', textAlign: 'left' }}>Room Type</th>
-                            <th style={{ padding: '8px', textAlign: 'left' }}>Area (sq m)</th>
-                            <th style={{ padding: '8px', textAlign: 'center', width: '80px' }}>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
                           {propertyData.rooms.map((room, index) => (
-                            <tr key={index} style={{ borderBottom: '1px solid #ddd' }}>
-                              <td style={{ padding: '8px' }}>
-                                {ROOM_TYPES.find(type => type.value === room.type)?.label || room.type}
-                              </td>
-                              <td style={{ padding: '8px' }}>{room.area} sq m</td>
-                              <td style={{ padding: '8px', textAlign: 'center' }}>
+                        <div key={index} style={{ 
+                          padding: '10px', 
+                          border: '1px solid #eee', 
+                          borderRadius: '4px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}>
+                          <div>
+                            <div style={{ fontWeight: 'bold' }}>
+                              {ROOM_TYPES.find(t => t.value === room.type)?.label || room.type}
+                            </div>
+                            <div>{room.area} sq m</div>
+                          </div>
                                 <button 
                                   onClick={() => handleRemoveRoom(index)}
                                   style={{
-                                    background: 'rgba(220, 53, 69, 0.8)',
-                                    color: 'white',
+                              background: 'none', 
                                     border: 'none',
-                                    borderRadius: '4px',
-                                    padding: '5px 10px',
-                                    cursor: 'pointer'
-                                  }}
-                                >
-                                  <FaTimes size={12} /> Remove
+                              cursor: 'pointer',
+                              color: 'red',
+                              fontSize: '16px'
+                            }}
+                          >
+                            <FaTrash />
                                 </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p>No rooms added yet.</p>
+                )}
                     </div>
                     
+              {/* Rules Management Section */}
+              <h3>Rules</h3>
                     <div style={{ 
+                padding: '15px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginBottom: '20px'
+              }}>
+                {/* Existing rules with toggle */}
+                {propertyData.rules.length > 0 ? (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ marginTop: 0 }}>Property Rules</h4>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+                      gap: '10px' 
+                    }}>
+                      {propertyData.rules.map((rule, index) => (
+                        <div key={index} style={{ 
+                          padding: '10px', 
+                          border: '1px solid #eee', 
+                          borderRadius: '4px',
                       display: 'flex', 
                       justifyContent: 'space-between', 
-                      marginTop: '10px',
-                      padding: '10px',
-                      backgroundColor: '#f8f9fa',
-                      borderRadius: '4px'
-                    }}>
-                      <div>
-                        <strong>Bedrooms:</strong> {propertyData.rooms.filter(room => room.type === 'bedroom').length}
+                          alignItems: 'center'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <div 
+                              style={{ 
+                                width: '18px', 
+                                height: '18px', 
+                                borderRadius: '50%', 
+                                backgroundColor: rule.allowed ? '#4CAF50' : '#F44336',
+                                marginRight: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontSize: '10px'
+                              }}
+                            >
+                              {rule.allowed ? '✓' : '✕'}
                       </div>
-                      <div>
-                        <strong>Bathrooms:</strong> {propertyData.rooms.filter(room => room.type === 'bathroom').length}
+                            <div>{rule.name}</div>
                       </div>
-                      <div>
-                        <strong>Total Rooms:</strong> {propertyData.rooms.length}
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            <button 
+                              onClick={() => handleRuleToggle(index)}
+                              style={{ 
+                                background: 'none', 
+                                border: 'none', 
+                                cursor: 'pointer',
+                                color: '#2196F3',
+                                fontSize: '16px',
+                                padding: '4px'
+                              }}
+                              title={rule.allowed ? "Mark as not allowed" : "Mark as allowed"}
+                            >
+                              {rule.allowed ? <FaBan /> : <FaCheck />}
+                            </button>
+                            <button 
+                              onClick={() => removeRule(index)}
+                              style={{ 
+                                background: 'none', 
+                                border: 'none', 
+                                cursor: 'pointer',
+                                color: 'red',
+                                fontSize: '16px',
+                                padding: '4px'
+                              }}
+                              title="Remove rule"
+                            >
+                              <FaTrash />
+                            </button>
                       </div>
-                      <div>
-                        <strong>Total Room Area:</strong> {propertyData.rooms.reduce((total, room) => total + room.area, 0)} sq m
                       </div>
+                      ))}
                     </div>
                   </div>
               ) : (
-                  <p style={{ color: '#666', fontStyle: 'italic' }}>No rooms added yet. Add rooms to specify bedroom, bathroom, and other room details.</p>
+                  <p>No rules added yet.</p>
                 )}
+                
+                {/* Add new rule */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4>Add a Rule</h4>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Rule Name</Label>
+                      <Input 
+                        type="text" 
+                        placeholder="e.g., No pets"
+                        value={ruleInput} 
+                        onChange={(e) => setRuleInput(e.target.value)}
+                      />
+                    </FormGroup>
+                    <Button 
+                      onClick={addRule}
+                      style={{ height: '38px' }}
+                    >
+                      Add Rule
+                    </Button>
+                  </div>
+                </div>
               </div>
               
-              {/* Legacy Bedrooms/Bathrooms Fields (hidden, maintained for backward compatibility) */}
-              <div style={{ display: 'none' }}>
-                <Input 
-                  type="hidden" 
-                  value={propertyData.bedrooms} 
-                  readOnly
-                />
-                <Input 
-                  type="hidden" 
-                  value={propertyData.bathrooms} 
-                  readOnly
-                />
-              </div>
-              
-              {/* Location Coordinates */}
-              <h3>Location Coordinates</h3>
+              {/* Nearby Places Management Section */}
+              <h3>Nearby Places</h3>
               <div style={{ 
-                padding: '10px',
-                backgroundColor: '#f5f5f5', 
+                padding: '15px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginBottom: '20px'
+              }}>
+                <p style={{ marginBottom: '15px', color: '#666' }}>
+                  Add nearby amenities with their distance/time. These will be displayed in the property listing to help potential renters understand the neighborhood.
+                </p>
+                
+                {/* Existing nearby places */}
+                {propertyData.nearbyPlaces.length > 0 ? (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ marginTop: 0 }}>Places Nearby</h4>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', 
+                      gap: '10px' 
+                    }}>
+                      {propertyData.nearbyPlaces.map((place, index) => (
+                        <div key={index} style={{ 
+                          padding: '12px 15px', 
+                          border: '1px solid #eee', 
+                          borderRadius: '4px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          background: '#f9f9f9'
+                        }}>
+                          <div>
+                            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{place.name}</div>
+                            <div style={{ fontSize: '14px', color: '#666' }}>{place.timeDistance}</div>
+                          </div>
+                          <button 
+                            onClick={() => removeNearbyPlace(index)}
+                            style={{ 
+                              background: 'none', 
+                              border: 'none', 
+                              cursor: 'pointer',
+                              color: 'red',
+                              fontSize: '16px'
+                            }}
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p style={{ color: '#666', fontStyle: 'italic', marginBottom: '15px' }}>
+                    No nearby places added yet. Common examples include Workplaces, Schools, Grocery stores, Supermarkets, Medical transport, etc.
+                  </p>
+                )}
+                
+                {/* Add new nearby place */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4>Add a Nearby Place</h4>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Place Name</Label>
+                <Input 
+                        type="text" 
+                        placeholder="e.g., Supermarkets, Schools, Workplaces"
+                        value={placeNameInput} 
+                        onChange={(e) => setPlaceNameInput(e.target.value)}
+                      />
+                    </FormGroup>
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Distance (time)</Label>
+                <Input 
+                        type="text" 
+                        placeholder="e.g., 10 minutes"
+                        value={placeDistanceInput} 
+                        onChange={(e) => setPlaceDistanceInput(e.target.value)}
+                      />
+                    </FormGroup>
+                    <Button 
+                      onClick={addNearbyPlace}
+                      style={{ height: '38px' }}
+                      disabled={!placeNameInput.trim() || !placeDistanceInput.trim()}
+                    >
+                      Add Place
+                    </Button>
+                  </div>
+              </div>
+              
+                {/* Quick add buttons for common places */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4 style={{ fontSize: '14px', marginBottom: '8px' }}>Quick Add Common Places:</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {COMMON_NEARBY_PLACES.map((place, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setPropertyData(prev => ({
+                            ...prev,
+                            nearbyPlaces: [...prev.nearbyPlaces, place]
+                          }));
+                        }}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#f0f0f0',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <FaPlus size={10} /> {place.name} ({place.timeDistance})
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Amenities Management Section */}
+              <h3>Amenities</h3>
+              <div style={{ 
+                padding: '15px',
+                border: '1px solid #ddd',
                 borderRadius: '4px', 
                 marginBottom: '20px' 
               }}>
-                {propertyData.location ? (
-                  <div>
-                    <p><strong>Latitude:</strong> {propertyData.location.lat}</p>
-                    <p><strong>Longitude:</strong> {propertyData.location.lng}</p>
-                    <p style={{ fontSize: '0.9em', color: '#666', marginTop: '8px' }}>
-                      Location coordinates from booking will be automatically stored with the property.
-                    </p>
+                <p style={{ marginBottom: '15px', color: '#666' }}>
+                  Add amenities that are included with the property, such as furniture, appliances, etc.
+                </p>
+                
+                {/* Existing amenities */}
+                {propertyData.amenities.length > 0 ? (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ marginTop: 0 }}>Property Amenities</h4>
+                    <div style={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: '10px' 
+                    }}>
+                      {propertyData.amenities.map((amenity, index) => (
+                        <div key={index} style={{ 
+                          padding: '8px 12px',
+                          background: '#f0f8ff',
+                          border: '1px solid #ccc',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px'
+                        }}>
+                          <span>{amenity}</span>
+                          <button 
+                            onClick={() => removeAmenity(index)}
+                            style={{ 
+                              background: 'none',
+                              border: 'none',
+                              color: 'red',
+                              cursor: 'pointer',
+                              padding: '0',
+                              fontSize: '14px',
+                              display: 'flex',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ) : (
-                  <p>No location coordinates available from the booking.</p>
-              )}
+                  <p style={{ color: '#666', fontStyle: 'italic', marginBottom: '15px' }}>
+                    No amenities added yet. Common examples include furnishings, appliances, etc.
+                  </p>
+                )}
+                
+                {/* Add new amenity */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4>Add an Amenity</h4>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Amenity Name</Label>
+                      <Input 
+                        type="text" 
+                        placeholder="e.g., sofa, dining table"
+                        value={amenityInput} 
+                        onChange={(e) => setAmenityInput(e.target.value)}
+                      />
+                    </FormGroup>
+                    <Button 
+                      onClick={addAmenity}
+                      style={{ height: '38px' }}
+                      disabled={!amenityInput.trim()}
+                    >
+                      Add Amenity
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Quick add common amenities */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4 style={{ fontSize: '14px', marginBottom: '8px' }}>Common Amenities:</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {COMMON_AMENITIES.map((amenity, index) => (
+                      <div key={index} style={{ marginBottom: '8px' }}>
+                        <label style={{ 
+                          display: 'flex', 
+                          alignItems: 'center',
+                          padding: '6px 12px',
+                          background: isItemSelected('amenities', amenity) ? '#e6f7ff' : '#f0f0f0',
+                          border: `1px solid ${isItemSelected('amenities', amenity) ? '#91d5ff' : '#ddd'}`,
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '13px'
+                        }}>
+                          <input 
+                            type="checkbox"
+                            checked={isItemSelected('amenities', amenity)}
+                            onChange={(e) => handleCheckboxChange('amenities', amenity, e.target.checked)}
+                            style={{ marginRight: '8px' }}
+                          />
+                          {amenity}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Features Management Section */}
+              <h3>Features</h3>
+              <div style={{ 
+                padding: '15px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginBottom: '20px'
+              }}>
+                <p style={{ marginBottom: '15px', color: '#666' }}>
+                  Add features available at the property, such as utilities, facilities, etc.
+                </p>
+                
+                {/* Existing features */}
+                {propertyData.features.length > 0 ? (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ marginTop: 0 }}>Property Features</h4>
+                    <div style={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: '10px' 
+                    }}>
+                      {propertyData.features.map((feature, index) => (
+                        <div key={index} style={{ 
+                          padding: '8px 12px',
+                          background: '#f0fff0',
+                          border: '1px solid #ccc',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px'
+                        }}>
+                          <span>{feature}</span>
+                          <button 
+                            onClick={() => removeFeature(index)}
+                            style={{ 
+                              background: 'none',
+                              border: 'none',
+                              color: 'red',
+                              cursor: 'pointer',
+                              padding: '0',
+                              fontSize: '14px',
+                              display: 'flex',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p style={{ color: '#666', fontStyle: 'italic', marginBottom: '15px' }}>
+                    No features added yet. Common examples include utilities, facilities, etc.
+                  </p>
+                )}
+                
+                {/* Add new feature */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4>Add a Feature</h4>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Feature Name</Label>
+                      <Input 
+                        type="text" 
+                        placeholder="e.g., wifi, water, electricity"
+                        value={featureInput} 
+                        onChange={(e) => setFeatureInput(e.target.value)}
+                      />
+                    </FormGroup>
+                    <Button 
+                      onClick={addFeature}
+                      style={{ height: '38px' }}
+                      disabled={!featureInput.trim()}
+                    >
+                      Add Feature
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Quick add common features */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4 style={{ fontSize: '14px', marginBottom: '8px' }}>Common Features:</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {COMMON_FEATURES.map((feature, index) => (
+                      <div key={index} style={{ marginBottom: '8px' }}>
+                        <label style={{ 
+                          display: 'flex', 
+                          alignItems: 'center',
+                          padding: '6px 12px',
+                          background: isItemSelected('features', feature) ? '#e6ffe6' : '#f0f0f0',
+                          border: `1px solid ${isItemSelected('features', feature) ? '#b7eb8f' : '#ddd'}`,
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '13px'
+                        }}>
+                          <input 
+                            type="checkbox"
+                            checked={isItemSelected('features', feature)}
+                            onChange={(e) => handleCheckboxChange('features', feature, e.target.checked)}
+                            style={{ marginRight: '8px' }}
+                          />
+                          {feature}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
             
@@ -1270,6 +1902,114 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                 </FormGroup>
               </div>
               
+              <h3>Property Images</h3>
+              <div style={{ 
+                padding: '15px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginBottom: '20px'
+              }}>
+                <p style={{ marginBottom: '15px', color: '#666' }}>
+                  Add images of the property. At least one image is required.
+                </p>
+                
+                {/* Existing images */}
+                {propertyData.images.length > 0 ? (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ marginTop: 0 }}>Current Images</h4>
+                    <div style={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: '10px' 
+                    }}>
+                      {propertyData.images.map((image, index) => (
+                        <div key={index} style={{ 
+                          position: 'relative',
+                          width: '120px', 
+                          height: '120px',
+                          border: '1px solid #eee',
+                          borderRadius: '4px',
+                          overflow: 'hidden'
+                        }}>
+                          <img 
+                            src={image} 
+                            alt={`Property ${index + 1}`} 
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'cover' 
+                            }} 
+                            onError={(e) => {
+                              e.currentTarget.src = 'https://via.placeholder.com/120x120?text=Image+Error';
+                            }}
+                          />
+                          <button 
+                            onClick={() => {
+                              setPropertyData(prev => ({
+                                ...prev,
+                                images: prev.images.filter((_, i) => i !== index)
+                              }));
+                            }}
+                            style={{ 
+                              position: 'absolute',
+                              top: '5px',
+                              right: '5px',
+                              background: 'rgba(255, 0, 0, 0.7)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '50%',
+                              width: '24px',
+                              height: '24px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <FaTimes size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p style={{ color: '#666', fontStyle: 'italic', marginBottom: '15px' }}>
+                    No images added yet. Please add at least one property image.
+                  </p>
+                )}
+                
+                {/* Add new image */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4>Add an Image URL</h4>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Image URL</Label>
+                      <Input 
+                        type="text" 
+                        placeholder="https://example.com/image.jpg"
+                        value={imageInput} 
+                        onChange={(e) => setImageInput(e.target.value)}
+                      />
+                    </FormGroup>
+                    <Button 
+                      onClick={() => {
+                        if (imageInput.trim()) {
+                          setPropertyData(prev => ({
+                            ...prev,
+                            images: [...prev.images, imageInput.trim()]
+                          }));
+                          setImageInput('');
+                        }
+                      }}
+                      style={{ height: '38px' }}
+                      disabled={!imageInput.trim()}
+                    >
+                      Add Image
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
               <h3>Property Details</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
                 <FormGroup>
@@ -1290,6 +2030,29 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                     value={propertyData.price} 
                     onChange={(e) => handleNumberInput(e, 'price')}
                   />
+                </FormGroup>
+                
+                <FormGroup>
+                  <Label>Capacity (people)</Label>
+                  <Input 
+                    type="number" 
+                    min="0"
+                    value={propertyData.capacity} 
+                    onChange={handleCapacityChange}
+                  />
+                </FormGroup>
+                
+                <FormGroup>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <input 
+                      type="checkbox" 
+                      id="furnished-checkbox"
+                      checked={propertyData.isFurnished}
+                      onChange={handleFurnishedToggle}
+                      style={{ marginRight: '8px' }}
+                    />
+                    <Label htmlFor="furnished-checkbox" style={{ margin: 0 }}>Furnished</Label>
+                  </div>
                 </FormGroup>
                 
                 <FormGroup>
@@ -1344,6 +2107,28 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                     <option value="occupied">Occupied</option>
                   </Select>
                 </FormGroup>
+                
+                {/* Location display */}
+                {propertyData.location && (
+                  <div style={{ 
+                    padding: '10px 15px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    marginBottom: '20px',
+                    background: '#f8f9fa'
+                  }}>
+                    <h4 style={{ margin: '0 0 8px 0', fontSize: '16px' }}>
+                      Property Location Data (for Map Display)
+                    </h4>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span><strong>Latitude:</strong> {propertyData.location.lat}</span>
+                      <span><strong>Longitude:</strong> {propertyData.location.lng}</span>
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#666', marginTop: '5px', marginBottom: '0' }}>
+                      This geolocation data from the photoshoot booking will be used to display the property on maps and for location-based searches.
+                    </p>
+                  </div>
+                )}
               </div>
               
               {/* Rooms Management Section */}
@@ -1376,7 +2161,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                         type="number" 
                         name="area"
                         min="0"
-                        step="0.5"
                         value={roomFormData.area} 
                         onChange={handleRoomFormChange}
                       />
@@ -1460,333 +2244,454 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                 )}
               </div>
               
-              {/* Legacy Bedrooms/Bathrooms Fields (hidden, maintained for backward compatibility) */}
-              <div style={{ display: 'none' }}>
-                <Input 
-                  type="hidden" 
-                  value={propertyData.bedrooms} 
-                  readOnly
-                />
-                <Input 
-                  type="hidden" 
-                  value={propertyData.bathrooms} 
-                  readOnly
-                />
-              </div>
-              
-              {/* Location Coordinates */}
-              <h3>Location Coordinates</h3>
+              {/* Rules Management Section */}
+              <h3>Rules</h3>
                     <div style={{ 
-                      padding: '10px',
-                backgroundColor: '#f5f5f5', 
+                padding: '15px',
+                border: '1px solid #ddd',
                       borderRadius: '4px', 
                 marginBottom: '20px' 
                     }}>
-                {propertyData.location ? (
-                  <div>
-                    <p><strong>Latitude:</strong> {propertyData.location.lat}</p>
-                    <p><strong>Longitude:</strong> {propertyData.location.lng}</p>
-                    <p style={{ fontSize: '0.9em', color: '#666', marginTop: '8px' }}>
-                      Location coordinates from booking will be automatically stored with the property.
-                    </p>
+                {/* Existing rules with toggle */}
+                {propertyData.rules.length > 0 ? (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ marginTop: 0 }}>Property Rules</h4>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
+                      gap: '10px' 
+                    }}>
+                      {propertyData.rules.map((rule, index) => (
+                        <div key={index} style={{ 
+                          padding: '10px', 
+                          border: '1px solid #eee', 
+                          borderRadius: '4px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <div 
+                              style={{ 
+                                width: '18px', 
+                                height: '18px', 
+                                borderRadius: '50%', 
+                                backgroundColor: rule.allowed ? '#4CAF50' : '#F44336',
+                                marginRight: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'white',
+                                fontSize: '10px'
+                              }}
+                            >
+                              {rule.allowed ? '✓' : '✕'}
+                            </div>
+                            <div>{rule.name}</div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            <button 
+                              onClick={() => handleRuleToggle(index)}
+                              style={{ 
+                                background: 'none', 
+                                border: 'none', 
+                                cursor: 'pointer',
+                                color: '#2196F3',
+                                fontSize: '16px',
+                                padding: '4px'
+                              }}
+                              title={rule.allowed ? "Mark as not allowed" : "Mark as allowed"}
+                            >
+                              {rule.allowed ? <FaBan /> : <FaCheck />}
+                            </button>
+                            <button 
+                              onClick={() => removeRule(index)}
+                              style={{ 
+                                background: 'none', 
+                                border: 'none', 
+                                cursor: 'pointer',
+                                color: 'red',
+                                fontSize: '16px',
+                                padding: '4px'
+                              }}
+                              title="Remove rule"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                         </div>
                 ) : (
-                  <p>No location coordinates available from the booking.</p>
+                  <p>No rules added yet.</p>
                 )}
-              </div>
-              
-              {/* Property Images */}
-              <h3>Property Images*</h3>
-              <FormGroup>
-                <Label>Add Image URLs</Label>
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                
+                {/* Add new rule */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4>Add a Rule</h4>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Rule Name</Label>
                   <Input 
                     type="text" 
-                    value={imageInput} 
-                    onChange={(e) => setImageInput(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    style={{ flex: 1 }}
-                  />
-                  <Button onClick={() => {
-                    if (imageInput.trim()) {
-                      setPropertyData(prev => ({
-                        ...prev,
-                        images: [...prev.images, imageInput.trim()]
-                      }));
-                      setImageInput('');
-                    }
-                  }}>
-                    <FaPlus /> Add
+                        placeholder="e.g., No pets"
+                        value={ruleInput} 
+                        onChange={(e) => setRuleInput(e.target.value)}
+                      />
+                    </FormGroup>
+                    <Button 
+                      onClick={addRule}
+                      style={{ height: '38px' }}
+                    >
+                      Add Rule
                   </Button>
+                  </div>
+                </div>
                 </div>
                 
-                {propertyData.images.length > 0 && (
-                  <div>
-                    <Label>Added Images ({propertyData.images.length}):</Label>
+              {/* Nearby Places Management Section */}
+              <h3>Nearby Places</h3>
                     <div style={{ 
-                      display: 'flex', 
-                      flexWrap: 'wrap', 
-                      gap: '10px',
-                      marginTop: '10px',
-                      maxHeight: '200px',
-                      overflowY: 'auto',
-                      padding: '10px',
+                padding: '15px',
                       border: '1px solid #ddd',
-                      borderRadius: '4px'
+                borderRadius: '4px',
+                marginBottom: '20px'
+              }}>
+                <p style={{ marginBottom: '15px', color: '#666' }}>
+                  Add nearby amenities with their distance/time. These will be displayed in the property listing to help potential renters understand the neighborhood.
+                </p>
+                
+                {/* Existing nearby places */}
+                {propertyData.nearbyPlaces.length > 0 ? (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ marginTop: 0 }}>Places Nearby</h4>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', 
+                      gap: '10px' 
                     }}>
-                      {propertyData.images.map((image, index) => (
+                      {propertyData.nearbyPlaces.map((place, index) => (
                         <div key={index} style={{ 
-                          position: 'relative',
-                          width: '100px', 
-                          height: '100px', 
-                          overflow: 'hidden',
-                          borderRadius: '4px'
+                          padding: '12px 15px', 
+                          border: '1px solid #eee', 
+                          borderRadius: '4px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          background: '#f9f9f9'
                         }}>
-                          <img 
-                            src={image} 
-                            alt={`Property ${index + 1}`} 
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3e%3crect width="100" height="100" fill="%23cccccc"/%3e%3ctext x="50%25" y="50%25" font-family="sans-serif" font-size="12" text-anchor="middle" dominant-baseline="middle" fill="%23666666"%3eImage Error%3c/text%3e%3c/svg%3e';
-                            }}
-                          />
+                          <div>
+                            <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{place.name}</div>
+                            <div style={{ fontSize: '14px', color: '#666' }}>{place.timeDistance}</div>
+                          </div>
                           <button 
-                            onClick={() => {
-                              setPropertyData(prev => ({
-                                ...prev,
-                                images: prev.images.filter((_, i) => i !== index)
-                              }));
-                            }}
+                            onClick={() => removeNearbyPlace(index)}
                             style={{
-                              position: 'absolute',
-                              top: '5px',
-                              right: '5px',
-                              background: 'rgba(220, 53, 69, 0.8)',
-                              color: 'white',
+                              background: 'none', 
                               border: 'none',
-                              borderRadius: '50%',
-                              width: '25px',
-                              height: '25px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              color: 'red',
+                              fontSize: '16px'
                             }}
                           >
-                            <FaTimes size={12} />
+                            <FaTrash />
                           </button>
                         </div>
                       ))}
                     </div>
                   </div>
+                ) : (
+                  <p style={{ color: '#666', fontStyle: 'italic', marginBottom: '15px' }}>
+                    No nearby places added yet. Common examples include Workplaces, Schools, Grocery stores, Supermarkets, Medical transport, etc.
+                  </p>
                 )}
-              </FormGroup>
-
-              {/* Amenities Section */}
-              <h3>Additional Amenities</h3>
-              <FormGroup>
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                
+                {/* Add new nearby place */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4>Add a Nearby Place</h4>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Place Name</Label>
                   <Input 
                     type="text" 
-                    value={amenityInput} 
-                    onChange={(e) => setAmenityInput(e.target.value)}
-                    placeholder="Add amenity (e.g., WiFi, Furnished, etc.)"
-                    style={{ flex: 1 }}
-                  />
-                  <Button onClick={addAmenity}>
-                    <FaPlus /> Add
+                        placeholder="e.g., Supermarkets, Schools, Workplaces"
+                        value={placeNameInput} 
+                        onChange={(e) => setPlaceNameInput(e.target.value)}
+                      />
+                    </FormGroup>
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Distance (time)</Label>
+                      <Input 
+                        type="text" 
+                        placeholder="e.g., 10 minutes"
+                        value={placeDistanceInput} 
+                        onChange={(e) => setPlaceDistanceInput(e.target.value)}
+                      />
+                    </FormGroup>
+                    <Button 
+                      onClick={addNearbyPlace}
+                      style={{ height: '38px' }}
+                      disabled={!placeNameInput.trim() || !placeDistanceInput.trim()}
+                    >
+                      Add Place
                   </Button>
-                </div>
-                
-                <div style={{ marginBottom: '15px' }}>
-                  <Label>Common Amenities:</Label>
-                  <div style={{ 
-                    display: 'flex', 
-                    flexWrap: 'wrap', 
-                    gap: '8px',
-                    marginTop: '8px'
-                  }}>
-                    {COMMON_AMENITIES.map(amenity => (
-                      <div 
-                        key={amenity} 
-                        onClick={() => handleCheckboxChange('amenities', amenity, !isItemSelected('amenities', amenity))}
-                        style={{ 
-                          display: 'flex',
-                          alignItems: 'center',
-                          padding: '5px 10px',
-                          border: '1px solid #ddd',
-                          borderRadius: '20px',
-                          cursor: 'pointer',
-                          background: isItemSelected('amenities', amenity) ? '#e6f7ff' : 'white',
-                          borderColor: isItemSelected('amenities', amenity) ? '#1890ff' : '#ddd',
-                          fontSize: '13px'
-                        }}
-                      >
-                        {isItemSelected('amenities', amenity) && (
-                          <div style={{ marginRight: '5px', color: '#1890ff' }}>✓</div>
-                        )}
-                        {amenity === 'furnished' ? 'Furnished' :
-                          amenity === 'sofabed' ? 'Sofabed' :
-                          amenity === 'dining-table' ? 'Dining Table' :
-                          amenity === 'wardrobe' ? 'Wardrobe' :
-                          amenity === 'cabinet' ? 'Cabinet' :
-                          amenity === 'chair' ? 'Chair' :
-                          amenity === 'desk' ? 'Desk' :
-                          amenity === 'sofa' ? 'Sofa' :
-                          amenity === 'coffee-table' ? 'Coffee Table' :
-                          amenity === 'dresser' ? 'Dresser' :
-                          amenity === 'mirror' ? 'Mirror' :
-                          amenity === 'walk-in-closet' ? 'Walk-in Closet' :
-                          amenity === 'oven' ? 'Oven' :
-                          amenity === 'washing-machine' ? 'Washing Machine' :
-                          amenity === 'hotplate-cooktop' ? 'Hotplate/Cooktop' :
-                          amenity === 'water-heater' ? 'Water Heater' :
-                          amenity}
-                      </div>
-                    ))}
                   </div>
                 </div>
                 
-                {propertyData.amenities.length > 0 && (
-                  <div>
-                    <Label>Added Amenities ({propertyData.amenities.length}):</Label>
+                {/* Quick add buttons for common places */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4 style={{ fontSize: '14px', marginBottom: '8px' }}>Quick Add Common Places:</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {COMMON_NEARBY_PLACES.map((place, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          setPropertyData(prev => ({
+                            ...prev,
+                            nearbyPlaces: [...prev.nearbyPlaces, place]
+                          }));
+                        }}
+                        style={{ 
+                          padding: '6px 12px',
+                          background: '#f0f0f0',
+                          border: '1px solid #ddd',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <FaPlus size={10} /> {place.name} ({place.timeDistance})
+                      </button>
+                    ))}
+                  </div>
+                  </div>
+                </div>
+                
+              {/* Amenities Management Section */}
+              <h3>Amenities</h3>
+              <div style={{ 
+                padding: '15px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginBottom: '20px'
+              }}>
+                <p style={{ marginBottom: '15px', color: '#666' }}>
+                  Add amenities that are included with the property, such as furniture, appliances, etc.
+                </p>
+                
+                {/* Existing amenities */}
+                {propertyData.amenities.length > 0 ? (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ marginTop: 0 }}>Property Amenities</h4>
                     <div style={{ 
                       display: 'flex', 
                       flexWrap: 'wrap', 
-                      gap: '10px',
-                      marginTop: '10px',
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
+                      gap: '10px' 
                     }}>
                       {propertyData.amenities.map((amenity, index) => (
                         <div key={index} style={{ 
+                          padding: '8px 12px',
+                          background: '#f0f8ff',
+                          border: '1px solid #ccc',
+                          borderRadius: '4px',
                           display: 'flex',
                           alignItems: 'center',
-                          padding: '6px 12px',
-                          background: '#f5f5f5',
-                          borderRadius: '20px',
-                          fontSize: '14px'
+                          justifyContent: 'space-between',
+                          gap: '8px'
                         }}>
-                          {amenity}
+                          <span>{amenity}</span>
                           <button 
                             onClick={() => removeAmenity(index)}
                             style={{
-                              marginLeft: '5px',
-                              background: 'transparent',
-                              color: '#666',
+                              background: 'none',
                               border: 'none',
+                              color: 'red',
                               cursor: 'pointer',
+                              padding: '0',
+                              fontSize: '14px',
                               display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
+                              alignItems: 'center'
                             }}
                           >
-                            <FaTimes size={12} />
+                            <FaTrash />
                           </button>
                         </div>
                       ))}
                     </div>
                   </div>
+                ) : (
+                  <p style={{ color: '#666', fontStyle: 'italic', marginBottom: '15px' }}>
+                    No amenities added yet. Common examples include furnishings, appliances, etc.
+                  </p>
                 )}
-              </FormGroup>
-              
-              {/* Features Section */}
-              <h3>Included Fees</h3>
-              <FormGroup>
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                
+                {/* Add new amenity */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4>Add an Amenity</h4>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Amenity Name</Label>
                   <Input 
                     type="text" 
-                    value={featureInput} 
-                    onChange={(e) => setFeatureInput(e.target.value)}
-                    placeholder="Add included fee (e.g., Water, Electricity, etc.)"
-                    style={{ flex: 1 }}
-                  />
-                  <Button onClick={addFeature}>
-                    <FaPlus /> Add
+                        placeholder="e.g., sofa, dining table"
+                        value={amenityInput} 
+                        onChange={(e) => setAmenityInput(e.target.value)}
+                      />
+                    </FormGroup>
+                    <Button 
+                      onClick={addAmenity}
+                      style={{ height: '38px' }}
+                      disabled={!amenityInput.trim()}
+                    >
+                      Add Amenity
                   </Button>
+                  </div>
                 </div>
                 
-                <div style={{ marginBottom: '15px' }}>
-                  <Label>Common Features:</Label>
-                  <div style={{ 
-                    display: 'flex', 
-                    flexWrap: 'wrap', 
-                    gap: '8px',
-                    marginTop: '8px'
-                  }}>
-                    {COMMON_FEATURES.map(feature => (
-                      <div 
-                        key={feature} 
-                        onClick={() => handleCheckboxChange('features', feature, !isItemSelected('features', feature))}
-                        style={{ 
+                {/* Quick add common amenities */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4 style={{ fontSize: '14px', marginBottom: '8px' }}>Common Amenities:</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {COMMON_AMENITIES.map((amenity, index) => (
+                      <div key={index} style={{ marginBottom: '8px' }}>
+                        <label style={{ 
                           display: 'flex',
                           alignItems: 'center',
-                          padding: '5px 10px',
-                          border: '1px solid #ddd',
-                          borderRadius: '20px',
+                          padding: '6px 12px',
+                          background: isItemSelected('amenities', amenity) ? '#e6f7ff' : '#f0f0f0',
+                          border: `1px solid ${isItemSelected('amenities', amenity) ? '#91d5ff' : '#ddd'}`,
+                          borderRadius: '4px',
                           cursor: 'pointer',
-                          background: isItemSelected('features', feature) ? '#e6f7ff' : 'white',
-                          borderColor: isItemSelected('features', feature) ? '#1890ff' : '#ddd',
                           fontSize: '13px'
-                        }}
-                      >
-                        {isItemSelected('features', feature) && (
-                          <div style={{ marginRight: '5px', color: '#1890ff' }}>✓</div>
-                        )}
-                        {feature === 'water' ? 'Water' :
-                          feature === 'electricity' ? 'Electricity' :
-                          feature === 'wifi' ? 'Wi-Fi' :
-                          feature === 'women-only' ? 'Women Only' :
-                          feature}
+                        }}>
+                          <input 
+                            type="checkbox"
+                            checked={isItemSelected('amenities', amenity)}
+                            onChange={(e) => handleCheckboxChange('amenities', amenity, e.target.checked)}
+                            style={{ marginRight: '8px' }}
+                          />
+                          {amenity}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  </div>
+                </div>
+                
+              {/* Features Management Section */}
+              <h3>Features</h3>
+              <div style={{ 
+                padding: '15px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginBottom: '20px'
+              }}>
+                <p style={{ marginBottom: '15px', color: '#666' }}>
+                  Add features available at the property, such as utilities, facilities, etc.
+                </p>
+                
+                {/* Existing features */}
+                {propertyData.features.length > 0 ? (
+                  <div style={{ marginBottom: '20px' }}>
+                    <h4 style={{ marginTop: 0 }}>Property Features</h4>
+                    <div style={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: '10px' 
+                    }}>
+                      {propertyData.features.map((feature, index) => (
+                        <div key={index} style={{ 
+                          padding: '8px 12px',
+                          background: '#f0fff0',
+                          border: '1px solid #ccc',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px'
+                        }}>
+                          <span>{feature}</span>
+                          <button 
+                            onClick={() => removeFeature(index)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'red',
+                              cursor: 'pointer',
+                              padding: '0',
+                              fontSize: '14px',
+                              display: 'flex',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p style={{ color: '#666', fontStyle: 'italic', marginBottom: '15px' }}>
+                    No features added yet. Common examples include utilities, facilities, etc.
+                  </p>
+                )}
+                
+                {/* Add new feature */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4>Add a Feature</h4>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <FormGroup style={{ flex: 1 }}>
+                      <Label>Feature Name</Label>
+                      <Input 
+                        type="text" 
+                        placeholder="e.g., wifi, water, electricity"
+                        value={featureInput} 
+                        onChange={(e) => setFeatureInput(e.target.value)}
+                      />
+              </FormGroup>
+                    <Button 
+                      onClick={addFeature}
+                      style={{ height: '38px' }}
+                      disabled={!featureInput.trim()}
+                    >
+                      Add Feature
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Quick add common features */}
+                <div style={{ marginTop: '15px' }}>
+                  <h4 style={{ fontSize: '14px', marginBottom: '8px' }}>Common Features:</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {COMMON_FEATURES.map((feature, index) => (
+                      <div key={index} style={{ marginBottom: '8px' }}>
+                        <label style={{ 
+                          display: 'flex', 
+                          alignItems: 'center',
+                          padding: '6px 12px',
+                          background: isItemSelected('features', feature) ? '#e6ffe6' : '#f0f0f0',
+                          border: `1px solid ${isItemSelected('features', feature) ? '#b7eb8f' : '#ddd'}`,
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '13px'
+                        }}>
+                          <input 
+                            type="checkbox"
+                            checked={isItemSelected('features', feature)}
+                            onChange={(e) => handleCheckboxChange('features', feature, e.target.checked)}
+                            style={{ marginRight: '8px' }}
+                          />
+                          {feature}
+                        </label>
                       </div>
                     ))}
                   </div>
                 </div>
-                
-                {propertyData.features.length > 0 && (
-                  <div>
-                    <Label>Added Features ({propertyData.features.length}):</Label>
-                    <div style={{ 
-                      display: 'flex', 
-                      flexWrap: 'wrap', 
-                      gap: '10px',
-                      marginTop: '10px',
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
-                    }}>
-                      {propertyData.features.map((feature, index) => (
-                        <div key={index} style={{ 
-                          display: 'flex',
-                          alignItems: 'center',
-                          padding: '6px 12px',
-                          background: '#f5f5f5',
-                          borderRadius: '20px',
-                          fontSize: '14px'
-                        }}>
-                          {feature}
-                          <button 
-                            onClick={() => removeFeature(index)}
-                            style={{
-                              marginLeft: '5px',
-                              background: 'transparent',
-                              color: '#666',
-                              border: 'none',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}
-                          >
-                            <FaTimes size={12} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </FormGroup>
+              </div>
             </div>
             
             <ModalFooter>

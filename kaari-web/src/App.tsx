@@ -234,39 +234,6 @@ function App() {
         }
       />
       
-      {/* Add specific admin routes for refund and cancellation requests */}
-      <Route 
-        path="/dashboard/admin/refund-requests" 
-        element={
-          isAuthenticated && userIsAdmin ? 
-            <AdminDashboard /> : 
-            (() => {
-              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
-                path: '/dashboard/admin/refund-requests',
-                redirectTo: '/',
-                isAuthenticated: isAuthenticated
-              });
-              return <Navigate to="/" replace />;
-            })()
-        }
-      />
-      
-      <Route 
-        path="/dashboard/admin/cancellation-requests" 
-        element={
-          isAuthenticated && userIsAdmin ? 
-            <AdminDashboard /> : 
-            (() => {
-              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
-                path: '/dashboard/admin/cancellation-requests',
-                redirectTo: '/',
-                isAuthenticated: isAuthenticated
-              });
-              return <Navigate to="/" replace />;
-            })()
-        }
-      />
-      
       {/* Account Routes - Redirect to user dashboard with appropriate section */}
       <Route 
         path="/account" 

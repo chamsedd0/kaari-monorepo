@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FaPlus, FaSearch } from 'react-icons/fa';
 import {
   DashboardCard,
@@ -158,7 +158,7 @@ const PhotoshootBookingsPage: React.FC = () => {
     );
   };
   
-  const BookingsList = () => (
+  return (
     <DashboardCard>
       <CardTitle>Photoshoot Bookings</CardTitle>
       <CardContent>
@@ -176,7 +176,7 @@ const PhotoshootBookingsPage: React.FC = () => {
             </div>
           </FormGroup>
           
-          <Button onClick={() => navigate('/dashboard/admin/photoshoot-bookings/refresh')}>
+          <Button onClick={() => loadBookings()}>
             <FaPlus style={{ marginRight: '5px' }} /> Refresh
           </Button>
         </div>
@@ -215,32 +215,10 @@ const PhotoshootBookingsPage: React.FC = () => {
             </Tab>
           </TabList>
           
-          <TabPanel>
-            {renderBookingsTable()}
-          </TabPanel>
+          {renderBookingsTable()}
         </TabsContainer>
       </CardContent>
     </DashboardCard>
-  );
-  
-  return (
-    <Routes>
-      <Route path="/" element={<BookingsList />} />
-      <Route path="/view/:id" element={
-        <div data-testid="booking-detail-wrapper">
-          <PhotoshootBookingDetail onUpdateBooking={loadBookings} />
-        </div>
-      } />
-      <Route path="/refresh" element={
-        <React.Fragment>
-          {React.useEffect(() => { 
-            console.log('Refresh route - reloading bookings');
-            loadBookings(); 
-          }, [])}
-          <BookingsList />
-        </React.Fragment>
-      } />
-    </Routes>
   );
 };
 

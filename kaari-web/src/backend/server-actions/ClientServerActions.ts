@@ -209,6 +209,14 @@ export async function requestRefund(
       });
     }
     
+    // Change property status to 'available'
+    if (reservation.propertyId) {
+      await updateDocument<Property>(PROPERTIES_COLLECTION, reservation.propertyId, {
+        status: 'available',
+        updatedAt: new Date()
+      });
+    }
+    
     return;
   } catch (error) {
     console.error('Error requesting refund:', error);
@@ -349,6 +357,14 @@ export async function requestExceptionCancellation(data: {
       createdAt: new Date(),
       updatedAt: new Date()
     });
+    
+    // 3. If property exists, update its status to available
+    if (reservation.propertyId) {
+      await updateDocument<Property>(PROPERTIES_COLLECTION, reservation.propertyId, {
+        status: 'available',
+        updatedAt: new Date()
+      });
+    }
     
     return;
   } catch (error) {

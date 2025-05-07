@@ -275,11 +275,14 @@ const CancellationRequests: React.FC = () => {
   const fetchCancellationRequests = async () => {
     try {
       setLoading(true);
+      console.log('Fetching cancellation requests from server...');
       const data = await getCancellationRequests();
+      console.log('Received cancellation requests:', data);
       setCancellationRequests(data);
-      setLoading(false);
     } catch (err: any) {
+      console.error('Error fetching cancellation requests:', err);
       setError(err.message || 'Failed to load cancellation requests');
+    } finally {
       setLoading(false);
     }
   };

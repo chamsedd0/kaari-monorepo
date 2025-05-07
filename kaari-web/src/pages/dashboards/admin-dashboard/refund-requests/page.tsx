@@ -315,11 +315,14 @@ const RefundRequests: React.FC = () => {
   const fetchRefundRequests = async () => {
     try {
       setLoading(true);
+      console.log('Fetching refund requests from server...');
       const data = await getRefundRequests();
+      console.log('Received refund requests:', data);
       setRefundRequests(data);
-      setLoading(false);
     } catch (err: any) {
+      console.error('Error fetching refund requests:', err);
       setError(err.message || 'Failed to load refund requests');
+    } finally {
       setLoading(false);
     }
   };

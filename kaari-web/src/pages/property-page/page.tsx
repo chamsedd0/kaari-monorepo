@@ -83,6 +83,10 @@ interface Property {
   isRecommended?: boolean;
   priceType?: string;
   image?: string;
+  rules?: { name: string; allowed: boolean }[];
+  capacity?: number;
+  isFurnished?: boolean;
+  nearbyPlaces?: { name: string; timeDistance: string }[];
 }
 
 interface User {
@@ -339,7 +343,7 @@ const PropertyPageComponent = () => {
               <img src={people} alt="icon" />
             </div>
             <div className="icon-text">
-              <p>{bedrooms + bathrooms} People</p>
+              <p>{property.capacity || (bedrooms + bathrooms)} People</p>
             </div>
           </div>
           <div className="icon-container">
@@ -379,7 +383,7 @@ const PropertyPageComponent = () => {
               <img src={furnished} alt="icon" />
             </div>
             <div className="icon-text">
-              <p>Furnished</p>
+              <p>{property.isFurnished ? "Furnished" : "Unfurnished"}</p>
             </div>
           </div>
         </div>
@@ -435,54 +439,108 @@ const PropertyPageComponent = () => {
           <div className="rooms">
             <h2>Rooms and equipment</h2>
             <div className="room-list">
-              <div className="room">
-                <BedroomIcon color={Theme.colors.secondary} />
-                <div className="text-container">
-                  <span className="room-name">Bedroom</span>
-                  <span className="room-description">
-                    {bedrooms > 0 ? `${bedrooms} room(s)${bedroomsArea > 0 ? ` - ${bedroomsArea} sq m` : ''}` : 'N/A'}
-                  </span>
-                </div>
-              </div>
-              <div className="room">
-                <BathroomIcon color={Theme.colors.secondary} />
-                <div className="text-container">
-                  <span className="room-name">Bathroom</span>
-                  <span className="room-description">
-                    {bathrooms > 0 ? `${bathrooms} room(s)${bathroomsArea > 0 ? ` - ${bathroomsArea} sq m` : ''}` : 'N/A'}
-                  </span>
-                </div>
-              </div>
-              <div className="room">
-                <FurnitureIcon color={Theme.colors.secondary} />
-                <div className="text-container">
-                  <span className="room-name">Living Room</span>
-                  <span className="room-description">
-                    {livingRooms.length > 0 
-                      ? `${livingRooms.length} room(s) - ${livingRoomsArea} sq m` 
-                      : area !== 'N/A' ? `${area} m2` : 'N/A'}
-                  </span>
-                </div>
-              </div>
-              <div className="room">
-                <KitchenIcon color={Theme.colors.secondary} />
-                <div className="text-container">
-                  <span className="room-name">Kitchen</span>
-                  <span className="room-description">
-                    {kitchens.length > 0 ? `${kitchens.length} room(s) - ${kitchensArea} sq m` : 'N/A'}
-                  </span>
-                </div>
-              </div>
-              {storageRooms.length > 0 && (
-                <div className="room">
-                  <FurnitureIcon color={Theme.colors.secondary} />
-                  <div className="text-container">
-                    <span className="room-name">Storage Room</span>
-                    <span className="room-description">
-                      {`${storageRooms.length} room(s) - ${storageRoomsArea} sq m`}
-                    </span>
-                  </div>
-                </div>
+              {property.rooms && property.rooms.length > 0 ? (
+                property.rooms.map((room, index) => {
+                  let RoomIcon;
+                  let roomLabel;
+                  
+                  switch(room.type) {
+                    case 'bedroom':
+                      RoomIcon = BedroomIcon;
+                      roomLabel = 'Bedroom';
+                      break;
+                    case 'bathroom':
+                      RoomIcon = BathroomIcon;
+                      roomLabel = 'Bathroom';
+                      break;
+                    case 'living':
+                      RoomIcon = FurnitureIcon;
+                      roomLabel = 'Living Room';
+                      break;
+                    case 'kitchen':
+                      RoomIcon = KitchenIcon;
+                      roomLabel = 'Kitchen';
+                      break;
+                    case 'storage':
+                      RoomIcon = FurnitureIcon;
+                      roomLabel = 'Storage Room';
+                      break;
+                    default:
+                      RoomIcon = FurnitureIcon;
+                      roomLabel = 'Room';
+                  }
+                  
+                  return (
+                    <div className="room" key={index}>
+                      <RoomIcon color={Theme.colors.secondary} />
+                      <div className="text-container">
+                        <span className="room-name">{roomLabel}</span>
+                        <span className="room-description">
+                          {`${room.area} sq m`}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <>
+                  {/* Legacy display method for properties without room detail */}
+                  {bedrooms > 0 && (
+                    <div className="room">
+                      <BedroomIcon color={Theme.colors.secondary} />
+                      <div className="text-container">
+                        <span className="room-name">Bedroom</span>
+                        <span className="room-description">
+                          {`${bedrooms} room(s)${bedroomsArea > 0 ? ` - ${bedroomsArea} sq m` : ''}`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {bathrooms > 0 && (
+                    <div className="room">
+                      <BathroomIcon color={Theme.colors.secondary} />
+                      <div className="text-container">
+                        <span className="room-name">Bathroom</span>
+                        <span className="room-description">
+                          {`${bathrooms} room(s)${bathroomsArea > 0 ? ` - ${bathroomsArea} sq m` : ''}`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {livingRooms.length > 0 && (
+                    <div className="room">
+                      <FurnitureIcon color={Theme.colors.secondary} />
+                      <div className="text-container">
+                        <span className="room-name">Living Room</span>
+                        <span className="room-description">
+                          {`${livingRooms.length} room(s) - ${livingRoomsArea} sq m`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {kitchens.length > 0 && (
+                    <div className="room">
+                      <KitchenIcon color={Theme.colors.secondary} />
+                      <div className="text-container">
+                        <span className="room-name">Kitchen</span>
+                        <span className="room-description">
+                          {`${kitchens.length} room(s) - ${kitchensArea} sq m`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {storageRooms.length > 0 && (
+                    <div className="room">
+                      <FurnitureIcon color={Theme.colors.secondary} />
+                      <div className="text-container">
+                        <span className="room-name">Storage Room</span>
+                        <span className="room-description">
+                          {`${storageRooms.length} room(s) - ${storageRoomsArea} sq m`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -510,6 +568,23 @@ const PropertyPageComponent = () => {
                 <span className="value">{availableFrom}</span>
               </div>
             </div>
+            
+            {/* Rules section */}
+            <h3 className="rules-title">Rules</h3>
+            <div className="rules-container">
+              {property.rules && property.rules.length > 0 ? (
+                property.rules.map((rule, index) => (
+                  <div className="rule-item" key={index}>
+                    <div className={`rule-icon ${rule.allowed ? 'allowed' : 'forbidden'}`}>
+                      <img src={rule.allowed ? check : cross} alt={rule.allowed ? "allowed" : "forbidden"} />
+                    </div>
+                    <div className="rule-name">{rule.name}</div>
+                  </div>
+                ))
+              ) : (
+                <div className="no-rules">No specific rules provided for this property.</div>
+              )}
+            </div>
           </div>
           <div className="about-advertiser">
             <h2>About the advertiser</h2>
@@ -527,36 +602,20 @@ const PropertyPageComponent = () => {
           </div>
           <div className="location">
             <h2>Where you will live</h2>
-            <div>{address}</div>
+            <p className="address">{address}</p>
             
-            <div className="location-map" style={{ width: '100%', height: '200px', marginTop: '15px', marginBottom: '15px', borderRadius: '8px', overflow: 'hidden' }}>
+            <div className="location-map">
               {!mapsLoaded ? (
-                <div className="map-placeholder" style={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  backgroundColor: '#f5f5f5', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  color: '#666'
-                }}>
+                <div className="map-placeholder">
                   <p>Loading map...</p>
                 </div>
               ) : mapsError ? (
-                <div className="map-placeholder" style={{
-                  width: '100%', 
-                  height: '100%', 
-                  backgroundColor: '#f5f5f5', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  color: '#666'
-                }}>
+                <div className="map-placeholder">
                   <p>Error loading map</p>
                 </div>
               ) : (
                 <GoogleMap
-                  mapContainerStyle={{ width: '100%', height: '100%' }}
+                  mapContainerStyle={mapContainerStyle}
                   center={mapCenter}
                   zoom={mapZoom}
                   options={{
@@ -578,26 +637,39 @@ const PropertyPageComponent = () => {
               )}
             </div>
             
-            <div className="nearby-places">
-              <div className="place">
-                <h4>Workplaces</h4>
-                <span>10 minutes</span>
-              </div>
-              <div className="place">
-                <h4>Grocery stores</h4>
-                <span>15 minutes</span>
-              </div>
-              <div className="place">
-                <h4>Schools</h4>
-                <span>10 minutes</span>
-              </div>
-              <div className="place">
-                <h4>Supermarkets</h4>
-                <span>10 minutes</span>
-              </div>
-              <div className="place">
-                <h4>Medical transport</h4>
-                <span>15 minutes</span>
+            <div className="nearby-places-container">
+              <div className="nearby-places">
+                {property.nearbyPlaces && property.nearbyPlaces.length > 0 ? (
+                  property.nearbyPlaces.map((place, index) => (
+                    <div className="place" key={index}>
+                      <h4>{place.name}</h4>
+                      <span>{place.timeDistance}</span>
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <div className="place">
+                      <h4>Workplaces</h4>
+                      <span>10 minutes</span>
+                    </div>
+                    <div className="place">
+                      <h4>Grocery stores</h4>
+                      <span>15 minutes</span>
+                    </div>
+                    <div className="place">
+                      <h4>Schools</h4>
+                      <span>10 minutes</span>
+                    </div>
+                    <div className="place">
+                      <h4>Supermarkets</h4>
+                      <span>10 minutes</span>
+                    </div>
+                    <div className="place">
+                      <h4>Medical transport</h4>
+                      <span>15 minutes</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

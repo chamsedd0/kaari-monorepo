@@ -247,23 +247,81 @@ export const PropertyPage = styled.div<PropertyPageProps>`
 
         .conditions-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          grid-template-columns: repeat(2, 1fr);
           gap: 24px;
+          margin-bottom: 40px;
 
           .condition {
             display: flex;
-            flex-direction: column;
-            gap: 8px;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #eee;
 
             .label {
-              font: ${Theme.typography.fonts.largeB};
-              color: ${Theme.colors.black};
+              font: ${Theme.typography.fonts.mediumM};
+              color: ${Theme.colors.gray2};
             }
 
             .value {
-              font: ${Theme.typography.fonts.largeM};
+              font: ${Theme.typography.fonts.extraLargeB};
               color: ${Theme.colors.gray2};
             }
+          }
+        }
+        
+        /* Rules section styling */
+        .rules-title {
+          font: ${Theme.typography.fonts.extraLargeB};
+          color: ${Theme.colors.black};
+          margin-bottom: 24px;
+        }
+        
+        .rules-container {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+          margin-bottom: 30px;
+          
+          .rule-item {
+            display: flex;
+            align-items: center;
+            
+            .rule-icon {
+              width: 24px;
+              height: 24px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin-right: 12px;
+              
+              &.allowed {
+                background-color: ${Theme.colors.secondary};
+              }
+              
+              &.forbidden {
+                background-color: ${Theme.colors.primary};
+              }
+              
+              img {
+                width: 12px;
+                height: 12px;
+                filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%);
+              }
+            }
+            
+            .rule-name {
+              font: ${Theme.typography.fonts.mediumM};
+              color: ${Theme.colors.gray2};
+            }
+          }
+          
+          .no-rules {
+            grid-column: 1 / -1;
+            font: ${Theme.typography.fonts.mediumM};
+            color: ${Theme.colors.gray2};
+            font-style: italic;
           }
         }
       }
@@ -315,24 +373,66 @@ export const PropertyPage = styled.div<PropertyPageProps>`
         h2 {
           font: ${Theme.typography.fonts.h4B};
           color: ${Theme.colors.black};
-          margin-bottom: 24px;
+          margin-bottom: 12px;
+        }
+
+        .address {
+          font: ${Theme.typography.fonts.mediumM};
+          color: ${Theme.colors.gray2};
+          margin-bottom: 20px;
+        }
+
+        .location-map {
+          width: 100%;
+          height: 280px;
+          margin-bottom: 30px;
+          border-radius: ${Theme.borders.radius.md};
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          
+          .map-placeholder {
+            width: 100%;
+            height: 100%;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+          }
+        }
+
+        .nearby-places-container {
+          margin-top: 20px;
         }
 
         .nearby-places {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
           gap: 16px;
+          margin-top: 10px;
 
           .place {
+            background-color: ${Theme.colors.white};
+            padding: 18px 20px;
+            border-radius: ${Theme.borders.radius.md};
+            border: 1px solid ${Theme.colors.tertiary};
+            transition: transform 0.2s;
+            
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            }
+
             h4 {
               font: ${Theme.typography.fonts.largeB};
               color: ${Theme.colors.black};
-              margin-bottom: 4px;
+              margin-bottom: 8px;
             }
 
             span {
-              font: ${Theme.typography.fonts.largeM};
+              font: ${Theme.typography.fonts.mediumM};
               color: ${Theme.colors.gray2};
+              display: block;
             }
           }
         }

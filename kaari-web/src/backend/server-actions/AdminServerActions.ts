@@ -47,19 +47,17 @@ export interface CancellationRequest {
   propertyId: string;
   propertyName: string;
   reservationId: string;
-  status: 'pending' | 'approved' | 'rejected';
-  createdAt: any; // Timestamp
-  updatedAt: any; // Timestamp
-  reason: string;
-  details: string;
   originalAmount: number;
   serviceFee: number;
   cancellationFee: number;
-  requestedRefundAmount: number;
-  adminReviewed: boolean;
+  refundAmount: number;
   daysToMoveIn: number;
-  proofUrls: string[];
-  refundStatus?: 'pending' | 'completed' | 'failed'; // Optional status of the associated refund
+  createdAt: any; // Timestamp
+  status: 'pending' | 'approved' | 'rejected';
+  reason: string;
+  requestDetails: string;
+  approvedBy?: string;
+  rejectedBy?: string;
 }
 
 /**
@@ -76,12 +74,13 @@ export const getRefundRequests = async (): Promise<RefundRequest[]> => {
     
     if (querySnapshot.docs.length === 0) {
       console.log('No refund requests found. Collection may be empty.');
+      return []; // Return empty array instead of continuing
     }
     
     const refundRequests: RefundRequest[] = [];
     
     for (const docSnapshot of querySnapshot.docs) {
-      const data = docSnapshot.data();
+      const data = docSnapshot.data() as Record<string, any>;
       console.log('Processing refund request:', docSnapshot.id, data);
       
       try {
@@ -92,13 +91,15 @@ export const getRefundRequests = async (): Promise<RefundRequest[]> => {
         if (userId && typeof userId === 'object' && 'id' in userId) {
           // It's a document reference
           const userDoc = await getDoc(userId);
-          userName = userDoc.exists() ? userDoc.data().displayName || userDoc.data().name || 'Unknown User' : 'Unknown User';
+          const userData = userDoc.exists() ? userDoc.data() as Record<string, any> : null;
+          userName = userData ? userData.displayName || userData.name || 'Unknown User' : 'Unknown User';
           userId = userId.id;
         } else if (userId && typeof userId === 'string') {
           // It's already a string ID
           try {
             const userDoc = await getDoc(doc(db, 'users', userId));
-            userName = userDoc.exists() ? userDoc.data().displayName || userDoc.data().name || 'Unknown User' : 'Unknown User';
+            const userData = userDoc.exists() ? userDoc.data() as Record<string, any> : null;
+            userName = userData ? userData.displayName || userData.name || 'Unknown User' : 'Unknown User';
           } catch (userError) {
             console.error('Error fetching user:', userError);
           }
@@ -111,18 +112,21 @@ export const getRefundRequests = async (): Promise<RefundRequest[]> => {
         if (propertyId && typeof propertyId === 'object' && 'id' in propertyId) {
           // It's a document reference
           const propertyDoc = await getDoc(propertyId);
-          propertyName = propertyDoc.exists() ? propertyDoc.data().title || 'Unknown Property' : 'Unknown Property';
+          const propertyData = propertyDoc.exists() ? propertyDoc.data() as Record<string, any> : null;
+          propertyName = propertyData ? propertyData.title || 'Unknown Property' : 'Unknown Property';
           propertyId = propertyId.id;
         } else if (propertyId && typeof propertyId === 'string') {
           // It's already a string ID
           try {
             const propertyDoc = await getDoc(doc(db, 'properties', propertyId));
-            propertyName = propertyDoc.exists() ? propertyDoc.data().title || 'Unknown Property' : 'Unknown Property';
+            const propertyData = propertyDoc.exists() ? propertyDoc.data() as Record<string, any> : null;
+            propertyName = propertyData ? propertyData.title || 'Unknown Property' : 'Unknown Property';
           } catch (propertyError) {
             console.error('Error fetching property:', propertyError);
           }
         }
         
+        // Map the request data to our interface, handling potential field name differences
         refundRequests.push({
           id: docSnapshot.id,
           userId: userId || 'unknown',
@@ -130,10 +134,10 @@ export const getRefundRequests = async (): Promise<RefundRequest[]> => {
           propertyId: propertyId || 'unknown',
           propertyName,
           reservationId: data.reservationId || '',
-          amount: data.amount || 0,
+          amount: data.amount || data.refundAmount || 0,
           requestDate: data.requestDate || data.createdAt || null,
           status: data.status || 'pending',
-          reason: data.reason || data.reasonsText || '',
+          reason: data.reason || data.reasonsText || (Array.isArray(data.reasons) ? data.reasons.join(', ') : ''),
           moveInDate: data.moveInDate || null,
           movedInDate: data.movedInDate || null,
           requestDetails: data.requestDetails || data.details || '',
@@ -146,6 +150,7 @@ export const getRefundRequests = async (): Promise<RefundRequest[]> => {
         });
       } catch (itemError) {
         console.error('Error processing refund request item:', itemError);
+        // Continue processing other requests instead of failing the entire operation
       }
     }
     
@@ -171,50 +176,52 @@ export const getCancellationRequests = async (): Promise<CancellationRequest[]> 
     
     if (querySnapshot.docs.length === 0) {
       console.log('No cancellation requests found. Collection may be empty.');
+      return [];
     }
     
     const cancellationRequests: CancellationRequest[] = [];
     
     for (const docSnapshot of querySnapshot.docs) {
-      const data = docSnapshot.data();
-      console.log('Processing cancellation request:', docSnapshot.id, data);
+      const data = docSnapshot.data() as Record<string, any>;
       
       try {
-        // Get user details - handle both document references and string IDs
+        // Get user details
         let userId = data.userId;
         let userName = 'Unknown User';
         
         if (userId && typeof userId === 'object' && 'id' in userId) {
           // It's a document reference
           const userDoc = await getDoc(userId);
-          userName = userDoc.exists() ? userDoc.data().displayName || userDoc.data().name || 'Unknown User' : 'Unknown User';
+          const userData = userDoc.exists() ? userDoc.data() as Record<string, any> : null;
+          userName = userData ? userData.displayName || userData.name || 'Unknown User' : 'Unknown User';
           userId = userId.id;
         } else if (userId && typeof userId === 'string') {
-          // It's already a string ID
           try {
             const userDoc = await getDoc(doc(db, 'users', userId));
-            userName = userDoc.exists() ? userDoc.data().displayName || userDoc.data().name || 'Unknown User' : 'Unknown User';
-          } catch (userError) {
-            console.error('Error fetching user:', userError);
+            const userData = userDoc.exists() ? userDoc.data() as Record<string, any> : null;
+            userName = userData ? userData.displayName || userData.name || 'Unknown User' : 'Unknown User';
+          } catch (error) {
+            console.error('Error fetching user:', error);
           }
         }
         
-        // Get property details - handle both document references and string IDs
+        // Get property details
         let propertyId = data.propertyId;
         let propertyName = 'Unknown Property';
         
         if (propertyId && typeof propertyId === 'object' && 'id' in propertyId) {
           // It's a document reference
           const propertyDoc = await getDoc(propertyId);
-          propertyName = propertyDoc.exists() ? propertyDoc.data().title || 'Unknown Property' : 'Unknown Property';
+          const propertyData = propertyDoc.exists() ? propertyDoc.data() as Record<string, any> : null;
+          propertyName = propertyData ? propertyData.title || 'Unknown Property' : 'Unknown Property';
           propertyId = propertyId.id;
         } else if (propertyId && typeof propertyId === 'string') {
-          // It's already a string ID
           try {
             const propertyDoc = await getDoc(doc(db, 'properties', propertyId));
-            propertyName = propertyDoc.exists() ? propertyDoc.data().title || 'Unknown Property' : 'Unknown Property';
-          } catch (propertyError) {
-            console.error('Error fetching property:', propertyError);
+            const propertyData = propertyDoc.exists() ? propertyDoc.data() as Record<string, any> : null;
+            propertyName = propertyData ? propertyData.title || 'Unknown Property' : 'Unknown Property';
+          } catch (error) {
+            console.error('Error fetching property:', error);
           }
         }
         
@@ -225,22 +232,20 @@ export const getCancellationRequests = async (): Promise<CancellationRequest[]> 
           propertyId: propertyId || 'unknown',
           propertyName,
           reservationId: data.reservationId || '',
-          status: data.status || 'pending',
-          createdAt: data.createdAt || null,
-          updatedAt: data.updatedAt || null,
-          reason: data.reason || '',
-          details: data.details || '',
           originalAmount: data.originalAmount || 0,
           serviceFee: data.serviceFee || 0,
           cancellationFee: data.cancellationFee || 0,
-          requestedRefundAmount: data.requestedRefundAmount || 0,
-          adminReviewed: data.adminReviewed || false,
+          refundAmount: data.refundAmount || 0,
           daysToMoveIn: data.daysToMoveIn || 0,
-          proofUrls: data.proofUrls || [],
-          refundStatus: data.refundStatus || undefined
+          createdAt: data.createdAt || null,
+          status: data.status || 'pending',
+          reason: data.reason || '',
+          requestDetails: data.requestDetails || data.details || '',
+          approvedBy: data.approvedBy || undefined,
+          rejectedBy: data.rejectedBy || undefined
         });
-      } catch (itemError) {
-        console.error('Error processing cancellation request item:', itemError);
+      } catch (error) {
+        console.error('Error processing cancellation request:', error);
       }
     }
     
@@ -248,7 +253,7 @@ export const getCancellationRequests = async (): Promise<CancellationRequest[]> 
     return cancellationRequests;
   } catch (error) {
     console.error('Error getting cancellation requests:', error);
-    throw new Error('Failed to fetch cancellation requests');
+    throw new Error('Failed to get cancellation requests');
   }
 };
 

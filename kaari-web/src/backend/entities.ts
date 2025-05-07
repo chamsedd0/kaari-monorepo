@@ -60,6 +60,16 @@ export interface Property {
     type: 'bedroom' | 'bathroom' | 'kitchen' | 'storage' | 'living';
     area: number;
   }>;
+  isFurnished?: boolean; // Whether the property is furnished
+  capacity?: number; // Number of people that can live in the property
+  rules?: Array<{
+    name: string;
+    allowed: boolean;
+  }>;
+  nearbyPlaces?: Array<{
+    name: string;
+    timeDistance: string; // e.g., "10 minutes"
+  }>;
 }
 
 export interface Request {
