@@ -250,4 +250,61 @@ export async function getDocumentsByField<T>(
     orderDirection: options?.orderDirection,
     limit: options?.limit
   });
+}
+
+/**
+ * Generic function to query documents with an array of filter conditions
+ */
+export async function queryDocuments<T>(
+  collectionName: string,
+  filters: Array<{
+    field: string;
+    operator: '==' | '!=' | '>' | '>=' | '<' | '<=';
+    value: any;
+  }>,
+  options?: {
+    orderByField?: string;
+    orderDirection?: 'asc' | 'desc';
+    limit?: number;
+  }
+): Promise<T[]> {
+  try {
+    const collectionRef = collection(db, collectionName);
+    let queryConstraints: QueryConstraint[] = [];
+    
+    // Add filters
+    if (filters && filters.length > 0) {
+      for (const filter of filters) {
+        queryConstraints.push(where(filter.field, filter.operator, filter.value));
+      }
+    }
+    
+    // Add ordering
+    if (options?.orderByField) {
+      queryConstraints.push(orderBy(
+        options.orderByField, 
+        options.orderDirection || 'asc'
+      ));
+    }
+    
+    // Add limit
+    if (options?.limit) {
+      queryConstraints.push(firestoreLimit(options.limit));
+    }
+    
+    // Create and execute query
+    const q = query(collectionRef, ...queryConstraints);
+    const querySnapshot = await getDocs(q);
+    
+    // Convert to array of documents with IDs
+    const documents: T[] = [];
+    querySnapshot.forEach((doc) => {
+      documents.push({ id: doc.id, ...doc.data() } as T);
+    });
+    
+    return documents;
+  } catch (error) {
+    console.error(`Error querying documents from ${collectionName}:`, error);
+    throw error;
+  }
 } 

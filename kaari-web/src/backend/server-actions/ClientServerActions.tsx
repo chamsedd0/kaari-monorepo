@@ -367,6 +367,94 @@ export async function processCancellation(
   }
 }
 
+/**
+ * Get all favorite properties for the current client user
+ */
+export async function getFavoriteProperties(): Promise<Property[]> {
+  try {
+    const savedPropertiesData = await getSavedProperties();
+    
+    if (!savedPropertiesData.length) {
+      return [];
+    }
+    
+    // Extract property IDs from saved properties data
+    const propertyIds = savedPropertiesData.map(savedProperty => savedProperty.propertyId);
+    
+    // Fetch the actual property data for all saved property IDs
+    const favoriteProperties = await Promise.all(
+      propertyIds.map(async (propertyId) => {
+        return await getDocumentById<Property>(PROPERTIES_COLLECTION, propertyId);
+      })
+    );
+    
+    // Filter out any null results (in case a property was deleted but still in favorites)
+    return favoriteProperties.filter(property => property !== null) as Property[];
+  } catch (error) {
+    console.error('Error fetching favorite properties:', error);
+    throw new Error('Failed to fetch favorite properties');
+  }
+}
+
+/**
+ * Toggle a property as a favorite (add if not favorited, remove if already favorited)
+ */
+export async function toggleFavoriteProperty(propertyId: string): Promise<{ added: boolean }> {
+  try {
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Check if this property is already saved by this user
+    const savedProperties = await queryDocuments(SAVED_PROPERTIES_COLLECTION, [
+      { field: 'userId', operator: '==', value: currentUser.id },
+      { field: 'propertyId', operator: '==', value: propertyId }
+    ]);
+    
+    // If property is already saved, remove it from favorites
+    if (savedProperties.length > 0) {
+      await deleteDocument(SAVED_PROPERTIES_COLLECTION, savedProperties[0].id);
+      return { added: false };
+    }
+    
+    // Otherwise, add the property to favorites
+    await createDocument(SAVED_PROPERTIES_COLLECTION, {
+      userId: currentUser.id,
+      propertyId: propertyId,
+      createdAt: new Date()
+    });
+    
+    return { added: true };
+  } catch (error) {
+    console.error('Error toggling favorite property:', error);
+    throw new Error('Failed to toggle favorite property');
+  }
+}
+
+/**
+ * Check if a property is favorited by the current user
+ */
+export async function isPropertyFavorited(propertyId: string): Promise<boolean> {
+  try {
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      return false; // Not authenticated, so not favorited
+    }
+    
+    // Check if this property is saved by this user
+    const savedProperties = await queryDocuments(SAVED_PROPERTIES_COLLECTION, [
+      { field: 'userId', operator: '==', value: currentUser.id },
+      { field: 'propertyId', operator: '==', value: propertyId }
+    ]);
+    
+    return savedProperties.length > 0;
+  } catch (error) {
+    console.error('Error checking if property is favorited:', error);
+    return false;
+  }
+}
+
 // Helper function to get saved properties
 async function getSavedProperties(): Promise<any[]> {
   const currentUser = await getCurrentUserProfile();

@@ -3,6 +3,7 @@
     "dev": "cd kaari-web && npm run dev"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@types/react": "^19.0.10",
     "@types/react-router-dom": "^5.3.3",
     "@types/react-transition-group": "^4.4.12",

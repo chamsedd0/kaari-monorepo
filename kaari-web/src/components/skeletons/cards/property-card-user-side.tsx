@@ -3,6 +3,7 @@ import { CertificationBanner } from "../banners/static/certification-banner";
 import { IoHeartOutline, IoHeart } from 'react-icons/io5';
 import React, { memo } from "react";
 import { useTranslation } from 'react-i18next';
+import defaultImage from "../../../assets/images/propertyExamplePic.png";
 
 interface PropertyCardProps {
   id: string | number;
@@ -22,17 +23,18 @@ interface PropertyCardProps {
 
 // Create the component
 const PropertyCardComponent = ({
-  image, 
-  title, 
-  subtitle, 
-  price, 
-  minstay, 
-  priceType, 
-  description, 
-  isRecommended, 
-  isFavorite, 
-  onToggleFavorite,
   id,
+  title,
+  description,
+  subtitle,
+  price,
+  priceType = '/month',
+  propertyType,
+  minstay,
+  image,
+  isRecommended = false,
+  isFavorite,
+  onToggleFavorite,
   onClick
 }: PropertyCardProps) => {
   const { t } = useTranslation();
@@ -59,7 +61,7 @@ const PropertyCardComponent = ({
       style={{ cursor: onClick ? 'pointer' : 'default' }}
     >
         <div className="image">
-            <img src={image} alt="Property" />
+            <img src={image || defaultImage} alt="Property" />
             <div className="certifications">
                 <CertificationBanner purple text={t('property_card.kaari_verified')}></CertificationBanner>
                 <CertificationBanner text={t('property_card.tenant_protection')}></CertificationBanner>

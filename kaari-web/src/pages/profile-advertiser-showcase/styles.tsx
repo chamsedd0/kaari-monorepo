@@ -261,9 +261,9 @@ export const ProfileShowcaseStyle = styled.div`
                     font: ${Theme.typography.fonts.mediumM};
                 }
             }
-            
-            .offers-grid {
-                display: grid;
+                
+                .offers-grid {
+                    display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
                 gap: 24px;
                 width: 100%;

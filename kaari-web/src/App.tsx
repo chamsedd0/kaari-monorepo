@@ -102,9 +102,9 @@ function App() {
       });
     } else {
       const handleContentLoaded = () => {
-        eventBus.emit(EventType.APP_LOADED, {
-          timestamp: Date.now()
-        });
+    eventBus.emit(EventType.APP_LOADED, {
+      timestamp: Date.now()
+    });
       };
       
       window.addEventListener('load', handleContentLoaded);
@@ -114,7 +114,7 @@ function App() {
       };
     }
   }, []);
-  
+    
   // Set up online/offline detection in a separate effect
   useEffect(() => {
     const handleOnlineStatus = () => {

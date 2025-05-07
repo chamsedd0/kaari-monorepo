@@ -6,15 +6,20 @@ import { AppliedFilterBannerComponent } from "../../components/skeletons/banners
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
 import SelectFieldBaseModelVariant2 from "../../components/skeletons/inputs/select-fields/select-field-base-model-variant-2"
 import { PropertyList } from "./styles"
-import { getProperties } from "../../backend/server-actions/PropertyServerActions";
+import { getProperties } from "../../backend/server-actions/PropertyServerActions.tsx";
 import SearchFilterBar from "../../components/skeletons/inputs/search-bars/search-filter-bar";
 import FilteringSection from "../../components/skeletons/constructed/filtering/filtering-section";
 import defaultImage from "../../assets/images/propertyExamplePic.png";
+
 import { useAuth } from "../../contexts/auth";
 import { useTranslation } from 'react-i18next';
 import { Theme } from "../../theme/theme";
 import { AuthModal } from '../../components/skeletons/constructed/modals/auth-modal';
 import closeIcon from '../../components/skeletons/icons/Cross-Icon.svg';
+import { toggleFavoriteProperty, isPropertyFavorited } from "../../backend/server-actions/ClientServerActions.tsx";
+
+
+
 // Updated PropertyType interface to match Firestore data model
 interface PropertyType {
   id: string | number;
@@ -43,7 +48,7 @@ interface PropertyType {
   updatedAt: Date;
   listingId?: string;
   // UI specific properties
-  isFavorite?: boolean;
+  isFavorite: boolean;
   isRecommended?: boolean;
   subtitle?: string;
   priceType?: string;
@@ -56,7 +61,7 @@ interface PropertyType {
     area: number;
   }>;
   // Additional properties for filtering
-  availableFrom?: Date | string; // Date from which the property is available
+  availableFrom?: Date | string | any; // Date from which the property is available
   capacity?: number; // Number of people the property can accommodate
   rules?: Array<{
     name: string;
@@ -541,9 +546,9 @@ const PropertyMap = memo(({
                     </div>
                     <div className="info-window-features">
                       <span className="feature">
-                        {selectedProperty.rooms?.filter(room => room.type === 'bedroom')?.length > 0 
-                          ? `${selectedProperty.rooms.filter(room => room.type === 'bedroom').length} ${
-                              selectedProperty.rooms.filter(room => room.type === 'bedroom').length === 1 
+                        {selectedProperty.rooms && selectedProperty.rooms.filter(room => room.type === 'bedroom').length > 0 
+                          ? `${selectedProperty.rooms!.filter(room => room.type === 'bedroom').length} ${
+                              selectedProperty.rooms!.filter(room => room.type === 'bedroom').length === 1 
                                 ? t('property_list.bedroom') 
                                 : t('property_list.bedrooms')
                             }`
@@ -558,9 +563,9 @@ const PropertyMap = memo(({
                       </span>
                       <span className="feature-divider">•</span>
                       <span className="feature">
-                        {selectedProperty.rooms?.filter(room => room.type === 'bathroom')?.length > 0
-                          ? `${selectedProperty.rooms.filter(room => room.type === 'bathroom').length} ${
-                              selectedProperty.rooms.filter(room => room.type === 'bathroom').length === 1 
+                        {selectedProperty.rooms && selectedProperty.rooms.filter(room => room.type === 'bathroom').length > 0
+                          ? `${selectedProperty.rooms!.filter(room => room.type === 'bathroom').length} ${
+                              selectedProperty.rooms!.filter(room => room.type === 'bathroom').length === 1 
                                 ? t('property_list.bathroom') 
                                 : t('property_list.bathrooms')
                             }`
@@ -625,10 +630,10 @@ const EnhancedPropertyCardComponent = ({ property, onToggleFavorite, isSelected 
   return (
     <div className={`property-card-wrapper${isSelected ? ' selected' : ''}`}>
       <PropertyCard 
-        image={property.image || defaultImage}
+        image={defaultImage}
         title={property.title}
         subtitle={property.subtitle || ''}
-        minstay={property.minstay || ''}
+        minstay={property.minstay || '1'}
         price={formattedPrice}
         priceType={property.priceType || ''}
         description={property.description}
@@ -697,121 +702,65 @@ export default function PropertyListPage() {
     libraries: ['places', 'geometry']
   });
 
-  // Load properties on mount
+  // Fetch properties and set up initial state
   useEffect(() => {
-    const loadProperties = async () => {
-      try {
+    const fetchProperties = async () => {
         setIsLoading(true);
+      try {
+        // Fetch properties from API with any required filters
+        let fetchedProperties = await getProperties();
         
-        // Fetch properties from Firestore
-        const fetchedProperties = await getProperties();
-        
-        if (fetchedProperties && fetchedProperties.length > 0) {
-          // Transform Firestore data to match our PropertyType interface if needed
-          const propertyData: PropertyType[] = fetchedProperties.map((prop) => {
-            // Ensure we have proper type conversion
-            const property = prop as any;
-            
-            // Convert Firestore timestamp to Date objects if needed
-            let createdDate = new Date();
-            let updatedDate = new Date();
-            let availableFromDate = null;
-            
-            if (property.createdAt instanceof Date) {
-              createdDate = property.createdAt;
-            } else if (property.createdAt && typeof property.createdAt.toDate === 'function') {
-              createdDate = property.createdAt.toDate();
-            }
-            
-            if (property.updatedAt instanceof Date) {
-              updatedDate = property.updatedAt;
-            } else if (property.updatedAt && typeof property.updatedAt.toDate === 'function') {
-              updatedDate = property.updatedAt.toDate();
-            }
-            
-            // Handle availableFrom date conversion
-            if (property.availableFrom instanceof Date) {
-              availableFromDate = property.availableFrom;
-            } else if (property.availableFrom && typeof property.availableFrom.toDate === 'function') {
-              availableFromDate = property.availableFrom.toDate();
-            } else if (property.availableFrom && typeof property.availableFrom === 'string') {
-              availableFromDate = new Date(property.availableFrom);
-            }
-            
-            // Use property's location if available, otherwise it will be geocoded later
-            const location = property.location && 
-                            typeof property.location.lat === 'number' && 
-                            typeof property.location.lng === 'number' ? 
-                            property.location : null;
-            
-            return {
-              id: property.id || '',
-              ownerId: property.ownerId || '',
-              title: property.title || '',
-              description: property.description || '',
-              address: property.address || {
-                street: '',
-                city: 'Rabat',
-                state: 'Rabat-Salé-Kénitra',
-                zipCode: '',
-                country: 'Morocco'
-              },
-              propertyType: (property.propertyType || 'apartment') as 'apartment' | 'house' | 'condo' | 'land' | 'commercial',
-              bedrooms: property.bedrooms,
-              bathrooms: property.bathrooms,
-              area: property.area || 0,
-              price: property.price || 0,
-              images: property.images || [],
-              amenities: property.amenities || [],
-              features: property.features || [],
-              status: (property.status || 'available') as 'available' | 'occupied',
-              createdAt: createdDate,
-              updatedAt: updatedDate,
-              // UI specific properties
-              isFavorite: Boolean(property.isFavorite),
-              isRecommended: Boolean(property.isRecommended),
-              subtitle: property.subtitle || '',
-              priceType: property.priceType || '/month',
-              minstay: property.minstay || '',
-              location,
-              image: property.image || defaultImage,
-              // New rooms property
-              rooms: property.rooms || [],
-              // Additional properties for filtering
-              availableFrom: availableFromDate,
-              capacity: property.capacity || 1,
-              rules: property.rules || [],
-              isFurnished: Boolean(property.isFurnished)
-            } as PropertyType;
-          });
+        // Check which properties are favorited by the user
+        if (isAuthenticated) {
+          const checkFavoriteStatus = async () => {
+            const propertiesWithFavorites = await Promise.all(
+              fetchedProperties.map(async (property) => {
+                const isFavorite = await isPropertyFavorited(property.id.toString());
+                return { ...property, isFavorite };
+              })
+            );
+            return propertiesWithFavorites;
+          };
           
-          // Filter out unlisted properties (those with status 'occupied')
-          const filteredProperties = propertyData.filter(property => {
-            console.log(`Property ${property.id} status: ${property.status}`);
-            return property.status === 'available';
-          });
-          
-          console.log("Loaded properties from Firestore:", filteredProperties.length);
-          setProperties(filteredProperties);
-          setFilteredProperties(filteredProperties);
-    } else {
-          console.log("No properties found in Firestore");
-          // Initialize with empty arrays if no properties found
-          setProperties([]);
-          setFilteredProperties([]);
+          fetchedProperties = await checkFavoriteStatus();
         }
         
+        // Set properties and filtered properties
+        setProperties(fetchedProperties.map(property => ({
+          ...property,
+          subtitle: property.address?.city || '',
+          image: defaultImage,
+          priceType: '/month',
+          minstay: property.minstay?.toString() || '1',
+          isRecommended: false,
+          // If not authenticated, isFavorite will be false by default
+          isFavorite: (property as any).isFavorite || false,
+          // Ensure isFurnished is always boolean, default to false if undefined
+          isFurnished: property.isFurnished || false
+        })) as PropertyType[]);
+        
+        setFilteredProperties(fetchedProperties.map(property => ({
+          ...property,
+          subtitle: property.address?.city || '',
+          image: defaultImage,
+          priceType: '/month',
+          minstay: property.minstay?.toString() || '1',
+          isRecommended: false,
+          isFavorite: (property as any).isFavorite || false,
+          // Ensure isFurnished is always boolean, default to false if undefined
+          isFurnished: property.isFurnished || false
+        })) as PropertyType[]);
+        
         setIsLoading(false);
+        setCurrentPage(1);
       } catch (error) {
-        console.error('Error loading properties:', error);
-        setProperties([]);
-        setFilteredProperties([]);
+        console.error('Error fetching properties:', error);
         setIsLoading(false);
       }
     };
 
-    loadProperties();
-  }, []);
+    fetchProperties();
+  }, [isAuthenticated]);
 
   // Handler functions
   const handleDateChange = (date: string) => {
@@ -821,7 +770,7 @@ export default function PropertyListPage() {
       // If date is cleared, mark to remove this filter type
       if (!date) {
         setPendingFilters(prev => prev.filter(filter => filter.type !== 'MoveInDate'));
-        return;
+          return;
       }
       
       // Format date for display in filter 
@@ -843,7 +792,7 @@ export default function PropertyListPage() {
       });
       
       console.log('Date input changed to:', displayDate, 'for date:', dateObj.toISOString());
-    } catch (error) {
+      } catch (error) {
       console.error('Error processing date:', error);
     }
   };
@@ -1038,8 +987,9 @@ export default function PropertyListPage() {
             availableFromDate = property.availableFrom;
           } else if (typeof property.availableFrom === 'string') {
             availableFromDate = new Date(property.availableFrom);
-          } else if (property.availableFrom && typeof property.availableFrom.toDate === 'function') {
-            availableFromDate = property.availableFrom.toDate();
+          } else if (property.availableFrom && typeof (property.availableFrom as any).toDate === 'function') {
+            // Handle Firestore Timestamp objects which have a toDate() method
+            availableFromDate = (property.availableFrom as any).toDate();
           } else {
             // If we can't parse the date, skip this property
             console.log(`Property ${property.id} has invalid availableFrom date, filtering out`);
@@ -1397,16 +1347,21 @@ export default function PropertyListPage() {
   }, [applyCurrentFilters]);
 
   // Toggle favorite status
-  const toggleFavorite = useCallback((propertyId: string | number) => {
+  const toggleFavorite = useCallback(async (propertyId: string | number) => {
     if (!isAuthenticated) {
       setShowAuthModal(true);
       return;
     }
 
+    try {
+      // Call the server action to update the favorite status in the database
+      const result = await toggleFavoriteProperty(propertyId.toString());
+      
+      // Update the local UI state based on the result from the server
     setProperties(prevProperties => 
       prevProperties.map(property => 
         property.id === propertyId 
-          ? { ...property, isFavorite: !property.isFavorite } 
+            ? { ...property, isFavorite: result.added } 
           : property
       )
     );
@@ -1414,10 +1369,13 @@ export default function PropertyListPage() {
     setFilteredProperties(prevFiltered => 
       prevFiltered.map(property => 
         property.id === propertyId 
-          ? { ...property, isFavorite: !property.isFavorite } 
+            ? { ...property, isFavorite: result.added } 
           : property
       )
     );
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    }
   }, [isAuthenticated]);
 
   // Ensure map recenters when a property is selected from the card list
