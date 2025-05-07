@@ -103,6 +103,12 @@ export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
   .description {
     font: ${Theme.typography.fonts.mediumM};
     color: ${Theme.colors.gray2};
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .recommendedBanner {

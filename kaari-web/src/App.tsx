@@ -75,14 +75,30 @@ function App() {
   const userIsAdvertiser = isAdvertiser(user);
   const userIsRegular = isRegularUser(user);
   
-  // Listen for app load completion
+  // Separate the APP_LOADED event emission into its own effect
   useEffect(() => {
-    // Emit app loaded event once the app is rendered
-    eventBus.emit(EventType.APP_LOADED, {
-      timestamp: Date.now()
-    });
-    
-    // Set up online/offline detection
+    // Wait for DOM content to be fully loaded before emitting app loaded event
+    if (document.readyState === 'complete') {
+      eventBus.emit(EventType.APP_LOADED, {
+        timestamp: Date.now()
+      });
+    } else {
+      const handleContentLoaded = () => {
+        eventBus.emit(EventType.APP_LOADED, {
+          timestamp: Date.now()
+        });
+      };
+      
+      window.addEventListener('load', handleContentLoaded);
+      
+      return () => {
+        window.removeEventListener('load', handleContentLoaded);
+      };
+    }
+  }, []);
+  
+  // Set up online/offline detection in a separate effect
+  useEffect(() => {
     const handleOnlineStatus = () => {
       eventBus.emit(EventType.APP_ONLINE_STATUS_CHANGED, {
         isOnline: navigator.onLine

@@ -3,8 +3,9 @@ import { useLocation } from 'react-router-dom';
 import Footer from '../components/skeletons/constructed/footer/footer';
 import UnifiedHeader from '../components/skeletons/constructed/headers/unified-header';
 import { useStore } from '../backend/store';
-import eventBus, { AUTH_EVENTS } from '../utils/event-bus';
+import eventBus, { AUTH_EVENTS, EventType } from '../utils/event-bus';
 import styled from 'styled-components';
+import LoadingScreen from '../components/loading/LoadingScreen';
 
 const SkipLink = styled.a`
   position: absolute;
@@ -23,6 +24,7 @@ const SkipLink = styled.a`
 
 const MainContent = styled.main`
   scroll-margin-top: 100px;
+  min-height: 100vh;
 `;
 
 interface MainLayoutProps {
@@ -31,118 +33,120 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const location = useLocation();
+  const userRole = useStore(state => state.user?.role || 'user');
+  const userType = userRole === 'admin' ? 'admin' : userRole === 'advertiser' ? 'advertiser' : 'user';
   const isAuthenticated = useStore(state => state.isAuthenticated);
-  const user = useStore(state => state.user);
-  const [, forceUpdate] = useState({});
+  // Add page loading state
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [contentLoaded, setContentLoaded] = useState(false);
   
-  // Force re-render when authentication state changes
+  // Handle page loading
   useEffect(() => {
-    const handleAuthChange = () => {
-      // This will trigger a re-render
-      forceUpdate({});
-    };
+    // Reset loading state on route change
+    setIsPageLoading(true);
+    setContentLoaded(false);
     
-    // Listen for authentication events
-    const unsubscribe = eventBus.on(AUTH_EVENTS.AUTH_STATE_CHANGED, handleAuthChange);
+    // When content is mounted
+    const contentTimer = setTimeout(() => {
+      setContentLoaded(true);
+    }, 100);
+    
+    // When everything is loaded
+    const loadingTimer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 800); // Adjust time as needed
     
     return () => {
+      clearTimeout(contentTimer);
+      clearTimeout(loadingTimer);
+    };
+  }, [location.pathname]);
+  
+  // Listen for app loaded event
+  useEffect(() => {
+    const handleAppLoaded = () => {
+      setIsPageLoading(false);
+    };
+    
+    // Store the unsubscribe function returned by eventBus.on()
+    const unsubscribe = eventBus.on(EventType.APP_LOADED, handleAppLoaded);
+    
+    return () => {
+      // Call the unsubscribe function instead of eventBus.off
       unsubscribe();
     };
   }, []);
   
-  // Determine if user is advertiser, client, or admin
-  const isAdvertiser = user?.role === 'advertiser';
-  const isClient = user?.role === 'client';
-  const isAdmin = user?.role === 'admin';
-  
-  // Get userType based on role
-  const getUserType = (): "user" | "admin" | "advertiser" => {
-    if (isAdvertiser) return 'advertiser';
-    if (isClient) return 'user';
-    if (isAdmin) return 'admin';
-    
-    // Default based on path if not authenticated
-    if (location.pathname === '/for-advertisers') return 'advertiser';
-    return 'user';
-  };
-  
-  // Centralized header configuration based on route path
   const getHeaderConfig = () => {
-    const userType = getUserType();
+    const dynamicHeaderConfig = {
+      userType: userType as 'user' | 'advertiser' | 'admin',
+      isAuthenticated
+    };
     
-    // Landing pages
-    if (location.pathname === '/') {
+    // User Dashboard
+    if (location.pathname.startsWith('/dashboard/user')) {
       return {
-        variant: 'landing' as const,
+        variant: 'white' as const,
         userType: 'user' as const,
         isAuthenticated
       };
     }
     
-    // Advertiser landing
-    if (location.pathname === '/for-advertisers') {
-      return {
-        variant: 'advertiser-landing' as const,
-        userType: 'advertiser' as const,
-        isAuthenticated,
-        customLink: {
-          text: "Looking for a place?",
-          onClick: () => window.location.href = '/'
-        }
-      };
-    }
-    
-    // User dashboard pages
-    if (location.pathname.startsWith('/dashboard/user')) {
-      return {
-        variant: 'white' as const,
-        userType: 'user' as const,
-        isAuthenticated: true,
-        showSearchBar: true
-      };
-    }
-    
-    // Advertiser dashboard pages
+    // Advertiser Dashboard
     if (location.pathname.startsWith('/dashboard/advertiser')) {
       return {
         variant: 'white' as const,
         userType: 'advertiser' as const,
-        isAuthenticated: true,
+        isAuthenticated
+      };
+    }
+    
+    // Admin Dashboard
+    if (location.pathname.startsWith('/dashboard/admin')) {
+      return {
+        variant: 'white' as const, 
+        userType: 'admin' as const,
+        isAuthenticated
+      };
+    }
+    
+    // Home page
+    if (location.pathname === '/') {
+      return {
+        variant: 'landing' as const,
+        userType: userType,
+        isAuthenticated,
+        showSearchBar: false
+      };
+    }
+    
+    // Property listing page
+    if (location.pathname === '/properties') {
+      return {
+        variant: 'white' as const,
+        userType: userType,
+        isAuthenticated,
         showSearchBar: true
       };
     }
     
-    // Admin uses a custom header, not UnifiedHeader
-    if (location.pathname.startsWith('/dashboard/admin')) {
-      return null;
+    // Property details page
+    if (location.pathname.startsWith('/property/')) {
+      return {
+        variant: 'white' as const,
+        userType: userType,
+        isAuthenticated,
+        showSearchBar: false
+      };
     }
     
     // Checkout process
     if (location.pathname.startsWith('/checkout-process')) {
       return {
         variant: 'white' as const,
-        userType: 'user' as const,
-        isAuthenticated
-      };
-    }
-    
-    // Property list
-    if (location.pathname.startsWith('/properties')) {
-      return {
-        variant: 'white' as const,
-        userType: 'user' as const,
+        userType: userType,
         isAuthenticated,
-        showSearchBar: true
-      };
-    }
-    
-    // Property detail page
-    if (location.pathname.startsWith('/property/')) {
-      return {
-        variant: 'white' as const,
-        userType: 'user' as const,
-        isAuthenticated,
-        showSearchBar: true
+        showMinimalHeader: true
       };
     }
     
@@ -201,12 +205,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   
   return (
     <>
+      <LoadingScreen isLoading={isPageLoading} />
       <SkipLink href="#main-content" className="skip-to-content">
         Skip to content
       </SkipLink>
       {headerConfig && <UnifiedHeader {...headerConfig} />}
       <MainContent id="main-content" tabIndex={-1}>{children}</MainContent>
-      {shouldShowFooter() && <Footer />}
+      {shouldShowFooter() && contentLoaded && !isPageLoading && <Footer />}
     </>
   );
 };
