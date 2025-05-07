@@ -1,6 +1,6 @@
 import React, { useState, FormEvent, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { IoSearch, IoLocationOutline, IoCalendarOutline, IoPersonOutline, IoClose, IoChevronDown, IoOptions } from 'react-icons/io5';
+import { IoSearch, IoLocationOutline, IoCalendarOutline, IoPersonOutline, IoClose, IoChevronDown, IoOptions, IoCheckmarkCircleOutline } from 'react-icons/io5';
 import { Theme } from '../../../../theme/theme';
 import { useTranslation } from 'react-i18next';
 
@@ -32,6 +32,7 @@ const FilterItem = styled.div<{ active?: boolean, isSelect?: boolean }>`
   color: ${props => props.active ? Theme.colors.primary : "#64748B"};
   flex: 1;
   max-width: ${props => props.isSelect ? '180px' : 'unset'};
+  min-width: 100px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   
   &:hover {
@@ -261,38 +262,25 @@ const SearchButton = styled.button`
 `;
 
 const ApplyFiltersButton = styled.button`
-  background-color: ${Theme.colors.secondary};
-  color: white;
+  background-color: transparent;
+  color: ${Theme.colors.secondary};
   border: none;
-  border-radius: 50px;
-  padding: 0 20px;
+  padding: 0;
   height: 42px;
+  width: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.2s;
-  font-weight: 500;
+  transition: color 0.2s;
   flex-shrink: 0;
-  white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  gap: 8px;
   
   .filter-text {
-    display: inline;
-  }
-  
-  @media (max-width: 1200px) {
-    padding: 0;
-    width: 42px;
-    
-    .filter-text {
-      display: none;
-    }
+    display: none;
   }
   
   &:hover {
-    background-color: ${Theme.colors.primary};
+    color: ${Theme.colors.primary};
   }
 `;
 
@@ -337,11 +325,11 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
 
   // Format date for display
   const formatDateForDisplay = (dateString: string): string => {
-    if (!dateString) return t('common.move_in_date');
+    if (!dateString) return t('common.date');
     
     try {
       const dateObj = new Date(dateString);
-      if (isNaN(dateObj.getTime())) return t('common.move_in_date');
+      if (isNaN(dateObj.getTime())) return t('common.date');
       
       return new Intl.DateTimeFormat(navigator.language, {
         year: 'numeric',
@@ -349,7 +337,7 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
         day: 'numeric'
       }).format(dateObj);
     } catch (e) {
-      return t('common.move_in_date');
+      return t('common.date');
     }
   };
 
@@ -705,7 +693,7 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
             type="button" 
             onClick={onAdvancedFilteringClick}
           >
-            <IoOptions size={20} />
+            <IoOptions size={24} />
             <span className="filter-text">{t('property_list.advanced_filtering')}</span>
           </ApplyFiltersButton>
         )}
@@ -716,7 +704,7 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
             type="button" 
             onClick={handleApplyFilters}
           >
-            <IoOptions size={20} />
+            <IoCheckmarkCircleOutline size={24} />
             <span className="filter-text">{t('property_list.apply_filters')}</span>
           </ApplyFiltersButton>
         )}

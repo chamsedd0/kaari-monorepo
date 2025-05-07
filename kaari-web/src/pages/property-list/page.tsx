@@ -794,7 +794,7 @@ export default function PropertyListPage() {
           console.log("Loaded properties from Firestore:", filteredProperties.length);
           setProperties(filteredProperties);
           setFilteredProperties(filteredProperties);
-        } else {
+    } else {
           console.log("No properties found in Firestore");
           // Initialize with empty arrays if no properties found
           setProperties([]);
@@ -1330,7 +1330,7 @@ export default function PropertyListPage() {
       applyCurrentFilters(newActiveFilters);
     } else {
       // Just apply existing active filters if no pending changes
-      applyCurrentFilters();
+    applyCurrentFilters();
     }
   };
 
