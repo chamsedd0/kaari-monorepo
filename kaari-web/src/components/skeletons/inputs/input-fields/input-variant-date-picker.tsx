@@ -272,16 +272,25 @@ const InputVariantDatePicker: React.FC<DatePickerProps> = ({
     return tomorrow;
   };
 
+  // Parse the provided date value safely
+  const parseInitialDate = () => {
+    if (!value) return getTomorrow();
+    
+    // Try to parse the provided date value
+    const parsedDate = new Date(value);
+    
+    // Check if the date is valid
+    if (isNaN(parsedDate.getTime())) {
+      return getTomorrow();
+    }
+    
+    return parsedDate;
+  };
+
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(
-    value ? new Date(value) : getTomorrow()
-  );
-  const [currentMonth, setCurrentMonth] = useState(
-    selectedDate ? selectedDate.getMonth() : getTomorrow().getMonth()
-  );
-  const [currentYear, setCurrentYear] = useState(
-    selectedDate ? selectedDate.getFullYear() : getTomorrow().getFullYear()
-  );
+  const [selectedDate, setSelectedDate] = useState<Date>(parseInitialDate());
+  const [currentMonth, setCurrentMonth] = useState(selectedDate.getMonth());
+  const [currentYear, setCurrentYear] = useState(selectedDate.getFullYear());
   const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
   const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
   
@@ -312,9 +321,9 @@ const InputVariantDatePicker: React.FC<DatePickerProps> = ({
   }, [isMonthDropdownOpen, isYearDropdownOpen]);
   
   // Format date for display
-  const formatDate = (date: Date | null): string => {
-    if (!date || isNaN(date.getTime())) {
-      // Show tomorrow's date instead of placeholder
+  const formatDate = (date: Date): string => {
+    // Always use a valid date
+    if (isNaN(date.getTime())) {
       const tomorrow = getTomorrow();
       
       const options: Intl.DateTimeFormatOptions = { 
@@ -391,18 +400,18 @@ const InputVariantDatePicker: React.FC<DatePickerProps> = ({
     setIsOpen(false);
   };
   
-  // Ensure the initial render selects tomorrow in the calendar
+  // Ensure valid initial state
   useEffect(() => {
-    // Make sure tomorrow is initially selected in the calendar
-    if (!selectedDate) {
-      const tomorrow = getTomorrow();
-      setSelectedDate(tomorrow);
-      setCurrentMonth(tomorrow.getMonth());
-      setCurrentYear(tomorrow.getFullYear());
-      
-      if (onChange) {
-        onChange(tomorrow.toISOString().split('T')[0]);
-      }
+    const initialDate = parseInitialDate();
+    
+    // Update the selected date, month and year
+    setSelectedDate(initialDate);
+    setCurrentMonth(initialDate.getMonth());
+    setCurrentYear(initialDate.getFullYear());
+    
+    // Notify parent component of initial date
+    if (onChange && !value) {
+      onChange(initialDate.toISOString().split('T')[0]);
     }
   }, []);
   
@@ -432,9 +441,9 @@ const InputVariantDatePicker: React.FC<DatePickerProps> = ({
     "July", "August", "September", "October", "November", "December"
   ];
   
-  // Generate year options (10 years before and after current year)
+  // Generate year options (current year and 10 years into the future)
   const currentYearNum = new Date().getFullYear();
-  const years = Array.from({ length: 21 }, (_, i) => currentYearNum - 10 + i);
+  const years = Array.from({ length: 11 }, (_, i) => currentYearNum + i);
   
   // Check if a date is today
   const isToday = (day: number, month: number, year: number) => {
@@ -448,7 +457,7 @@ const InputVariantDatePicker: React.FC<DatePickerProps> = ({
   
   // Check if a date is selected
   const isSelected = (day: number, month: number, year: number) => {
-    if (!selectedDate) return false;
+    if (!selectedDate || isNaN(selectedDate.getTime())) return false;
     
     return (
       day === selectedDate.getDate() &&

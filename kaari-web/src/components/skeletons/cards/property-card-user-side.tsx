@@ -24,16 +24,16 @@ interface PropertyCardProps {
 // Create the component
 const PropertyCardComponent = ({
   id,
-  title,
+  title, 
   description,
-  subtitle,
-  price,
+  subtitle, 
+  price, 
   priceType = '/month',
   propertyType,
-  minstay,
+  minstay, 
   image,
   isRecommended = false,
-  isFavorite,
+  isFavorite, 
   onToggleFavorite,
   onClick
 }: PropertyCardProps) => {

@@ -15,7 +15,15 @@ interface BookingSearchFormProps {
 const BookingSearchForm: React.FC<BookingSearchFormProps> = ({ onSubmit }) => {
   const navigate = useNavigate();
   const [location, setLocation] = useState("");
-  const [selectedDate, setSelectedDate] = useState(Date.now().toString());
+  
+  // Create a proper initial date (tomorrow) in ISO format
+  const getTomorrowDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+  };
+  
+  const [selectedDate, setSelectedDate] = useState(getTomorrowDate());
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocation(e.target.value);

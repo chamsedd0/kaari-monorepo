@@ -729,10 +729,10 @@ export default function PropertyListPage() {
         setProperties(fetchedProperties.map(property => ({
           ...property,
           subtitle: property.address?.city || '',
-          image: defaultImage,
+            image: defaultImage,
           priceType: '/month',
           minstay: property.minstay?.toString() || '1',
-          isRecommended: false,
+              isRecommended: false,
           // If not authenticated, isFavorite will be false by default
           isFavorite: (property as any).isFavorite || false,
           // Ensure isFurnished is always boolean, default to false if undefined
@@ -742,7 +742,7 @@ export default function PropertyListPage() {
         setFilteredProperties(fetchedProperties.map(property => ({
           ...property,
           subtitle: property.address?.city || '',
-          image: defaultImage,
+              image: defaultImage,
           priceType: '/month',
           minstay: property.minstay?.toString() || '1',
           isRecommended: false,
