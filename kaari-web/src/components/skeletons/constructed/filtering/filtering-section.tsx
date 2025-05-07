@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { Theme } from '../../../../theme/theme';
 import SearchFilterBar from '../../inputs/search-bars/search-filter-bar';
-import { FaBed, FaCouch, FaTable, FaChair, FaDesktop, FaArrowLeft } from 'react-icons/fa';
+import { FaBed, FaCouch, FaTable, FaChair, FaDesktop, FaArrowLeft, FaUsers, FaPaw, FaSmoking } from 'react-icons/fa';
 import { BiCloset, BiCabinet } from 'react-icons/bi';
 import { MdTableRestaurant, MdOutlineCoffee, MdWaterDrop, MdOutlineLocalLaundryService, MdOutlineKitchen, MdOutlineMicrowave } from 'react-icons/md';
 import { RiWaterFlashFill, RiWifiFill } from 'react-icons/ri';
@@ -230,11 +230,10 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
   setActiveFilters
 }) => {
   const { t } = useTranslation();
-  const [numPeople, setNumPeople] = useState('2');
-  const [bedrooms, setBedrooms] = useState('2');
+  const [bedrooms, setBedrooms] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
-  const [propertyType, setPropertyType] = useState('Apartment');
+  const [propertyType, setPropertyType] = useState('');
   const [localLocation, setLocalLocation] = useState(location);
   const [localDate, setLocalDate] = useState(date);
   const [localGender, setLocalGender] = useState(gender);
@@ -283,28 +282,30 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
     }
     
     // Handle bedrooms
-    let bedroomFilter;
-    if (bedrooms === '0') {
-      bedroomFilter = t('property_list.studio');
-    } else if (bedrooms === '1') {
-      bedroomFilter = `1 ${t('property_list.bedroom')}`;
-    } else {
-      bedroomFilter = `${bedrooms} ${t('property_list.bedrooms')}`;
+    if (bedrooms) {
+      let bedroomFilter;
+      if (bedrooms === '0') {
+        bedroomFilter = t('property_list.studio');
+      } else if (bedrooms === '1') {
+        bedroomFilter = `1 ${t('property_list.bedroom')}`;
+      } else {
+        bedroomFilter = `${bedrooms} ${t('property_list.bedrooms')}`;
+      }
+      
+      // Find any existing bedroom filter
+      const existingBedroomFilter = finalFilters.find(f => 
+        f === t('property_list.studio') || 
+        f.includes(t('property_list.bedroom')) || 
+        f.includes(t('property_list.bedrooms')));
+      
+      // Remove existing bedroom filter if any
+      if (existingBedroomFilter) {
+        finalFilters = finalFilters.filter(f => f !== existingBedroomFilter);
+      }
+      
+      // Add new bedroom filter
+      finalFilters.push(bedroomFilter);
     }
-    
-    // Find any existing bedroom filter
-    const existingBedroomFilter = finalFilters.find(f => 
-      f === t('property_list.studio') || 
-      f.includes(t('property_list.bedroom')) || 
-      f.includes(t('property_list.bedrooms')));
-    
-    // Remove existing bedroom filter if any
-    if (existingBedroomFilter) {
-      finalFilters = finalFilters.filter(f => f !== existingBedroomFilter);
-    }
-    
-    // Add new bedroom filter
-    finalFilters.push(bedroomFilter);
     
     // Handle property type
     if (propertyType) {
@@ -322,12 +323,14 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
     
     // Handle amenities - replace with the current local state
     // First remove any existing amenity filters
-    const allAmenityIds = [...amenities, ...includedFees].map(item => item.id);
-    finalFilters = finalFilters.filter(filter => !allAmenityIds.includes(filter));
+    const allAmenityIds = [...amenities, ...includedFees, ...acceptsOnlyRules].map(item => item.id);
+    // Also include the furnished filter ID
+    const allFilterIds = [...allAmenityIds, furnishedFilter.id];
+    finalFilters = finalFilters.filter(filter => !allFilterIds.includes(filter));
     
     // Then add the ones that are checked in the local state
     localActiveFilters.forEach(filter => {
-      if (allAmenityIds.includes(filter) && !finalFilters.includes(filter)) {
+      if (allFilterIds.includes(filter) && !finalFilters.includes(filter)) {
         finalFilters.push(filter);
       }
     });
@@ -346,7 +349,6 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
 
   // Updated amenities with icons and matching the advertiser dashboard
   const amenities = [
-    { id: 'furnished', label: t('common.furnished'), icon: <FaBed style={{ color: Theme.colors.secondary }} /> },
     { id: 'sofabed', label: t('advertiser_dashboard.properties.amenities.sofabed'), icon: <FaCouch style={{ color: Theme.colors.secondary }} /> },
     { id: 'dining-table', label: t('advertiser_dashboard.properties.amenities.dining_table'), icon: <MdTableRestaurant style={{ color: Theme.colors.secondary }} /> },
     { id: 'wardrobe', label: t('advertiser_dashboard.properties.amenities.wardrobe'), icon: <BiCloset style={{ color: Theme.colors.secondary }} /> },
@@ -358,12 +360,22 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
     { id: 'oven', label: t('advertiser_dashboard.properties.amenities.oven'), icon: <MdOutlineKitchen style={{ color: Theme.colors.secondary }} /> }
   ];
 
+  // Define furnished filter
+  const furnishedFilter = { id: 'isFurnished', label: t('common.furnished'), icon: <FaBed style={{ color: Theme.colors.secondary }} /> };
+
   // Updated included fees options
   const includedFees = [
-    { id: 'water', label: t('common.water'), icon: <RiWaterFlashFill style={{ color: Theme.colors.secondary }} /> },
-    { id: 'electricity', label: t('common.electricity'), icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> },
-    { id: 'wifi', label: t('common.wifi'), icon: <RiWifiFill style={{ color: Theme.colors.secondary }} /> },
-    { id: 'women-only', label: t('common.women_only'), icon: <ImWoman style={{ color: Theme.colors.secondary }} /> }
+    { id: '"water"', label: t('common.water'), icon: <RiWaterFlashFill style={{ color: Theme.colors.secondary }} /> },
+    { id: '"electricity"', label: t('common.electricity'), icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> },
+    { id: '"wifi"', label: t('common.wifi'), icon: <RiWifiFill style={{ color: Theme.colors.secondary }} /> }
+  ];
+
+  // Updated accepts only rules
+  const acceptsOnlyRules = [
+    { id: 'women-only', label: t('common.women_only'), icon: <ImWoman style={{ color: Theme.colors.secondary }} /> },
+    { id: 'families-only', label: t('common.families_only'), icon: <FaUsers style={{ color: Theme.colors.secondary }} /> },
+    { id: 'pets-allowed', label: t('common.pets_allowed'), icon: <FaPaw style={{ color: Theme.colors.secondary }} /> },
+    { id: 'smoking-allowed', label: t('common.smoking_allowed'), icon: <FaSmoking style={{ color: Theme.colors.secondary }} /> }
   ];
 
   const isAmenityChecked = (id: string) => {
@@ -408,29 +420,13 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
       />
       
       <FilteringRow>
-        <FilteringTitle>{t('common.number_of_people')}</FilteringTitle>
-        <DropdownSelector>
-          <select 
-            value={numPeople} 
-            onChange={(e) => setNumPeople(e.target.value)}
-          >
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5+">5+</option>
-          </select>
-          <IoChevronDown style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', pointerEvents: 'none' }}/>
-        </DropdownSelector>
-      </FilteringRow>
-      
-      <FilteringRow>
         <FilteringTitle>{t('property_list.bedrooms')}</FilteringTitle>
         <DropdownSelector>
           <select 
             value={bedrooms} 
             onChange={(e) => handleBedroomChange(e.target.value)}
           >
+            <option value="">{t('property_list.select_bedrooms')}</option>
             <option value="0">{t('property_list.studio')}</option>
             <option value="1">1</option>
             <option value="2">2</option>
@@ -467,6 +463,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
             value={propertyType} 
             onChange={(e) => handlePropertyTypeChange(e.target.value)}
           >
+            <option value="">{t('property_list.select_property_type')}</option>
             <option value="Apartment">{t('property_list.property_type.apartment')}</option>
             <option value="House">{t('property_list.property_type.house')}</option>
             <option value="Condo">{t('property_list.property_type.condo')}</option>
@@ -476,6 +473,21 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
         </DropdownSelector>
       </FilteringRow>
       
+      <FilteringRow>
+        <FilteringTitle>{t('common.furnished')}</FilteringTitle>
+        <AmenitiesGrid>
+          <AmenityItem>
+            <div 
+              className={`checkbox ${isAmenityChecked(furnishedFilter.id) ? 'checked' : ''}`}
+              onClick={() => handleAmenityToggle(furnishedFilter.id)}
+            ></div>
+            <label onClick={() => handleAmenityToggle(furnishedFilter.id)}>
+              {furnishedFilter.icon} {furnishedFilter.label}
+            </label>
+          </AmenityItem>
+        </AmenitiesGrid>
+      </FilteringRow>
+
       <FilteringRow>
         <FilteringTitle>{t('property_list.amenities')}</FilteringTitle>
         <AmenitiesGrid>
@@ -504,6 +516,23 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
               ></div>
               <label onClick={() => handleAmenityToggle(fee.id)}>
                 {fee.icon} {fee.label}
+              </label>
+            </AmenityItem>
+          ))}
+        </AmenitiesGrid>
+      </FilteringRow>
+
+      <FilteringRow>
+        <FilteringTitle>{t('common.accepts_only')}</FilteringTitle>
+        <AmenitiesGrid>
+          {acceptsOnlyRules.map(rule => (
+            <AmenityItem key={rule.id}>
+              <div 
+                className={`checkbox ${isAmenityChecked(rule.id) ? 'checked' : ''}`}
+                onClick={() => handleAmenityToggle(rule.id)}
+              ></div>
+              <label onClick={() => handleAmenityToggle(rule.id)}>
+                {rule.icon} {rule.label}
               </label>
             </AmenityItem>
           ))}

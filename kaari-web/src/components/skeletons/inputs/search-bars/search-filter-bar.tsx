@@ -323,11 +323,11 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
 
   // Format date for display
   const formatDateForDisplay = (dateString: string): string => {
-    if (!dateString) return t('common.select_date');
+    if (!dateString) return t('common.move_in_date');
     
     try {
       const dateObj = new Date(dateString);
-      if (isNaN(dateObj.getTime())) return t('common.select_date');
+      if (isNaN(dateObj.getTime())) return t('common.move_in_date');
       
       return new Intl.DateTimeFormat(navigator.language, {
         year: 'numeric',
@@ -335,16 +335,20 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
         day: 'numeric'
       }).format(dateObj);
     } catch (e) {
-      return t('common.select_date');
+      return t('common.move_in_date');
     }
   };
 
-  // Gender options
-  const genderOptions = [
-    { value: '', label: t('common.any_gender') },
-    { value: 'women_only', label: t('common.women_only') },
-    { value: 'men_only', label: t('common.men_only') },
-    { value: 'other', label: t('common.other_gender') }
+  // Capacity options (renamed from gender options for clarity)
+  const capacityOptions = [
+    { value: '', label: t('common.any_capacity') },
+    { value: '1', label: t('common.person_count', { count: 1 }) },
+    { value: '2', label: t('common.person_count', { count: 2 }) },
+    { value: '3', label: t('common.person_count', { count: 3 }) },
+    { value: '4', label: t('common.person_count', { count: 4 }) },
+    { value: '5', label: t('common.person_count', { count: 5 }) },
+    { value: '6', label: t('common.person_count', { count: 6 }) },
+    { value: '7+', label: t('common.person_count_plus', { count: 7 }) }
   ];
 
   const handleClearLocation = () => {
@@ -355,9 +359,10 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
     onDateChange('');
   };
   
-  // Prevent form submission on Enter key
+  // Prevent default form submission and call onSearch instead
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    console.log("Search form submitted - calling onSearch");
     onSearch();
   };
   
@@ -370,10 +375,10 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
     }
   };
 
-  // Get current gender label
-  const getCurrentGenderLabel = () => {
-    const option = genderOptions.find(opt => opt.value === gender);
-    return option ? option.label : t('common.any_gender');
+  // Get current capacity label
+  const getCurrentCapacityLabel = () => {
+    const option = capacityOptions.find(opt => opt.value === gender);
+    return option ? option.label : t('common.any_capacity');
   };
 
   // Date picker helpers
@@ -524,149 +529,182 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
 
   // Handle search button click
   const handleSearchClick = () => {
-    console.log("Search with:", { location, date, gender });
+    console.log("Search button clicked, triggering search");
+    // Call onSearch function passed as prop
     onSearch();
   };
 
   return (
-    <SearchFilterBarContainer as="form" onSubmit={handleSubmit}>
-      <FilterItem active={locationFocused || location !== ''}>
-        <IoLocationOutline />
-        <input
-          type="text"
-          placeholder={t('common.location')}
-          value={location}
-          onChange={(e) => onLocationChange(e.target.value)}
-          onFocus={() => setLocationFocused(true)}
-          onBlur={() => setLocationFocused(false)}
-        />
-        {location && (
-          <button 
-            type="button"
-            className="clear-button" 
-            onClick={handleClearLocation}
-          >
-            <IoClose size={16} />
-          </button>
-        )}
-      </FilterItem>
-      
-      <FilterItem 
-        active={date !== ''}
-        isSelect={true}
-        className={dateDropdownOpen ? 'open' : ''}
-        ref={datePickerRef}
-        onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
-      >
-        <IoCalendarOutline />
-        <CustomSelectButton type="button">
-          {formatDateForDisplay(date)}
-        </CustomSelectButton>
-        {date && (
-          <button 
-            type="button"
-            className="clear-button" 
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClearDate();
-            }}
-          >
-            <IoClose size={16} />
-          </button>
-        )}
-        <div className="dropdown-icon">
-          <IoChevronDown />
-        </div>
-        
-        <DatePickerDropdown isOpen={dateDropdownOpen} onClick={(e) => e.stopPropagation()}>
-          <DatePickerHeader>
-            <MonthNavigationButton type="button" onClick={handlePrevMonth}>
-              &lsaquo;
-            </MonthNavigationButton>
-            <MonthYearLabel>
-              {currentMonth.toLocaleDateString(navigator.language, { month: 'long', year: 'numeric' })}
-            </MonthYearLabel>
-            <MonthNavigationButton type="button" onClick={handleNextMonth}>
-              &rsaquo;
-            </MonthNavigationButton>
-          </DatePickerHeader>
-          
-          <DaysHeader>
-            {dayNames.map((day, index) => (
-              <DayLabel key={index}>{day}</DayLabel>
-            ))}
-          </DaysHeader>
-          
-          <DayGrid>
-            {generateCalendarDays().map((day, index) => (
-              <DayButton
-                key={index}
-                type="button"
-                isToday={isToday(day.year, day.month, day.day)}
-                isSelected={isSelectedDate(day.year, day.month, day.day)}
-                isCurrentMonth={day.isCurrentMonth}
-                onClick={() => handleDateSelect(day.year, day.month, day.day)}
-              >
-                {day.day}
-              </DayButton>
-            ))}
-          </DayGrid>
-        </DatePickerDropdown>
-      </FilterItem>
-      
-      <FilterItem 
-        active={gender !== ''}
-        isSelect={true}
-        className={genderDropdownOpen ? 'open' : ''}
-        ref={genderSelectRef}
-        onClick={() => setGenderDropdownOpen(!genderDropdownOpen)}
-      >
-        <IoPersonOutline />
-        <CustomSelectButton type="button">
-          {getCurrentGenderLabel()}
-        </CustomSelectButton>
-        <div className="dropdown-icon">
-          <IoChevronDown />
-        </div>
-
-        <CustomSelectDropdown isOpen={genderDropdownOpen}>
-          {genderOptions.map(option => (
-            <SelectOption 
-              key={option.value} 
-              isSelected={gender === option.value}
-              onClick={(e) => {
-                e.stopPropagation();
-                onGenderChange(option.value);
-                setGenderDropdownOpen(false);
-              }}
+    <SearchFilterBarContainer>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '12px', width: '100%' }}>
+        {/* Location Input */}
+        <FilterItem active={!!location || locationFocused}>
+          <IoLocationOutline />
+          <input
+            type="text"
+            value={location}
+            onChange={(e) => onLocationChange(e.target.value)}
+            onFocus={() => setLocationFocused(true)}
+            onBlur={() => setLocationFocused(false)}
+            placeholder={t('common.city_region')}
+          />
+          {location && (
+            <button
+              type="button"
+              className="clear-button"
+              onClick={handleClearLocation}
+              aria-label="Clear location"
             >
-              {option.label}
-            </SelectOption>
-          ))}
-        </CustomSelectDropdown>
-      </FilterItem>
-      
-      {showSearchButton && (
-        <SearchButton 
-          onClick={handleSearchClick} 
-          aria-label={t('common.search')} 
-          type="button"
-        >
-          <IoSearch />
-        </SearchButton>
-      )}
-      
-      {showAdvancedButton && (
-        <ApplyFiltersButton onClick={onAdvancedFilteringClick} type="button">
-          {t('common.advanced_filtering')}
-        </ApplyFiltersButton>
-      )}
-      
-      {showApplyFiltersButton && (
-        <ApplyFiltersButton onClick={handleApplyFilters} type="button">
-          {t('common.apply_filters')}
-        </ApplyFiltersButton>
-      )}
+              <IoClose size={16} />
+            </button>
+          )}
+        </FilterItem>
+
+        {/* Date Picker */}
+        <FilterItem active={!!date} ref={datePickerRef}>
+          <IoCalendarOutline />
+          <CustomSelectButton
+            type="button"
+            onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
+          >
+            {formatDateForDisplay(date)}
+          </CustomSelectButton>
+          <div className="dropdown-icon">
+            <IoChevronDown />
+          </div>
+
+          <DatePickerDropdown isOpen={dateDropdownOpen}>
+            <DatePickerHeader>
+              <MonthNavigationButton
+                type="button"
+                onClick={handlePrevMonth}
+                aria-label="Previous month"
+              >
+                &lt;
+              </MonthNavigationButton>
+
+              <MonthYearLabel>
+                {new Intl.DateTimeFormat(navigator.language, {
+                  year: 'numeric',
+                  month: 'long',
+                }).format(currentMonth)}
+              </MonthYearLabel>
+
+              <MonthNavigationButton
+                type="button"
+                onClick={handleNextMonth}
+                aria-label="Next month"
+              >
+                &gt;
+              </MonthNavigationButton>
+            </DatePickerHeader>
+
+            <DaysHeader>
+              {/* Use locale-sensitive day names - Monday first for most locales */}
+              <DayLabel>M</DayLabel>
+              <DayLabel>T</DayLabel>
+              <DayLabel>W</DayLabel>
+              <DayLabel>T</DayLabel>
+              <DayLabel>F</DayLabel>
+              <DayLabel>S</DayLabel>
+              <DayLabel>S</DayLabel>
+            </DaysHeader>
+
+            <DayGrid>
+              {generateCalendarDays().map((day, index) => (
+                <DayButton
+                  key={index}
+                  type="button"
+                  isCurrentMonth={day.isCurrentMonth}
+                  isToday={isToday(day.year, day.month, day.day)}
+                  isSelected={isSelectedDate(day.year, day.month, day.day)}
+                  onClick={() => handleDateSelect(day.year, day.month, day.day)}
+                >
+                  {day.day}
+                </DayButton>
+              ))}
+            </DayGrid>
+            
+            {date && (
+              <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={handleClearDate}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: Theme.colors.primary,
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  {t('common.clear')}
+                </button>
+              </div>
+            )}
+          </DatePickerDropdown>
+        </FilterItem>
+
+        {/* Capacity/People Select */}
+        <FilterItem active={!!gender} isSelect={true} ref={genderSelectRef} className={genderDropdownOpen ? 'open' : ''}>
+          <IoPersonOutline />
+          <CustomSelectButton
+            type="button"
+            onClick={() => setGenderDropdownOpen(!genderDropdownOpen)}
+          >
+            {gender ? getCurrentCapacityLabel() : t('common.number_of_people')}
+          </CustomSelectButton>
+          <div className="dropdown-icon">
+            <IoChevronDown />
+          </div>
+
+          <CustomSelectDropdown isOpen={genderDropdownOpen}>
+            {capacityOptions.map(option => (
+              <SelectOption 
+                key={option.value} 
+                isSelected={gender === option.value}
+                onClick={() => {
+                  onGenderChange(option.value);
+                  setGenderDropdownOpen(false);
+                }}
+              >
+                {option.label}
+              </SelectOption>
+            ))}
+          </CustomSelectDropdown>
+        </FilterItem>
+
+        {/* Search Button */}
+        {showSearchButton && (
+          <SearchButton 
+            type="button" 
+            onClick={handleSearchClick}
+            aria-label="Search"
+          >
+            <IoSearch size={20} />
+          </SearchButton>
+        )}
+        
+        {/* Advanced Filtering Button */}
+        {showAdvancedButton && (
+          <ApplyFiltersButton 
+            type="button" 
+            onClick={onAdvancedFilteringClick}
+          >
+            {t('property_list.advanced_filtering')}
+          </ApplyFiltersButton>
+        )}
+        
+        {/* Apply Filters Button */}
+        {showApplyFiltersButton && onApplyFilters && (
+          <ApplyFiltersButton 
+            type="button" 
+            onClick={handleApplyFilters}
+          >
+            {t('property_list.apply_filters')}
+          </ApplyFiltersButton>
+        )}
+      </form>
     </SearchFilterBarContainer>
   );
 };
