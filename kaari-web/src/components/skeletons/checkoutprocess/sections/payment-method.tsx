@@ -173,18 +173,23 @@ const PaymentMethod: React.FC = () => {
       return;
     }
     
-      const selectedCard = savedCards.find(card => card.id === selectedCardId);
-      if (selectedCard) {
-        // Save the selected payment method in the checkout context
-        savePaymentMethod({
-          id: selectedCard.id,
-          type: 'card',
-          details: selectedCard
-        });
-        
-        // Navigate to the next step
-        navigateToConfirmation();
-      }
+    const selectedCard = savedCards.find(card => card.id === selectedCardId);
+    if (selectedCard) {
+      // Save the selected payment method in the checkout context
+      savePaymentMethod({
+        id: selectedCard.id,
+        type: 'card',
+        details: selectedCard
+      });
+      
+      // Navigate to the next step
+      navigateToConfirmation();
+      
+      // Emit event for scroll to top component
+      import('../../../../utils/event-bus').then(({ default: eventBus, EventType }) => {
+        eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
+      });
+    }
   };
 
   const handleCardSubmit = (e: React.FormEvent) => {
@@ -266,7 +271,13 @@ const PaymentMethod: React.FC = () => {
       <div className="actions-container">
         <button 
           className="back-button" 
-          onClick={navigateToRentalApplication}
+          onClick={() => {
+            navigateToRentalApplication();
+            // Emit event for scroll to top component
+            import('../../../../utils/event-bus').then(({ default: eventBus, EventType }) => {
+              eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
+            });
+          }}
         >
           Back
         </button>

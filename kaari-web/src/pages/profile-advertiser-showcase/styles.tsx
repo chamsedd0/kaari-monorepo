@@ -33,6 +33,7 @@ export const ProfileShowcaseStyle = styled.div`
             width: 100%;
             object-fit: cover;
             border-radius: 8px;
+            height: 302px;
         }
 
         .about-me-section, .additional-info {
@@ -243,23 +244,101 @@ export const ProfileShowcaseStyle = styled.div`
             align-items: start;
             justify-content: start;
 
-            .offers-content {
+            .offers-content, .ratings-content {
                 width: 100%;
                 display: flex;
                 flex-direction: column;
                 gap: 20px;
                 
-                .offers-grid {
-                    display: grid;
+                h3 {
+                    color: ${Theme.colors.black};
+                    font: ${Theme.typography.fonts.h3};
+                    margin-bottom: 10px;
+                }
+                
+                p {
+                    color: ${Theme.colors.gray2};
+                    font: ${Theme.typography.fonts.mediumM};
+                }
+            }
+            
+            .offers-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 24px;
+                width: 100%;
+                max-width: 100%;
+                
+                @media (max-width: 767px) {
+                    grid-template-columns: 1fr;
+                }
+                
+                @media (min-width: 768px) and (max-width: 1024px) {
                     grid-template-columns: repeat(2, 1fr);
-                    gap: 20px;
+                }
+                
+                @media (min-width: 1025px) {
+                    grid-template-columns: repeat(2, 1fr);
+                    max-width: 900px;
+                }
+                
+                /* Style for each property card item */
+                > div {
+                    max-width: 100%;
                     width: 100%;
+                    height: 100%;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    
+                    img {
+                        height: 220px;
+                        object-fit: cover;
+                        width: 100%;
+                    }
+                    
+                    .description {
+                        max-height: 20px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        width: 100%;
+                    }
+                    
+                    .title, .subtitle, .price {
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                        max-width: 100%;
+                    }
                 }
             }
         }
-
-
     }
-
-
+    
+    @media (max-width: 1200px) {
+        flex-direction: column;
+        
+        .info-section {
+            max-width: 100%;
+            margin-right: 0;
+            margin-bottom: 40px;
+            
+            .image {
+                max-height: 400px;
+                object-position: center top;
+            }
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .profile-section .profile-details .control-buttons {
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start;
+            
+            .control-button {
+                padding: 15px 0;
+            }
+        }
+    }
 `

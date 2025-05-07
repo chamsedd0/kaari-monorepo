@@ -728,6 +728,7 @@ const PropertyPageComponent = () => {
             serviceFee={property.serviceFee || 0}
             totalPrice={(property.price || 0) + (property.serviceFee || 0)}
             propertyId={property.id}
+            ownerId={advertiser?.id || ''}
           />
         ) : currentUser ? (
           <div style={{ 

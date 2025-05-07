@@ -158,6 +158,10 @@ const CheckoutPage: React.FC = () => {
 
   const handleNavigate = (step: number) => {
     setActiveStep(step);
+    // Emit event for scroll to top component
+    import('../../utils/event-bus').then(({ default: eventBus, EventType }) => {
+      eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
+    });
   };
 
   const renderStep = () => {

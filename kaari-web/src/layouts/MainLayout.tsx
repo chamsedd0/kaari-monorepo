@@ -80,8 +80,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const getHeaderConfig = () => {
     const dynamicHeaderConfig = {
       userType: userType as 'user' | 'advertiser' | 'admin',
-      isAuthenticated
-    };
+        isAuthenticated
+      };
     
     // User Dashboard
     if (location.pathname.startsWith('/dashboard/user')) {
@@ -104,7 +104,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     // Admin Dashboard
     if (location.pathname.startsWith('/dashboard/admin')) {
       return {
-        variant: 'white' as const, 
+        variant: 'white' as const,
         userType: 'admin' as const,
         isAuthenticated
       };

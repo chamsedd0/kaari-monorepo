@@ -17,6 +17,7 @@ interface PropertyCardProps {
   isRecommended?: boolean;
   isFavorite: boolean;
   onToggleFavorite: (id: string | number) => void;
+  onClick?: () => void;
 }
 
 // Create the component
@@ -31,7 +32,8 @@ const PropertyCardComponent = ({
   isRecommended, 
   isFavorite, 
   onToggleFavorite,
-  id
+  id,
+  onClick
 }: PropertyCardProps) => {
   const { t } = useTranslation();
   
@@ -51,7 +53,11 @@ const PropertyCardComponent = ({
   };
 
   return (
-    <CardBaseModelStyle1 $isRecommended={isRecommended}>
+    <CardBaseModelStyle1 
+      $isRecommended={isRecommended}
+      onClick={onClick}
+      style={{ cursor: onClick ? 'pointer' : 'default' }}
+    >
         <div className="image">
             <img src={image} alt="Property" />
             <div className="certifications">
@@ -91,6 +97,7 @@ export const PropertyCard = memo(PropertyCardComponent, (prevProps, nextProps) =
     prevProps.id === nextProps.id &&
     prevProps.isFavorite === nextProps.isFavorite &&
     prevProps.title === nextProps.title &&
-    prevProps.price === nextProps.price
+    prevProps.price === nextProps.price &&
+    prevProps.onClick === nextProps.onClick
   );
 });

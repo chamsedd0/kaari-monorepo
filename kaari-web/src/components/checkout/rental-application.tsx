@@ -509,11 +509,19 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ userData, propert
     
     if (validateStep1()) {
       setCurrentStep(2);
+      // Emit event for scroll to top component
+      import('../../utils/event-bus').then(({ default: eventBus, EventType }) => {
+        eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
+      });
     }
   };
   
   const handleBack = () => {
     setCurrentStep(1);
+    // Emit event for scroll to top component
+    import('../../utils/event-bus').then(({ default: eventBus, EventType }) => {
+      eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
+    });
   };
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -567,7 +575,14 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ userData, propert
     // Simulate API call delay
     setTimeout(() => {
       setIsSubmitting(false);
+      
+      // Navigate to the next step
       navigateToPaymentMethod();
+      
+      // Explicitly trigger scroll to top event
+      import('../../utils/event-bus').then(({ default: eventBus, EventType }) => {
+        eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
+      });
     }, 500);
   };
   

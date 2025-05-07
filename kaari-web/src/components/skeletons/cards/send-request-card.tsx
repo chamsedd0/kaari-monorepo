@@ -101,6 +101,7 @@ interface PropertyRequestCardProps {
     serviceFee: number;
     totalPrice: number;
     propertyId: string;
+    ownerId: string;
   }
   
   const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({ 
@@ -112,7 +113,8 @@ interface PropertyRequestCardProps {
     priceFor30Days, 
     serviceFee, 
     totalPrice,
-    propertyId
+    propertyId,
+    ownerId
   }) => {
   const navigate = useNavigate();
 
@@ -254,7 +256,7 @@ interface PropertyRequestCardProps {
             <img src={advertiserImage} alt="Profile" />
             <div className="name">{advertiserName}</div>
           </div>
-          <div className="view-profile" onClick={() => navigate(`/advertiser-profile/${advertiserName}`)}>View Profile</div>
+          <div className="view-profile" onClick={() => navigate(`/advertiser-profile/${ownerId}`)}>View Profile</div>
         </div>
       </div>
       

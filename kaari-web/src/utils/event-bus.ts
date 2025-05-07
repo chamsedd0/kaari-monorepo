@@ -24,7 +24,10 @@ export enum EventType {
   // Application events
   APP_LOADED = 'app:loaded',
   APP_ERROR = 'app:error',
-  APP_ONLINE_STATUS_CHANGED = 'app:onlineStatusChanged'
+  APP_ONLINE_STATUS_CHANGED = 'app:onlineStatusChanged',
+  
+  // Checkout related events
+  CHECKOUT_STEP_CHANGED = 'checkout:stepChanged'
 }
 
 // Define event payload types for type checking

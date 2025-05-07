@@ -21,6 +21,24 @@ import MainLayout from './layouts/MainLayout';
 import { isAdmin, isAdvertiser, isRegularUser } from './utils/user-roles';
 import eventBus, { EventType } from './utils/event-bus';
 import { ToastProvider } from './contexts/ToastContext';
+import ScrollToTop from './components/ScrollToTop';
+// Import static pages
+import {
+  AboutUsPage,
+  BecomeAPartnerPage,
+  CareersPage,
+  BlogPage,
+  ContactPage,
+  HowItWorksPage,
+  StayProtectionTenantsPage,
+  HelpTenantsPage,
+  TenantResourcesPage,
+  TestimonialsPage,
+  AdvertiserGuidePage,
+  StayProtectionAdvertisersPage,
+  TermsPage,
+  PrivacyPage
+} from './pages/static';
 
 function App() {
   // Use the global store for authentication
@@ -345,6 +363,22 @@ function App() {
       {/* Help Page Route */}
       <Route path="/help" element={<HelpPage />} />
       
+      {/* Static Pages */}
+      <Route path="/about-us" element={<AboutUsPage />} />
+      <Route path="/become-a-partner" element={<BecomeAPartnerPage />} />
+      <Route path="/careers" element={<CareersPage />} />
+      <Route path="/blog" element={<BlogPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/how-it-works" element={<HowItWorksPage />} />
+      <Route path="/stay-protection-tenants" element={<StayProtectionTenantsPage />} />
+      <Route path="/help-tenants" element={<HelpTenantsPage />} />
+      <Route path="/tenant-resources" element={<TenantResourcesPage />} />
+      <Route path="/testimonials" element={<TestimonialsPage />} />
+      <Route path="/advertiser-guide" element={<AdvertiserGuidePage />} />
+      <Route path="/stay-protection-advertisers" element={<StayProtectionAdvertisersPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
+      
       {/* Reservation Status Page Routes */}
       <Route 
         path="/reservation-status" 
@@ -435,6 +469,7 @@ function App() {
   
   return (
     <ToastProvider>
+      <ScrollToTop />
       <MainLayout key={renderKey}>
         {routes}
       </MainLayout>

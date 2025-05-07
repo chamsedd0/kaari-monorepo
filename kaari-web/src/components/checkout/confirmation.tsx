@@ -202,6 +202,11 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
       
       // Navigate to success page
       navigateToSuccess();
+      
+      // Emit event for scroll to top component
+      import('../../utils/event-bus').then(({ default: eventBus, EventType }) => {
+        eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
+      });
     } catch (err) {
       console.error('Error creating reservation:', err);
       setError('Failed to create reservation. Please try again.');
@@ -216,7 +221,11 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
   };
   
   const handleBack = () => {
-    navigateToPaymentMethod(); // Navigate back to the payment method step
+    navigateToPaymentMethod();
+    // Emit event for scroll to top component
+    import('../../utils/event-bus').then(({ default: eventBus, EventType }) => {
+      eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
+    });
   };
   
   if (!rentalData) {
