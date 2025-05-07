@@ -651,6 +651,13 @@ const EnhancedPropertyCard = memo(EnhancedPropertyCardComponent, (prevProps, nex
   );
 });
 
+// Helper function to normalize text by removing accents/diacritics
+const normalizeText = (text: string): string => {
+  if (!text) return '';
+  // Normalize the string and replace diacritics with their base characters
+  return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+};
+
 export default function PropertyListPage() {
   // Hooks
   const { t } = useTranslation();
@@ -963,17 +970,44 @@ export default function PropertyListPage() {
       for (const filter of filtersToUse) {
         console.log(`Testing filter: ${filter} on property ${property.id}`);
         
-        // Process location filter
-        if (filter.includes(',')) {
-          const filterLoc = filter.toLowerCase();
+        // Process location filter - now works with or without commas
+        if (filter.includes(':') && filter.split(':')[0].trim() === 'Location') {
+          const filterLoc = filter.split(':')[1].trim();
           
-          // Check if the property address includes the location filter
-          const addressString = `${property.address.street}, ${property.address.city}, ${property.address.state}, ${property.address.zipCode}, ${property.address.country}`.toLowerCase();
+          // Extract address components for more granular matching
+          const addressComponents = {
+            street: normalizeText(property.address.street || ''),
+            city: normalizeText(property.address.city || ''),
+            state: normalizeText(property.address.state || ''),
+            zipCode: normalizeText(property.address.zipCode || ''),
+            country: normalizeText(property.address.country || '')
+          };
           
-          if (!addressString.includes(filterLoc)) {
-            console.log(`Property ${property.id} filtered out by location: ${filter}`);
+          // Create a combined address string for full text search
+          const addressString = `${addressComponents.street}, ${addressComponents.city}, ${addressComponents.state}, ${addressComponents.zipCode}, ${addressComponents.country}`;
+          
+          // Split the filter query into parts to match individual components more effectively
+          // And normalize each part to remove accents
+          const filterParts = filterLoc.split(/[,\s]+/)
+            .map(part => normalizeText(part))
+            .filter(part => part.length > 1);
+          
+          // Check if any of the filter parts match any of the address components
+          const matchFound = filterParts.some(part => {
+            // Check for partial matches in each address component
+            return Object.values(addressComponents).some(component => 
+              component.includes(part)
+            );
+          });
+
+          // If no match found in any address component, filter out this property
+          if (!matchFound) {
+            console.log(`Property ${property.id} filtered out by location: ${filterLoc}`);
+            console.log(`Address components:`, addressComponents);
             return false;
           }
+          
+          console.log(`Property ${property.id} matches location filter "${filterLoc}"`);
         }
         
         // Handle price filters
@@ -1262,8 +1296,20 @@ export default function PropertyListPage() {
     if (pendingFilters.length > 0) {
       // Convert pending filters to string format and update active filters
       const formattedFilters = pendingFilters.map(filter => {
+        // For location filters, we need to clean the value a bit to improve matching
+        if (filter.type === 'Location') {
+          const cleanedLocation = filter.value.trim();
+          // Only add location filter if it's not empty after cleaning
+          if (cleanedLocation) {
+            // We don't normalize here since we want to display the original text to the user
+            // Normalization happens during the actual filtering process
+            return `${filter.type}: ${cleanedLocation}`;
+          } else {
+            return ''; // Empty string will be filtered out below
+          }
+        }
         return `${filter.type}: ${filter.value}`;
-      });
+      }).filter(filter => filter !== ''); // Remove any empty filters
       
       // Find active filters that don't have a pending counterpart
       const typesToReplace = pendingFilters.map(filter => filter.type);
@@ -1284,13 +1330,14 @@ export default function PropertyListPage() {
       applyCurrentFilters(newActiveFilters);
     } else {
       // Just apply existing active filters if no pending changes
-    applyCurrentFilters();
+      applyCurrentFilters();
     }
   };
 
   // Handle search input changes with debounce
   const handleSearchInputChange = (location: string) => {
-    // Update the location input state
+    // Update the location input state with the original text (with accents preserved)
+    // This ensures the UI shows exactly what the user typed
     setLocationInput(location);
     
     // Clear previous timeout if it exists
@@ -1312,7 +1359,8 @@ export default function PropertyListPage() {
             newFilters = newFilters.filter(f => f.type !== 'Location');
           }
           
-          // Add new location filter to pending filters
+          // Add new location filter to pending filters with original text
+          // The normalization will happen during the actual filtering
           return [...newFilters, { type: 'Location', value: location }];
         });
         
