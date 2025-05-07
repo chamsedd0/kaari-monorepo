@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { IoMap, IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
+import { IoMap, IoChevronBackOutline, IoChevronForwardOutline, IoClose } from 'react-icons/io5';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import { AppliedFilterBannerComponent } from "../../components/skeletons/banners/static/applied-filter-banner";
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
@@ -1611,6 +1611,12 @@ export default function PropertyListPage() {
         mapCenter={mapCenter}
         mapZoom={mapZoom}
       />
+
+      {showMap && !isMainContentCollapsed && (
+        <button className="close-map-button" onClick={toggleMap} aria-label="Close map">
+          <IoClose />
+        </button>
+      )}
 
       {!isMainContentCollapsed && (
       <button className="toggle-map-button" onClick={toggleMap}>

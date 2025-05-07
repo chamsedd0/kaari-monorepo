@@ -1,6 +1,6 @@
 import React, { useState, FormEvent, useRef, useEffect } from 'react';
 import styled from 'styled-components';
-import { IoSearch, IoLocationOutline, IoCalendarOutline, IoPersonOutline, IoClose, IoChevronDown } from 'react-icons/io5';
+import { IoSearch, IoLocationOutline, IoCalendarOutline, IoPersonOutline, IoClose, IoChevronDown, IoOptions } from 'react-icons/io5';
 import { Theme } from '../../../../theme/theme';
 import { useTranslation } from 'react-i18next';
 
@@ -276,6 +276,20 @@ const ApplyFiltersButton = styled.button`
   flex-shrink: 0;
   white-space: nowrap;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  gap: 8px;
+  
+  .filter-text {
+    display: inline;
+  }
+  
+  @media (max-width: 1200px) {
+    padding: 0;
+    width: 42px;
+    
+    .filter-text {
+      display: none;
+    }
+  }
   
   &:hover {
     background-color: ${Theme.colors.primary};
@@ -691,7 +705,8 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
             type="button" 
             onClick={onAdvancedFilteringClick}
           >
-            {t('property_list.advanced_filtering')}
+            <IoOptions size={20} />
+            <span className="filter-text">{t('property_list.advanced_filtering')}</span>
           </ApplyFiltersButton>
         )}
         
@@ -701,7 +716,8 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
             type="button" 
             onClick={handleApplyFilters}
           >
-            {t('property_list.apply_filters')}
+            <IoOptions size={20} />
+            <span className="filter-text">{t('property_list.apply_filters')}</span>
           </ApplyFiltersButton>
         )}
       </form>

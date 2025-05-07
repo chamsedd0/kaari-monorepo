@@ -738,6 +738,36 @@ export const PropertyList = styled.div<PropertyListProps>`
         }
     }
 
+    .close-map-button {
+        position: fixed;
+        top: 90px;
+        right: 20px;
+        background-color: white;
+        color: ${Theme.colors.black};
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        z-index: 101;
+        
+        @media (min-width: 992px) {
+            display: none;
+        }
+        
+        svg {
+            font-size: 20px;
+        }
+        
+        &:hover {
+            background-color: #f5f5f5;
+        }
+    }
+
     @media (max-width: 991px) {
         display: block;
         
