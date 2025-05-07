@@ -16,12 +16,14 @@ export interface Toast {
   description: string;
   autoClose?: boolean;
   duration?: number;
+  exiting?: boolean;
 }
 
 // Context interface
 interface ToastContextType {
   addToast: (type: ToastType, title: string, description: string, autoClose?: boolean, duration?: number) => void;
   removeToast: (id: string) => void;
+  removeAllToasts: () => void;
 }
 
 // Create context with default value
@@ -36,10 +38,21 @@ const ToastContainer = styled.div`
   display: flex;
   flex-direction: column-reverse;
   gap: 10px;
-  max-height: 100vh;
+  max-height: 90vh;
   overflow-y: auto;
+  overflow: -moz-scrollbars-none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
   padding: 10px;
   pointer-events: none;
+  
+  /* Hide the scrollbar for WebKit browsers */
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
 
   /* Each toast should have pointer events */
   & > * {
@@ -86,6 +99,17 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     autoClose = true, 
     duration = 5000
   ) => {
+    // Check if a toast with the same title already exists
+    const hasDuplicateToast = toasts.some(toast => 
+      toast.title === title && !toast.exiting
+    );
+    
+    // If a duplicate toast exists, don't add another one
+    if (hasDuplicateToast) {
+      console.log('Preventing duplicate toast:', title);
+      return;
+    }
+    
     const id = Date.now().toString();
     const newToast: Toast = {
       id,
@@ -104,7 +128,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         removeToast(id);
       }, duration);
     }
-  }, []);
+  }, [toasts]);
 
   // Remove a toast notification
   const removeToast = useCallback((id: string) => {
@@ -121,6 +145,19 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setTimeout(() => {
       setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
     }, 300); // Match animation duration
+  }, []);
+  
+  // Remove all toasts
+  const removeAllToasts = useCallback(() => {
+    // Mark all toasts as exiting
+    setToasts(prevToasts => 
+      prevToasts.map(toast => ({ ...toast, exiting: true }))
+    );
+
+    // Remove all toasts after animation
+    setTimeout(() => {
+      setToasts([]);
+    }, 300);
   }, []);
 
   // Render the appropriate toast component based on type
@@ -175,7 +212,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   return (
-    <ToastContext.Provider value={{ addToast, removeToast }}>
+    <ToastContext.Provider value={{ addToast, removeToast, removeAllToasts }}>
       {children}
       <ToastContainer>
         {toasts.map(renderToast)}

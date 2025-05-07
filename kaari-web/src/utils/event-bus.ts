@@ -26,6 +26,10 @@ export enum EventType {
   APP_ERROR = 'app:error',
   APP_ONLINE_STATUS_CHANGED = 'app:onlineStatusChanged',
   
+  // Profile events
+  PROFILE_NAVIGATION_SUGGESTED = 'profile:navigationSuggested',
+  PROFILE_COMPLETION_REMINDER = 'profile:completionReminder',
+  
   // Checkout related events
   CHECKOUT_STEP_CHANGED = 'checkout:stepChanged'
 }
@@ -52,6 +56,10 @@ export interface EventPayloads {
   [EventType.APP_LOADED]: { timestamp: number };
   [EventType.APP_ERROR]: { message: string; stack?: string; componentStack?: string };
   [EventType.APP_ONLINE_STATUS_CHANGED]: { isOnline: boolean };
+  
+  // Profile events
+  [EventType.PROFILE_NAVIGATION_SUGGESTED]: { path: string; reason: string; timestamp: number };
+  [EventType.PROFILE_COMPLETION_REMINDER]: { message: string; role?: string };
   
   // Allow for custom events with any payload
   [key: string]: any;

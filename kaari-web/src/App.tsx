@@ -22,6 +22,7 @@ import { isAdmin, isAdvertiser, isRegularUser } from './utils/user-roles';
 import eventBus, { EventType } from './utils/event-bus';
 import { ToastProvider } from './contexts/ToastContext';
 import ScrollToTop from './components/ScrollToTop';
+import { useProfileCompletionReminder } from './hooks/useProfileCompletionReminder';
 // Import static pages
 import {
   AboutUsPage,
@@ -466,10 +467,22 @@ function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   ), [isAuthenticated, userIsAdvertiser, userIsRegular, userIsAdmin, renderKey]);
+
+  // Create a ProfileReminderWrapper component to use the hook within the ToastProvider
+  // Memoize to prevent unnecessary remounting and duplicate notifications
+  const ProfileReminderWrapper = useMemo(() => {
+    const Wrapper = () => {
+      useProfileCompletionReminder();
+      return null;
+    };
+    return <Wrapper />;
+  }, [isAuthenticated, user?.id]); // Only re-create when auth state or user ID changes
   
   return (
     <ToastProvider>
       <ScrollToTop />
+      {/* Use the memoized ProfileReminderWrapper here inside the ToastProvider */}
+      {ProfileReminderWrapper}
       <MainLayout key={renderKey}>
         {routes}
       </MainLayout>

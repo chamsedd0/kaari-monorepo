@@ -1,4 +1,6 @@
 import { useToast, ToastType } from '../contexts/ToastContext';
+import { useStore } from '../backend/store';
+import eventBus, { EventType } from '../utils/event-bus';
 
 /**
  * ToastService - Utility service to provide standardized toast notifications
@@ -54,22 +56,55 @@ export const useToastService = () => {
   // ===== Profile Toasts =====
   const profileToasts = {
     updateSuccess: () => {
-      showToast('success', 'Profile Updated', 'Your profile information has been updated successfully.');
+      showToast('success', 'Profile Updated', 'Your profile has been updated successfully.');
     },
     updateError: (error?: string) => {
-      showToast('error', 'Update Failed', error || 'There was a problem updating your profile. Please try again.');
+      showToast('error', 'Profile Update Failed', error || 'There was a problem updating your profile. Please try again.');
     },
     uploadPhotoSuccess: () => {
-      showToast('success', 'Photo Uploaded', 'Your profile photo has been updated successfully.');
+      showToast('success', 'Photo Uploaded', 'Your profile photo has been uploaded successfully.');
     },
     uploadPhotoError: (error?: string) => {
-      showToast('error', 'Upload Failed', error || 'There was a problem uploading your photo. Please try again.');
+      showToast('error', 'Photo Upload Failed', error || 'There was a problem uploading your photo. Please try again.');
     },
     uploadDocumentSuccess: () => {
       showToast('success', 'Document Uploaded', 'Your document has been uploaded successfully.');
     },
     uploadDocumentError: (error?: string) => {
-      showToast('error', 'Upload Failed', error || 'There was a problem uploading your document. Please try again.');
+      showToast('error', 'Document Upload Failed', error || 'There was a problem uploading your document. Please try again.');
+    },
+    verificationSuccess: () => {
+      showToast('success', 'Verification Successful', 'Your identity has been verified successfully.');
+    },
+    verificationPending: () => {
+      showToast('info', 'Verification Pending', 'Your identity verification is pending review.');
+    },
+    verificationRejected: (reason?: string) => {
+      showToast('error', 'Verification Rejected', reason || 'Your identity verification has been rejected. Please try again with valid documents.');
+    },
+    profileIncomplete: (message?: string, userRole?: string) => {
+      const baseMessage = message || 'Please complete your profile information for a better experience.';
+      const profilePath = userRole === 'advertiser' 
+        ? '/dashboard/advertiser/profile' 
+        : '/dashboard/user/profile';
+      
+      // Always use same title to help prevent duplicates
+      const title = 'Complete Your Profile';
+      
+      showToast(
+        'info',
+        title,
+        `${baseMessage} Visit your profile page to complete your information.`,
+        true,
+        8000
+      );
+      
+      // Also emit an event that profile navigation is suggested
+      eventBus.emit(EventType.PROFILE_NAVIGATION_SUGGESTED, {
+        path: profilePath,
+        reason: 'incomplete_profile',
+        timestamp: Date.now()
+      });
     }
   };
 
