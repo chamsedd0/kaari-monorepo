@@ -657,7 +657,16 @@
         "loading_failed": "Failed to load property details. Please try again.",
         "load_failed": "Failed to load your properties. Please try again later.",
         "update_status_failed": "Failed to update property status. Please try again.",
-        "submit_failed": "Failed to submit edit request. Please try again."
+        "submit_failed": "Failed to submit edit request. Please try again.",
+        "check_reservations_failed": "Failed to check property reservations. Please try again.",
+        "property_unavailable": "Property Unavailable",
+        "operation_failed": "Operation Failed",
+        "cannot_list_property": "This property cannot be listed at this time.",
+        "has_active_tenant": "This property currently has a tenant living there and cannot be listed.",
+        "has_moved_in_tenant": "This property has a tenant who has moved in and cannot be listed.",
+        "has_paid_reservation": "This property has a paid reservation and cannot be listed.",
+        "has_accepted_reservation": "This property has an accepted reservation and cannot be listed.",
+        "has_pending_reservation": "This property has a pending reservation and cannot be listed."
       },
       "amenities": {
         "sofabed": "Sofabed",

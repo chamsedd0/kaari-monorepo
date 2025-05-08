@@ -70,6 +70,7 @@ export interface Property {
     name: string;
     timeDistance: string; // e.g., "10 minutes"
   }>;
+  reviews?: string[]; // References to review IDs related to this property
 }
 
 export interface Request {

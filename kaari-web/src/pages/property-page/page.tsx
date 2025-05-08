@@ -168,7 +168,6 @@ const PropertyPageComponent = () => {
         
         // Add default images to the property data
         if (data) {
-          data.images = [pictures, LivingRoom, smallPic1, smallPic2, smallPic3, bigCityPic0, photoshoot1];
           setProperty(data);
           
           // Set map center if property has address data
@@ -210,9 +209,6 @@ const PropertyPageComponent = () => {
     }
     if (id) fetchData();
   }, [id]);
-
-  // Use default images instead of property.images
-  const images = [pictures, LivingRoom, smallPic1, smallPic2, smallPic3, bigCityPic0, photoshoot1];
 
   // Handle scroll for checkout box positioning
   useEffect(() => {
@@ -335,7 +331,13 @@ const PropertyPageComponent = () => {
       <UnifiedHeader variant="white" userType="user" />
       <div className="main-content">
         <div className="photo-slider">
-          <PhotoSlider images={images}></PhotoSlider>
+          {property.images.length > 0 ? (
+            <PhotoSlider images={property.images}></PhotoSlider>
+          ) : (
+            <div className="fallback-image">
+              <img src={pictures} alt="Fallback" />
+            </div>
+          )}
         </div>
         <div className="property-icons-container">
           <div className="icon-container">

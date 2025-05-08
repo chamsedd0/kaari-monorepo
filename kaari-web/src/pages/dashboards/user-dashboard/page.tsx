@@ -2,13 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { NavigationPannel } from '../../../components/skeletons/constructed/dashboard-navigation-pannel/navigation-pannel';
 import { UserDashboardStyle } from './styles';
 import LoadingScreen from '../../../components/loading/LoadingScreen';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Routes, Route } from 'react-router-dom';
 
 // Import all section pages
 import ProfilePage from './profile/page';
 import MessagesPage from './messages/page';
 import ReservationsPage from './reservations/page';
 import ReviewsPage from './reviews/page';
+import WriteReviewPage from './reviews/write/page';
+import MyReviewsPage from './reviews/my-reviews/page';
 import PaymentsPage from './payments/page';
 import PerksPage from './perks/page';
 import SettingsPage from './settings/page';
@@ -40,7 +42,11 @@ const UserDashboard: React.FC = () => {
     // Get the current section from the URL
     const getInitialSection = (): Section => {
         const path = location.pathname.split('/');
-        const sectionFromUrl = path[path.length - 1];
+        
+        // Special cases for nested routes
+        if (location.pathname.includes('/dashboard/user/reviews/')) {
+            return 'reviews';
+        }
         
         // Special case for the /account, /payments, and /reservations routes
         if (location.pathname.startsWith('/account')) {
@@ -53,6 +59,8 @@ const UserDashboard: React.FC = () => {
             return 'reservations';
         }
         
+        // For normal sections, get the last part of the URL
+        const sectionFromUrl = path[path.length - 1];
         return URL_TO_SECTION[sectionFromUrl] || 'profile';
     };
     
@@ -112,7 +120,16 @@ const UserDashboard: React.FC = () => {
         };
     }, [activeSection, isLoading]);
 
+    // Updated renderSection function to handle nested routes for reviews
     const renderSection = () => {
+        // Special handling for review sub-pages
+        if (location.pathname.includes('/dashboard/user/reviews/write')) {
+            return <WriteReviewPage />;
+        } else if (location.pathname.includes('/dashboard/user/reviews/my-reviews')) {
+            return <MyReviewsPage />;
+        }
+        
+        // Default sections
         switch (activeSection) {
             case 'profile':
                 return <ProfilePage />;

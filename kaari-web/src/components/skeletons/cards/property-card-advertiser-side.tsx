@@ -12,6 +12,7 @@ interface PropertyCardProps {
   bathrooms?: number;
   area?: number;
   imageUrl?: string;
+  images?: string[];
   description?: string;
   subtitle?: string;
   minStay?: string;
@@ -19,6 +20,7 @@ interface PropertyCardProps {
   onUnlist?: () => void;
   onAskForEdit?: () => void;
   propertyId?: string;
+  isSubmitting?: boolean;
 }
 
 const PropertyCardAdvertiserSide: React.FC<PropertyCardProps> = ({
@@ -29,17 +31,21 @@ const PropertyCardAdvertiserSide: React.FC<PropertyCardProps> = ({
   bathrooms,
   area,
   imageUrl,
+  images,
   description,
   subtitle,
   minStay,
   onList,
   onUnlist,
   onAskForEdit,
-  propertyId
+  propertyId,
+  isSubmitting = false
 }) => {
+  const displayImage = (images && images.length > 0) ? images[0] : (imageUrl || propertyExamplePic);
+
   return (
     <CardBaseModelStyle2>
-        <img src={imageUrl || propertyExamplePic} alt="Property" />
+        <img src={displayImage} alt="Property" />
         <div className="title">
             <b>{title}</b> 
             <span> {subtitle || location}</span>
@@ -70,9 +76,9 @@ const PropertyCardAdvertiserSide: React.FC<PropertyCardProps> = ({
         <div className="control">
             <div className="button">
               {onUnlist ? (
-                <BpurpleButtonLB40 text="Unlist" onClick={onUnlist} />
+                <BpurpleButtonLB40 text="Unlist" onClick={onUnlist} disabled={isSubmitting} />
               ) : onList ? (
-                <BpurpleButtonLB40 text="List" onClick={onList} />
+                <BpurpleButtonLB40 text="List" onClick={onList} disabled={isSubmitting} />
               ) : (
                 <BpurpleButtonLB40 text="Unlist" disabled />
               )}
@@ -81,7 +87,7 @@ const PropertyCardAdvertiserSide: React.FC<PropertyCardProps> = ({
               <PurpleButtonLB40 
                 text="Ask for Edit"
                 onClick={onAskForEdit}
-                disabled={!onAskForEdit} 
+                disabled={!onAskForEdit || isSubmitting} 
               />
             </div>
         </div>

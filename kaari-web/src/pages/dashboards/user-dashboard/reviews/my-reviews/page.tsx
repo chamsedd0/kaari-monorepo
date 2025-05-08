@@ -37,12 +37,41 @@ const MyReviewsPage: React.FC = () => {
     }, [user?.id]);
     
     // Format date nicely
-    const formatDate = (date: Date): string => {
-        return new Date(date).toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric'
-        });
+    const formatDate = (date: Date | any): string => {
+        if (!date) return 'Date not available';
+        
+        try {
+            // Handle different types of date inputs
+            let dateObj: Date;
+            
+            // Check if it's already a Date object
+            if (date instanceof Date) {
+                dateObj = date;
+            } 
+            // Handle Firestore timestamp (object with seconds property)
+            else if (typeof date === 'object' && 'seconds' in date) {
+                dateObj = new Date(date.seconds * 1000);
+            }
+            // Handle string or any other format
+            else {
+                dateObj = new Date(date);
+            }
+            
+            // Check if the date is valid
+            if (isNaN(dateObj.getTime())) {
+                console.warn('Invalid date encountered:', date);
+                return 'Date not available';
+            }
+            
+            return dateObj.toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        } catch (error) {
+            console.error('Error formatting date:', error, date);
+            return 'Date not available';
+        }
     };
     
     return (

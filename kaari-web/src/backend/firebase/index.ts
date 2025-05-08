@@ -1,11 +1,14 @@
-// Re-export Firebase configuration
+// Re-export from config
 export * from './config';
 
-// Re-export Firebase auth methods
+// Re-export auth operations
 export * from './auth';
 
-// Re-export Firebase firestore methods
+// Re-export firestore operations
 export * from './firestore';
 
-// Re-export Firebase storage methods
-export * from './storage'; 
+// Re-export storage operations
+export * from './storage';
+
+// Export Cloud Functions
+export * from './cloudFunctions'; 

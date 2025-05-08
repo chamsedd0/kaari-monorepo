@@ -379,15 +379,6 @@ const RefundRequestPage: React.FC = () => {
       // Show initial processing toast
       toast.showToast('info', 'Processing', 'Submitting your refund request...');
       
-      // Upload files first if there are any
-      let fileUrls: string[] = [];
-      
-      if (proofFiles.length > 0) {
-        // In a real implementation, you would upload the files
-        // and get back their URLs
-        fileUrls = proofFiles.map(file => `fake-url-for-${file.name}`);
-      }
-      
       // Calculate refund amounts for submission
       const propertyPrice = reservation.property.price;
       const serviceFee = reservation.reservation?.serviceFee || 
@@ -399,7 +390,8 @@ const RefundRequestPage: React.FC = () => {
       await requestRefund(reservationId!, {
         reasons: selectedReasons,
         details: reasonDetails,
-        proofUrls: fileUrls,
+        proofUrls: [], // Empty array as we're now passing the files directly
+        proofFiles: proofFiles, // Pass the actual File objects for secure upload
         originalAmount: propertyPrice,
         serviceFee: serviceFee,
         refundAmount: refundableRent,
@@ -409,14 +401,11 @@ const RefundRequestPage: React.FC = () => {
       // Show success toast
       toast.showToast('success', 'Refund Requested', 'Your refund request has been submitted for review and your reservation status has been updated to "Refund Processing"');
       
-      // Add small delay to ensure toast is visible before navigation
-      setTimeout(() => {
-        // Navigate back to reservations page
-        navigate('/dashboard/user/reservations');
-      }, 1500);
-    } catch (error: any) {
+      // Navigate back to dashboard
+      navigate('/dashboard/reservations');
+    } catch (error) {
       console.error('Error submitting refund request:', error);
-      toast.showToast('error', 'Submission Failed', `Failed to submit refund request: ${error.message}`);
+      toast.showToast('error', 'Submission Error', getErrorMessage(error));
     } finally {
       setSubmitting(false);
     }

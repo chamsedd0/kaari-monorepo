@@ -7,7 +7,7 @@ import {
 } from '../firebase/firestore';
 import { getCurrentUserProfile } from '../firebase/auth';
 import { 
-  uploadFile, 
+  secureUploadFile, 
   getUserProfileImagePath
 } from '../firebase/storage';
 import { User as FirebaseUser, updateProfile } from 'firebase/auth';
@@ -90,7 +90,9 @@ export async function updateUserProfile(
     if (profileData.profilePicture) {
       const fileName = `profile_${Date.now()}_${profileData.profilePicture.name}`;
       const storagePath = getUserProfileImagePath(userId, fileName);
-      profilePictureUrl = await uploadFile(storagePath, profileData.profilePicture);
+      
+      // Use secure upload instead of direct upload
+      profilePictureUrl = await secureUploadFile(storagePath, profileData.profilePicture);
       
       // Update Firebase Auth profile
       await updateProfile(firebaseUser, {
@@ -110,6 +112,8 @@ export async function updateUserProfile(
       ...(profileData.languages && { languages: profileData.languages }),
       ...(profileData.aboutMe && { aboutMe: profileData.aboutMe }),
       ...(profilePictureUrl && { profilePicture: profilePictureUrl }),
+      // Always update the 'updatedAt' field
+      updatedAt: new Date()
     };
 
     // Update user in Firestore
@@ -135,27 +139,40 @@ export async function uploadGovernmentID(
       throw new Error('User not authenticated or unauthorized');
     }
 
-    // Upload front of ID
+    // Upload front of ID using secure upload
     const frontFileName = `id_front_${Date.now()}_${idFront.name}`;
     const frontPath = `users/${userId}/documents/${frontFileName}`;
-    const frontUrl = await uploadFile(frontPath, idFront);
+    const frontUrl = await secureUploadFile(frontPath, idFront);
 
-    // Upload back of ID if provided
+    // Upload back of ID if provided using secure upload
     let backUrl: string | undefined;
     if (idBack) {
       const backFileName = `id_back_${Date.now()}_${idBack.name}`;
       const backPath = `users/${userId}/documents/${backFileName}`;
-      backUrl = await uploadFile(backPath, idBack);
+      backUrl = await secureUploadFile(backPath, idBack);
+    }
+
+    // Create the identification documents object, only including backId if it exists
+    const identificationDocuments: {
+      frontId: string;
+      backId?: string;
+      verified: boolean;
+      uploadDate: Date;
+    } = {
+      frontId: frontUrl,
+      verified: false, // Admin needs to verify these documents
+      uploadDate: new Date()
+    };
+    
+    // Only add backId to the document if backUrl is defined
+    if (backUrl) {
+      identificationDocuments.backId = backUrl;
     }
 
     // Update user document with ID information
     await updateDocument<User>(USERS_COLLECTION, userId, {
-      identificationDocuments: {
-        frontId: frontUrl,
-        backId: backUrl,
-        verified: false, // Admin needs to verify these documents
-        uploadDate: new Date()
-      }
+      identificationDocuments,
+      updatedAt: new Date()
     });
 
     return { frontUrl, backUrl };
@@ -171,7 +188,8 @@ export async function uploadGovernmentID(
 export async function verifyUserEmail(userId: string): Promise<User> {
   try {
     return await updateDocument<User>(USERS_COLLECTION, userId, {
-      emailVerified: true
+      emailVerified: true,
+      updatedAt: new Date()
     });
   } catch (error) {
     console.error('Error verifying user email:', error);
@@ -190,7 +208,8 @@ export async function connectWithGoogle(userId: string, googleData: {
     return await updateDocument<User>(USERS_COLLECTION, userId, {
       googleConnected: true,
       googleId: googleData.googleId,
-      googleEmail: googleData.googleEmail
+      googleEmail: googleData.googleEmail,
+      updatedAt: new Date()
     });
   } catch (error) {
     console.error('Error connecting with Google:', error);

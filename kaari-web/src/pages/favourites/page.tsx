@@ -63,6 +63,7 @@ interface PropertyType {
   priceType?: string;
   minstay?: string;
   image?: string;
+  images?: string[];
   isFavorite: boolean;
 }
 
@@ -116,6 +117,7 @@ export const FavouritesPage = () => {
                     priceType: '/month',
                     minstay: property.minstay ? `${property.minstay}` : undefined,
                     image: getDefaultPropertyImage(property.id),
+                    images: property.images,
                     isFavorite: true
                 }));
                 
@@ -139,6 +141,7 @@ export const FavouritesPage = () => {
                         priceType: '/month',
                         minstay: property.minstay ? `${property.minstay}` : undefined,
                         image: getDefaultPropertyImage(property.id),
+                        images: property.images,
                         isFavorite: false
                     }));
                 
@@ -242,6 +245,7 @@ export const FavouritesPage = () => {
                                 key={property.id}
                                 id={property.id}
                                 image={property.image || getDefaultPropertyImage(property.id)}
+                                images={property.images}
                                 title={property.title}
                                 subtitle={property.subtitle || ''}
                                 description={property.description}
@@ -278,6 +282,7 @@ export const FavouritesPage = () => {
                                 key={property.id}
                                 id={property.id}
                                 image={property.image || getDefaultPropertyImage(property.id)}
+                                images={property.images}
                                 title={property.title}
                                 subtitle={property.subtitle || ''}
                                 description={property.description}

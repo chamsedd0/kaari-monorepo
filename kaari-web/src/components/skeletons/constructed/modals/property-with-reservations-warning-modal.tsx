@@ -9,7 +9,7 @@ interface PropertyReservationsWarningModalProps {
   onClose: () => void;
   onViewReservations: () => void;
   propertyTitle: string;
-  reason: 'completed' | 'pending' | 'accepted' | 'none';
+  reason: 'completed' | 'pending' | 'accepted' | 'paid' | 'movedIn' | 'none';
 }
 
 export const PropertyReservationsWarningModal: React.FC<PropertyReservationsWarningModalProps> = ({
@@ -24,6 +24,10 @@ export const PropertyReservationsWarningModal: React.FC<PropertyReservationsWarn
   // Generate title based on reason
   const getTitle = () => {
     switch(reason) {
+      case 'movedIn':
+        return 'Property Has Active Tenant';
+      case 'paid':
+        return 'Property Has Paid Reservation';
       case 'completed':
         return 'Property Occupied';
       case 'accepted':
@@ -37,6 +41,10 @@ export const PropertyReservationsWarningModal: React.FC<PropertyReservationsWarn
   // Generate specific message based on reason
   const getMessage = () => {
     switch(reason) {
+      case 'movedIn':
+        return `${propertyTitle} currently has a tenant who has moved in. This property cannot be listed as available until the tenant moves out.`;
+      case 'paid':
+        return `${propertyTitle} has a paid reservation. This property cannot be listed as available until the reservation is cancelled or completed.`;
       case 'completed':
         return `${propertyTitle} currently has a tenant living there. This property cannot be listed as available until the reservation is marked as completed and the tenant has moved out.`;
       case 'accepted':

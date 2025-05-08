@@ -1,6 +1,12 @@
 'use server';
 
-import { User, Property } from '../entities';
+import { 
+  User, 
+  Property, 
+  Listing, 
+  Request,
+  Review
+} from '../entities';
 import { 
   getDocumentById, 
   createDocument,
@@ -307,21 +313,6 @@ export interface Photoshoot {
   status: 'scheduled' | 'completed' | 'cancelled';
   createdAt: Date;
   updatedAt: Date;
-}
-
-// Define Request interface if not already defined
-export interface Request {
-  id: string;
-  userId: string;
-  listingId?: string;
-  propertyId?: string;
-  requestType: 'viewing' | 'information' | 'offer' | 'general';
-  message: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'completed';
-  offerAmount?: number;
-  createdAt: Date;
-  updatedAt: Date;
-  scheduledDate?: Date;
 }
 
 /**
@@ -656,7 +647,7 @@ export async function rejectReservationRequest(requestId: string): Promise<boole
  */
 export async function checkPropertyHasActiveReservations(propertyId: string): Promise<{
   hasActiveReservations: boolean;
-  reason: 'none' | 'completed' | 'pending' | 'accepted';
+  reason: 'none' | 'completed' | 'pending' | 'accepted' | 'paid' | 'movedIn';
 }> {
   try {
     // Check if user is authenticated and an advertiser
@@ -677,9 +668,30 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
       propertyId
     );
     
-    // Check for completed reservations first (highest priority - tenant has moved in)
+    // Log the requests for debugging purposes
+    console.log(`Found ${requests.length} requests for property ${propertyId}`);
+    
+    // Check for moved-in tenants first (highest priority)
+    const hasMovedInTenant = requests.some(req => 
+      req.requestType === 'rent' && req.status === 'movedIn'
+    );
+    
+    if (hasMovedInTenant) {
+      return { hasActiveReservations: true, reason: 'movedIn' };
+    }
+    
+    // Check for paid reservations
+    const hasPaidReservation = requests.some(req => 
+      req.requestType === 'rent' && req.status === 'paid'
+    );
+    
+    if (hasPaidReservation) {
+      return { hasActiveReservations: true, reason: 'paid' };
+    }
+    
+    // Check for completed reservations
     const hasCompletedReservation = requests.some(req => 
-      req.requestType === 'viewing' && req.status === 'completed'
+      (req.requestType === 'rent' || req.requestType === 'viewing') && req.status === 'completed'
     );
     
     if (hasCompletedReservation) {
@@ -688,7 +700,7 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
     
     // Check for accepted reservations
     const hasAcceptedReservation = requests.some(req => 
-      req.requestType === 'viewing' && req.status === 'accepted'
+      (req.requestType === 'rent' || req.requestType === 'viewing') && req.status === 'accepted'
     );
     
     if (hasAcceptedReservation) {
@@ -697,7 +709,7 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
     
     // Check for pending reservations
     const hasPendingReservation = requests.some(req => 
-      req.requestType === 'viewing' && req.status === 'pending'
+      (req.requestType === 'rent' || req.requestType === 'viewing') && req.status === 'pending'
     );
     
     if (hasPendingReservation) {
@@ -709,5 +721,81 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
   } catch (error) {
     console.error('Error checking if property has active reservations:', error);
     throw new Error('Failed to check property reservations');
+  }
+}
+
+/**
+ * Get all reviews for properties owned by the current advertiser
+ */
+export async function getAdvertiserPropertyReviews(): Promise<{
+  review: Review;
+  property: Property;
+  reviewer: User | null;
+}[]> {
+  try {
+    // Check if user is authenticated and an advertiser
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    if (currentUser.role !== 'advertiser') {
+      throw new Error('Only advertisers can access their property reviews');
+    }
+    
+    // Get all properties owned by this advertiser
+    const properties = await getDocumentsByField<Property>(
+      PROPERTIES_COLLECTION,
+      'ownerId',
+      currentUser.id
+    );
+    
+    // If no properties, return empty array
+    if (!properties || properties.length === 0) {
+      return [];
+    }
+    
+    let allReviews: {
+      review: Review;
+      property: Property;
+      reviewer: User | null;
+    }[] = [];
+    
+    // For each property, get its reviews
+    for (const property of properties) {
+      // Skip properties without reviews
+      if (!property.reviews || property.reviews.length === 0) {
+        continue;
+      }
+      
+      // Fetch each review by ID
+      for (const reviewId of property.reviews) {
+        const review = await getDocumentById<Review>('reviews', reviewId);
+        
+        if (review && review.published) {
+          // Get reviewer information
+          let reviewer = null;
+          if (review.userId) {
+            reviewer = await getDocumentById<User>(USERS_COLLECTION, review.userId);
+          }
+          
+          allReviews.push({
+            review,
+            property,
+            reviewer
+          });
+        }
+      }
+    }
+    
+    // Sort reviews by creation date (newest first)
+    allReviews.sort((a, b) => {
+      return new Date(b.review.createdAt).getTime() - new Date(a.review.createdAt).getTime();
+    });
+    
+    return allReviews;
+  } catch (error) {
+    console.error('Error getting advertiser property reviews:', error);
+    throw new Error('Failed to get advertiser property reviews');
   }
 } 

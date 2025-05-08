@@ -188,6 +188,40 @@ function App() {
             })()
         } 
       />
+      
+      {/* Add explicit routes for nested review paths - place these BEFORE the generic route */}
+      <Route 
+        path="/dashboard/user/reviews/write" 
+        element={
+          isAuthenticated && userIsRegular ? 
+            <UserDashboard /> : 
+            (() => {
+              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                path: '/dashboard/user/reviews/write',
+                redirectTo: '/',
+                isAuthenticated: isAuthenticated
+              });
+              return <Navigate to="/" replace />;
+            })()
+        } 
+      />
+      
+      <Route 
+        path="/dashboard/user/reviews/my-reviews" 
+        element={
+          isAuthenticated && userIsRegular ? 
+            <UserDashboard /> : 
+            (() => {
+              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                path: '/dashboard/user/reviews/my-reviews',
+                redirectTo: '/',
+                isAuthenticated: isAuthenticated
+              });
+              return <Navigate to="/" replace />;
+            })()
+        } 
+      />
+      
       <Route 
         path="/dashboard/user/:section" 
         element={

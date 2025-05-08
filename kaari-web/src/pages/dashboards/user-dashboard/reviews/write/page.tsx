@@ -1,21 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { WriteReviewPageStyle } from './styles';
 import { createReview } from '../../../../../backend/server-actions/ReviewServerActions';
+import { createReviewEnhanced } from '../../../../../backend/server-actions/EnhancedReviewActions';
 import { getDocumentById } from '../../../../../backend/firebase/firestore';
 import { Property, User } from '../../../../../backend/entities';
 import NeedHelpCardComponent from '../../../../../components/skeletons/cards/need-help-card';
 import { PurpleButtonMB48 } from '../../../../../components/skeletons/buttons/purple_MB48';
 import { WhiteButtonSM32 } from '../../../../../components/skeletons/buttons/white_SM32';
 import StarRating from '../../../../../components/skeletons/inputs/star-rating';
+import { useNavigate } from 'react-router-dom';
 
 const WriteReviewPage: React.FC = () => {
-    // Get property ID from URL query parameters
-    const getPropertyIdFromUrl = () => {
+    const navigate = useNavigate();
+    
+    // Get property ID and prompt ID from URL query parameters
+    const getUrlParams = () => {
         const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('propertyId');
+        return {
+            propertyId: urlParams.get('propertyId'),
+            promptId: urlParams.get('promptId')
+        };
     };
     
-    const propertyId = getPropertyIdFromUrl();
+    const { propertyId, promptId } = getUrlParams();
     
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -38,7 +45,7 @@ const WriteReviewPage: React.FC = () => {
     
     // Navigation functions
     const navigateToReviews = () => {
-        window.location.href = '/dashboards/user-dashboard/reviews';
+        navigate('/dashboard/user/reviews');
     };
     
     // Load property details when component mounts
@@ -109,14 +116,16 @@ const WriteReviewPage: React.FC = () => {
         setError(null);
         
         try {
-            // Create the review
-            await createReview(propertyId, {
+            // Create the review with promptId if it exists
+            await createReviewEnhanced(propertyId, {
                 stayDuration,
                 reviewText,
                 ratings,
-                moveInDate: new Date() // For simplicity, using current date
+                moveInDate: new Date(),
+                promptId: promptId || undefined
             });
             
+            console.log('Review submitted successfully with promptId:', promptId);
             setSuccess(true);
             
             // Redirect after a short delay

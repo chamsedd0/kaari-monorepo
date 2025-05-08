@@ -8,9 +8,25 @@ import {
   UploadResult
 } from 'firebase/storage';
 import { storage } from './config';
+import { getAuth } from 'firebase/auth';
+import { 
+  getSignedUploadUrl, 
+  uploadFileWithSignedUrl,
+  uploadUserFile,
+  uploadMultipleUserFiles
+} from './cloudFunctions';
+
+// Export cloud functions for direct use
+export { 
+  getSignedUploadUrl, 
+  uploadFileWithSignedUrl,
+  uploadUserFile,
+  uploadMultipleUserFiles
+};
 
 /**
- * Upload a file to Firebase Storage
+ * Legacy method to upload a file to Firebase Storage
+ * Consider using signed URLs for better security
  */
 export async function uploadFile(
   path: string, 
@@ -24,6 +40,63 @@ export async function uploadFile(
     return downloadURL;
   } catch (error) {
     console.error('Error uploading file:', error);
+    throw error;
+  }
+}
+
+/**
+ * Secure version of file upload using cloud functions and signed URLs
+ */
+export async function secureUploadFile(
+  path: string,
+  file: File, 
+  metadata?: { customMetadata?: Record<string, string> }
+): Promise<string> {
+  try {
+    // Get authentication state
+    const auth = getAuth();
+    const user = auth.currentUser;
+    
+    if (!user) {
+      throw new Error('User must be authenticated to use secure upload');
+    }
+    
+    // Either the path must include the user's ID or be in a public folder
+    if (!path.includes(user.uid) && !path.startsWith('public/')) {
+      throw new Error('Unauthorized path. Path must include user ID or be in public folder');
+    }
+    
+    try {
+      // Try secure upload with signed URL first
+      // Get signed URL from cloud function
+      const { url } = await getSignedUploadUrl(path, file.type, file.size);
+      
+      // Upload using signed URL
+      const success = await uploadFileWithSignedUrl(url, file);
+      
+      if (!success) {
+        throw new Error('File upload failed');
+      }
+    } catch (error) {
+      console.warn('Secure upload failed, falling back to direct upload:', error);
+      
+      // Fall back to direct upload if we get a CORS error or other error with the cloud function
+      console.log('Falling back to direct upload for path:', path);
+      await uploadFile(path, file, {
+        contentType: file.type,
+        customMetadata: {
+          ...metadata?.customMetadata,
+          uploadMethod: 'direct-fallback',
+          uploadTime: new Date().toISOString()
+        }
+      });
+    }
+    
+    // Get download URL regardless of which method was used
+    const storageRef = ref(storage, path);
+    return await getDownloadURL(storageRef);
+  } catch (error) {
+    console.error('Error in secure file upload:', error);
     throw error;
   }
 }
@@ -89,7 +162,8 @@ export async function listFiles(directoryPath: string): Promise<string[]> {
 }
 
 /**
- * Upload multiple files to Firebase Storage
+ * Upload multiple files to Firebase Storage (legacy method)
+ * Consider using secureUploadMultipleFiles instead
  */
 export async function uploadMultipleFiles(
   files: File[], 
@@ -107,6 +181,52 @@ export async function uploadMultipleFiles(
     return await Promise.all(uploadPromises);
   } catch (error) {
     console.error('Error uploading multiple files:', error);
+    throw error;
+  }
+}
+
+/**
+ * Secure version of multiple file upload using cloud functions and signed URLs
+ */
+export async function secureUploadMultipleFiles(
+  files: File[], 
+  basePath: string,
+  prefix?: string
+): Promise<string[]> {
+  try {
+    // Get authentication state
+    const auth = getAuth();
+    const user = auth.currentUser;
+    
+    if (!user) {
+      throw new Error('User must be authenticated to use secure upload');
+    }
+    
+    // Either the basePath must include the user's ID or be in a public folder
+    if (!basePath.includes(user.uid) && !basePath.startsWith('public/')) {
+      throw new Error('Unauthorized path. Path must include user ID or be in public folder');
+    }
+    
+    try {
+      // Try secure upload first
+      // Upload files using the cloud function implementation
+      const paths = await uploadMultipleUserFiles(
+        user.uid,
+        files,
+        basePath.includes('images') ? 'image' : 
+          basePath.includes('documents') ? 'document' : 'other'
+      );
+      
+      // Get download URLs for all files
+      return await Promise.all(paths.map(path => getFileUrl(path)));
+    } catch (error) {
+      console.warn('Secure multiple upload failed, falling back to direct upload:', error);
+      
+      // Fallback to direct upload if cloud function fails (like CORS issues)
+      return await uploadMultipleFiles(files, basePath, prefix);
+    }
+  } catch (error) {
+    console.error('Error in secure multiple file upload:', error);
     throw error;
   }
 }

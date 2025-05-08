@@ -25,10 +25,13 @@ const TenantsPage: React.FC = () => {
         // Detailed logging of reservation data for debugging
         console.log('All tenant data:', JSON.stringify(data, null, 2));
         
-        // Filter tenants - show completed reservations 
+        // Filter tenants - show completed or moved-in reservations
+        // Both 'completed' and 'movedIn' statuses represent active tenants
         const filteredTenants = data.filter(res => 
-          res.reservation.status === 'completed'
+          res.reservation.status === 'completed' || res.reservation.status === 'movedIn'
         );
+        
+        console.log('Filtered tenant data:', filteredTenants.length, 'active tenants found');
         
         // Log all reservation date fields for debugging
         filteredTenants.forEach((tenant, index) => {

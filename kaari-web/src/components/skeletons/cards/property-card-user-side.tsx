@@ -14,7 +14,8 @@ interface PropertyCardProps {
   priceType?: string;
   propertyType: string;
   minstay?: string;
-  image: string;
+  image?: string;
+  images?: string[];
   isRecommended?: boolean;
   isFavorite: boolean;
   onToggleFavorite: (id: string | number) => void;
@@ -32,6 +33,7 @@ const PropertyCardComponent = ({
   propertyType,
   minstay, 
   image,
+  images,
   isRecommended = false,
   isFavorite, 
   onToggleFavorite,
@@ -54,6 +56,9 @@ const PropertyCardComponent = ({
     }
   };
 
+  // Get the first image from images array if available, otherwise use image prop or default
+  const displayImage = (images && images.length > 0) ? images[0] : (image || defaultImage);
+
   return (
     <CardBaseModelStyle1 
       $isRecommended={isRecommended}
@@ -61,7 +66,7 @@ const PropertyCardComponent = ({
       style={{ cursor: onClick ? 'pointer' : 'default' }}
     >
         <div className="image">
-            <img src={image || defaultImage} alt="Property" />
+            <img src={displayImage} alt="Property" />
             <div className="certifications">
                 <CertificationBanner purple text={t('property_card.kaari_verified')}></CertificationBanner>
                 <CertificationBanner text={t('property_card.tenant_protection')}></CertificationBanner>
@@ -100,6 +105,8 @@ export const PropertyCard = memo(PropertyCardComponent, (prevProps, nextProps) =
     prevProps.isFavorite === nextProps.isFavorite &&
     prevProps.title === nextProps.title &&
     prevProps.price === nextProps.price &&
-    prevProps.onClick === nextProps.onClick
+    prevProps.onClick === nextProps.onClick &&
+    prevProps.image === nextProps.image &&
+    prevProps.images === nextProps.images
   );
 });

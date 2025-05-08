@@ -30,6 +30,7 @@ const ProfileSection: React.FC = () => {
     const [nationality, setNationality] = useState('');
     const [aboutMe, setAboutMe] = useState('');
     const [profilePicture, setProfilePicture] = useState<File | null>(null);
+    const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
     const [idFront, setIdFront] = useState<File | null>(null);
     const [idBack, setIdBack] = useState<File | null>(null);
     const [languages, setLanguages] = useState<string[]>([]);
@@ -135,9 +136,20 @@ const ProfileSection: React.FC = () => {
             
             // Upload ID documents if provided
             if (idFront) {
-                await uploadGovernmentID(user.id, idFront, idBack || undefined);
-                // Show document upload success toast
-                toast.profile.uploadDocumentSuccess();
+                try {
+                    // Only pass idBack if it exists
+                    if (idBack) {
+                        await uploadGovernmentID(user.id, idFront, idBack);
+                    } else {
+                        await uploadGovernmentID(user.id, idFront);
+                    }
+                    // Show document upload success toast
+                    toast.profile.uploadDocumentSuccess();
+                } catch (idError) {
+                    console.error('Error uploading government ID:', idError);
+                    toast.profile.documentUploadError(t('advertiser_dashboard.profile.document_upload_error'));
+                    // Continue with the profile update even if ID upload fails
+                }
             }
             
             // Update user in global store
@@ -146,6 +158,12 @@ const ProfileSection: React.FC = () => {
             
             // Show success toast
             toast.profile.updateSuccess();
+            
+            // Reset file inputs after successful upload
+            setProfilePicture(null);
+            setProfilePicturePreview(null);
+            setIdFront(null);
+            setIdBack(null);
             
             // Show success message briefly
             setTimeout(() => {
@@ -165,6 +183,14 @@ const ProfileSection: React.FC = () => {
     // Handle profile picture change
     const handleProfilePictureChange = (file: File) => {
         setProfilePicture(file);
+        
+        // Create a preview of the uploaded image
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setProfilePicturePreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+        
         // Show success toast for profile picture upload
         toast.profile.uploadPhotoSuccess();
     };
@@ -174,7 +200,10 @@ const ProfileSection: React.FC = () => {
             <h1 className="section-title">{t('advertiser_dashboard.profile.section_title')}</h1>
             <div className="profile-image-container">
                 <div className="profile-image">
-                    <img src={user?.profilePicture || Picture} alt={t('advertiser_dashboard.profile.profile_image_alt', 'Profile')} />
+                    <img 
+                        src={profilePicturePreview || user?.profilePicture || Picture} 
+                        alt={t('advertiser_dashboard.profile.profile_image_alt', 'Profile')} 
+                    />
                 </div>
                 <UploadFieldModel
                     label={t('advertiser_dashboard.profile.change_profile_picture')}
@@ -212,12 +241,12 @@ const ProfileSection: React.FC = () => {
                     label={t('advertiser_dashboard.profile.passport_front_id')}
                     hlabel={t('advertiser_dashboard.profile.government_id')}
                     onFileSelect={(file) => setIdFront(file)}
-                    fileName={user?.identificationDocuments?.frontId ? t('advertiser_dashboard.profile.id_front_uploaded') : ""}
+                    fileName={idFront?.name || (user?.identificationDocuments?.frontId ? t('advertiser_dashboard.profile.id_front_uploaded') : "")}
                 />
                 <UploadFieldModel 
                     label={t('advertiser_dashboard.profile.back_of_id')}
                     onFileSelect={(file) => setIdBack(file)}
-                    fileName={user?.identificationDocuments?.backId ? t('advertiser_dashboard.profile.id_back_uploaded') : ""}
+                    fileName={idBack?.name || (user?.identificationDocuments?.backId ? t('advertiser_dashboard.profile.id_back_uploaded') : "")}
                 />
                
                 <div className="profile-inbut-label">{t('advertiser_dashboard.profile.gender')}</div>

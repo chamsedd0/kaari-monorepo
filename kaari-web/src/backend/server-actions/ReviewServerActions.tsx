@@ -10,6 +10,7 @@ import {
   getDocumentsByField
 } from '../firebase/firestore';
 import { getCurrentUserProfile } from '../firebase/auth';
+import { addReviewToProperty } from './ReviewManagementActions';
 
 // Collection name for reviews
 const REVIEWS_COLLECTION = 'reviews';
@@ -19,6 +20,7 @@ const USERS_COLLECTION = 'users';
 /**
  * Get reviews to write by the current user
  * Returns properties the user has stayed at but hasn't reviewed yet
+ * and where the move-in date was at least 3 hours ago
  */
 export async function getReviewsToWrite(): Promise<{
   property: Property;
@@ -47,6 +49,17 @@ export async function getReviewsToWrite(): Promise<{
       ]
     });
     
+    // Also get requests where the user has moved in
+    const movedInRequests = await getDocuments('requests', {
+      filters: [
+        { field: 'userId', operator: '==', value: currentUser.id },
+        { field: 'status', operator: '==', value: 'movedIn' }
+      ]
+    });
+    
+    // Combine both types of requests
+    const allRequests = [...completedRequests, ...movedInRequests];
+    
     // Get all reviews by this user
     const userReviews = await getDocumentsByField<Review>(
       REVIEWS_COLLECTION,
@@ -54,8 +67,14 @@ export async function getReviewsToWrite(): Promise<{
       currentUser.id
     );
     
+    // Calculate the timestamp for 3 hours ago
+    const threeHoursAgo = new Date();
+    threeHoursAgo.setHours(threeHoursAgo.getHours() - 3);
+    
+    console.log(`Total requests found: ${allRequests.length}`);
+    
     // Get properties and check if already reviewed
-    const reviewsToWritePromises = completedRequests.map(async (request) => {
+    const reviewsToWritePromises = allRequests.map(async (request) => {
       // Get property ID either directly from request or via listing
       let propertyId = request.propertyId;
       if (!propertyId && request.listingId) {
@@ -88,17 +107,26 @@ export async function getReviewsToWrite(): Promise<{
       }
       
       // Use the request's scheduled date as the move-in date
-      const moveInDate = request.scheduledDate || request.createdAt;
+      const moveInDate = request.movedInAt || request.scheduledDate || request.createdAt;
+      const moveInDateObj = new Date(moveInDate);
+      
+      // REMOVED: Skip if not 3 hours since move-in
+      // This was causing reviews to not show up
+      // if (moveInDateObj > threeHoursAgo) {
+      //   return null; // Skip if not 3 hours since move-in
+      // }
       
       return {
         property,
         advertiser,
-        moveInDate: new Date(moveInDate)
+        moveInDate: moveInDateObj
       };
     });
     
     // Wait for all promises to resolve and filter out nulls
     const reviewsToWrite = (await Promise.all(reviewsToWritePromises)).filter(Boolean);
+    
+    console.log(`Found ${reviewsToWrite.length} reviews that need to be written`);
     
     return reviewsToWrite;
   } catch (error) {

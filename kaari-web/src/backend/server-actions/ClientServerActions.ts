@@ -6,6 +6,8 @@ import {
   createDocument
 } from '../firebase/firestore';
 import { getCurrentUserProfile } from '../firebase/auth';
+import { secureUploadMultipleFiles } from '../firebase/storage';
+import { scheduleReviewPromptAfterMoveIn } from './ReviewManagementActions';
 
 // Collection names
 const USERS_COLLECTION = 'users';
@@ -128,10 +130,52 @@ export async function completeReservation(reservationId: string): Promise<void> 
       updatedAt: new Date()
     });
     
+    // Schedule a review prompt for 3 hours after moving in
+    // This is done asynchronously to avoid blocking the main workflow
+    scheduleReviewPromptAfterMoveIn(reservationId).catch(error => {
+      console.error('Error scheduling review prompt:', error);
+      // Non-blocking - doesn't affect the main workflow
+    });
+    
     return;
   } catch (error) {
     console.error('Error completing reservation:', error);
     throw error;
+  }
+}
+
+/**
+ * Securely upload proof files for refund requests
+ */
+export async function secureUploadProofFiles(
+  userId: string,
+  reservationId: string,
+  files: File[]
+): Promise<string[]> {
+  try {
+    // Check if user is authenticated
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Verify that the user is the one making the request
+    if (currentUser.id !== userId) {
+      throw new Error('Not authorized to upload files for another user');
+    }
+    
+    // Upload all files using secure upload method
+    const basePath = `users/${userId}/refund-proofs/${reservationId}`;
+    const fileUrls = await secureUploadMultipleFiles(
+      files,
+      basePath,
+      'proof_'
+    );
+    
+    return fileUrls;
+  } catch (error) {
+    console.error('Error uploading proof files:', error);
+    throw new Error('Failed to upload proof files');
   }
 }
 
@@ -146,6 +190,7 @@ export async function requestRefund(
     serviceFee: number;
     refundAmount: number;
     reasonsText: string;
+    proofFiles?: File[]; // Add optional proofFiles parameter
   }
 ): Promise<void> {
   try {
@@ -191,13 +236,20 @@ export async function requestRefund(
     
     // If additional data is provided, create a refund request record
     if (data) {
+      // Upload proof files if provided
+      let proofUrls = data.proofUrls;
+      if (data.proofFiles && data.proofFiles.length > 0) {
+        // Use secure upload function to upload proof files
+        proofUrls = await secureUploadProofFiles(currentUser.id, reservationId, data.proofFiles);
+      }
+      
       await createDocument(REFUND_REQUESTS_COLLECTION, {
         reservationId,
         userId: currentUser.id,
         reasons: data.reasons,
         reasonsText: data.reasonsText,
         details: data.details,
-        proofUrls: data.proofUrls,
+        proofUrls: proofUrls,
         requestedRefundAmount: data.refundAmount,
         originalAmount: data.originalAmount,
         serviceFee: data.serviceFee,

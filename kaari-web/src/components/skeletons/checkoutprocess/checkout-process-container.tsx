@@ -22,7 +22,8 @@ interface CheckoutProcessContainerProps {
   propertyData?: {
     id: string;
     title: string;
-    image: string;
+    image?: string;
+    images?: string[]; // Add images array
     moveInDate: string;
     lengthOfStay: string;
     profileImage: string;
@@ -58,6 +59,11 @@ const CheckoutProcessContainer: React.FC<CheckoutProcessContainerProps> = ({
   };
   
   const property = propertyData || defaultPropertyData;
+  
+  // Get the display image from either the first image in the images array, the image property, or the default
+  const displayImage = property.images && property.images.length > 0 
+    ? property.images[0] 
+    : (property.image || PropertyImage);
   
   const handleNext = () => {
     setCurrentStep(prev => Math.min(prev + 1, 4));
@@ -110,7 +116,7 @@ const CheckoutProcessContainer: React.FC<CheckoutProcessContainerProps> = ({
           
           <div className="checkout-process-property-card">
             <CheckoutCard
-              image={property.image}
+              image={displayImage}
               title={property.title}
               moveInDate={property.moveInDate}
               lengthOfStay={property.lengthOfStay}

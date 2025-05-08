@@ -26,6 +26,7 @@ import { TeamServerActions } from '../../../backend/server-actions/TeamServerAct
 import { PhotoshootBooking, Team, Property } from '../../../backend/entities';
 import { collection, getDocs, getDoc, doc, updateDoc, arrayUnion, Timestamp, setDoc } from 'firebase/firestore';
 import { db } from '../../../backend/firebase/config';
+import { secureUploadMultipleFiles } from '../../../backend/firebase/storage';
 
 interface PhotoshootBookingDetailProps {
   onUpdateBooking: () => void;
@@ -181,6 +182,8 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   const [propertyId, setPropertyId] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [imageInput, setImageInput] = useState('');
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
   
   // Add new state for property data
   const [propertyData, setPropertyData] = useState<PropertyFormData>({
@@ -574,6 +577,86 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   
   const handleRemoveImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index));
+  };
+  
+  // Function to handle file selection
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      // Convert FileList to array and add to state
+      const newFiles = Array.from(e.target.files);
+      setImageFiles(prev => [...prev, ...newFiles]);
+      
+      // Auto-start the upload process
+      try {
+        setUploading(true);
+        
+        // For temporary property ID use a timestamp + random string
+        const tempPropertyId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        const basePath = `properties/${tempPropertyId}/images`;
+        
+        // Upload files using secure upload
+        const uploadedUrls = await secureUploadMultipleFiles(
+          newFiles,
+          basePath,
+          'property_'
+        );
+        
+        // Update property data with the new image URLs
+        setPropertyData(prev => ({
+          ...prev,
+          images: [...prev.images, ...uploadedUrls]
+        }));
+        
+        // Clear the selected files after successful upload
+        setImageFiles([]);
+        
+      } catch (error) {
+        console.error('Error uploading files:', error);
+        alert(`Error uploading files: ${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+  
+  // Function to remove a selected file
+  const handleRemoveFile = (index: number) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  // Function to upload files
+  const handleUploadFiles = async () => {
+    if (imageFiles.length === 0) return;
+    
+    try {
+      setUploading(true);
+      
+      // For temporary property ID use a timestamp + random string
+      const tempPropertyId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const basePath = `properties/${tempPropertyId}/images`;
+      
+      // Upload files using secure upload
+      const uploadedUrls = await secureUploadMultipleFiles(
+        imageFiles,
+        basePath,
+        'property_'
+      );
+      
+      // Update property data with the new image URLs
+      setPropertyData(prev => ({
+        ...prev,
+        images: [...prev.images, ...uploadedUrls]
+      }));
+      
+      // Clear the selected files after successful upload
+      setImageFiles([]);
+      
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      alert(`Error uploading files: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setUploading(false);
+    }
   };
   
   // Add handlers for property form
@@ -1096,9 +1179,137 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                   </p>
                 )}
                 
-                {/* Add new image */}
+                {/* File Upload UI */}
                 <div style={{ marginTop: '15px' }}>
-                  <h4>Add an Image URL</h4>
+                  <h4>Upload Property Images</h4>
+                  
+                  {/* Selected files section */}
+                  {imageFiles.length > 0 && (
+                    <div style={{ marginBottom: '15px' }}>
+                      <h5 style={{ fontSize: '14px', color: '#555' }}>Selected Files:</h5>
+                      <div style={{ 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: '10px',
+                        marginBottom: '10px'
+                      }}>
+                        {imageFiles.map((file, index) => (
+                          <div key={index} style={{ 
+                            position: 'relative',
+                            border: '1px solid #eee',
+                            borderRadius: '4px',
+                            padding: '8px 12px',
+                            paddingRight: '30px',
+                            backgroundColor: '#f9f9f9'
+                          }}>
+                            <span style={{ fontSize: '14px' }}>
+                              {file.name.length > 20 ? `${file.name.substring(0, 17)}...` : file.name}
+                            </span>
+                            <button 
+                              onClick={() => handleRemoveFile(index)}
+                              style={{ 
+                                position: 'absolute',
+                                top: '50%',
+                                right: '5px',
+                                transform: 'translateY(-50%)',
+                                background: 'none',
+                                color: '#666',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '4px'
+                              }}
+                            >
+                              <FaTimes size={10} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <Button 
+                        onClick={handleUploadFiles}
+                        disabled={uploading || imageFiles.length === 0}
+                        style={{ 
+                          backgroundColor: '#6200EA',
+                          marginRight: '10px'
+                        }}
+                      >
+                        {uploading ? 'Uploading...' : `Upload ${imageFiles.length} file${imageFiles.length !== 1 ? 's' : ''}`}
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {/* File input */}
+                  <div style={{ 
+                    border: '2px dashed #ddd',
+                    borderRadius: '4px',
+                    padding: '15px',
+                    textAlign: 'center',
+                    backgroundColor: '#f9f9f9',
+                    position: 'relative'
+                  }}>
+                    {uploading ? (
+                      <div style={{ 
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 2,
+                        borderRadius: '4px'
+                      }}>
+                        <div style={{ 
+                          border: '4px solid #f3f3f3',
+                          borderTop: '4px solid #6200EA',
+                          borderRadius: '50%',
+                          width: '30px',
+                          height: '30px',
+                          animation: 'spin 1s linear infinite',
+                          marginBottom: '10px'
+                        }} />
+                        <p>Uploading images...</p>
+                      </div>
+                    ) : null}
+                    <FaUpload size={24} style={{ color: '#666', marginBottom: '10px' }} />
+                    <p style={{ margin: '0 0 10px 0', color: '#666' }}>
+                      {uploading 
+                        ? 'Images are being uploaded...' 
+                        : 'Drag and drop your property images here, or click to select files'}
+                    </p>
+                    <input
+                      type="file"
+                      id="property-images-input"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileSelect}
+                      disabled={uploading}
+                      style={{ display: 'none' }}
+                    />
+                    <label htmlFor="property-images-input">
+                      <Button
+                        as="span"
+                        style={{ 
+                          display: 'inline-block',
+                          cursor: uploading ? 'not-allowed' : 'pointer',
+                          opacity: uploading ? 0.7 : 1
+                        }}
+                        disabled={uploading}
+                      >
+                        {uploading ? 'Uploading...' : 'Select Images'}
+                      </Button>
+                    </label>
+                    <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: '#999' }}>
+                      Allowed formats: JPG, PNG, WEBP | Max size: 10MB per file
+                    </p>
+                  </div>
+                  
+                  {/* Legacy URL input for backward compatibility */}
+                  <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                    <h4 style={{ fontSize: '14px', color: '#666' }}>Alternative: Add an Image URL</h4>
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
                     <FormGroup style={{ flex: 1 }}>
                       <Label>Image URL</Label>
@@ -1122,8 +1333,9 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                       style={{ height: '38px' }}
                       disabled={!imageInput.trim()}
                     >
-                      Add Image
+                        Add URL
                     </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1978,9 +2190,137 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                   </p>
                 )}
                 
-                {/* Add new image */}
+                {/* File Upload UI */}
                 <div style={{ marginTop: '15px' }}>
-                  <h4>Add an Image URL</h4>
+                  <h4>Upload Property Images</h4>
+                  
+                  {/* Selected files section */}
+                  {imageFiles.length > 0 && (
+                    <div style={{ marginBottom: '15px' }}>
+                      <h5 style={{ fontSize: '14px', color: '#555' }}>Selected Files:</h5>
+                      <div style={{ 
+                        display: 'flex', 
+                        flexWrap: 'wrap', 
+                        gap: '10px',
+                        marginBottom: '10px'
+                      }}>
+                        {imageFiles.map((file, index) => (
+                          <div key={index} style={{ 
+                            position: 'relative',
+                            border: '1px solid #eee',
+                            borderRadius: '4px',
+                            padding: '8px 12px',
+                            paddingRight: '30px',
+                            backgroundColor: '#f9f9f9'
+                          }}>
+                            <span style={{ fontSize: '14px' }}>
+                              {file.name.length > 20 ? `${file.name.substring(0, 17)}...` : file.name}
+                            </span>
+                            <button 
+                              onClick={() => handleRemoveFile(index)}
+                              style={{ 
+                                position: 'absolute',
+                                top: '50%',
+                                right: '5px',
+                                transform: 'translateY(-50%)',
+                                background: 'none',
+                                color: '#666',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: '4px'
+                              }}
+                            >
+                              <FaTimes size={10} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <Button 
+                        onClick={handleUploadFiles}
+                        disabled={uploading || imageFiles.length === 0}
+                        style={{ 
+                          backgroundColor: '#6200EA',
+                          marginRight: '10px'
+                        }}
+                      >
+                        {uploading ? 'Uploading...' : `Upload ${imageFiles.length} file${imageFiles.length !== 1 ? 's' : ''}`}
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {/* File input */}
+                  <div style={{ 
+                    border: '2px dashed #ddd',
+                    borderRadius: '4px',
+                    padding: '15px',
+                    textAlign: 'center',
+                    backgroundColor: '#f9f9f9',
+                    position: 'relative'
+                  }}>
+                    {uploading ? (
+                      <div style={{ 
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 2,
+                        borderRadius: '4px'
+                      }}>
+                        <div style={{ 
+                          border: '4px solid #f3f3f3',
+                          borderTop: '4px solid #6200EA',
+                          borderRadius: '50%',
+                          width: '30px',
+                          height: '30px',
+                          animation: 'spin 1s linear infinite',
+                          marginBottom: '10px'
+                        }} />
+                        <p>Uploading images...</p>
+                      </div>
+                    ) : null}
+                    <FaUpload size={24} style={{ color: '#666', marginBottom: '10px' }} />
+                    <p style={{ margin: '0 0 10px 0', color: '#666' }}>
+                      {uploading 
+                        ? 'Images are being uploaded...' 
+                        : 'Drag and drop your property images here, or click to select files'}
+                    </p>
+                    <input
+                      type="file"
+                      id="property-images-input"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileSelect}
+                      disabled={uploading}
+                      style={{ display: 'none' }}
+                    />
+                    <label htmlFor="property-images-input">
+                      <Button
+                        as="span"
+                        style={{ 
+                          display: 'inline-block',
+                          cursor: uploading ? 'not-allowed' : 'pointer',
+                          opacity: uploading ? 0.7 : 1
+                        }}
+                        disabled={uploading}
+                      >
+                        {uploading ? 'Uploading...' : 'Select Images'}
+                      </Button>
+                    </label>
+                    <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: '#999' }}>
+                      Allowed formats: JPG, PNG, WEBP | Max size: 10MB per file
+                    </p>
+                  </div>
+                  
+                  {/* Legacy URL input for backward compatibility */}
+                  <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                    <h4 style={{ fontSize: '14px', color: '#666' }}>Alternative: Add an Image URL</h4>
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
                     <FormGroup style={{ flex: 1 }}>
                       <Label>Image URL</Label>
@@ -2004,8 +2344,9 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                       style={{ height: '38px' }}
                       disabled={!imageInput.trim()}
                     >
-                      Add Image
+                        Add URL
                     </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2263,7 +2604,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                     }}>
                       {propertyData.rules.map((rule, index) => (
                         <div key={index} style={{ 
-                          padding: '10px', 
+                          padding: '10px 15px', 
                           border: '1px solid #eee', 
                           borderRadius: '4px',
                           display: 'flex',

@@ -1,6 +1,7 @@
 import { WriteReviewCard } from "../../styles/cards/card-base-model-style-reviews-write";
 import Picture from "../../../assets/images/propertyExamplePic.png" ;
 import { PurpleButtonMB48 } from "../buttons/purple_MB48";
+import { useNavigate } from 'react-router-dom';
 
 interface ReviewsWriteSkeletonProps {
     title?: string;
@@ -8,6 +9,7 @@ interface ReviewsWriteSkeletonProps {
     advertiserName?: string;
     propertyImage?: string;
     propertyId: string;
+    promptId?: string;
 }
 
 const ReviewsWriteSkeleton = ({ 
@@ -15,15 +17,20 @@ const ReviewsWriteSkeleton = ({
     moveInDate, 
     advertiserName, 
     propertyImage,
-    propertyId
+    propertyId,
+    promptId
 }: ReviewsWriteSkeletonProps) => {
+    const navigate = useNavigate();
+    
     const handleWriteReview = () => {
-        window.location.href = `/dashboards/user-dashboard/reviews/write?propertyId=${propertyId}`;
+        // Include promptId in URL if available
+        const url = `/dashboard/user/reviews/write?propertyId=${propertyId}${promptId ? `&promptId=${promptId}` : ''}`;
+        navigate(url);
     };
 
     return (
         <WriteReviewCard>
-            <div className="info-text">Reviews are written after maximum 1 month after move-in date</div>
+            <div className="info-text">Share your experience to help other students find great accommodations</div>
             <div className="container">
                 <div className="container-left">
                     <img src={propertyImage || Picture} alt="Property" />
@@ -49,7 +56,7 @@ const ReviewsWriteSkeleton = ({
 
                     <div className="write-review-button">
                         <PurpleButtonMB48 
-                            text="Write Feedback" 
+                            text="Write Review" 
                             onClick={handleWriteReview}
                         />
                     </div>

@@ -15,9 +15,11 @@ import EmptyBox from '../../../../assets/images/emptybox.svg';
 import { PurpleButtonLB40 } from '../../../../components/skeletons/buttons/purple_LB40';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '../../../../contexts/ToastContext';
 
 const PropertiesPage: React.FC = () => {
     const { t } = useTranslation();
+    const { addToast } = useToast();
     const listedPropertiesRef = useRef<HTMLDivElement>(null);
     const unlistedPropertiesRef = useRef<HTMLDivElement>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -30,8 +32,8 @@ const PropertiesPage: React.FC = () => {
     const [reservationsWarningModalOpen, setReservationsWarningModalOpen] = useState(false);
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    // Add state for the reservation reason
-    const [reservationReason, setReservationReason] = useState<'completed' | 'pending' | 'accepted' | 'none'>('none');
+    // Update state for the reservation reason
+    const [reservationReason, setReservationReason] = useState<'completed' | 'pending' | 'accepted' | 'paid' | 'movedIn' | 'none'>('none');
     
     // Add navigate
     const navigate = useNavigate();
@@ -97,17 +99,56 @@ const PropertiesPage: React.FC = () => {
             const { hasActiveReservations, reason } = await checkPropertyHasActiveReservations(property.id);
             
             if (hasActiveReservations) {
-                // Show warning modal instead of listing
-                setSelectedProperty(property);
-                setReservationReason(reason);
-                setReservationsWarningModalOpen(true);
+                // Show toast error instead of modal
+                let errorMessage = '';
+                
+                switch(reason) {
+                    case 'movedIn':
+                        errorMessage = t('advertiser_dashboard.properties.errors.has_moved_in_tenant');
+                        break;
+                    case 'paid':
+                        errorMessage = t('advertiser_dashboard.properties.errors.has_paid_reservation');
+                        break;
+                    case 'completed':
+                        errorMessage = t('advertiser_dashboard.properties.errors.has_active_tenant');
+                        break;
+                    case 'accepted':
+                        errorMessage = t('advertiser_dashboard.properties.errors.has_accepted_reservation');
+                        break;
+                    case 'pending':
+                        errorMessage = t('advertiser_dashboard.properties.errors.has_pending_reservation');
+                        break;
+                    default:
+                        errorMessage = t('advertiser_dashboard.properties.errors.cannot_list_property');
+                }
+                
+                // Show toast error notification
+                addToast(
+                    'error',
+                    t('advertiser_dashboard.properties.errors.property_unavailable'),
+                    errorMessage
+                );
             } else {
                 // No reservations, update status to available
                 await handleChangePropertyStatus(property.id, 'available');
+                
+                // Show success toast
+                addToast(
+                    'success',
+                    t('advertiser_dashboard.properties.success.property_listed'),
+                    t('advertiser_dashboard.properties.success.property_listed_message')
+                );
             }
         } catch (err) {
             console.error('Error checking reservations:', err);
             setError(t('advertiser_dashboard.properties.errors.check_reservations_failed'));
+            
+            // Show error toast
+            addToast(
+                'error',
+                t('advertiser_dashboard.properties.errors.operation_failed'),
+                t('advertiser_dashboard.properties.errors.check_reservations_failed')
+            );
         } finally {
             setIsSubmitting(false);
         }
@@ -184,12 +225,13 @@ const PropertiesPage: React.FC = () => {
                                             key={property.id}
                                             title={property.title}
                                             location={`${property.address.city}, ${property.address.country}`}
-                                            imageUrl={PropertyExamplePic}
+                                            images={property.images}
                                             price={`${property.price} ${t('common.per_month')}`}
                             minStay={t('common.min_stay', { count: 1 })}
                                             propertyId={property.id}
                                             onUnlist={() => handleOpenUnlistModal(property)}
                                             onAskForEdit={() => handleAskForEdit(property)}
+                                            isSubmitting={isSubmitting}
                                         />
                                     ))}
                     </div>
@@ -223,12 +265,13 @@ const PropertiesPage: React.FC = () => {
                                             key={property.id}
                                             title={property.title}
                                             location={`${property.address.city}, ${property.address.country}`}
-                                            imageUrl={PropertyExamplePic}
+                                            images={property.images}
                                             price={`${property.price} ${t('common.per_month')}`}
                             minStay={t('common.min_stay', { count: 1 })}
                                             propertyId={property.id}
                                             onList={() => handleListProperty(property)}
                                             onAskForEdit={() => handleAskForEdit(property)}
+                                            isSubmitting={isSubmitting}
                                         />
                                     ))}
                     </div>

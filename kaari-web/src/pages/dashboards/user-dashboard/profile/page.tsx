@@ -29,6 +29,7 @@ const ProfilePage: React.FC = () => {
     const [nationality, setNationality] = useState('');
     const [aboutMe, setAboutMe] = useState('');
     const [profilePicture, setProfilePicture] = useState<File | null>(null);
+    const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
     const [idFront, setIdFront] = useState<File | null>(null);
     const [idBack, setIdBack] = useState<File | null>(null);
     
@@ -73,9 +74,20 @@ const ProfilePage: React.FC = () => {
             
             // Upload ID documents if provided
             if (idFront) {
-                await uploadGovernmentID(user.id, idFront, idBack || undefined);
-                // Show document upload success toast
-                toast.profile.uploadDocumentSuccess();
+                try {
+                    // Only pass idBack if it exists
+                    if (idBack) {
+                        await uploadGovernmentID(user.id, idFront, idBack);
+                    } else {
+                        await uploadGovernmentID(user.id, idFront);
+                    }
+                    // Show document upload success toast
+                    toast.profile.uploadDocumentSuccess();
+                } catch (idError) {
+                    console.error('Error uploading government ID:', idError);
+                    toast.profile.documentUploadError('Failed to upload identification documents.');
+                    // Continue with the profile update even if ID upload fails
+                }
             }
             
             // Update user in global store
@@ -84,6 +96,11 @@ const ProfilePage: React.FC = () => {
             
             // Show profile update success toast
             toast.profile.updateSuccess();
+            
+            // Reset file inputs after successful upload
+            setProfilePicture(null);
+            setIdFront(null);
+            setIdBack(null);
             
         } catch (err) {
             console.error('Error updating profile:', err);
@@ -125,6 +142,15 @@ const ProfilePage: React.FC = () => {
     // Handle profile picture change
     const handleProfilePictureChange = (file: File) => {
         setProfilePicture(file);
+        
+        // Create a preview of the uploaded image
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setProfilePicturePreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+        
+        // Show success toast
         toast.profile.uploadPhotoSuccess();
     };
     
@@ -134,9 +160,15 @@ const ProfilePage: React.FC = () => {
                 <h1 className="section-title">Your Profile</h1>
                 <div className="profile-image-container">
                     <div className="profile-image">
-                        <img src={user?.profilePicture || Picture} alt="Profile" />
+                        <img 
+                            src={profilePicturePreview || user?.profilePicture || Picture} 
+                            alt="Profile" 
+                        />
                     </div>
-                    <div className="text-button">Edit Profile Picture</div>
+                    <UploadFieldModel 
+                        isProfilePicture={true}
+                        onFileSelect={handleProfilePictureChange}
+                    />
                 </div>
                 <div className="profile-grid">
                     <InputBaseModel 
@@ -157,17 +189,16 @@ const ProfilePage: React.FC = () => {
                     <SelectFieldDatePicker 
                         label="Date of Birth"
                         onChange={(value) => setDateOfBirth(`${value.year}-${value.month}-${value.day}`)}
-                    /> 
-                   <UploadFieldModel 
-                    label="Passport or Front of ID" 
-                    hlabel="Government ID"
-                    onFileSelect={(file) => setIdFront(file)}
-                    
-                />
-                <UploadFieldModel 
-                    label="Back of ID" 
-                    onFileSelect={(file) => setIdBack(file)}
-                />
+                    />
+                    <UploadFieldModel 
+                        label="Passport or Front of ID" 
+                        hlabel="Government ID"
+                        onFileSelect={(file) => setIdFront(file)}
+                    />
+                    <UploadFieldModel 
+                        label="Back of ID" 
+                        onFileSelect={(file) => setIdBack(file)}
+                    />
                
                     <div className="profile-inbut-label">Gender</div>
                     <div className="profile-inbut-label">Languages</div>
@@ -221,6 +252,8 @@ const ProfilePage: React.FC = () => {
                 <GoogleCard 
                     title="Connect to Google" 
                     description="Connect your Google account to your Kaari account to easily sign in and access your reservations." 
+                    onConnect={handleConnectGoogle}
+                    isConnected={user?.googleConnected}
                 />
                 <NeedHelpCardComponent 
                     title="Need Help?" 
