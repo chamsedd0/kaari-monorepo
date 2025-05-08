@@ -82,10 +82,8 @@ export const ReservationStatusContainer = styled.div`
   .status-card-container {
     background-color: white;
     border-radius: ${Theme.borders.radius.lg};
-    border: ${Theme.borders.primary};
     overflow: hidden;
     margin-bottom: 2rem;
-    min-height: 200px;
   }
   
   /* Additional Sections */
@@ -95,7 +93,6 @@ export const ReservationStatusContainer = styled.div`
     .info-card {
       background-color: white;
       border-radius: ${Theme.borders.radius.lg};
-      border: ${Theme.borders.primary};
       padding: 1.5rem;
       margin-bottom: 1rem;
       

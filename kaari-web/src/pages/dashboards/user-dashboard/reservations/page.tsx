@@ -10,6 +10,7 @@ import ProgressBanner from '../../../../components/skeletons/banners/status/bann
 import { useNavigate } from 'react-router-dom';
 import emptyBoxSvg from '../../../../assets/images/emptybox.svg';
 import SpinningLoading from '../../../../components/skeletons/icons/SpinningLoading'
+import ConfirmationModal from '../../../../components/modals/ConfirmationModal';
 
 const ReservationsContainer = styled.div`
   padding: 2rem;
@@ -163,93 +164,6 @@ const ReservationsContainer = styled.div`
           &:hover {
         background-color: ${Theme.colors.secondary};
         color: white;
-      }
-    }
-  }
-  
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    
-    .modal-content {
-      background-color: white;
-      border-radius: ${Theme.borders.radius.md};
-      padding: 2rem;
-      width: 90%;
-      max-width: 500px;
-      
-      .modal-title {
-        font: ${Theme.typography.fonts.h4B};
-        color: ${Theme.colors.black};
-        margin-bottom: 1rem;
-      }
-      
-      .modal-message {
-        font: ${Theme.typography.fonts.mediumM};
-        color: ${Theme.colors.gray2};
-        margin-bottom: 1.5rem;
-      }
-      
-      .modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 1rem;
-        
-        .modal-button {
-          padding: 0.75rem 1.5rem;
-          border-radius: ${Theme.borders.radius.sm};
-          font: ${Theme.typography.fonts.smallB};
-          cursor: pointer;
-          transition: all 0.3s ease;
-          
-          &.cancel {
-            background-color: white;
-            color: ${Theme.colors.gray2};
-            border: 1px solid ${Theme.colors.gray};
-            
-            &:hover {
-              background-color: ${Theme.colors.tertiary};
-            }
-          }
-          
-          &.confirm {
-            background-color: ${Theme.colors.error};
-            color: white;
-            border: none;
-            
-            &:hover {
-              background-color: #c0392b;
-            }
-            
-            &:disabled {
-              opacity: 0.6;
-              cursor: not-allowed;
-            }
-          }
-          
-          &.pay {
-            background-color: ${Theme.colors.success};
-            color: white;
-            border: none;
-            
-            &:hover {
-              background-color: ${Theme.colors.success};
-            }
-            
-            &:disabled {
-              opacity: 0.6;
-              cursor: not-allowed;
-            }
-          }
-        }
       }
     }
   }
@@ -1480,58 +1394,29 @@ const ReservationsPage: React.FC = () => {
       )}
 
       {showCancelModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 className="modal-title">Cancel Reservation</h2>
-            <p className="modal-message">
-              Are you sure you want to cancel this reservation request? This action cannot be undone.
-            </p>
-            <div className="modal-actions">
-              <button 
-                className="modal-button cancel"
-                onClick={closeCancelModal}
-                disabled={cancellingReservation !== null}
-              >
-                Keep Request
-              </button>
-              <button 
-                className="modal-button confirm"
-                onClick={handleCancelReservation}
-                disabled={cancellingReservation !== null}
-              >
-                {cancellingReservation ? 'Cancelling...' : 'Yes, Cancel'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmationModal
+          isOpen={showCancelModal}
+          onClose={closeCancelModal}
+          onConfirm={handleCancelReservation}
+          title="Cancel Reservation"
+          message="Are you sure you want to cancel this reservation request? This action cannot be undone."
+          confirmText={cancellingReservation ? 'Cancelling...' : 'Yes, Cancel'}
+          cancelText="Keep Request"
+          isLoading={cancellingReservation !== null}
+        />
       )}
 
       {showPaymentModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 className="modal-title">Confirm Payment</h2>
-            <p className="modal-message">
-              By confirming this payment, you agree to complete the reservation. 
-              Your payment method will be charged for the deposit and first month's rent.
-            </p>
-            <div className="modal-actions">
-              <button 
-                className="modal-button cancel"
-                onClick={closePaymentModal}
-                disabled={processingPayment !== null}
-              >
-                Cancel
-              </button>
-              <button 
-                className="modal-button pay"
-                onClick={handleConfirmPayment}
-                disabled={processingPayment !== null}
-              >
-                {processingPayment ? 'Processing...' : 'Confirm Payment'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmationModal
+          isOpen={showPaymentModal}
+          onClose={closePaymentModal}
+          onConfirm={handleConfirmPayment}
+          title="Confirm Payment"
+          message="By confirming this payment, you agree to complete the reservation. Your payment method will be charged for the deposit and first month's rent."
+          confirmText={processingPayment ? 'Processing...' : 'Confirm Payment'}
+          cancelText="Cancel"
+          isLoading={processingPayment !== null}
+        />
       )}
     </ReservationsContainer>
     );

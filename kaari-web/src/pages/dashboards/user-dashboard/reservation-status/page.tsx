@@ -11,6 +11,24 @@ import { getClientReservations, cancelReservation, completeReservation, requestR
 import { processPayment } from '../../../../backend/server-actions/CheckoutServerActions';
 import { useToastService } from '../../../../services/ToastService';
 import BookingDetailsComponent from '../../../../components/reservations/BookingDetails';
+import TimerComponent from '../../../../components/skeletons/constructed/status-cards/TimerComponent';
+import ApprovedReservationWithTimer from './ApprovedReservationWithTimer';
+import MovedInWithTimer from './MovedInWithTimer';
+import InfoCardsSection from './InfoCardsSection';
+import ConfirmationModal from '../../../../components/modals/ConfirmationModal';
+
+// Import status cards - Using correct import types for each component
+import { ConfirmationRequestSentCard } from '../../../../components/skeletons/constructed/status-cards/confirmation-request-sent';
+import ConfirmationRequestApproved from '../../../../components/skeletons/constructed/status-cards/confirmation-request-approved';
+import ConfirmationRequestRejected  from '../../../../components/skeletons/constructed/status-cards/confirmation-request-rejected';
+import ConfirmationYouGetThePlace  from '../../../../components/skeletons/constructed/status-cards/confirmation-you-get-the-place';
+import ConfirmationPaymentFailedCard  from '../../../../components/skeletons/constructed/status-cards/confirmation-paymet-failed'; // Note: There's a typo in the filename
+import ConfirmationToYourLikingCard  from '../../../../components/skeletons/constructed/status-cards/cofirmation-to-your-liking'; // Note: There's a typo in the filename
+import CancellationRequestUnderReview from '../../../../components/skeletons/constructed/status-cards/cancellation-request-under-review';
+import CancellationRequestApproved from '../../../../components/skeletons/constructed/status-cards/cancellation-request-approved';
+import CancellationRequestRejected from '../../../../components/skeletons/constructed/status-cards/cacellation-request-rejected'; // Note: There's a typo in the filename
+import CancellationRefundBeingProcessed from '../../../../components/skeletons/constructed/status-cards/cancellation-refund-being-processed';
+import CancellationRefundCouldNotProcessed from '../../../../components/skeletons/constructed/status-cards/cancellation-refund-could-not-processed';
 
 // Define interfaces
 interface FirestoreTimestamp {
@@ -22,7 +40,7 @@ interface Reservation {
   reservation: {
     id: string;
     requestType: string;
-    status: 'pending' | 'accepted' | 'rejected' | 'paid' | 'movedIn' | 'cancelled' | 'refundProcessing' | 'refundCompleted' | 'refundFailed' | 'cancellationUnderReview';
+    status: 'pending' | 'accepted' | 'rejected' | 'paid' | 'movedIn' | 'cancelled' | 'refundProcessing' | 'refundCompleted' | 'refundFailed' | 'cancellationUnderReview' | 'cancellationRejected';
     createdAt: Date | FirestoreTimestamp | string;
     updatedAt: Date | FirestoreTimestamp | string;
     scheduledDate?: Date | FirestoreTimestamp | string;
@@ -49,6 +67,7 @@ interface Reservation {
       type: 'bedroom' | 'bathroom' | 'kitchen' | 'living' | 'storage';
       area: number;
     }>;
+    features?: string[] | Record<string, boolean> | string;
   } | null;
   advertiser?: {
     id: string;
@@ -110,6 +129,16 @@ const ReservationStatusPage: React.FC = () => {
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [processing, setProcessing] = useState(false);
   
+  // Modal states
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    cancelText: 'Cancel',
+    onConfirm: () => {}
+  });
+  
   // Get the reservation ID from params or search params
   const reservationId = id || new URLSearchParams(location.search).get('id');
   
@@ -153,12 +182,24 @@ const ReservationStatusPage: React.FC = () => {
     navigate('/dashboard/user/reservations');
   };
   
-  // Function to handle reservation cancellation
-  const handleCancel = async () => {
+  // Function to handle reservation cancellation with modal
+  const confirmCancel = () => {
+    setModalConfig({
+      title: 'Cancel Reservation',
+      message: 'Are you sure you want to cancel this reservation? This action cannot be undone.',
+      confirmText: 'Yes, Cancel',
+      cancelText: 'No, Keep It',
+      onConfirm: performCancellation
+    });
+    setModalOpen(true);
+  };
+  
+  const performCancellation = async () => {
     if (!reservation) return;
     
     try {
       setProcessing(true);
+      setModalOpen(false);
       await cancelReservation(reservation.reservation.id);
       toast.showToast('success', 'Reservation Cancelled', 'Your reservation has been successfully cancelled');
       
@@ -172,12 +213,24 @@ const ReservationStatusPage: React.FC = () => {
     }
   };
   
-  // Function to handle payment confirmation
-  const handleConfirmPayment = async () => {
+  // Function to handle payment confirmation with modal
+  const confirmPayment = () => {
+    setModalConfig({
+      title: 'Confirm Payment',
+      message: 'Are you sure you want to proceed with the payment? Your payment information will be processed.',
+      confirmText: 'Yes, Pay Now',
+      cancelText: 'Not Now',
+      onConfirm: performPayment
+    });
+    setModalOpen(true);
+  };
+  
+  const performPayment = async () => {
     if (!reservation) return;
     
     try {
       setProcessing(true);
+      setModalOpen(false);
       await processPayment(reservation.reservation.id);
       toast.showToast('success', 'Payment Processed', 'Your payment has been successfully processed');
       
@@ -191,12 +244,24 @@ const ReservationStatusPage: React.FC = () => {
     }
   };
   
-  // Function to handle move-in confirmation
-  const handleMoveIn = async () => {
+  // Function to handle move-in confirmation with modal
+  const confirmMoveIn = () => {
+    setModalConfig({
+      title: 'Confirm Move-In',
+      message: 'Are you sure you want to confirm that you have moved in to this property?',
+      confirmText: 'Yes, I Moved In',
+      cancelText: 'Not Yet',
+      onConfirm: performMoveIn
+    });
+    setModalOpen(true);
+  };
+  
+  const performMoveIn = async () => {
     if (!reservation) return;
     
     try {
       setProcessing(true);
+      setModalOpen(false);
       await completeReservation(reservation.reservation.id);
       toast.showToast('success', 'Move-In Confirmed', 'Your move-in has been successfully confirmed');
       
@@ -210,10 +275,16 @@ const ReservationStatusPage: React.FC = () => {
     }
   };
   
-  // Function to handle refund request
-  const handleRequestRefund = () => {
-    if (!reservation) return;
-    navigate(`/dashboard/user/refund-request?reservationId=${reservation.reservation.id}`);
+  // Function to handle refund request with modal
+  const confirmRefundRequest = () => {
+    setModalConfig({
+      title: 'Request Refund',
+      message: 'Are you sure you want to request a refund? This will initiate the cancellation process.',
+      confirmText: 'Yes, Request Refund',
+      cancelText: 'Cancel',
+      onConfirm: () => navigate(`/dashboard/user/refund-request?reservationId=${reservation?.reservation.id}`)
+    });
+    setModalOpen(true);
   };
   
   // Function to handle 'Find other housing' button
@@ -228,10 +299,21 @@ const ReservationStatusPage: React.FC = () => {
   };
   
   // Function to handle 'Contact Advertiser' button
-  const handleContactAdvertiser = () => {
+  const confirmContactAdvertiser = () => {
     if (!reservation?.advertiser?.id) return;
-    // In a real implementation, this would open a chat with the advertiser or redirect to a message form
-    toast.showToast('info', 'Contact', 'Opening chat with advertiser');
+    
+    setModalConfig({
+      title: 'Contact Advertiser',
+      message: `Are you sure you want to contact ${reservation.advertiser.name}?`,
+      confirmText: 'Yes, Contact Now',
+      cancelText: 'Not Now',
+      onConfirm: () => {
+        // In a real implementation, this would open a chat with the advertiser or redirect to a message form
+        toast.showToast('info', 'Contact', 'Opening chat with advertiser');
+        setModalOpen(false);
+      }
+    });
+    setModalOpen(true);
   };
   
   // Function to handle 'View Profile' button
@@ -243,6 +325,68 @@ const ReservationStatusPage: React.FC = () => {
   // Function to read cancellation policy
   const handleReadCancellationPolicy = () => {
     window.open('/cancellation-policy', '_blank');
+  };
+
+  // Function to handle 'Contact Support' button
+  const confirmContactSupport = () => {
+    setModalConfig({
+      title: 'Contact Support',
+      message: 'Do you want to contact our support team for assistance?',
+      confirmText: 'Yes, Contact Support',
+      cancelText: 'Not Now',
+      onConfirm: () => {
+        window.open('/help', '_blank');
+        setModalOpen(false);
+      }
+    });
+    setModalOpen(true);
+  };
+  
+  // Function to handle resubmit request for cancellation
+  const confirmResubmitCancellation = () => {
+    if (!reservation) return;
+    
+    setModalConfig({
+      title: 'Resubmit Cancellation Request',
+      message: 'Would you like to resubmit your cancellation request with additional information?',
+      confirmText: 'Yes, Resubmit',
+      cancelText: 'Not Now',
+      onConfirm: () => navigate('/dashboard/user/cancellation-request?reservationId=' + reservation.reservation.id)
+    });
+    setModalOpen(true);
+  };
+
+  // Function to calculate expiry time (24 hours after updatedAt)
+  const calculateExpiryTime = (timestamp: Date | FirestoreTimestamp | string | undefined): Date | null => {
+    if (!timestamp) return null;
+    
+    try {
+      let dateObj: Date;
+      
+      // Convert the timestamp to a Date object
+      if (timestamp instanceof Date) {
+        dateObj = new Date(timestamp);
+      } 
+      else if (typeof timestamp === 'object' && 'seconds' in timestamp) {
+        dateObj = new Date((timestamp as FirestoreTimestamp).seconds * 1000);
+      }
+      else {
+        dateObj = new Date(timestamp as string);
+      }
+      
+      // Check if the date is valid
+      if (isNaN(dateObj.getTime())) {
+        console.error('Invalid date in calculateExpiryTime:', timestamp);
+        return null;
+      }
+      
+      // Add 24 hours to the timestamp
+      const expiryTime = new Date(dateObj.getTime() + (24 * 60 * 60 * 1000));
+      return expiryTime;
+    } catch (error) {
+      console.error('Error calculating expiry time:', error);
+      return null;
+    }
   };
 
   if (loading) {
@@ -310,32 +454,88 @@ const ReservationStatusPage: React.FC = () => {
       <h1>Reservation Details</h1>
       
       <div className="main-content">
-        {/* Status Card Container - To be filled with actual status cards later */}
+        {/* Status Card Container - Replace with appropriate status card based on status */}
         <div className="status-card-container">
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <h2>Status: {status.charAt(0).toUpperCase() + status.slice(1)}</h2>
-            <p>
-              {status === 'pending' && 'Your reservation request is waiting for advertiser approval.'}
-              {status === 'accepted' && 'Your reservation has been accepted! Please proceed with payment.'}
-              {status === 'rejected' && 'Your reservation request was not accepted by the advertiser.'}
-              {status === 'paid' && 'Your payment has been processed. You can move in on the scheduled date.'}
-              {status === 'movedIn' && 'You have confirmed moving in to this property.'}
-              {status === 'cancelled' && 'This reservation has been cancelled.'}
-              {status === 'refundProcessing' && 'Your refund request is being processed.'}
-              {status === 'refundCompleted' && 'Your refund has been processed successfully.'}
-              {status === 'refundFailed' && 'There was an issue processing your refund.'}
-              {status === 'cancellationUnderReview' && 'Your cancellation request is being reviewed.'}
-            </p>
-            <p style={{ marginTop: '1rem' }}>
-              Last updated: {formatDate(reservation.reservation.updatedAt)}
-            </p>
-          </div>
+          {status === 'pending' && (
+            <>
+              <ConfirmationRequestSentCard 
+                onCancel={confirmCancel} 
+              />
+              <InfoCardsSection />
+            </>
+          )}
+          
+          {status === 'accepted' && (
+            <ApprovedReservationWithTimer 
+              onConfirmPayment={confirmPayment} 
+              onCancelReservation={confirmCancel}
+              expiryTime={calculateExpiryTime(reservation.reservation.updatedAt)}
+            />
+          )}
+          
+          {status === 'rejected' && (
+            <ConfirmationRequestRejected />
+          )}
+          
+          {status === 'paid' && (
+            <ConfirmationYouGetThePlace 
+              onMovedIn={confirmMoveIn}
+              onHaveIssue={confirmRefundRequest}
+            />
+          )}
+          
+          {status === 'movedIn' && (
+            <MovedInWithTimer 
+              onHaveIssue={confirmRefundRequest}
+              expiryTime={calculateExpiryTime(reservation.reservation.movedInAt)}
+            />
+          )}
+          
+          {(status === 'cancellationUnderReview') && (
+            <CancellationRequestUnderReview 
+              onContactSupport={confirmContactSupport}
+            />
+          )}
+          
+          {status === 'cancelled' && (
+            <CancellationRequestApproved 
+              onGoBack={() => navigate('/dashboard/user/reservations')}
+            />
+          )}
+          
+          {status === 'refundProcessing' && (
+            <CancellationRefundBeingProcessed 
+              onContactSupport={confirmContactSupport}
+            />
+          )}
+          
+          {status === 'refundCompleted' && (
+            <CancellationRequestApproved 
+              onGoBack={() => navigate('/dashboard/user/reservations')}
+            />
+          )}
+          
+          {status === 'refundFailed' && (
+            <CancellationRefundCouldNotProcessed 
+              onTryAgain={confirmContactSupport}
+            />
+          )}
+
+          {/* Add handler for cancellation rejection if this status exists */}
+          {status === 'cancellationRejected' && (
+            <CancellationRequestRejected 
+              onResubmit={confirmResubmitCancellation}
+            />
+          )}
         </div>
+        
+        {/* Note: Some sections below are now partially redundant with the status cards above,
+           but they provide additional information that may still be useful to the user. */}
         
         {/* Additional Info Sections based on status */}
         {(status === 'accepted' || status === 'paid' || status === 'movedIn') && (
           <div className="section">
-          <div className="info-card">
+            <div className="info-card">
               <div className="card-header">
                 <FaInfoCircle />
                 <h3>Contact Your Advertiser</h3>
@@ -351,13 +551,13 @@ const ReservationStatusPage: React.FC = () => {
               <div className="card-actions">
                 <PurpleButtonMB48 
                   text="Contact Advertiser" 
-                  onClick={handleContactAdvertiser}
+                  onClick={confirmContactAdvertiser}
                   disabled={processing || !reservation.advertiser}
                 />
               </div>
             </div>
-                    </div>
-      )}
+          </div>
+        )}
       
         {status === 'rejected' && (
           <div className="section">
@@ -567,7 +767,7 @@ const ReservationStatusPage: React.FC = () => {
             }}
             message={reservation.reservation.message}
           />
-        )}
+      )}
       </div>
       
       {/* Sidebar with property details */}
@@ -587,121 +787,23 @@ const ReservationStatusPage: React.FC = () => {
           onReadCancellationPolicy={handleReadCancellationPolicy}
         />
         
-        {/* Cancellation Policy Table */}
-        <div className="cancellation-policy">
-          <table className="policy-table">
-            <thead>
-              <tr>
-                <th>Cancel before move-in</th>
-                <th>Rent refund</th>
-                <th>Tenant fee refund</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>&gt; 30 days</td>
-                <td>100%</td>
-                <td>75%</td>
-              </tr>
-              <tr>
-                <td>30 - 15 days</td>
-                <td>100%</td>
-                <td>50%</td>
-              </tr>
-              <tr>
-                <td>14 - 8 days</td>
-                <td>50%</td>
-                <td>50%</td>
-              </tr>
-              <tr>
-                <td>≤ 7 days</td>
-                <td>0%</td>
-                <td>50%</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
         
-        {/* Status-specific action buttons */}
-        <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {status === 'pending' && (
-            <PurpleButtonMB48 
-              text={processing ? "Processing..." : "Cancel Reservation"} 
-              onClick={handleCancel}
-              disabled={processing}
-            />
-          )}
-          
-          {status === 'accepted' && (
-            <>
-              <PurpleButtonMB48 
-                text={processing ? "Processing..." : "Confirm Payment"} 
-                onClick={handleConfirmPayment}
-                disabled={processing}
-              />
-              <BpurpleButtonMB48 
-                text="Cancel Reservation" 
-                onClick={handleCancel}
-                disabled={processing}
-              />
-            </>
-          )}
-          
-          {status === 'paid' && (
-            <PurpleButtonMB48 
-              text={processing ? "Processing..." : "I Moved In"} 
-              onClick={handleMoveIn}
-              disabled={processing}
-            />
-          )}
-          
-          {status === 'movedIn' && (
-            <PurpleButtonMB48 
-              text="Request Refund" 
-              onClick={handleRequestRefund}
-              disabled={processing}
-            />
-          )}
-          
-          {status === 'rejected' && (
-            <PurpleButtonMB48 
-              text="Find Other Housing" 
-              onClick={handleFindHousing}
-              disabled={processing}
-            />
-          )}
-          
-          {status === 'refundCompleted' && (
-            <PurpleButtonMB48 
-              text="Download Receipt" 
-              onClick={handleDownloadReceipt}
-              disabled={processing}
-            />
-          )}
-          
-          {status === 'refundFailed' && (
-            <PurpleButtonMB48 
-              text="Contact Support" 
-              onClick={() => window.open('/help', '_blank')}
-              disabled={processing}
-            />
-          )}
-          
-          {status === 'cancelled' && (
-            <PurpleButtonMB48 
-              text="Find New Housing" 
-              onClick={handleFindHousing}
-              disabled={processing}
-            />
-          )}
-          
-          {(status === 'refundProcessing' || status === 'cancellationUnderReview') && (
-            <div style={{ textAlign: 'center', padding: '1rem', color: Theme.colors.gray2, fontSize: '0.9rem' }}>
-              Your request is being processed. Please check back later for updates.
-            </div>
-          )}
-        </div>
+        
+        
+       
               </div>
+      
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        confirmText={modalConfig.confirmText}
+        cancelText={modalConfig.cancelText}
+        isLoading={processing}
+      />
     </ReservationStatusContainer>
   );
 };

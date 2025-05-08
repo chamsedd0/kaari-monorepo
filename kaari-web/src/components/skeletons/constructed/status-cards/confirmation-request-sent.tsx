@@ -20,7 +20,7 @@ export const ConfirmationRequestSentCard: React.FC<ConfirmationRequestSentCardPr
                     Make sure to check emails regularly.
                 </div>
                 <div className="button-container">
-                <WhiteButtonLB48 text="Cancel without charge" />
+                <WhiteButtonLB48 text="Cancel without charge" onClick={onCancel} />
                 </div>
             </div>
             <div className="right-container">
