@@ -10,6 +10,7 @@ import { CheckoutCard } from '../../../../components/skeletons/cards/checkout-ca
 import { getClientReservations, cancelReservation, completeReservation, requestRefund } from '../../../../backend/server-actions/ClientServerActions';
 import { processPayment } from '../../../../backend/server-actions/CheckoutServerActions';
 import { useToastService } from '../../../../services/ToastService';
+import BookingDetailsComponent from '../../../../components/reservations/BookingDetails';
 
 // Define interfaces
 interface FirestoreTimestamp {
@@ -515,106 +516,58 @@ const ReservationStatusPage: React.FC = () => {
         
         {/* Booking details section - for all statuses except pending */}
         {status !== 'pending' && (
-          <div className="booking-details">
-            <h3>Booking Details</h3>
-            <p>These are the details that were shown to your advertiser. Some information like your contact information or your surname will not be shared with the advertiser.</p>
-            
-            <div className="details-grid">
-              {/* Display real booking details from reservation request */}
-              {reservation.reservation.requestType && (
-                <div className="detail-item">
-                  <div className="detail-label">Request Type</div>
-                  <div className="detail-value">{reservation.reservation.requestType}</div>
-                </div>
-      )}
-      
-              {/* User details - In a real implementation, these would come from the user profile or reservation data */}
-              {/* Map reservation data dynamically - this assumes reservation.reservation contains booking details */}
-              {Object.entries(reservation.reservation).filter(([key, value]) => {
-                // Filter out internal fields or fields already displayed elsewhere
-                const excludedFields = ['id', 'status', 'createdAt', 'updatedAt', 'propertyId', 'message', 'requestType', 'movedIn', 'movedInAt', 'scheduledDate'];
-                return !excludedFields.includes(key) && value !== undefined && value !== null;
-              }).map(([key, value]) => (
-                <div className="detail-item" key={key}>
-                  <div className="detail-label">
-                    {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                  </div>
-                  <div className="detail-value">
-                    {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : 
-                     typeof value === 'object' ? JSON.stringify(value) : value.toString()}
-                  </div>
-              </div>
-              ))}
+          <BookingDetailsComponent
+            personalDetails={{
+              // Include basic reservation details that are user-friendly
+              requestType: reservation.reservation.requestType,
               
-              {/* Display message separately as it might be longer */}
-              <div className="detail-item" style={{ gridColumn: '1 / span 2' }}>
-                <div className="detail-label">Message</div>
-                <div className="detail-value" style={{ whiteSpace: 'pre-wrap' }}>{reservation.reservation.message || "-"}</div>
-              </div>
+              // Include all relevant reservation data, filtering developer info
+              ...Object.fromEntries(
+                Object.entries(reservation.reservation)
+                  .filter(([key, value]) => {
+                    // Define fields to exclude (developer-only, system fields, timestamps handled separately)
+                    const developerFields = [
+                      'id', 'status', 'propertyId', 'movedIn', 'advertiserId', 'clientId',
+                      'createdAt', 'updatedAt', 'scheduledDate', 'movedInAt', 'userId', 
+                      'messageId', 'activityId', 'batchId', 'transactionId', 'message', 
+                      'requestType', '__typename'
+                    ];
+                    
+                    // Keep all fields that aren't developer-only and have values
+                    return !developerFields.includes(key) && 
+                           value !== undefined && 
+                           value !== null;
+                  })
+              ),
               
-              {/* Use a fallback if no booking details are available */}
-              {Object.entries(reservation.reservation).filter(([key, value]) => {
-                const excludedFields = ['id', 'status', 'createdAt', 'updatedAt', 'propertyId', 'message', 'requestType', 'movedIn', 'movedInAt', 'scheduledDate'];
-                return !excludedFields.includes(key) && value !== undefined && value !== null;
-              }).length === 0 && (
-                <>
-                  <div className="detail-item">
-                    <div className="detail-label">Name</div>
-                    <div className="detail-value">John</div>
-            </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Do you study or work</div>
-                    <div className="detail-value">Study</div>
-          </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Gender</div>
-                    <div className="detail-value">Male</div>
-        </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Institution Name</div>
-                    <div className="detail-value">NYU</div>
-                </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Age</div>
-                    <div className="detail-value">20 y.o.</div>
-              </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Field of Study</div>
-                    <div className="detail-value">Computer Engineering</div>
-            </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Length of Stay</div>
-                    <div className="detail-value">{lengthOfStay}</div>
-                  </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Funding Source</div>
-                    <div className="detail-value">Salary</div>
-            </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Nationality</div>
-                    <div className="detail-value">Morocco</div>
-                    </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Pets</div>
-                    <div className="detail-value">Yes</div>
-                    </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Number of People</div>
-                    <div className="detail-value">2</div>
-                  </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Smoking Habits</div>
-                    <div className="detail-value">No</div>
-                </div>
-                  <div className="detail-item">
-                    <div className="detail-label">Who will you live with</div>
-                    <div className="detail-value">Family</div>
-              </div>
-                </>
-              )}
-            </div>
-              </div>
-      )}
+              // Format important dates correctly
+              ...(reservation.reservation.scheduledDate && {
+                moveInDate: formatDate(reservation.reservation.scheduledDate)
+              })
+            }}
+            otherDetails={{
+              // Only include user-friendly property details
+              propertyTitle: reservation.property?.title,
+              propertyAddress: reservation.property ? formatAddress(reservation.property.address) : undefined,
+              monthlyRent: reservation.property?.price ? `${reservation.property.price}$` : undefined,
+              securityDeposit: reservation.property?.deposit ? `${reservation.property.deposit}$` : undefined,
+              serviceFee: reservation.property?.serviceFee ? `${reservation.property.serviceFee}$` : undefined,
+              
+              // Include property features in a readable format
+              ...(reservation.property?.features && { 
+                features: Array.isArray(reservation.property.features) 
+                  ? reservation.property.features.join(', ') 
+                  : (typeof reservation.property.features === 'object' ? Object.keys(reservation.property.features).join(', ') : String(reservation.property.features))
+              }),
+              
+              // Only include room count, not detailed room info (shown elsewhere)
+              ...(reservation.property?.rooms && {
+                roomCount: reservation.property.rooms.length
+              })
+            }}
+            message={reservation.reservation.message}
+          />
+        )}
       </div>
       
       {/* Sidebar with property details */}
