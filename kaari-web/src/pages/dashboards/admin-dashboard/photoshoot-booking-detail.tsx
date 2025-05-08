@@ -592,7 +592,8 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         
         // For temporary property ID use a timestamp + random string
         const tempPropertyId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-        const basePath = `properties/${tempPropertyId}/images`;
+        // Use a public folder path to avoid unauthorized path error
+        const basePath = `public/properties/${tempPropertyId}/images`;
         
         // Upload files using secure upload
         const uploadedUrls = await secureUploadMultipleFiles(
@@ -633,7 +634,8 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       
       // For temporary property ID use a timestamp + random string
       const tempPropertyId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      const basePath = `properties/${tempPropertyId}/images`;
+      // Use a public folder path to avoid unauthorized path error
+      const basePath = `public/properties/${tempPropertyId}/images`;
       
       // Upload files using secure upload
       const uploadedUrls = await secureUploadMultipleFiles(
