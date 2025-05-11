@@ -32,6 +32,7 @@ import {
 import { useAuth } from '../../../../contexts/auth/AuthContext'; // Corrected path for AuthContext
 import { formatDistanceToNow } from 'date-fns';
 import { useToastService } from '../../../../services/ToastService'; // Corrected toast import
+import { createNewMessageNotification } from '../../../../utils/notification-helpers';
 
 // Interfaces for Firestore data
 interface User {
@@ -395,6 +396,17 @@ const MessageInput: React.FC<MessageInputProps> = ({
         lastMessageTimestamp: serverTimestamp(),
         unreadCounts,
       });
+
+      // Send notification to the other participant
+      if (otherParticipantId) {
+        const otherParticipantType = otherParticipantId.startsWith('adv-') ? 'advertiser' : 'user';
+        await createNewMessageNotification(
+          otherParticipantId, 
+          otherParticipantType, 
+          currentUser.name || 'Someone',
+          activeConversationId
+        );
+      }
 
       setMessage(''); // Clear input field
       setAttachments([]); // Clear attachments

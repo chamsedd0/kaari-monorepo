@@ -19,6 +19,8 @@ import { signOut } from '../../../../backend/firebase/auth';
 import eventBus, { AUTH_EVENTS } from '../../../../utils/event-bus';
 import LanguageSwitcher from '../../language-switcher/language-switcher';
 import { useTranslation } from 'react-i18next';
+import NotificationBell from '../../notifications/NotificationBell';
+import { NotificationProvider } from '../../../../contexts/notifications/NotificationContext';
 
 // Define the styled components for different header styles
 const HeaderContainer = styled(HeaderBaseModel)<{
@@ -162,6 +164,13 @@ const HeaderContainer = styled(HeaderBaseModel)<{
     &:hover {
       opacity: 0.8;
       transform: scale(1.1);
+    }
+  }
+
+  .notif {
+    &:hover {
+      opacity: 1 !important;
+      transform: none !important;
     }
   }
   
@@ -458,8 +467,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             <MessageBubble bgColor={getIconColor()} />
           </div>
           
-          <div className="icon-container" onClick={handleNotificationsClick}>
-            <Notifications bgColor={getIconColor()} />
+          <div className="icon-container notif">
+            <NotificationBell color={getIconColor()} />
           </div>
           
           <div className="icon-container" onClick={handleFavoritesClick}>
@@ -477,8 +486,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             <FaCamera color={getIconColor()} />
           </div>
           
-          <div className="icon-container" onClick={handleNotificationsClick}>
-            <Notifications bgColor={getIconColor()} />
+          <div className="icon-container notif">
+            <NotificationBell color={getIconColor()} />
           </div>
         </>
       );
@@ -573,7 +582,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   }, []);
 
   return (
-    <>
+    <NotificationProvider>
       <HeaderContainer 
         isTransparent={isTransparent}
         scrolled={scrolled} 
@@ -596,7 +605,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         onClose={() => setShowSignOutModal(false)}
         onConfirm={handleSignOut}
       />
-    </>
+    </NotificationProvider>
   );
 };
 

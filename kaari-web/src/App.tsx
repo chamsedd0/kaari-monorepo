@@ -23,6 +23,8 @@ import eventBus, { EventType } from './utils/event-bus';
 import { ToastProvider } from './contexts/ToastContext';
 import ScrollToTop from './components/ScrollToTop';
 import { useProfileCompletionReminder } from './hooks/useProfileCompletionReminder';
+import { NotificationProvider } from './contexts/notifications/NotificationContext';
+import NotificationsPage from './pages/notifications';
 // Import static pages
 import {
   AboutUsPage,
@@ -497,7 +499,24 @@ function App() {
         } 
       />
       
-      {/* Fallback route for 404 */}
+      {/* Notifications Page */}
+      <Route 
+        path="/notifications" 
+        element={
+          isAuthenticated ? 
+            <NotificationsPage /> : 
+            (() => {
+              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                path: '/notifications',
+                redirectTo: '/',
+                isAuthenticated: false
+              });
+              return <Navigate to="/" replace />;
+            })()
+        } 
+      />
+      
+      {/* Default route - redirect to home if no path matched */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   ), [isAuthenticated, userIsAdvertiser, userIsRegular, userIsAdmin, renderKey]);
@@ -512,16 +531,21 @@ function App() {
     return <Wrapper />;
   }, [isAuthenticated, user?.id]); // Only re-create when auth state or user ID changes
   
-  return (
-    <ToastProvider>
-      <ScrollToTop />
-      {/* Use the memoized ProfileReminderWrapper here inside the ToastProvider */}
-      {ProfileReminderWrapper}
-      <MainLayout key={renderKey}>
-        {routes}
-      </MainLayout>
-    </ToastProvider>
-  );
+  const Wrapper = () => {
+    return (
+      <ToastProvider>
+        <NotificationProvider>
+          <MainLayout>
+            <ScrollToTop />
+            {ProfileReminderWrapper}
+            {routes}
+          </MainLayout>
+        </NotificationProvider>
+      </ToastProvider>
+    );
+  };
+  
+  return <Wrapper />;
 }
 
 export default App;
