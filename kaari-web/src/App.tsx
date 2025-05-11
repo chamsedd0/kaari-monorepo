@@ -25,6 +25,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { useProfileCompletionReminder } from './hooks/useProfileCompletionReminder';
 import { NotificationProvider } from './contexts/notifications/NotificationContext';
 import NotificationsPage from './pages/notifications';
+import TestNotificationsPage from './pages/test-notifications';
 // Import static pages
 import {
   AboutUsPage,
@@ -508,6 +509,23 @@ function App() {
             (() => {
               eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
                 path: '/notifications',
+                redirectTo: '/',
+                isAuthenticated: false
+              });
+              return <Navigate to="/" replace />;
+            })()
+        } 
+      />
+      
+      {/* Test Notifications Page */}
+      <Route 
+        path="/test-notifications" 
+        element={
+          isAuthenticated ? 
+            <TestNotificationsPage /> : 
+            (() => {
+              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                path: '/test-notifications',
                 redirectTo: '/',
                 isAuthenticated: false
               });

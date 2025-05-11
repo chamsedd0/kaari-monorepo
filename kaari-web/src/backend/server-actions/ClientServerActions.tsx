@@ -11,6 +11,7 @@ import {
 } from '../firebase/firestore';
 import { getCurrentUserProfile } from '../firebase/auth';
 import { getRequestsByUser } from './RequestServerActions';
+import { advertiserNotifications, userNotifications } from '../../utils/notification-helpers';
 
 // Collection names
 const REQUESTS_COLLECTION = 'requests';
@@ -122,6 +123,37 @@ export async function createReservation(
       updatedAt: new Date()
     });
     
+    // Get property details for notification
+    const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, propertyId);
+    if (property) {
+      // Send notification to the property owner
+      const clientName = currentUser.name && currentUser.surname 
+        ? `${currentUser.name} ${currentUser.surname}` 
+        : currentUser.email || 'A client';
+        
+      // Create a reservation object for notification
+      const reservationForNotification = {
+        id: request.id,
+        propertyId,
+        propertyTitle: property.title || 'Property',
+        advertiserId: property.ownerId,
+        clientId: currentUser.id,
+        clientName,
+        status: 'pending'
+      };
+      
+      // Send notification to advertiser about new reservation request
+      try {
+        await advertiserNotifications.reservationRequest(
+          property.ownerId,
+          reservationForNotification as any
+        );
+      } catch (notifError) {
+        console.error('Error sending reservation notification:', notifError);
+        // Don't throw error, just log it (non-critical)
+      }
+    }
+    
     return request;
   } catch (error) {
     console.error('Error creating reservation:', error);
@@ -159,10 +191,10 @@ export async function cancelReservation(reservationId: string): Promise<boolean>
         updatedAt: new Date()
       });
     } else {
-    await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
+      await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
         status: 'cancellationUnderReview',
-      updatedAt: new Date()
-    });
+        updatedAt: new Date()
+      });
     }
     
     // Change property status back to 'available' when reservation is cancelled
@@ -172,6 +204,38 @@ export async function cancelReservation(reservationId: string): Promise<boolean>
         status: 'available',
         updatedAt: new Date()
       });
+    }
+    
+    // Get property details for notification
+    if (reservation.propertyId) {
+      const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
+      if (property) {
+        // Create a reservation object for notification
+        const clientName = currentUser.name && currentUser.surname 
+          ? `${currentUser.name} ${currentUser.surname}` 
+          : currentUser.email || 'A client';
+          
+        const reservationForNotification = {
+          id: reservationId,
+          propertyId: reservation.propertyId,
+          propertyTitle: property.title || 'Property',
+          advertiserId: property.ownerId,
+          clientId: currentUser.id,
+          clientName,
+          status: reservation.status
+        };
+        
+        // Send notification to the advertiser about the cancellation
+        try {
+          await advertiserNotifications.reservationCancelled(
+            property.ownerId,
+            reservationForNotification as any
+          );
+        } catch (notifError) {
+          console.error('Error sending cancellation notification:', notifError);
+          // Don't throw error, just log it (non-critical)
+        }
+      }
     }
     
     return true;
@@ -360,6 +424,33 @@ export async function processCancellation(
       });
     }
     
+    // Send notification to the client about cancellation request decision
+    try {
+      if (reservation.propertyId) {
+        const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
+        if (property) {
+          // Create reservation object for notification
+          const reservationData = {
+            id: reservationId,
+            propertyId: reservation.propertyId,
+            propertyTitle: property.title || 'Property',
+            status: approved ? 'cancelled' : previousStatus
+          };
+          
+          // Send notification to the client
+          await userNotifications.cancellationRequestHandled(
+            reservation.userId,
+            reservationData as any,
+            approved,
+            adminNotes || (approved ? 'Your cancellation was approved' : 'Your cancellation was not approved')
+          );
+        }
+      }
+    } catch (notifError) {
+      console.error('Error sending cancellation handling notification:', notifError);
+      // Don't throw error, just log it (non-critical)
+    }
+    
     return true;
   } catch (error) {
     console.error('Error processing cancellation:', error);
@@ -468,4 +559,73 @@ async function getSavedProperties(): Promise<any[]> {
   ]);
   
   return savedProperties;
+}
+
+/**
+ * Complete a reservation (move in)
+ */
+export async function completeReservation(reservationId: string): Promise<boolean> {
+  try {
+    // Check if user is authenticated
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Get the reservation
+    const reservation = await getDocumentById<Request>(REQUESTS_COLLECTION, reservationId);
+    if (!reservation) {
+      throw new Error('Reservation not found');
+    }
+    
+    // Verify that the reservation belongs to the current user
+    if (reservation.userId !== currentUser.id) {
+      throw new Error('Not authorized to complete this reservation');
+    }
+    
+    // Update the reservation status to "movedIn" with "moved_in" flag and timestamp
+    await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
+      status: 'movedIn',
+      movedIn: true,
+      movedInAt: new Date(),
+      updatedAt: new Date()
+    });
+    
+    // Get property details for notification
+    if (reservation.propertyId) {
+      const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
+      if (property) {
+        // Create a reservation object for notification
+        const clientName = currentUser.name && currentUser.surname 
+          ? `${currentUser.name} ${currentUser.surname}` 
+          : currentUser.email || 'A client';
+          
+        const reservationForNotification = {
+          id: reservationId,
+          propertyId: reservation.propertyId,
+          propertyTitle: property.title || 'Property',
+          advertiserId: property.ownerId,
+          clientId: currentUser.id,
+          clientName,
+          status: 'movedIn'
+        };
+        
+        // Send notification to the advertiser about move-in
+        try {
+          await advertiserNotifications.clientMovedIn(
+            property.ownerId,
+            reservationForNotification as any
+          );
+        } catch (notifError) {
+          console.error('Error sending move-in notification:', notifError);
+          // Don't throw error, just log it (non-critical)
+        }
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error completing reservation:', error);
+    throw new Error('Failed to complete reservation');
+  }
 } 

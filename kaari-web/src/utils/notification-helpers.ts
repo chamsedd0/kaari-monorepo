@@ -15,6 +15,7 @@ export const createNewMessageNotification = async (
   senderName: string,
   conversationId: string
 ): Promise<string | undefined> => {
+  console.log(`createNewMessageNotification called for ${recipientType} ${recipientId} from ${senderName}`);
   try {
     return await NotificationService.createNotification(
       recipientId,
@@ -407,14 +408,15 @@ export const advertiserNotifications = {
     advertiserId: string, 
     booking: PhotoshootBooking
   ): Promise<string> => {
-    const title = 'Photoshoot Scheduled';
-    const message = `Your photoshoot for ${booking.propertyTitle} has been scheduled for ${booking.date.toLocaleDateString()}.`;
-    const link = `/dashboard/advertiser/photoshoots`;
+    console.log(`advertiserNotifications.photoshootBooked called for advertiser ${advertiserId}`);
+    const title = 'Photoshoot Booked';
+    const message = `A new photoshoot has been booked for ${booking.propertyTitle}.`;
+    const link = `/dashboard/advertiser/photoshoots/${booking.id}`;
     
     return NotificationService.createNotification(
       advertiserId,
       'advertiser',
-      'photoshoot_reminder',
+      'photoshoot_booked',
       title,
       message,
       link,
@@ -427,9 +429,11 @@ export const advertiserNotifications = {
     advertiserId: string,
     reservation: Reservation
   ): Promise<string> => {
+    console.log(`advertiserNotifications.reservationRequest called for advertiser ${advertiserId}`);
+    console.log('Reservation data:', JSON.stringify(reservation));
     const title = 'New Reservation Request';
-    const message = `${reservation.clientName} has requested to book ${reservation.propertyTitle} from ${reservation.startDate.toLocaleDateString()} to ${reservation.endDate.toLocaleDateString()}.`;
-    const link = `/dashboard/advertiser/reservations/${reservation.id}`;
+    const message = `${reservation.clientName} has requested to book ${reservation.propertyTitle}.`;
+    const link = `/dashboard/advertiser/reservations`;
     
     return NotificationService.createNotification(
       advertiserId,
@@ -447,6 +451,7 @@ export const advertiserNotifications = {
     advertiserId: string,
     reservation: Reservation
   ): Promise<string> => {
+    console.log(`advertiserNotifications.reservationCancelled called for advertiser ${advertiserId}`);
     const title = 'Reservation Cancelled';
     const message = `${reservation.clientName} has cancelled their reservation for ${reservation.propertyTitle}.`;
     const link = `/dashboard/advertiser/reservations`;
@@ -469,6 +474,7 @@ export const advertiserNotifications = {
     property: Property,
     client: User
   ): Promise<string> => {
+    console.log(`advertiserNotifications.paymentConfirmed called for advertiser ${advertiserId}`);
     const title = 'Payment Confirmed';
     const message = `Payment of ${payment.amount} ${payment.currency} has been confirmed for ${property.title} from ${client.name}.`;
     const link = `/dashboard/advertiser/financials`;
@@ -489,6 +495,7 @@ export const advertiserNotifications = {
     advertiserId: string,
     reservation: Reservation
   ): Promise<string> => {
+    console.log(`advertiserNotifications.clientMovedIn called for advertiser ${advertiserId}`);
     const title = 'Client Moved In';
     const message = `${reservation.clientName} has confirmed move-in for ${reservation.propertyTitle}.`;
     const link = `/dashboard/advertiser/reservations/${reservation.id}`;
@@ -536,6 +543,7 @@ export const userNotifications = {
     userId: string,
     reservation: Reservation
   ): Promise<string> => {
+    console.log(`userNotifications.reservationAccepted called for user ${userId}`);
     const title = 'Reservation Accepted';
     const message = `Your reservation for ${reservation.propertyTitle} has been accepted!`;
     const link = `/dashboard/user/reservations/${reservation.id}`;
@@ -557,6 +565,7 @@ export const userNotifications = {
     reservation: Reservation,
     reason?: string
   ): Promise<string> => {
+    console.log(`userNotifications.reservationRejected called for user ${userId}`);
     const title = 'Reservation Declined';
     const reasonText = reason ? ` Reason: ${reason}` : '';
     const message = `Your reservation for ${reservation.propertyTitle} has been declined.${reasonText}`;

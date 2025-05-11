@@ -7,6 +7,7 @@ import {
   updateDocument
 } from '../firebase/firestore';
 import { getCurrentUserProfile } from '../firebase/auth';
+import { advertiserNotifications, userNotifications } from '../../utils/notification-helpers';
 
 // Collection names
 const USERS_COLLECTION = 'users';
@@ -315,6 +316,48 @@ export async function processPayment(reservationId: string): Promise<boolean> {
       status: 'paid',
       updatedAt: new Date()
     });
+    
+    // Get property details for notification
+    if (reservation.propertyId) {
+      const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
+      if (property) {
+        const clientName = currentUser.name && currentUser.surname 
+          ? `${currentUser.name} ${currentUser.surname}` 
+          : currentUser.email || 'A client';
+          
+        // Create payment notification data
+        const paymentData = {
+          id: `payment-${reservationId}`,
+          amount: property.rent || 0,
+          currency: property.currency || 'USD',
+          status: 'paid',
+          reservationId
+        };
+        
+        const propertyData = {
+          id: property.id,
+          title: property.title || 'Property'
+        };
+        
+        const userData = {
+          id: currentUser.id,
+          name: clientName
+        };
+        
+        // Send notification to advertiser about payment confirmation
+        try {
+          await advertiserNotifications.paymentConfirmed(
+            property.ownerId,
+            paymentData as any,
+            propertyData as any,
+            userData as any
+          );
+        } catch (notifError) {
+          console.error('Error sending payment notification to advertiser:', notifError);
+          // Don't throw error, just log it (non-critical)
+        }
+      }
+    }
     
     return true;
   } catch (error) {

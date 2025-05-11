@@ -18,6 +18,7 @@ import {
   uploadMultipleFiles
 } from '../firebase/storage';
 import { getProperties } from './PropertyServerActions';
+import { userNotifications } from '../../utils/notification-helpers';
 
 // Collection names
 const USERS_COLLECTION = 'users';
@@ -553,9 +554,10 @@ export async function approveReservationRequest(requestId: string): Promise<bool
     
     // Verify that the request is for a property owned by this advertiser
     let isAuthorized = false;
+    let property = null;
     
     if (request.propertyId) {
-      const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, request.propertyId);
+      property = await getDocumentById<Property>(PROPERTIES_COLLECTION, request.propertyId);
       if (property && property.ownerId === currentUser.id) {
         isAuthorized = true;
       }
@@ -577,6 +579,28 @@ export async function approveReservationRequest(requestId: string): Promise<bool
         status: 'occupied',
         updatedAt: new Date()
       });
+    }
+    
+    // Send notification to client about approved reservation
+    try {
+      if (property) {
+        // Create reservation object for notification
+        const reservationData = {
+          id: request.id,
+          propertyId: request.propertyId,
+          propertyTitle: property.title || 'Property',
+          status: 'accepted'
+        };
+        
+        // Send notification to the client
+        await userNotifications.reservationAccepted(
+          request.userId,
+          reservationData as any
+        );
+      }
+    } catch (notifError) {
+      console.error('Error sending approval notification:', notifError);
+      // Don't throw error, just log it (non-critical)
     }
     
     return true;
@@ -608,9 +632,10 @@ export async function rejectReservationRequest(requestId: string): Promise<boole
     
     // Verify that the request is for a property owned by this advertiser
     let isAuthorized = false;
+    let property = null;
     
     if (request.propertyId) {
-      const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, request.propertyId);
+      property = await getDocumentById<Property>(PROPERTIES_COLLECTION, request.propertyId);
       if (property && property.ownerId === currentUser.id) {
         isAuthorized = true;
       }
@@ -632,6 +657,29 @@ export async function rejectReservationRequest(requestId: string): Promise<boole
         status: 'available',
         updatedAt: new Date()
       });
+    }
+    
+    // Send notification to client about rejected reservation
+    try {
+      if (property) {
+        // Create reservation object for notification
+        const reservationData = {
+          id: request.id,
+          propertyId: request.propertyId,
+          propertyTitle: property.title || 'Property',
+          status: 'rejected'
+        };
+        
+        // Send notification to the client
+        await userNotifications.reservationRejected(
+          request.userId,
+          reservationData as any,
+          'Your reservation request was not approved'
+        );
+      }
+    } catch (notifError) {
+      console.error('Error sending rejection notification:', notifError);
+      // Don't throw error, just log it (non-critical)
     }
     
     return true;
