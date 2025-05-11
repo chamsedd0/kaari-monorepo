@@ -1,31 +1,41 @@
 import { MessageBannerBaseModelStyle } from "../../../styles/banners/messages/message-banner-base-model-style";
+import React from "react";
 
-export const MessageBanner = ({
-  profileImage,
-  name,
-  time,
-  message,
-  unreadCount,
-}: {
+interface MessageBannerProps {
   profileImage: string;
   name: string;
-  time: string;
   message: string;
-  unreadCount: number;
+  time: string;
+  unreadCount?: number;
+  isActive?: boolean;
+}
+
+export const MessageBanner: React.FC<MessageBannerProps> = ({
+  profileImage,
+  name,
+  message,
+  time,
+  unreadCount = 0,
+  isActive = false
 }) => {
   return (
-    <MessageBannerBaseModelStyle>
-      <div className="content">
-        <img src={profileImage} alt={name} />
-        <div className="text">
-          <div className="name">
-            {name} <span>{time}</span>
+    <MessageBannerBaseModelStyle unread={unreadCount} className={isActive ? 'active' : ''}>
+      <div className="banner">
+        <img className="profile-image" src={profileImage} alt={name} />
+        <div className="content">
+          <div className="top-row">
+            <div className="name">{name}</div>
+            <div className="time">{time}</div>
           </div>
-          <div className="message">{message}</div>
+          <div className="bottom-row">
+            <div className="message">{message}</div>
+            {unreadCount > 0 && (
+              <div className="unread-indicator">
+                {unreadCount}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-      <div className="counter">
-        <span>{unreadCount}</span>
       </div>
     </MessageBannerBaseModelStyle>
   );

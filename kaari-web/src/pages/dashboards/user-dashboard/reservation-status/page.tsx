@@ -300,16 +300,29 @@ const ReservationStatusPage: React.FC = () => {
   
   // Function to handle 'Contact Advertiser' button
   const confirmContactAdvertiser = () => {
-    if (!reservation?.advertiser?.id) return;
+    if (!reservation?.advertiser?.id || !reservation?.advertiser?.name) {
+        toast.showToast('error', 'Cannot Contact', 'Advertiser details are missing.');
+        return;
+    }
     
+    const advertiserId = reservation.advertiser.id;
+    const advertiserName = reservation.advertiser.name;
+    const advertiserProfilePic = reservation.advertiser.profilePicture;
+
     setModalConfig({
       title: 'Contact Advertiser',
-      message: `Are you sure you want to contact ${reservation.advertiser.name}?`,
-      confirmText: 'Yes, Contact Now',
+      message: `Start a conversation with ${advertiserName}?`,
+      confirmText: 'Yes, Message Advertiser',
       cancelText: 'Not Now',
       onConfirm: () => {
-        // In a real implementation, this would open a chat with the advertiser or redirect to a message form
-        toast.showToast('info', 'Contact', 'Opening chat with advertiser');
+        // Navigate to the messages page, passing advertiser details as query parameters
+        const params = new URLSearchParams();
+        params.append('contactUserId', advertiserId);
+        params.append('contactUserName', advertiserName);
+        if (advertiserProfilePic) {
+            params.append('contactUserPic', advertiserProfilePic);
+        }
+        navigate(`/dashboard/user/messages?${params.toString()}`);
         setModalOpen(false);
       }
     });
