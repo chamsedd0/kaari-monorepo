@@ -7,7 +7,7 @@ export const MessagesPageStyle = styled.div`
     min-height: 100vh;
     width: 100%;
     position: relative;
-    
+
     .messages-page-layout {
         display: flex;
         height: calc(75vh - 70px);
@@ -59,23 +59,23 @@ export const MessagesPageStyle = styled.div`
                     transform: translateY(0);
                 }
             }
-        }
+    }
 
-        .conversations-list {
+    .conversations-list {
             background: white;
             border-radius: 12px;
             overflow-y: auto;
-            width: 280px;
+        width: 280px;
             height: 100%;
             flex-shrink: 0;
             transition: all 0.25s ease;
-            position: relative;
+        position: relative;
             border: ${Theme.borders.primary};
-            
-            &.collapsed {
-                width: 0;
-                padding: 0;
-                margin: 0;
+        
+        &.collapsed {
+            width: 0;
+            padding: 0;
+            margin: 0;
                 overflow: hidden;
                 opacity: 0;
             }
@@ -85,11 +85,11 @@ export const MessagesPageStyle = styled.div`
                 display: flex;
                 flex-direction: column;
                 height: 100%;
-                
-                .conversations-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
+
+    .conversations-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
                     padding: 25px 0px;
                     padding-top: 9px;
                     margin-bottom: 20px;
@@ -100,10 +100,10 @@ export const MessagesPageStyle = styled.div`
                         font-weight: 600;
                         color: #111827;
                         margin: 0;
-                    }
-                    
-                    .actions {
-                        display: flex;
+        }
+
+        .actions {
+            display: flex;
                         gap: 8px;
                         
                         .edit-button, .delete-button {
@@ -111,12 +111,12 @@ export const MessagesPageStyle = styled.div`
                             width: 32px;
                             height: 32px;
                             display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+                cursor: pointer;
                             transition: all 0.2s ease;
-                            
-                            &:hover {
+
+                &:hover {
                                 background: #f3f4f6;
                             }
                             
@@ -134,8 +134,8 @@ export const MessagesPageStyle = styled.div`
                 }
                 
                 .conversation-list {
-                    display: flex;
-                    flex-direction: column;
+        display: flex;
+        flex-direction: column;
                     gap: 8px;
                     overflow-y: auto;
                     flex: 1;
@@ -152,20 +152,20 @@ export const MessagesPageStyle = styled.div`
                     &::-webkit-scrollbar-thumb {
                         background-color: rgba(0, 0, 0, 0.2);
                         border-radius: 4px;
-                    }
-                }
-                
-                .conversation-item {
+        }
+    }
+
+    .conversation-item {
                     cursor: pointer;
                     border-radius: 8px;
                     transition: all 0.15s ease;
-                    
-                }
-                
+
+    }
+
                 .loading-state, .empty-state {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
                     height: 100%;
                     color: #6b7280;
                     font-size: 14px;
@@ -181,8 +181,8 @@ export const MessagesPageStyle = styled.div`
                         border: 2px solid #f3f4f6;
                         border-top: 2px solid #0057FF;
                         border-radius: 50%;
-                        width: 24px;
-                        height: 24px;
+            width: 24px;
+            height: 24px;
                         animation: spin 0.8s linear infinite;
                     }
                 }
@@ -199,22 +199,22 @@ export const MessagesPageStyle = styled.div`
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
                 }
-            }
         }
-        
-        .chat-area {
-            display: flex;
-            flex-direction: column;
+    }
+
+    .chat-area {
+        display: flex;
+        flex-direction: column;
             flex: 1;
             background: white;
             border-radius: 12px;
             overflow: hidden;
-            border: ${Theme.borders.primary};
+        border: ${Theme.borders.primary};
             transition: all 0.25s ease;
-            
-            .conversation-header-wrapper {
-                display: flex;
-                align-items: center;
+    
+    .conversation-header-wrapper {
+        display: flex;
+        align-items: center;
                 padding: 16px;
                 border-bottom: ${Theme.borders.primary};
                 background-color: white;
@@ -250,12 +250,12 @@ export const MessagesPageStyle = styled.div`
             }
             
             .messages-container {
-                flex: 1;
+        flex: 1;
                 padding: 20px;
-                overflow-y: auto;
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
                 min-height: 300px;
                 max-height: calc(100vh - 170px);
                 
@@ -274,7 +274,7 @@ export const MessagesPageStyle = styled.div`
                 }
                 
                 .messages-loading, .messages-empty {
-                    display: flex;
+        display: flex;
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
@@ -288,7 +288,7 @@ export const MessagesPageStyle = styled.div`
                     content: '';
                     width: 28px;
                     height: 28px;
-                    border-radius: 50%;
+            border-radius: 50%;
                     border: 2px solid #f3f4f6;
                     border-top: 2px solid #0057FF;
                     margin-bottom: 12px;

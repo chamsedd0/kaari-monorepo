@@ -358,4 +358,424 @@ export const createCancellationRequestHandledNotification = async (
   } catch (error) {
     console.error('Failed to create cancellation request handled notification:', error);
   }
+};
+
+interface Property {
+  id: string;
+  title: string;
+}
+
+interface User {
+  id: string;
+  name: string;
+}
+
+interface Reservation {
+  id: string;
+  propertyId: string;
+  propertyTitle: string;
+  startDate: Date;
+  endDate: Date;
+  clientId: string;
+  clientName: string;
+  advertiserId: string;
+  status: string;
+}
+
+interface Payment {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  reservationId: string;
+}
+
+interface PhotoshootBooking {
+  id: string;
+  date: Date;
+  propertyId: string;
+  propertyTitle: string;
+  advertiserId: string;
+}
+
+/**
+ * Notification helpers for advertisers
+ */
+export const advertiserNotifications = {
+  // Notify advertiser about new photoshoot booking
+  photoshootBooked: async (
+    advertiserId: string, 
+    booking: PhotoshootBooking
+  ): Promise<string> => {
+    const title = 'Photoshoot Scheduled';
+    const message = `Your photoshoot for ${booking.propertyTitle} has been scheduled for ${booking.date.toLocaleDateString()}.`;
+    const link = `/dashboard/advertiser/photoshoots`;
+    
+    return NotificationService.createNotification(
+      advertiserId,
+      'advertiser',
+      'photoshoot_reminder',
+      title,
+      message,
+      link,
+      { bookingId: booking.id, propertyId: booking.propertyId }
+    );
+  },
+  
+  // Notify advertiser about new reservation request
+  reservationRequest: async (
+    advertiserId: string,
+    reservation: Reservation
+  ): Promise<string> => {
+    const title = 'New Reservation Request';
+    const message = `${reservation.clientName} has requested to book ${reservation.propertyTitle} from ${reservation.startDate.toLocaleDateString()} to ${reservation.endDate.toLocaleDateString()}.`;
+    const link = `/dashboard/advertiser/reservations/${reservation.id}`;
+    
+    return NotificationService.createNotification(
+      advertiserId,
+      'advertiser',
+      'reservation_request',
+      title,
+      message,
+      link,
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
+    );
+  },
+  
+  // Notify advertiser about reservation cancellation
+  reservationCancelled: async (
+    advertiserId: string,
+    reservation: Reservation
+  ): Promise<string> => {
+    const title = 'Reservation Cancelled';
+    const message = `${reservation.clientName} has cancelled their reservation for ${reservation.propertyTitle}.`;
+    const link = `/dashboard/advertiser/reservations`;
+    
+    return NotificationService.createNotification(
+      advertiserId,
+      'advertiser',
+      'reservation_cancelled',
+      title,
+      message,
+      link,
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
+    );
+  },
+  
+  // Notify advertiser about payment confirmation
+  paymentConfirmed: async (
+    advertiserId: string,
+    payment: Payment,
+    property: Property,
+    client: User
+  ): Promise<string> => {
+    const title = 'Payment Confirmed';
+    const message = `Payment of ${payment.amount} ${payment.currency} has been confirmed for ${property.title} from ${client.name}.`;
+    const link = `/dashboard/advertiser/financials`;
+    
+    return NotificationService.createNotification(
+      advertiserId,
+      'advertiser',
+      'payment_confirmed',
+      title,
+      message,
+      link,
+      { paymentId: payment.id, propertyId: property.id, clientId: client.id }
+    );
+  },
+  
+  // Notify advertiser when client moves in
+  clientMovedIn: async (
+    advertiserId: string,
+    reservation: Reservation
+  ): Promise<string> => {
+    const title = 'Client Moved In';
+    const message = `${reservation.clientName} has confirmed move-in for ${reservation.propertyTitle}.`;
+    const link = `/dashboard/advertiser/reservations/${reservation.id}`;
+    
+    return NotificationService.createNotification(
+      advertiserId,
+      'advertiser',
+      'client_moved_in',
+      title,
+      message,
+      link,
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
+    );
+  },
+  
+  // Notify advertiser about new message
+  newMessage: async (
+    advertiserId: string,
+    senderId: string,
+    senderName: string,
+    conversationId: string
+  ): Promise<string> => {
+    const title = 'New Message';
+    const message = `You have received a new message from ${senderName}.`;
+    const link = `/dashboard/advertiser/messages/${conversationId}`;
+    
+    return NotificationService.createNotification(
+      advertiserId,
+      'advertiser',
+      'new_message',
+      title,
+      message,
+      link,
+      { conversationId, senderId }
+    );
+  }
+};
+
+/**
+ * Notification helpers for users/clients
+ */
+export const userNotifications = {
+  // Notify user when reservation is accepted
+  reservationAccepted: async (
+    userId: string,
+    reservation: Reservation
+  ): Promise<string> => {
+    const title = 'Reservation Accepted';
+    const message = `Your reservation for ${reservation.propertyTitle} has been accepted!`;
+    const link = `/dashboard/user/reservations/${reservation.id}`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'reservation_accepted',
+      title,
+      message,
+      link,
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
+    );
+  },
+  
+  // Notify user when reservation is rejected
+  reservationRejected: async (
+    userId: string,
+    reservation: Reservation,
+    reason?: string
+  ): Promise<string> => {
+    const title = 'Reservation Declined';
+    const reasonText = reason ? ` Reason: ${reason}` : '';
+    const message = `Your reservation for ${reservation.propertyTitle} has been declined.${reasonText}`;
+    const link = `/dashboard/user/reservations`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'reservation_rejected',
+      title,
+      message,
+      link,
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
+    );
+  },
+  
+  // Notify user when reservation is cancelled by advertiser
+  reservationCancelledByAdvertiser: async (
+    userId: string,
+    reservation: Reservation,
+    reason?: string
+  ): Promise<string> => {
+    const title = 'Reservation Cancelled';
+    const reasonText = reason ? ` Reason: ${reason}` : '';
+    const message = `Your reservation for ${reservation.propertyTitle} has been cancelled by the advertiser.${reasonText}`;
+    const link = `/dashboard/user/reservations`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'reservation_cancelled_by_advertiser',
+      title,
+      message,
+      link,
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
+    );
+  },
+  
+  // Notify user about payment reminder
+  paymentReminder: async (
+    userId: string,
+    reservation: Reservation,
+    dueDate: Date
+  ): Promise<string> => {
+    const title = 'Payment Reminder';
+    const message = `Your payment for ${reservation.propertyTitle} is due on ${dueDate.toLocaleDateString()}.`;
+    const link = `/dashboard/user/payments`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'payment_reminder',
+      title,
+      message,
+      link,
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
+    );
+  },
+  
+  // Notify user about reservation expiry
+  reservationExpired: async (
+    userId: string,
+    reservation: Reservation
+  ): Promise<string> => {
+    const title = 'Reservation Expired';
+    const message = `Your reservation request for ${reservation.propertyTitle} has expired without a response.`;
+    const link = `/dashboard/user/reservations`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'reservation_expired',
+      title,
+      message,
+      link,
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
+    );
+  },
+  
+  // Notify user about upcoming move-in
+  moveInReminder: async (
+    userId: string,
+    reservation: Reservation
+  ): Promise<string> => {
+    const title = 'Move-in Reminder';
+    const message = `Your move-in date for ${reservation.propertyTitle} is approaching (${reservation.startDate.toLocaleDateString()}).`;
+    const link = `/dashboard/user/reservations/${reservation.id}`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'move_in_reminder',
+      title,
+      message,
+      link,
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
+    );
+  },
+  
+  // Notify user about move-in confirmation
+  moveInConfirmation: async (
+    userId: string,
+    reservation: Reservation
+  ): Promise<string> => {
+    const title = 'Move-in Confirmed';
+    const message = `Your move-in for ${reservation.propertyTitle} has been confirmed.`;
+    const link = `/dashboard/user/reservations/${reservation.id}`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'move_in_confirmation',
+      title,
+      message,
+      link,
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
+    );
+  },
+  
+  // Notify user about refund request result
+  refundRequestHandled: async (
+    userId: string,
+    reservation: Reservation,
+    approved: boolean,
+    reason?: string
+  ): Promise<string> => {
+    const title = approved ? 'Refund Approved' : 'Refund Declined';
+    const reasonText = reason ? ` Reason: ${reason}` : '';
+    const message = approved
+      ? `Your refund request for ${reservation.propertyTitle} has been approved.${reasonText}`
+      : `Your refund request for ${reservation.propertyTitle} has been declined.${reasonText}`;
+    const link = `/dashboard/user/payments`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'refund_request_handled',
+      title,
+      message,
+      link,
+      { 
+        reservationId: reservation.id, 
+        propertyId: reservation.propertyId,
+        approved
+      }
+    );
+  },
+  
+  // Notify user about cancellation request result
+  cancellationRequestHandled: async (
+    userId: string,
+    reservation: Reservation,
+    approved: boolean,
+    reason?: string
+  ): Promise<string> => {
+    const title = approved ? 'Cancellation Approved' : 'Cancellation Declined';
+    const reasonText = reason ? ` Reason: ${reason}` : '';
+    const message = approved
+      ? `Your cancellation request for ${reservation.propertyTitle} has been approved.${reasonText}`
+      : `Your cancellation request for ${reservation.propertyTitle} has been declined.${reasonText}`;
+    const link = `/dashboard/user/reservations`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'cancellation_request_handled',
+      title,
+      message,
+      link,
+      { 
+        reservationId: reservation.id, 
+        propertyId: reservation.propertyId,
+        approved
+      }
+    );
+  },
+  
+  // Notify user about new message
+  newMessage: async (
+    userId: string,
+    senderId: string,
+    senderName: string,
+    conversationId: string
+  ): Promise<string> => {
+    const title = 'New Message';
+    const message = `You have received a new message from ${senderName}.`;
+    const link = `/dashboard/user/messages/${conversationId}`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'new_message',
+      title,
+      message,
+      link,
+      { conversationId, senderId }
+    );
+  }
+};
+
+/**
+ * Create a generic notification
+ */
+export const createCustomNotification = async (
+  userId: string,
+  userType: 'user' | 'advertiser' | 'admin',
+  type: NotificationType,
+  title: string,
+  message: string,
+  link?: string,
+  metadata?: Record<string, any>
+): Promise<string> => {
+  return NotificationService.createNotification(
+    userId,
+    userType,
+    type,
+    title,
+    message,
+    link,
+    metadata
+  );
 }; 

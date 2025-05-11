@@ -881,9 +881,9 @@ const MessagesPage: React.FC = () => {
               <div className="empty-state">{t('messages.no_conversations')}</div>
             ) : (
               <div className="conversation-list">
-                {conversations.map(conversation => (
+            {conversations.map(conversation => (
                   <RealConversationBanner
-                    key={conversation.id} 
+                key={conversation.id} 
                     conversation={conversation}
                     currentUser={currentUser}
                     isActive={activeConversation?.id === conversation.id}
@@ -917,9 +917,9 @@ const MessagesPage: React.FC = () => {
                   <div className="messages-empty">{t('messages.no_messages')}</div>
                 ) : (
                   <>
-                    {messages.map(message => (
+            {messages.map(message => (
                       <MessageBubble
-                        key={message.id}
+                key={message.id} 
                         variant={message.senderId === currentUser?.id ? "secondary" : "primary"}
                         message={message.text}
                         timestamp={formatMessageTime(message.timestamp)}
@@ -929,7 +929,7 @@ const MessagesPage: React.FC = () => {
                       />
                     ))}
                     {otherUserTyping && (
-                      <MessageBubble
+                  <MessageBubble 
                         key="typing-indicator"
                         variant="primary"
                         message=""
@@ -952,7 +952,7 @@ const MessagesPage: React.FC = () => {
             <div className="no-conversation-selected">
               <h3>{t('messages.no_conversation_selected')}</h3>
               <p>{t('messages.select_conversation')}</p>
-            </div>
+          </div>
           )}
         </div>
       </div>

@@ -1038,19 +1038,19 @@ const MessagesPage: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className={`conversations-list ${isPanelCollapsed ? 'collapsed' : ''}`}>
-              <div className="conversations-list-content">
-                <div className="conversations-header">
-                  <h2>{t('messages.title')}</h2>
-                  <div className="actions">
+        <div className={`conversations-list ${isPanelCollapsed ? 'collapsed' : ''}`}>
+          <div className="conversations-list-content">
+            <div className="conversations-header">
+              <h2>{t('messages.title')}</h2>
+              <div className="actions">
                     <div className="edit-button" onClick={handleNewChat}>
                       <img src={EditIcon} alt={t('messages.new_chat')} />
-                    </div>
-                    <div className="delete-button">
-                      <img src={DeleteIcon} alt={t('messages.delete')} />
-                    </div>
-                  </div>
                 </div>
+                <div className="delete-button">
+                  <img src={DeleteIcon} alt={t('messages.delete')} />
+                </div>
+              </div>
+            </div>
                 
                 {loadingConversations ? (
                   <div className="loading-state">{t('messages.loading_conversations')}</div>
@@ -1058,9 +1058,9 @@ const MessagesPage: React.FC = () => {
                   <div className="empty-state">{t('messages.no_conversations')}</div>
                 ) : (
                   <div className="conversation-list">
-                    {conversations.map(conversation => (
+            {conversations.map(conversation => (
                       <RealConversationBanner
-                        key={conversation.id} 
+                key={conversation.id} 
                         conversation={conversation}
                         currentUser={currentUser}
                         isActive={activeConversation?.id === conversation.id}
@@ -1069,10 +1069,10 @@ const MessagesPage: React.FC = () => {
                     ))}
                   </div>
                 )}
-              </div>
-            </div>
-            
-            <div className="chat-area">
+          </div>
+        </div>
+
+        <div className="chat-area">
               {activeConversation ? (
                 <>
                   <MessageHeader 
@@ -1094,9 +1094,9 @@ const MessagesPage: React.FC = () => {
                       <div className="messages-empty">{t('messages.no_messages')}</div>
                     ) : (
                       <>
-                        {messages.map(message => (
+            {messages.map(message => (
                           <MessageBubble
-                            key={message.id}
+                key={message.id} 
                             variant={message.senderId === currentUser?.id ? "secondary" : "primary"}
                             message={message.text}
                             timestamp={formatMessageTime(message.timestamp)}
@@ -1129,9 +1129,9 @@ const MessagesPage: React.FC = () => {
                 <div className="no-conversation-selected">
                   <h3>{t('messages.no_conversation_selected')}</h3>
                   <p>{t('messages.select_conversation')}</p>
-                </div>
-              )}
-            </div>
+                  </div>
+                )}
+              </div>
           </>
         )}
       </div>
