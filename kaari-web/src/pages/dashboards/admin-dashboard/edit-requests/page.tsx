@@ -35,8 +35,8 @@ const EditRequestsPage: React.FC = () => {
       toast.error('Failed to load edit requests');
       } finally {
       setLoading(false);
-    }
-  };
+      }
+    };
 
   const handleApproveRequest = async (requestId: string) => {
     try {
@@ -78,7 +78,7 @@ const EditRequestsPage: React.FC = () => {
   return (
     <EditRequestsPageContainer>
       <h1>Property Edit Requests</h1>
-
+      
       <div className="filter-bar">
         <div className="search-box">
           <FaSearch />
@@ -176,7 +176,7 @@ const EditRequestsPage: React.FC = () => {
                       <li key={key}>
                         <strong>{key}:</strong> {JSON.stringify(value)}
                       </li>
-                    ))}
+                        ))}
                   </ul>
                     </div>
                   
@@ -214,7 +214,7 @@ const EditRequestsPage: React.FC = () => {
 
 const EditRequestsPageContainer = styled.div`
   padding: 2rem;
-
+  
   h1 {
     font: ${Theme.typography.fonts.h3};
     margin-bottom: 1.5rem;
@@ -323,7 +323,7 @@ const EditRequestsPageContainer = styled.div`
       to { transform: rotate(360deg); }
     }
   }
-
+  
   .error-state {
     text-align: center;
     padding: 2rem;
@@ -352,7 +352,7 @@ const EditRequestsPageContainer = styled.div`
     border-radius: ${Theme.borders.radius.lg};
     border: ${Theme.borders.primary};
   }
-
+  
   .requests-list {
     display: flex;
     flex-direction: column;
@@ -371,8 +371,8 @@ const EditRequestsPageContainer = styled.div`
         h3 {
           font: ${Theme.typography.fonts.mediumB};
           margin-bottom: 0.5rem;
-        }
-
+      }
+      
         .requester {
           color: ${Theme.colors.gray2};
           font: ${Theme.typography.fonts.smallM};
@@ -420,8 +420,8 @@ const EditRequestsPageContainer = styled.div`
             color: ${Theme.colors.gray2};
           }
         }
-      }
-
+          }
+          
       .request-actions {
         display: flex;
         flex-direction: column;
@@ -429,7 +429,7 @@ const EditRequestsPageContainer = styled.div`
         min-width: 120px;
 
         button {
-          display: flex;
+            display: flex;
           align-items: center;
           justify-content: center;
           gap: 0.5rem;
@@ -446,9 +446,9 @@ const EditRequestsPageContainer = styled.div`
             &:hover {
               background-color: ${Theme.colors.success};
               color: white;
-            }
           }
-
+        }
+        
           &.reject-button {
             background-color: ${Theme.colors.error}20;
             color: ${Theme.colors.error};

@@ -819,6 +819,26 @@ export const userNotifications = {
         currency: reservation.currency
       }
     );
+  },
+
+  // Notify user about payment expiration
+  paymentExpired: async (
+    userId: string,
+    reservation: Reservation
+  ): Promise<string> => {
+    const title = 'Payment Time Expired';
+    const message = `Your payment time for ${reservation.propertyTitle} has expired. The reservation has been cancelled.`;
+    const link = `/dashboard/user/reservations`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'payment_expired',
+      title,
+      message,
+      link,
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
+    );
   }
 };
 

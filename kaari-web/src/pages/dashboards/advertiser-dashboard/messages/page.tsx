@@ -463,7 +463,6 @@ const MessagesPage: React.FC = () => {
   // Add refs to track subscriptions
   const conversationsSubscribed = useRef<boolean>(false);
   const messagesSubscribed = useRef<boolean>(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   console.log("AdvertiserMessagesPage rendering, user:", authUser?.id, "currentUser:", currentUser?.id, "loadingConversations:", loadingConversations);
 
@@ -474,13 +473,37 @@ const MessagesPage: React.FC = () => {
   
   // Scroll to bottom of messages
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const messagesContainer = document.querySelector('.messages-container');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
   };
   
   // UseEffect for scrolling to bottom when messages change
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
+
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Only scroll if we should (new message or initial load)
+    if (shouldScrollToBottom) {
+      scrollToBottom();
+    }
+  }, [messages, shouldScrollToBottom]);
+
+  // Update scroll behavior when user scrolls
+  useEffect(() => {
+    const messagesContainer = document.querySelector('.messages-container');
+    if (!messagesContainer) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
+      // If user is near bottom (within 100px), enable auto-scroll
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShouldScrollToBottom(isNearBottom);
+    };
+
+    messagesContainer.addEventListener('scroll', handleScroll);
+    return () => messagesContainer.removeEventListener('scroll', handleScroll);
+  }, []);
   
   // Handle typing indicator updates
   useEffect(() => {
@@ -937,7 +960,6 @@ const MessagesPage: React.FC = () => {
                         isTyping={true}
                       />
                     )}
-                    <div ref={messagesEndRef} />
                   </>
                 )}
               </div>

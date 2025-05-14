@@ -7,7 +7,6 @@ export const MessagesPageStyle = styled.div`
     min-height: 100vh;
     width: 100%;
     position: relative;
-    background-color: #f7f9fc;
 
     .messages-page-layout {
         display: flex;

@@ -43,6 +43,7 @@ import {
   TermsPage,
   PrivacyPage
 } from './pages/static';
+import ExpirationService from './services/ExpirationService';
 
 function App() {
   // Use the global store for authentication
@@ -544,6 +545,16 @@ function App() {
       </ToastProvider>
     );
   };
+  
+  useEffect(() => {
+    // Start the expiration check service
+    ExpirationService.startExpirationCheck();
+
+    // Clean up on unmount
+    return () => {
+      ExpirationService.stopExpirationCheck();
+    };
+  }, []);
   
   return <Wrapper />;
 }

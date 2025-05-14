@@ -883,19 +883,98 @@ const CountdownTimer = ({ updatedAt }: CountdownTimerProps) => {
 const ReservationsPage: React.FC = () => {
   const navigate = useNavigate();
   const [reservations, setReservations] = useState<Reservation[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<string | null>(null);
   const [cancellingReservation, setCancellingReservation] = useState<string | null>(null);
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+
+  const getTimeRemaining = (updatedAt: Date | FirestoreTimestamp | string | undefined) => {
+    if (!updatedAt) return { hours: 0, minutes: 0, expired: true };
+    
+    try {
+      let updated: Date;
+      
+      if (updatedAt instanceof Date) {
+        updated = updatedAt;
+      } 
+      else if (typeof updatedAt === 'object' && 'seconds' in updatedAt && 'nanoseconds' in updatedAt) {
+        updated = new Date((updatedAt as FirestoreTimestamp).seconds * 1000);
+      }
+      else {
+        updated = new Date(updatedAt as string);
+      }
+      
+      if (isNaN(updated.getTime())) {
+        console.error('Invalid date in getTimeRemaining:', updatedAt);
+        return { hours: 0, minutes: 0, expired: true };
+      }
+      
+      const now = new Date();
+      const deadline = new Date(updated.getTime() + 24 * 60 * 60 * 1000);
+      const diffMs = deadline.getTime() - now.getTime();
+      
+      if (diffMs <= 0) return { hours: 0, minutes: 0, expired: true };
+      
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      
+      return { hours, minutes, expired: false };
+    } catch (error) {
+      console.error('Error in getTimeRemaining:', error, updatedAt);
+      return { hours: 0, minutes: 0, expired: true };
+    }
+  };
+
+  const formatTimeRemaining = (updatedAt: Date | FirestoreTimestamp | string | undefined) => {
+    const { hours, minutes, expired } = getTimeRemaining(updatedAt);
+    
+    if (expired) return 'Time expired';
+    
+    return `${hours}h ${minutes}m remaining`;
+  };
+
+  const handleCancelReservation = async () => {
+    if (!selectedReservation) return;
+    
+    try {
+      setCancellingReservation(selectedReservation);
+      await cancelReservation(selectedReservation);
+      await loadReservations();
+      setShowCancelModal(false);
+    } catch (err: any) {
+      console.error('Error cancelling reservation:', err);
+      setError(err.message || 'Failed to cancel reservation');
+    } finally {
+      setCancellingReservation(null);
+    }
+  };
+  
+  const openCancelModal = (reservationId: string) => {
+    setSelectedReservation(reservationId);
+    setShowCancelModal(true);
+  };
+  
+  const closeCancelModal = () => {
+    setSelectedReservation(null);
+    setShowCancelModal(false);
+  };
   
   // Group reservations into latest and past
   const latestReservations = useMemo(() => {
     return reservations.filter(res => {
       const status = res.reservation.status;
+      
+      // If status is 'accepted', check if the timer has expired
+      if (status === 'accepted') {
+        const { expired } = getTimeRemaining(res.reservation.updatedAt);
+        // If timer has expired, don't include in latest
+        if (expired) return false;
+      }
+      
       return status === 'pending' || status === 'accepted' || status === 'paid' || 
              status === 'movedIn' || status === 'refundProcessing' ||
              status === 'cancellationUnderReview';
@@ -905,6 +984,14 @@ const ReservationsPage: React.FC = () => {
   const otherReservations = useMemo(() => {
     return reservations.filter(res => {
       const status = res.reservation.status;
+      
+      // If status is 'accepted', check if the timer has expired
+      if (status === 'accepted') {
+        const { expired } = getTimeRemaining(res.reservation.updatedAt);
+        // If timer has expired, include in other reservations
+        if (expired) return true;
+      }
+      
       return status === 'rejected' || status === 'cancelled' || 
              status === 'refundCompleted' || status === 'refundFailed';
     });
@@ -952,80 +1039,6 @@ const ReservationsPage: React.FC = () => {
   const closePaymentModal = () => {
     setSelectedReservation(null);
     setShowPaymentModal(false);
-  };
-  
-  const getTimeRemaining = (updatedAt: Date | FirestoreTimestamp | string | undefined) => {
-    if (!updatedAt) return { hours: 0, minutes: 0, expired: true };
-    
-    try {
-      let updated: Date;
-      
-      // Check if it's already a Date object
-      if (updatedAt instanceof Date) {
-        updated = updatedAt;
-      } 
-      // Check if it's a timestamp object with seconds and nanoseconds (Firestore timestamp)
-      else if (typeof updatedAt === 'object' && 'seconds' in updatedAt && 'nanoseconds' in updatedAt) {
-        updated = new Date((updatedAt as FirestoreTimestamp).seconds * 1000);
-      }
-      // Handle string or any other format
-      else {
-        updated = new Date(updatedAt as string);
-      }
-      
-      if (isNaN(updated.getTime())) {
-        console.error('Invalid date in getTimeRemaining:', updatedAt);
-        return { hours: 0, minutes: 0, expired: true };
-      }
-      
-      const now = new Date();
-      const deadline = new Date(updated.getTime() + 24 * 60 * 60 * 1000);
-      const diffMs = deadline.getTime() - now.getTime();
-      
-      if (diffMs <= 0) return { hours: 0, minutes: 0, expired: true };
-      
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      
-      return { hours, minutes, expired: false };
-    } catch (error) {
-      console.error('Error in getTimeRemaining:', error, updatedAt);
-      return { hours: 0, minutes: 0, expired: true };
-    }
-  };
-  
-  const formatTimeRemaining = (updatedAt: Date | FirestoreTimestamp | string | undefined) => {
-    const { hours, minutes, expired } = getTimeRemaining(updatedAt);
-    
-    if (expired) return 'Time expired';
-    
-    return `${hours}h ${minutes}m remaining`;
-        };
-        
-  const handleCancelReservation = async () => {
-    if (!selectedReservation) return;
-    
-    try {
-      setCancellingReservation(selectedReservation);
-      await cancelReservation(selectedReservation);
-      await loadReservations();
-      setShowCancelModal(false);
-    } catch (err: any) {
-      console.error('Error cancelling reservation:', err);
-      setError(err.message || 'Failed to cancel reservation');
-    } finally {
-      setCancellingReservation(null);
-    }
-  };
-  
-  const openCancelModal = (reservationId: string) => {
-    setSelectedReservation(reservationId);
-    setShowCancelModal(true);
-  };
-  
-  const closeCancelModal = () => {
-    setSelectedReservation(null);
-    setShowCancelModal(false);
   };
   
   const formatAddress = (address: any) => {
@@ -1351,7 +1364,7 @@ const ReservationsPage: React.FC = () => {
                   <td>
                     <button 
                       className="action-button"
-                      onClick={() => window.open(`/properties/${res.property?.id || res.reservation.propertyId || ''}`, '_blank')}
+                      onClick={() => navigate(`/dashboard/user/reservation-status?id=${res.reservation.id}`)}
                     >
                       Details
                     </button>

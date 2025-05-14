@@ -98,33 +98,29 @@ const getOrCreateConversation = async (
   try {
     console.log("Getting or creating conversation between", user1Id, "and", user2Id);
     
-    // First, check if a conversation already exists between these users
-    const q1 = query(
+    // Sort participant IDs to ensure consistent queries
+    const participants = [user1Id, user2Id].sort();
+    
+    // Create a compound query to find exact conversation
+    const q = query(
       collection(db, 'conversations'),
-      where('participants', 'array-contains', user1Id)
+      where('participants', '==', participants)
     );
     
-    const querySnapshot = await getDocs(q1);
-    let existingConversationId: string | null = null;
-    
-    querySnapshot.forEach(doc => {
-      const convData = doc.data() as Conversation;
-      if (convData.participants.includes(user2Id)) {
-        existingConversationId = doc.id;
-        console.log("Found existing conversation:", doc.id);
-      }
-    });
+    const querySnapshot = await getDocs(q);
     
     // If conversation exists, return its ID
-    if (existingConversationId) {
-      return existingConversationId;
+    if (!querySnapshot.empty) {
+      const existingConversation = querySnapshot.docs[0];
+      console.log("Found existing conversation:", existingConversation.id);
+      return existingConversation.id;
     }
     
     console.log("No existing conversation found, creating new one");
     
-    // Otherwise create a new conversation
+    // Create new conversation with sorted participants
     const newConversationRef = await addDoc(collection(db, 'conversations'), {
-      participants: [user1Id, user2Id],
+      participants,
       participantDetails: {
         [user1Id]: {
           name: user1Details.name,
@@ -137,7 +133,6 @@ const getOrCreateConversation = async (
       },
       lastMessage: "",
       lastMessageTimestamp: serverTimestamp(),
-      // Initialize unread counts to 0 for both users
       unreadCounts: {
         [user1Id]: 0,
         [user2Id]: 0
@@ -535,7 +530,6 @@ const MessagesPage: React.FC = () => {
   // Add a ref to track if we've already subscribed
   const conversationsSubscribed = useRef<boolean>(false);
   const messagesSubscribed = useRef<boolean>(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   console.log("MessagesPage rendering, user:", user?.id, "currentUser:", currentUser?.id, "loadingConversations:", loadingConversations);
   
@@ -978,13 +972,37 @@ const MessagesPage: React.FC = () => {
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const messagesContainer = document.querySelector('.messages-container');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
   };
 
   // UseEffect for scrolling to bottom when messages change
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
+
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Only scroll if we should (new message or initial load)
+    if (shouldScrollToBottom) {
+      scrollToBottom();
+    }
+  }, [messages, shouldScrollToBottom]);
+
+  // Update scroll behavior when user scrolls
+  useEffect(() => {
+    const messagesContainer = document.querySelector('.messages-container');
+    if (!messagesContainer) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
+      // If user is near bottom (within 100px), enable auto-scroll
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setShouldScrollToBottom(isNearBottom);
+    };
+
+    messagesContainer.addEventListener('scroll', handleScroll);
+    return () => messagesContainer.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleDeleteMessage = async (messageId: string) => {
     if (!activeConversation) return;
@@ -1114,7 +1132,6 @@ const MessagesPage: React.FC = () => {
                             isTyping={true}
                           />
                         )}
-                        <div ref={messagesEndRef} />
                       </>
                     )}
                   </div>

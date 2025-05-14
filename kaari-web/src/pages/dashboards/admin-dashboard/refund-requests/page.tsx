@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
 import { 
@@ -343,7 +343,7 @@ const ErrorState = styled.div`
     margin: 1rem auto;
 
     &:hover {
-      background-color: ${Theme.colors.secondaryDark};
+      background-color: ${Theme.colors.secondary};
     }
   }
 `;
@@ -369,42 +369,42 @@ const RefundRequests: React.FC = () => {
   const [processing, setProcessing] = useState<string | null>(null);
   const toast = useToastService();
   
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        console.log('Fetching refund requests...');
-        const data = await getRefundRequests();
-        console.log('Received refund requests:', data);
+  const fetchRefundRequests = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Fetching refund requests...');
+      const data = await getRefundRequests();
+      console.log('Received refund requests:', data);
+      
+      // Filter out any malformed data
+      const validRequests = data.filter(request => {
+        const isValid = 
+          request.id &&
+          request.userId &&
+          request.propertyId &&
+          typeof request.amount === 'number' &&
+          request.status;
         
-        // Filter out any malformed data
-        const validRequests = data.filter(request => {
-          const isValid = 
-            request.id &&
-            request.userId &&
-            request.propertyId &&
-            typeof request.amount === 'number' &&
-            request.status;
-          
-          if (!isValid) {
-            console.warn('Found invalid refund request:', request);
-          }
-          return isValid;
-        });
-        
-        setRefundRequests(validRequests);
-      } catch (err: any) {
-        console.error('Error fetching refund requests:', err);
-        setError(err.message || 'Failed to load refund requests');
-        setRefundRequests([]); // Clear any partial data
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+        if (!isValid) {
+          console.warn('Found invalid refund request:', request);
+        }
+        return isValid;
+      });
+      
+      setRefundRequests(validRequests);
+    } catch (err: any) {
+      console.error('Error fetching refund requests:', err);
+      setError(err.message || 'Failed to load refund requests');
+      setRefundRequests([]); // Clear any partial data
+    } finally {
+      setLoading(false);
+    }
   }, []);
+  
+  useEffect(() => {
+    fetchRefundRequests();
+  }, [fetchRefundRequests]);
   
   // Filter requests based on search term and status filter
   const filteredRequests = refundRequests.filter(request => {

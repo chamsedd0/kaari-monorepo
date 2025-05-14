@@ -9,7 +9,8 @@ import {
   where,
   getDocs,
   orderBy,
-  Timestamp
+  Timestamp,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '../backend/firebase/config';
 import { advertiserNotifications, userNotifications } from '../utils/notification-helpers';
@@ -19,10 +20,12 @@ export type ReservationStatus =
   | 'pending'
   | 'accepted'
   | 'rejected'
-  | 'cancelled_by_user'
-  | 'cancelled_by_advertiser'
-  | 'confirmed'
-  | 'completed'
+  | 'cancelled'
+  | 'paid'
+  | 'movedIn'
+  | 'refundComplete'
+  | 'refundFailed'
+  | 'cancellationUnderReview'
   | 'expired';
 
 // Define reservation interface
@@ -152,7 +155,7 @@ class ReservationService {
         status,
         updatedAt: Timestamp.now(),
         ...(status === 'rejected' ? { rejectionReason: reason } : {}),
-        ...(status === 'cancelled_by_advertiser' || status === 'cancelled_by_user' 
+        ...(status === 'cancelled' || status === 'cancellationUnderReview' 
           ? { cancellationReason: reason } : {})
       });
       
@@ -189,7 +192,7 @@ class ReservationService {
           );
           break;
           
-        case 'cancelled_by_user':
+        case 'cancelled':
           // Notify advertiser that user cancelled
           await advertiserNotifications.reservationCancelled(
             reservation.advertiserId,
@@ -197,20 +200,51 @@ class ReservationService {
           );
           break;
           
-        case 'cancelled_by_advertiser':
-          // Notify user that advertiser cancelled
-          await userNotifications.reservationCancelledByAdvertiser(
+        case 'paid':
+          // Notify user about payment
+          await userNotifications.paymentConfirmed(
             reservation.clientId,
-            reservation as Reservation,
-            reason
+            reservation
+          );
+          break;
+          
+        case 'movedIn':
+          // Notify advertiser about move-in
+          await advertiserNotifications.clientMovedIn(
+            reservation.advertiserId,
+            reservation
+          );
+          break;
+          
+        case 'refundComplete':
+          // Notify user about refund
+          await userNotifications.refundComplete(
+            reservation.clientId,
+            reservation
+          );
+          break;
+          
+        case 'refundFailed':
+          // Notify user about refund failure
+          await userNotifications.refundFailed(
+            reservation.clientId,
+            reservation
+          );
+          break;
+          
+        case 'cancellationUnderReview':
+          // Notify advertiser about cancellation under review
+          await advertiserNotifications.cancellationUnderReview(
+            reservation.advertiserId,
+            reservation
           );
           break;
           
         case 'expired':
-          // Notify user that reservation request expired
+          // Notify user about reservation request expired
           await userNotifications.reservationExpired(
             reservation.clientId,
-            reservation as Reservation
+            reservation
           );
           break;
           
@@ -239,7 +273,7 @@ class ReservationService {
       // Update payment status
       await updateDoc(reservationRef, {
         paymentStatus: 'paid',
-        status: 'confirmed',
+        status: 'paid',
         updatedAt: Timestamp.now()
       });
       
@@ -342,7 +376,7 @@ class ReservationService {
         throw new Error('Reservation not found');
       }
       
-      if (reservation.status !== 'confirmed') {
+      if (reservation.status !== 'paid') {
         throw new Error('Reservation is not confirmed');
       }
       
@@ -405,7 +439,7 @@ class ReservationService {
       // Update reservation status based on approval
       if (approved) {
         await updateDoc(doc(db, this.collection, reservationId), {
-          status: 'cancelled_by_user',
+          status: 'cancelled',
           cancellationReason: reason,
           updatedAt: Timestamp.now()
         });
@@ -488,6 +522,66 @@ class ReservationService {
       })) as Reservation[];
     } catch (error) {
       console.error('Error getting property reservations:', error);
+      throw error;
+    }
+  }
+
+  // Check and handle expired reservations
+  async checkAndHandleExpiredReservations(): Promise<void> {
+    try {
+      const now = Timestamp.now();
+      const twentyFourHoursAgo = new Timestamp(
+        now.seconds - (24 * 60 * 60),
+        now.nanoseconds
+      );
+
+      // Query for reservations that might be expired
+      const q = query(
+        collection(db, this.collection),
+        where('status', 'in', ['pending', 'accepted']),
+        where('updatedAt', '<=', twentyFourHoursAgo)
+      );
+
+      const querySnapshot = await getDocs(q);
+      const batch = writeBatch(db);
+      let expiredCount = 0;
+
+      for (const doc of querySnapshot.docs) {
+        const reservation = { id: doc.id, ...doc.data() } as Reservation;
+        const reservationRef = doc.ref;
+
+        // Update the reservation status to expired
+        batch.update(reservationRef, {
+          status: 'expired',
+          updatedAt: now
+        });
+
+        // Send notification about expiration
+        try {
+          if (reservation.status === 'pending') {
+            await userNotifications.reservationExpired(
+              reservation.clientId,
+              reservation
+            );
+          } else if (reservation.status === 'accepted') {
+            await userNotifications.paymentExpired(
+              reservation.clientId,
+              reservation
+            );
+          }
+        } catch (notifError) {
+          console.error('Error sending expiration notification:', notifError);
+        }
+
+        expiredCount++;
+      }
+
+      if (expiredCount > 0) {
+        await batch.commit();
+        console.log(`Updated ${expiredCount} expired reservations`);
+      }
+    } catch (error) {
+      console.error('Error handling expired reservations:', error);
       throw error;
     }
   }
