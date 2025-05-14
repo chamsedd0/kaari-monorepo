@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { 
   FaHome, 
   FaCalendarAlt, 
@@ -51,54 +51,35 @@ import AdminControls from './admin-controls';
 import TeamsPage from './teams';
 import OverviewPage from './overview';
 import TestDataGenerator from './test-data-generator';
+import PropertyPage from './properties/page';
+import PropertyEditPage from './properties/[id]/edit/page';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [activePage, setActivePage] = useState<string>('overview');
-  
-  const user = useStore(state => state.user);
-  const logout = useStore(state => state.logout);
-  
-  // Helper function to get user initials for avatar
-  const getUserInitials = (): string => {
-    if (!user) return '';
-    
-    const firstName = user.name.charAt(0).toUpperCase();
-    const lastName = user.surname ? user.surname.charAt(0).toUpperCase() : '';
-    
-    return `${firstName}${lastName}`;
-  };
-  
-  // Update active page based on route
-  useEffect(() => {
-    const path = location.pathname.split('/').pop() || 'overview';
-    setActivePage(path);
-  }, [location]);
-  
-  // Navigation handler
+  const { user, signOut } = useStore();
+  const [activePage, setActivePage] = useState('overview');
+
   const handleNavigation = (page: string) => {
+    setActivePage(page);
     navigate(`/dashboard/admin/${page}`);
   };
-  
-  // Logout handler
+
   const handleLogout = async () => {
     try {
-      await logout();
-      navigate('/login'); // Redirect to login page after logout
+      await signOut();
+      navigate('/');
     } catch (error) {
-      console.error('Logout failed:', error);
-      alert('Logout failed. Please try again.');
+      console.error('Error signing out:', error);
     }
   };
-  
+
   return (
     <AdminDashboardContainer>
       <Sidebar>
         <SidebarHeader>
           <Logo>Admin Panel</Logo>
         </SidebarHeader>
-        
+
         <NavItem 
           $active={activePage === 'overview'} 
           onClick={() => handleNavigation('overview')}
@@ -166,19 +147,18 @@ const AdminDashboard: React.FC = () => {
           <FaSignOutAlt /> Logout
         </NavItem>
       </Sidebar>
-      
+
       <MainContent>
         <Header>
           <PageTitle>
-            Admin Dashboard
+            {activePage.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
           </PageTitle>
-          
           <UserInfo>
-            <Avatar>{getUserInitials()}</Avatar>
-            <UserName>{user?.displayName || user?.name || 'Admin User'}</UserName>
+            <Avatar src={user?.photoURL || '/default-avatar.png'} alt="User avatar" />
+            <UserName>{user?.displayName || 'Admin User'}</UserName>
           </UserInfo>
         </Header>
-        
+
         <Routes>
           <Route path="/" element={<Navigate to="overview" replace />} />
           <Route path="overview" element={<OverviewPage />} />
@@ -186,6 +166,8 @@ const AdminDashboard: React.FC = () => {
           <Route path="photoshoot-bookings/view/:id" element={<PhotoshootBookingDetail onUpdateBooking={() => {}} />} />
           <Route path="teams" element={<TeamsPage />} />
           <Route path="admin-controls" element={<AdminControls />} />
+          <Route path="properties" element={<PropertyPage />} />
+          <Route path="properties/edit/:id" element={<PropertyEditPage />} />
           <Route path="property-edit-requests" element={<PropertyEditRequests />} />
           <Route path="edit-requests/*" element={<EditRequests />} />
           <Route path="refund-requests/*" element={<RefundRequests />} />

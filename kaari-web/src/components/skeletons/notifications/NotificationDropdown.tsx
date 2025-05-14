@@ -5,9 +5,13 @@ import { useNotifications } from '../../../contexts/notifications/NotificationCo
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import NotificationItem from './NotificationItem';
+import { Notification } from '../../../types/Notification';
 
 interface NotificationDropdownProps {
+  notifications: Notification[];
   onClose: () => void;
+  onMarkAsRead: (notificationId: string) => Promise<void>;
+  onViewAll: () => void;
 }
 
 const DropdownWrapper = styled.div`
@@ -181,17 +185,12 @@ const Footer = styled.div`
   }
 `;
 
-const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onClose }) => {
-  const { notifications, unreadCount, markAllAsRead, loading } = useNotifications();
-  const navigate = useNavigate();
+const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ notifications, onClose, onMarkAsRead, onViewAll }) => {
+  const { unreadCount, loading } = useNotifications();
 
   const handleMarkAllAsRead = async () => {
-    await markAllAsRead();
-  };
-
-  const handleViewAllClick = () => {
-    navigate('/notifications');
-    onClose();
+    // Mark each notification as read
+    await Promise.all(notifications.map(notification => onMarkAsRead(notification.id)));
   };
 
   return (
@@ -232,7 +231,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ onClose }) 
       
       {notifications.length > 0 && (
         <Footer>
-          <button onClick={handleViewAllClick}>
+          <button onClick={onViewAll}>
             View all notifications
           </button>
         </Footer>

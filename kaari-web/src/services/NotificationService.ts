@@ -32,7 +32,7 @@ class NotificationService {
     metadata?: Record<string, any>
   ): Promise<string> {
     console.log(`NotificationService: Creating notification for ${userType} ${userId}`);
-    console.log(`NotificationService: Notification type: ${type}, title: ${title}`);
+    console.log(`NotificationService: Type: ${type}, Title: ${title}`);
     
     if (!userId) {
       console.error('Error creating notification: userId is required');
@@ -45,44 +45,48 @@ class NotificationService {
     }
     
     try {
+      // Create timestamp as a regular JavaScript Date
+      const timestamp = new Date();
+      console.log(`NotificationService: Using timestamp: ${timestamp.toISOString()}`);
+      
+      // Prepare notification data with explicit Date object
       const notificationData = {
         userId,
         userType,
         type,
         title,
         message,
-        timestamp: serverTimestamp(),
+        timestamp, // Use regular Date object
         isRead: false,
-        link,
-        metadata
+        link: link || '',
+        metadata: metadata || {}
       };
 
-      console.log(`NotificationService: Notification data prepared:`, notificationData);
-      console.log(`NotificationService: Attempting to add document to collection '${this.collection}'`);
-
+      console.log(`NotificationService: Adding notification data:`, 
+        JSON.stringify({
+          ...notificationData,
+          timestamp: timestamp.toISOString() // Convert Date to string for logging
+        }, null, 2)
+      );
+      
+      // Using simple try-catch for direct debugging
       try {
-        // Create a reference to the collection
+        // Get a reference to the collection
         const notificationsCollection = collection(db, this.collection);
-        console.log(`NotificationService: Collection reference created`);
         
-        // Try to add the document
+        // Add the document with all fields
         const docRef = await addDoc(notificationsCollection, notificationData);
-        console.log(`NotificationService: Document successfully added with ID: ${docRef.id}`);
         
+        console.log(`NotificationService: SUCCESS! Notification created with ID: ${docRef.id}`);
+        
+        // Return the document ID
         return docRef.id;
       } catch (innerError) {
-        console.error('Error in Firestore addDoc operation:', innerError);
-        // Check for permission error
-        if (innerError instanceof Error && 
-            (innerError.message.includes('permission-denied') || 
-             innerError.message.includes('PERMISSION_DENIED'))) {
-          console.error('Firestore permission denied error. Check security rules for notifications collection.');
-          throw new Error(`Permission denied creating notification. Check security rules for the '${this.collection}' collection.`);
-        }
+        console.error('NotificationService: ERROR in Firestore addDoc operation', innerError);
         throw innerError;
       }
     } catch (error) {
-      console.error('Error creating notification:', error);
+      console.error('NotificationService: OUTER ERROR', error);
       throw error;
     }
   }
@@ -91,7 +95,7 @@ class NotificationService {
   async getNotifications(
     userId: string,
     userType: 'user' | 'advertiser' | 'admin',
-    limit = 20
+    limit2 = 20
   ): Promise<Notification[]> {
     try {
       const q = query(
@@ -99,7 +103,7 @@ class NotificationService {
         where('userId', '==', userId),
         where('userType', '==', userType),
         orderBy('timestamp', 'desc'),
-        limit(limit)
+        limit(limit2)
       );
 
       const querySnapshot = await getDocs(q);

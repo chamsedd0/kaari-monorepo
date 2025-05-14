@@ -6,7 +6,8 @@ import { FaCheck, FaTimes, FaEye } from 'react-icons/fa';
 import { 
   PropertyEditRequest, 
   getAllPendingEditRequests, 
-  updateEditRequestStatus 
+  updateEditRequestStatus,
+  approvePropertyEditRequest
 } from '../../../../backend/server-actions/PropertyEditRequestServerActions';
 
 const PropertyEditRequestsPage: React.FC = () => {
@@ -44,22 +45,24 @@ const PropertyEditRequestsPage: React.FC = () => {
       // Get the request before it's removed from state
       const request = editRequests.find(req => req.id === requestId);
       
-      await updateEditRequestStatus(requestId, 'approved', adminResponse);
-      
-      // Update local state
-      setEditRequests(editRequests.filter(req => req.id !== requestId));
-      setSelectedRequest(null);
-      setAdminResponse('');
-      
-      // Set success message
-      if (request) {
-        setSuccessMessage(
-          `Changes for "${request.propertyTitle}" have been approved and applied to the property. ${
-            request.additionalAmenities.length > 0 ? `${request.additionalAmenities.length} amenities updated.` : ''
-          } ${
-            request.features.length > 0 ? `${request.features.length} features updated.` : ''
-          }`
-        );
+      const result = await approvePropertyEditRequest(requestId);
+      if (result.success) {
+        // Navigate to the property edit page with the requested changes
+        navigate(`/dashboard/admin/properties/edit/${result.propertyId}`, {
+          state: { requestedChanges: result.requestedChanges }
+        });
+        
+        // Update local state
+        setEditRequests(editRequests.filter(req => req.id !== requestId));
+        setSelectedRequest(null);
+        setAdminResponse('');
+        
+        // Set success message
+        if (request) {
+          setSuccessMessage(
+            `Changes for "${request.propertyTitle}" have been approved. You will be redirected to edit the property.`
+          );
+        }
       }
     } catch (err) {
       setError('Failed to approve request. Please try again.');
@@ -84,7 +87,7 @@ const PropertyEditRequestsPage: React.FC = () => {
 
   // View property details
   const viewProperty = (propertyId: string) => {
-    navigate(`/properties/${propertyId}`);
+    navigate(`/dashboard/admin/properties/edit/${propertyId}`);
   };
 
   return (

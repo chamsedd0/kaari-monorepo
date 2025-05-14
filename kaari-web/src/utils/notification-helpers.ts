@@ -5,6 +5,7 @@ import {
 } from '../types/Notification';
 import NotificationService from '../services/NotificationService';
 import { User } from 'firebase/auth';
+import { Timestamp } from 'firebase/firestore';
 
 /**
  * Creates a notification for a new message
@@ -399,6 +400,17 @@ interface PhotoshootBooking {
   advertiserId: string;
 }
 
+// Helper function to convert Date to Timestamp if it's not already a Timestamp
+const ensureTimestamp = (date: Date | any): Timestamp => {
+  if (!date) return Timestamp.now();
+  if (date instanceof Timestamp) return date;
+  if (date.seconds && date.nanoseconds) return date; // Already a Firestore timestamp-like object
+  if (date instanceof Date) return Timestamp.fromDate(date);
+  if (typeof date === 'string') return Timestamp.fromDate(new Date(date));
+  if (typeof date === 'number') return Timestamp.fromDate(new Date(date));
+  return Timestamp.now(); // Fallback
+};
+
 /**
  * Notification helpers for advertisers
  */
@@ -435,6 +447,13 @@ export const advertiserNotifications = {
     const message = `${reservation.clientName} has requested to book ${reservation.propertyTitle}.`;
     const link = `/dashboard/advertiser/reservations`;
     
+    // Ensure dates are proper Timestamps
+    const reservationWithTimestamps = {
+      ...reservation,
+      startDate: ensureTimestamp(reservation.startDate),
+      endDate: ensureTimestamp(reservation.endDate)
+    };
+    
     return NotificationService.createNotification(
       advertiserId,
       'advertiser',
@@ -442,7 +461,11 @@ export const advertiserNotifications = {
       title,
       message,
       link,
-      { reservationId: reservation.id, propertyId: reservation.propertyId }
+      { 
+        reservationId: reservation.id, 
+        propertyId: reservation.propertyId,
+        clientId: reservation.clientId
+      }
     );
   },
   
@@ -762,6 +785,39 @@ export const userNotifications = {
       message,
       link,
       { conversationId, senderId }
+    );
+  },
+  
+  // Notify user when payment is confirmed
+  paymentConfirmation: async (
+    userId: string,
+    reservation: Reservation
+  ): Promise<string> => {
+    console.log(`userNotifications.paymentConfirmation called for user ${userId}`);
+    const title = 'Payment Confirmed';
+    const message = `Your payment for ${reservation.propertyTitle} has been confirmed. You're all set to move in!`;
+    const link = `/dashboard/user/reservations/${reservation.id}`;
+    
+    // Ensure dates are proper Timestamps
+    const reservationWithTimestamps = {
+      ...reservation,
+      startDate: ensureTimestamp(reservation.startDate),
+      endDate: ensureTimestamp(reservation.endDate)
+    };
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'payment_confirmation',
+      title,
+      message,
+      link,
+      { 
+        reservationId: reservation.id, 
+        propertyId: reservation.propertyId,
+        amount: reservation.totalPrice,
+        currency: reservation.currency
+      }
     );
   }
 };

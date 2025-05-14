@@ -139,18 +139,35 @@ export async function createReservation(
         advertiserId: property.ownerId,
         clientId: currentUser.id,
         clientName,
+        startDate: scheduledDate,
+        endDate: new Date(scheduledDate.getTime() + 86400000 * 30), // Default to 30 days
+        totalPrice: property.rent || 0,
+        currency: property.currency || 'USD',
         status: 'pending'
       };
       
-      // Send notification to advertiser about new reservation request
+      // Skip helpers and use direct notification
       try {
-        await advertiserNotifications.reservationRequest(
+        // Import NotificationService dynamically to avoid circular dependencies
+        const NotificationService = (await import('../../services/NotificationService')).default;
+        
+        // Send a direct notification to the advertiser
+        await NotificationService.createNotification(
           property.ownerId,
-          reservationForNotification as any
+          'advertiser',
+          'reservation_request',
+          'New Reservation Request',
+          `${clientName} has requested to book ${property.title || 'Property'}.`,
+          `/dashboard/advertiser/reservations`,
+          { 
+            reservationId: request.id, 
+            propertyId: propertyId
+          }
         );
+        
+        console.log(`Direct reservation notification sent to advertiser: ${property.ownerId}`);
       } catch (notifError) {
         console.error('Error sending reservation notification:', notifError);
-        // Don't throw error, just log it (non-critical)
       }
     }
     
@@ -600,25 +617,28 @@ export async function completeReservation(reservationId: string): Promise<boolea
           ? `${currentUser.name} ${currentUser.surname}` 
           : currentUser.email || 'A client';
           
-        const reservationForNotification = {
-          id: reservationId,
-          propertyId: reservation.propertyId,
-          propertyTitle: property.title || 'Property',
-          advertiserId: property.ownerId,
-          clientId: currentUser.id,
-          clientName,
-          status: 'movedIn'
-        };
-        
-        // Send notification to the advertiser about move-in
+        // Skip helpers and use direct notification
         try {
-          await advertiserNotifications.clientMovedIn(
+          // Import NotificationService dynamically to avoid circular dependencies
+          const NotificationService = (await import('../../services/NotificationService')).default;
+          
+          // Send a direct notification to the advertiser
+          await NotificationService.createNotification(
             property.ownerId,
-            reservationForNotification as any
+            'advertiser',
+            'client_moved_in',
+            'Tenant Has Moved In',
+            `${clientName} has confirmed they have moved into ${property.title || 'Property'}.`,
+            `/dashboard/advertiser/reservations`,
+            { 
+              reservationId: reservationId, 
+              propertyId: reservation.propertyId
+            }
           );
+          
+          console.log(`Direct move-in notification sent to advertiser: ${property.ownerId}`);
         } catch (notifError) {
           console.error('Error sending move-in notification:', notifError);
-          // Don't throw error, just log it (non-critical)
         }
       }
     }

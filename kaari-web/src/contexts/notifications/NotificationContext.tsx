@@ -32,6 +32,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Fetch notifications when user changes
   useEffect(() => {
     let unsubscribe: (() => void) | null = null;
+    let refreshInterval: NodeJS.Timeout | null = null;
 
     const initializeNotifications = async () => {
       setLoading(true);
@@ -41,17 +42,39 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           // Determine user type
           const userType = user.userType || 'user';
           
+          console.log(`Initializing notifications for ${userType} ${user.id}`);
+          
+          // Force an initial refresh of notifications
+          await refreshNotifications();
+          
           // Subscribe to notifications
-          unsubscribe = NotificationService.subscribeToNotifications(
-            user.id,
-            userType,
-            (updatedNotifications) => {
-              setNotifications(updatedNotifications);
-              const unreadNotifications = updatedNotifications.filter(n => !n.isRead);
-              setUnreadCount(unreadNotifications.length);
-              setLoading(false);
+          try {
+            unsubscribe = NotificationService.subscribeToNotifications(
+              user.id,
+              userType,
+              (updatedNotifications) => {
+                setNotifications(updatedNotifications);
+                const unreadNotifications = updatedNotifications.filter(n => !n.isRead);
+                setUnreadCount(unreadNotifications.length);
+                setLoading(false);
+                console.log(`Got ${updatedNotifications.length} notifications, ${unreadNotifications.length} unread`);
+              }
+            );
+          } catch (subscribeError) {
+            console.error('Error subscribing to notifications:', subscribeError);
+            // Silent failure, we'll use polling as fallback
+          }
+          
+          // Set up a fallback polling mechanism in case real-time updates fail
+          refreshInterval = setInterval(async () => {
+            try {
+              console.log('Polling for notifications...');
+              await refreshNotifications();
+            } catch (pollingError) {
+              console.error('Error in notification polling:', pollingError);
             }
-          );
+          }, 15000); // Poll every 15 seconds
+          
         } catch (error) {
           console.error('Error initializing notifications:', error);
           setLoading(false);
@@ -66,10 +89,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     initializeNotifications();
 
-    // Cleanup subscription on unmount or user change
+    // Cleanup subscription and polling on unmount or user change
     return () => {
       if (unsubscribe) {
         unsubscribe();
+      }
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
       }
     };
   }, [user]);
@@ -131,12 +157,22 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const refreshNotifications = async (): Promise<void> => {
     if (!user || !user.id) return;
     
-    setLoading(true);
     try {
+      console.log(`Manually refreshing notifications for ${user.userType || 'user'} ${user.id}`);
       const userType = user.userType || 'user';
+      
+      // Get debug info first
+      const debugInfo = await NotificationService.getNotificationsDebugInfo(user.id, userType);
+      console.log(`Notification debug info:`, debugInfo);
+      
+      // Then get the actual notifications
       const refreshedNotifications = await NotificationService.getNotifications(user.id, userType);
+      console.log(`Refreshed ${refreshedNotifications.length} notifications:`, 
+        refreshedNotifications.map(n => ({ id: n.id, title: n.title, type: n.type })));
+      
       setNotifications(refreshedNotifications);
       const unreadNotifications = refreshedNotifications.filter(n => !n.isRead);
+      console.log(`Found ${unreadNotifications.length} unread notifications`);
       setUnreadCount(unreadNotifications.length);
     } catch (error) {
       console.error('Error refreshing notifications:', error);

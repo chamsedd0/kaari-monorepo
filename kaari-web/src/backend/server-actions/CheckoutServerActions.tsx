@@ -325,36 +325,44 @@ export async function processPayment(reservationId: string): Promise<boolean> {
           ? `${currentUser.name} ${currentUser.surname}` 
           : currentUser.email || 'A client';
           
-        // Create payment notification data
-        const paymentData = {
-          id: `payment-${reservationId}`,
-          amount: property.rent || 0,
-          currency: property.currency || 'USD',
-          status: 'paid',
-          reservationId
-        };
-        
-        const propertyData = {
-          id: property.id,
-          title: property.title || 'Property'
-        };
-        
-        const userData = {
-          id: currentUser.id,
-          name: clientName
-        };
-        
-        // Send notification to advertiser about payment confirmation
+        // Send notification to the advertiser about the payment
         try {
-          await advertiserNotifications.paymentConfirmed(
+          // Import NotificationService dynamically to avoid circular dependencies
+          const NotificationService = (await import('../../services/NotificationService')).default;
+          
+          // Send a direct notification to the advertiser
+          await NotificationService.createNotification(
             property.ownerId,
-            paymentData as any,
-            propertyData as any,
-            userData as any
+            'advertiser',
+            'payment_confirmed',
+            'Reservation Payment Received',
+            `${clientName} has completed payment for their reservation at ${property.title || 'Property'}.`,
+            `/dashboard/advertiser/reservations`,
+            { 
+              reservationId: reservationId, 
+              propertyId: property.id,
+              status: 'paid'
+            }
           );
+          
+          // Also send a confirmation to the client
+          await NotificationService.createNotification(
+            currentUser.id,
+            'user',
+            'payment_confirmation',
+            'Payment Confirmed',
+            `Your payment for ${property.title || 'Property'} has been successfully processed.`,
+            `/dashboard/user/reservations`,
+            { 
+              reservationId: reservationId, 
+              propertyId: property.id,
+              status: 'paid'
+            }
+          );
+          
+          console.log(`Direct payment notifications sent to advertiser and client`);
         } catch (notifError) {
-          console.error('Error sending payment notification to advertiser:', notifError);
-          // Don't throw error, just log it (non-critical)
+          console.error('Error sending payment notification:', notifError);
         }
       }
     }

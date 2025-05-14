@@ -10,7 +10,11 @@ import {
   FaUserCircle,
   FaBuilding,
   FaCalendarAlt,
-  FaDollarSign
+  FaDollarSign,
+  FaExclamationCircle,
+  FaInbox,
+  FaSpinner,
+  FaSync
 } from 'react-icons/fa';
 import { useToastService } from '../../../../services/ToastService';
 import { getRefundRequests, approveRefundRequest, rejectRefundRequest, RefundRequest } from '../../../../backend/server-actions/AdminServerActions';
@@ -298,6 +302,63 @@ const RefundRequestsContainer = styled.div`
   }
 `;
 
+const LoadingState = styled.div`
+  text-align: center;
+  padding: 3rem;
+  color: ${Theme.colors.gray2};
+
+  .spinner {
+    animation: spin 1s linear infinite;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+`;
+
+const ErrorState = styled.div`
+  text-align: center;
+  padding: 3rem;
+  color: ${Theme.colors.error};
+
+  svg {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .retry-button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: ${Theme.borders.radius.sm};
+    background-color: ${Theme.colors.secondary};
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem auto;
+
+    &:hover {
+      background-color: ${Theme.colors.secondaryDark};
+    }
+  }
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 3rem;
+  color: ${Theme.colors.gray2};
+
+  svg {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+`;
+
 const RefundRequests: React.FC = () => {
   const [refundRequests, setRefundRequests] = useState<RefundRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -309,23 +370,41 @@ const RefundRequests: React.FC = () => {
   const toast = useToastService();
   
   useEffect(() => {
-    fetchRefundRequests();
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        console.log('Fetching refund requests...');
+        const data = await getRefundRequests();
+        console.log('Received refund requests:', data);
+        
+        // Filter out any malformed data
+        const validRequests = data.filter(request => {
+          const isValid = 
+            request.id &&
+            request.userId &&
+            request.propertyId &&
+            typeof request.amount === 'number' &&
+            request.status;
+          
+          if (!isValid) {
+            console.warn('Found invalid refund request:', request);
+          }
+          return isValid;
+        });
+        
+        setRefundRequests(validRequests);
+      } catch (err: any) {
+        console.error('Error fetching refund requests:', err);
+        setError(err.message || 'Failed to load refund requests');
+        setRefundRequests([]); // Clear any partial data
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
-  
-  const fetchRefundRequests = async () => {
-    try {
-      setLoading(true);
-      console.log('Fetching refund requests from server...');
-      const data = await getRefundRequests();
-      console.log('Received refund requests:', data);
-      setRefundRequests(data);
-    } catch (err: any) {
-      console.error('Error fetching refund requests:', err);
-      setError(err.message || 'Failed to load refund requests');
-    } finally {
-      setLoading(false);
-    }
-  };
   
   // Filter requests based on search term and status filter
   const filteredRequests = refundRequests.filter(request => {
@@ -541,7 +620,27 @@ const RefundRequests: React.FC = () => {
         </div>
       </div>
       
-      {filteredRequests.length > 0 ? (
+      {loading ? (
+        <div className="loading-state">
+          <FaSpinner className="spinner" />
+          <p>Loading refund requests...</p>
+        </div>
+      ) : error ? (
+        <div className="error-state">
+          <FaExclamationCircle />
+          <h3>Error Loading Requests</h3>
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()} className="retry-button">
+            <FaSync /> Retry
+          </button>
+        </div>
+      ) : filteredRequests.length === 0 ? (
+        <div className="empty-state">
+          <FaInbox />
+          <h3>No Refund Requests Found</h3>
+          <p>There are currently no refund requests matching your search criteria.</p>
+        </div>
+      ) : (
         <div className="requests-table">
           <table>
             <thead>
@@ -629,12 +728,6 @@ const RefundRequests: React.FC = () => {
               ))}
             </tbody>
           </table>
-        </div>
-      ) : (
-        <div className="empty-state">
-          <FaHourglassHalf />
-          <h3>No Refund Requests Found</h3>
-          <p>There are currently no refund requests matching your search criteria.</p>
         </div>
       )}
     </RefundRequestsContainer>

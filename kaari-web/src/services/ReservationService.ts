@@ -55,26 +55,57 @@ class ReservationService {
   // Create a new reservation
   async createReservation(reservationData: Omit<Reservation, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
+      if (!reservationData.advertiserId) {
+        console.error('Error: Missing advertiserId in reservation data');
+        throw new Error('advertiserId is required for reservation creation');
+      }
+
       const now = Timestamp.now();
+      
+      // Ensure dates are Timestamps
+      const startDate = reservationData.startDate instanceof Timestamp ? 
+        reservationData.startDate : 
+        Timestamp.fromDate(new Date(reservationData.startDate));
+        
+      const endDate = reservationData.endDate instanceof Timestamp ? 
+        reservationData.endDate : 
+        Timestamp.fromDate(new Date(reservationData.endDate));
+        
       const newReservation = {
         ...reservationData,
+        startDate,
+        endDate,
         status: 'pending' as ReservationStatus,
         createdAt: now,
         updatedAt: now,
       };
 
+      console.log(`Creating reservation with data:`, JSON.stringify({
+        advertiserId: newReservation.advertiserId,
+        clientId: newReservation.clientId,
+        propertyId: newReservation.propertyId,
+        status: newReservation.status
+      }));
+
       // Add to database
       const docRef = await addDoc(collection(db, this.collection), newReservation);
+      console.log(`Reservation created with ID: ${docRef.id}`);
       
       // Send notification to advertiser
-      await advertiserNotifications.reservationRequest(
-        reservationData.advertiserId,
-        {
-          id: docRef.id,
-          ...reservationData,
-          status: 'pending'
-        } as Reservation
-      );
+      try {
+        await advertiserNotifications.reservationRequest(
+          reservationData.advertiserId,
+          {
+            id: docRef.id,
+            ...reservationData,
+            status: 'pending'
+          } as Reservation
+        );
+        console.log(`Reservation notification sent to advertiser: ${reservationData.advertiserId}`);
+      } catch (notifError) {
+        console.error('Error sending reservation notification:', notifError);
+        // Don't throw this error as it's non-critical
+      }
       
       return docRef.id;
     } catch (error) {

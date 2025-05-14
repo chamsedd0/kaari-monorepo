@@ -285,6 +285,28 @@ const AuthModalContent = styled.div`
       }
     }
   }
+
+  .advertiser-toggle {
+    width: 100%;
+    background: none;
+    border: none;
+    color: ${Theme.colors.primary};
+    font-size: 14px;
+    padding: 12px;
+    margin-top: 16px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    font-weight: 500;
+
+    &:hover {
+      opacity: 0.8;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
 `;
 
 interface AuthModalProps {
@@ -309,7 +331,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [accountType, setAccountType] = useState<'client' | 'advertiser'>('client');
+  const [isAdvertiserMode, setIsAdvertiserMode] = useState(false);
   const [showNameField, setShowNameField] = useState(false);
   
   // Use auth context
@@ -341,6 +363,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setShowPassword(false);
       setShowNameField(false);
       setName('');
+      setPassword('');
+      setEmail('');
+      setIsAdvertiserMode(false);
       clearError?.();
     }
   }, [isOpen, clearError]);
@@ -363,7 +388,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       
       // If we've selected the advertiser account type, pass that to the Google sign-in
       // This works whether we're on the name field or just clicked the advertiser toggle
-      const isAdvertiserRegistration = accountType === 'advertiser';
+      const isAdvertiserRegistration = isAdvertiserMode;
       
       // Pass the account type when signing in with Google if we're in advertiser mode
       const result = await signInWithGooglePopup(
@@ -397,7 +422,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           errorText.includes('auth/email-already-in-use') || 
           errorText.includes('already exists') ||
           errorText.includes('existing account')) {
-        if (accountType === 'advertiser') {
+        if (isAdvertiserMode) {
           errorText = 'This email is already registered. Please use a different email to create an advertiser account.';
         } else {
           errorText = 'This email is already registered. Please sign in instead.';
@@ -414,8 +439,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleContinue = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleContinue = async (e?: React.FormEvent | React.MouseEvent) => {
+    if (e && 'preventDefault' in e) {
+      e.preventDefault();
+    }
     
     if (!email.trim()) {
       setErrorMessage('Please enter your email');
@@ -429,112 +456,125 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
     
-    // If password is not visible yet, just show the password field
+    // Show password field after email validation
     if (!showPassword) {
       setShowPassword(true);
       return;
     }
-    
+
+    // If password field is empty, just validate
     if (!password.trim()) {
       setErrorMessage('Please enter your password');
       return;
     }
-    
-    // Password strength check for new accounts
-    if (initialMode === 'register' || !showNameField) {
-      if (password.length < 8) {
-        setErrorMessage('Password should be at least 8 characters');
+
+    // For advertiser mode, always collect name for new registrations
+    if (isAdvertiserMode && !showNameField) {
+      try {
+        // Try to sign in first to check if account exists
+        const userCredential = await signIn(email, password, true); // true flag for check-only mode
+        
+        // If we get here and it's not an advertiser account, show error
+        if (!userCredential?.user?.isAdvertiser) {
+          setErrorMessage('This email is registered as a client account. Please use a different email for your advertiser account.');
+          return;
+        }
+        
+        // If it is an advertiser, let them sign in
+        if (onSuccess) onSuccess();
+        setEmail('');
+        setPassword('');
+        setShowPassword(false);
+        return;
+        
+      } catch (error: any) {
+        // If user not found, proceed to registration
+        if (error.message?.includes('user-not-found')) {
+          setShowNameField(true);
+          return;
+        }
+        // For other errors, show them
+        setErrorMessage(formatErrorMessage(error.message || String(error)));
         return;
       }
     }
-    
-    // If it's register mode or we've determined we need to register (account doesn't exist),
-    // and we haven't yet shown the name field, show it now
-    if ((initialMode === 'register' || showNameField) && !name.trim() && showPassword) {
-      setShowNameField(true);
+
+    // If in advertiser mode and name is required but empty
+    if (isAdvertiserMode && showNameField && !name.trim()) {
+      setErrorMessage('Please enter your full name');
       return;
     }
-    
-    setIsSubmitting(true);
-    setErrorMessage(null);
-    
-    try {
-      // Determine if we're signing in or signing up
-      if (showNameField) {
-        // This is a registration
-        await signUp(email, password, name, accountType); // Pass the account type when registering
-        // Show registration success toast - the AUTH_SIGNED_IN event will show login success
+
+    // Proceed with registration (we only get here for new advertiser registration)
+    if (isAdvertiserMode && showNameField) {
+      setIsSubmitting(true);
+      setErrorMessage(null);
+      
+      try {
+        await signUp(email, password, name, 'advertiser');
         toast.auth.registrationSuccess();
-      } else {
-        // This is a sign in attempt
+        
+        // If we get here, it means the registration was successful
+        if (onSuccess) onSuccess();
+        
+        // Clear fields for security
+        setEmail('');
+        setPassword('');
+        setName('');
+        setShowPassword(false);
+        setShowNameField(false);
+        
+      } catch (error: any) {
+        console.error('Auth error:', error);
+        setIsSubmitting(false);
+        
+        let errorText = error.message || String(error);
+        if (errorText.includes('email-already-in-use')) {
+          errorText = 'This email is already registered. Please use a different email for your advertiser account.';
+        }
+        
+        setErrorMessage(formatErrorMessage(errorText));
+        toast.auth.registrationError(errorText);
+      }
+      return;
+    }
+
+    // Regular sign in (non-advertiser mode)
+    if (!isAdvertiserMode) {
+      setIsSubmitting(true);
+      setErrorMessage(null);
+      
+      try {
         await signIn(email, password);
-        // Login success toast will be shown by the AUTH_SIGNED_IN event listener
-      }
-      
-      // If we get here, it means the operation was successful
-      if (onSuccess) onSuccess();
-      
-      // Clear fields for security
-      setEmail('');
-      setPassword('');
-      setName('');
-      setShowPassword(false);
-      setShowNameField(false);
-      
-    } catch (error: any) {
-      console.error('Auth error:', error);
-      setIsSubmitting(false);
-      
-      // Convert error to string for display
-      let errorCode = '';
-      let errorText = '';
-      
-      // Handle Firebase error objects which have a code property
-      if (error && typeof error === 'object') {
-        if (error.code) {
-          errorCode = error.code; // Save the error code for specific checks
-          errorText = error.message || String(error);
-        } else {
-          errorText = error.message || String(error);
-        }
-      } else {
-        errorText = String(error);
-      }
-      
-      // Special handling for specific error cases
-      if (errorCode === 'auth/email-already-in-use' || errorText.includes('auth/email-already-in-use')) {
-        if (showNameField && accountType === 'advertiser') {
-          // If trying to register as advertiser but email exists
-          setErrorMessage('This email is already registered. Please use a different email to create an advertiser account.');
-          return;
-        } else if (!showNameField) {
-          // If trying to sign in and the email exists, suggest signing in
-          setErrorMessage('An account with this email already exists. Please sign in instead.');
-          return;
-        }
-      } else if ((errorCode === 'auth/user-not-found' || errorText.includes('auth/user-not-found')) && !showNameField) {
-        // If trying to sign in but no account found, switch to registration mode
-        setShowNameField(true);
-        setErrorMessage('No account found with this email. Please complete registration.');
-        return;
-      }
-      
-      // For all other errors, just display the formatted message
-      setErrorMessage(errorText);
-      
-      // Show toast notification for the error
-      if (showNameField) {
-        toast.auth.registrationError(formatErrorMessage(errorText));
-      } else {
-        toast.auth.loginError(formatErrorMessage(errorText));
+        
+        // If we get here, it means the sign in was successful
+        if (onSuccess) onSuccess();
+        
+        // Clear fields for security
+        setEmail('');
+        setPassword('');
+        setShowPassword(false);
+        
+      } catch (error: any) {
+        console.error('Auth error:', error);
+        setIsSubmitting(false);
+        setErrorMessage(formatErrorMessage(error.message || String(error)));
+        toast.auth.loginError(formatErrorMessage(error.message || String(error)));
       }
     }
   };
-  
-  // Create a wrapper function to handle button clicks
-  const handleButtonClick = (e?: React.MouseEvent<HTMLButtonElement>) => {
-    if (e) e.preventDefault();
-    handleContinue({} as React.FormEvent);
+
+  const handleCancel = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    if (e && 'preventDefault' in e) {
+      e.preventDefault();
+    }
+    if (showNameField) {
+      setShowNameField(false);
+    } else {
+      setShowPassword(false);
+      setPassword('');
+    }
+    setErrorMessage(null);
   };
 
   const handleForgotPassword = () => {
@@ -584,9 +624,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   const getFormTitle = () => {
-    return showNameField 
-      ? `Register as ${accountType === 'advertiser' ? 'an Advertiser' : 'a Client'}` 
-      : "Sign in or Register";
+    if (isAdvertiserMode) {
+      return showNameField ? "Register as Advertiser" : "Advertiser Sign In";
+    }
+    return "Sign in";
+  };
+
+  // Create a wrapper function to handle button clicks
+  const handleButtonClick = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    if (showPassword && !password.trim()) {
+      handleCancel(e);
+    } else {
+      handleContinue(e);
+    }
+  };
+
+  const toggleAdvertiserMode = () => {
+    setIsAdvertiserMode(!isAdvertiserMode);
+    setShowPassword(false);
+    setShowNameField(false);
+    setPassword('');
+    setName('');
+    setErrorMessage(null);
   };
 
   return (
@@ -605,31 +664,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <img src={Logo} alt="Kaari Logo" />
           </div>
           
-          {showNameField && (
-            <div className="account-type-toggle">
-              <div className={`slider ${accountType === 'advertiser' ? 'advertiser' : ''}`}></div>
-              <button 
-                type="button"
-                className={`toggle-button ${accountType === 'client' ? 'active' : ''}`}
-                onClick={() => setAccountType('client')}
-                aria-pressed={accountType === 'client'}
-              >
-                <FaUser size={16} />
-                <span>Client</span>
-              </button>
-              <button 
-                type="button"
-                className={`toggle-button ${accountType === 'advertiser' ? 'active' : ''}`}
-                onClick={() => setAccountType('advertiser')}
-                aria-pressed={accountType === 'advertiser'}
-              >
-                <FaBuilding size={16} />
-                <span>Advertiser</span>
-              </button>
-            </div>
-          )}
-          
-          {showNameField && accountType === 'advertiser' && (
+          {isAdvertiserMode && showNameField && (
             <div className="advertiser-info">
               <h4>Register as Property Advertiser</h4>
               <p>You'll be able to list properties for rent and receive requests from clients.</p>
@@ -647,7 +682,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
           
           <form onSubmit={handleContinue}>
-            {showNameField && (
+            {isAdvertiserMode && showNameField && (
               <div className="form-group">
                 <label htmlFor="name">Full Name</label>
                 <input
@@ -696,14 +731,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
             )}
             
-            <PurpleButtonLB60
-              text={isSubmitting || loading ? "Please wait..." : showNameField ? "Register" : "Continue"}
-              onClick={handleButtonClick}
-              disabled={isSubmitting || loading}
-              aria-busy={isSubmitting || loading ? 'true' : 'false'}
-            />
-            
-            {!showNameField && (
+            {showPassword && (
               <div className="form-options">
                 <div className="remember-me">
                   <input
@@ -717,52 +745,66 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <label htmlFor="remember">Remember this device</label>
                 </div>
                 
-                {showPassword && (
-                  <div className="forgot-password">
-                    <button 
-                      type="button"
-                      onClick={handleForgotPassword} 
-                      className="forgot-link btn-reset"
-                      disabled={isSubmitting || loading}
-                      aria-label="Forgot password"
-                    >
-                      Forgot password?
-                    </button>
-                  </div>
-                )}
+                <div className="forgot-password">
+                  <button 
+                    type="button"
+                    onClick={handleForgotPassword} 
+                    className="forgot-link btn-reset"
+                    disabled={isSubmitting || loading}
+                    aria-label="Forgot password"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
               </div>
             )}
             
-            <div className="separator">
-              <span>or</span>
-            </div>
-            
-            <WhiteButtonLB60
+            <PurpleButtonLB60
               text={
-                <span className="google-button-content">
-                  <FaGoogle aria-hidden="true" /> 
-                  <span>Connect with Google</span>
-                </span>
+                isSubmitting || loading 
+                  ? "Please wait..." 
+                  : showPassword 
+                    ? password.trim() 
+                      ? isAdvertiserMode && !showNameField
+                        ? "Continue"
+                        : showNameField
+                          ? "Register"
+                          : "Log in"
+                      : "Cancel"
+                    : "Continue"
               }
-              onClick={handleGoogleSignIn}
+              onClick={handleButtonClick}
               disabled={isSubmitting || loading}
               aria-busy={isSubmitting || loading ? 'true' : 'false'}
             />
             
-            {!showNameField && (
-              <div className="advertiser-link" style={{ textAlign: 'center', marginTop: '20px' }}>
+            {!showPassword && (
+              <>
+                <div className="separator">
+                  <span>or</span>
+                </div>
+                
+                <WhiteButtonLB60
+                  text={
+                    <span className="google-button-content">
+                      <FaGoogle aria-hidden="true" /> 
+                      <span>Connect with Google</span>
+                    </span>
+                  }
+                  onClick={handleGoogleSignIn}
+                  disabled={isSubmitting || loading}
+                  aria-busy={isSubmitting || loading ? 'true' : 'false'}
+                />
+
                 <button 
-                  type="button" 
-                  className="btn-reset" 
-                  style={{ color: Theme.colors.primary, textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}
-                  onClick={() => {
-                    setShowNameField(true);
-                    setAccountType('advertiser');
-                  }}
+                  type="button"
+                  onClick={toggleAdvertiserMode}
+                  className="advertiser-toggle"
+                  disabled={isSubmitting || loading}
                 >
-                  Register as an advertiser
+                  {isAdvertiserMode ? "← Back to Regular Sign In" : "I am an Advertiser"}
                 </button>
-              </div>
+              </>
             )}
           </form>
         </AuthModalContent>
@@ -772,7 +814,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <ForgotPasswordModal
           isOpen={showForgotPassword}
           onClose={handleForgotPasswordClose}
-          loading={isSubmitting || loading}
           initialEmail={email}
         />
       )}

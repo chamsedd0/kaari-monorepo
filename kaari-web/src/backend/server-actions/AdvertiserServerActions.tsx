@@ -584,23 +584,28 @@ export async function approveReservationRequest(requestId: string): Promise<bool
     // Send notification to client about approved reservation
     try {
       if (property) {
-        // Create reservation object for notification
-        const reservationData = {
-          id: request.id,
-          propertyId: request.propertyId,
-          propertyTitle: property.title || 'Property',
-          status: 'accepted'
-        };
+        // Import NotificationService dynamically to avoid circular dependencies
+        const NotificationService = (await import('../../services/NotificationService')).default;
         
-        // Send notification to the client
-        await userNotifications.reservationAccepted(
+        // Send a direct notification to the client
+        await NotificationService.createNotification(
           request.userId,
-          reservationData as any
+          'user',
+          'reservation_accepted',
+          'Reservation Request Accepted',
+          `Your reservation request for ${property.title || 'Property'} has been accepted. Please complete payment to secure your booking.`,
+          `/dashboard/user/reservations`,
+          { 
+            reservationId: request.id, 
+            propertyId: request.propertyId,
+            status: 'accepted'
+          }
         );
+        
+        console.log(`Direct acceptance notification sent to client: ${request.userId}`);
       }
-    } catch (notifError) {
-      console.error('Error sending approval notification:', notifError);
-      // Don't throw error, just log it (non-critical)
+    } catch (error) {
+      console.error('Error sending reservation accepted notification:', error);
     }
     
     return true;
@@ -662,24 +667,28 @@ export async function rejectReservationRequest(requestId: string): Promise<boole
     // Send notification to client about rejected reservation
     try {
       if (property) {
-        // Create reservation object for notification
-        const reservationData = {
-          id: request.id,
-          propertyId: request.propertyId,
-          propertyTitle: property.title || 'Property',
-          status: 'rejected'
-        };
+        // Import NotificationService dynamically to avoid circular dependencies
+        const NotificationService = (await import('../../services/NotificationService')).default;
         
-        // Send notification to the client
-        await userNotifications.reservationRejected(
+        // Send a direct notification to the client
+        await NotificationService.createNotification(
           request.userId,
-          reservationData as any,
-          'Your reservation request was not approved'
+          'user',
+          'reservation_rejected',
+          'Reservation Request Rejected',
+          `Your reservation request for ${property.title || 'Property'} has been rejected. You can try booking a different property.`,
+          `/dashboard/user/reservations`,
+          { 
+            reservationId: request.id, 
+            propertyId: request.propertyId,
+            status: 'rejected'
+          }
         );
+        
+        console.log(`Direct rejection notification sent to client: ${request.userId}`);
       }
-    } catch (notifError) {
-      console.error('Error sending rejection notification:', notifError);
-      // Don't throw error, just log it (non-critical)
+    } catch (error) {
+      console.error('Error sending reservation rejected notification:', error);
     }
     
     return true;

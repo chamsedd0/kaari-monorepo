@@ -189,4 +189,35 @@ export async function updateEditRequestStatus(
     console.error('Error updating edit request status:', error);
     throw new Error('Failed to update edit request status');
   }
-} 
+}
+
+export const approvePropertyEditRequest = async (requestId: string) => {
+  try {
+    const editRequest = await getDocumentById(PROPERTY_EDIT_REQUESTS_COLLECTION, requestId) as PropertyEditRequest;
+    if (!editRequest) {
+      throw new Error('Edit request not found');
+    }
+
+    // Create the requested changes object
+    const requestedChanges = {
+      amenities: editRequest.additionalAmenities || [],
+      features: editRequest.features || [],
+      additionalComments: editRequest.additionalComments
+    };
+
+    // Update the edit request status
+    await updateDocument(PROPERTY_EDIT_REQUESTS_COLLECTION, requestId, {
+      status: 'approved',
+      updatedAt: Date.now()
+    });
+
+    return {
+      success: true,
+      propertyId: editRequest.propertyId,
+      requestedChanges
+    };
+  } catch (error) {
+    console.error('Error approving property edit request:', error);
+    throw error;
+  }
+}; 

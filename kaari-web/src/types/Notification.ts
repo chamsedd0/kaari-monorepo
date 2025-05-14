@@ -30,6 +30,7 @@ export type ClientNotificationType =
   | 'reservation_rejected'
   | 'reservation_cancelled_by_advertiser'
   | 'payment_reminder'
+  | 'payment_confirmation'
   | 'reservation_expired'
   | 'move_in_reminder'
   | 'move_in_confirmation'

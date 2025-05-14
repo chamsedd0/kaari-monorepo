@@ -10,7 +10,11 @@ import {
   FaUserCircle,
   FaBuilding,
   FaCalendarAlt,
-  FaDollarSign
+  FaDollarSign,
+  FaExclamationCircle,
+  FaInbox,
+  FaSpinner,
+  FaSync
 } from 'react-icons/fa';
 import { useToastService } from '../../../../services/ToastService';
 import { getCancellationRequests, approveCancellationRequest, rejectCancellationRequest, CancellationRequest } from '../../../../backend/server-actions/AdminServerActions';
@@ -258,6 +262,63 @@ const CancellationRequestsContainer = styled.div`
   }
 `;
 
+const LoadingState = styled.div`
+  text-align: center;
+  padding: 3rem;
+  color: ${Theme.colors.gray2};
+
+  .spinner {
+    animation: spin 1s linear infinite;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+`;
+
+const ErrorState = styled.div`
+  text-align: center;
+  padding: 3rem;
+  color: ${Theme.colors.error};
+
+  svg {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .retry-button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: ${Theme.borders.radius.sm};
+    background-color: ${Theme.colors.secondary};
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem auto;
+
+    &:hover {
+      background-color: ${Theme.colors.secondaryDark};
+    }
+  }
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 3rem;
+  color: ${Theme.colors.gray2};
+
+  svg {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+`;
+
 const CancellationRequests: React.FC = () => {
   const [cancellationRequests, setCancellationRequests] = useState<CancellationRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -269,23 +330,41 @@ const CancellationRequests: React.FC = () => {
   const toast = useToastService();
   
   useEffect(() => {
-    fetchCancellationRequests();
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        console.log('Fetching cancellation requests...');
+        const data = await getCancellationRequests();
+        console.log('Received cancellation requests:', data);
+        
+        // Filter out any malformed data
+        const validRequests = data.filter(request => {
+          const isValid = 
+            request.id &&
+            request.userId &&
+            request.propertyId &&
+            typeof request.originalAmount === 'number' &&
+            request.status;
+          
+          if (!isValid) {
+            console.warn('Found invalid cancellation request:', request);
+          }
+          return isValid;
+        });
+        
+        setCancellationRequests(validRequests);
+      } catch (err: any) {
+        console.error('Error fetching cancellation requests:', err);
+        setError(err.message || 'Failed to load cancellation requests');
+        setCancellationRequests([]); // Clear any partial data
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
-  
-  const fetchCancellationRequests = async () => {
-    try {
-      setLoading(true);
-      console.log('Fetching cancellation requests from server...');
-      const data = await getCancellationRequests();
-      console.log('Received cancellation requests:', data);
-      setCancellationRequests(data);
-    } catch (err: any) {
-      console.error('Error fetching cancellation requests:', err);
-      setError(err.message || 'Failed to load cancellation requests');
-    } finally {
-      setLoading(false);
-    }
-  };
   
   // Filter requests based on search term and status filter
   const filteredRequests = cancellationRequests.filter(request => {
@@ -501,7 +580,27 @@ const CancellationRequests: React.FC = () => {
         </div>
       </div>
       
-      {filteredRequests.length > 0 ? (
+      {loading ? (
+        <div className="loading-state">
+          <FaSpinner className="spinner" />
+          <p>Loading cancellation requests...</p>
+        </div>
+      ) : error ? (
+        <div className="error-state">
+          <FaExclamationCircle />
+          <h3>Error Loading Requests</h3>
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()} className="retry-button">
+            <FaSync /> Retry
+          </button>
+        </div>
+      ) : filteredRequests.length === 0 ? (
+        <div className="empty-state">
+          <FaInbox />
+          <h3>No Cancellation Requests Found</h3>
+          <p>There are currently no cancellation requests matching your search criteria.</p>
+        </div>
+      ) : (
         <div className="requests-table">
           <table>
             <thead>
@@ -596,12 +695,6 @@ const CancellationRequests: React.FC = () => {
               ))}
             </tbody>
           </table>
-        </div>
-      ) : (
-        <div className="empty-state">
-          <FaHourglassHalf />
-          <h3>No Cancellation Requests Found</h3>
-          <p>There are currently no cancellation requests matching your search criteria.</p>
         </div>
       )}
     </CancellationRequestsContainer>
