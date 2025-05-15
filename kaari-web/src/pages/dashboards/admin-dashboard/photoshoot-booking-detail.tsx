@@ -53,11 +53,9 @@ interface PropertyFormData {
   bedrooms: number;
   bathrooms: number;
   area: number;
-  price: {
-    monthly: number;
+  price: number;
   deposit: number;
   serviceFee: number;
-  };
   minstay: string;
   availableFrom: string;
   images: string[];
@@ -95,37 +93,34 @@ const ROOM_TYPES = [
 
 // Common amenities and features
 const COMMON_AMENITIES = [
-  'Washing Machine',
-  'Dishwasher',
-  'Air Conditioning',
-  'Heating',
-  'TV',
-  'Internet',
-  'Microwave',
-  'Oven',
-  'Fridge',
-  'Coffee Machine',
-  'Kettle',
-  'Iron',
-  'Hair Dryer',
-  'Desk',
-  'Wardrobe',
-  'Balcony',
-  'Parking',
-  'Elevator',
-  'Security System',
-  'Intercom'
+  'sofabed',
+  'dining-table',
+  'wardrobe',
+  'cabinet',
+  'chair',
+  'desk',
+  'sofa',
+  'coffee-table',
+  'dresser',
+  'mirror',
+  'walk-in-closet',
+  'oven',
+  'washing-machine',
+  'hotplate-cooktop',
+  'water-heater',
+  'air-conditioning',
+  'heating',
+  'parking',
+  'elevator',
+  'security',
+  'gym',
+  'pool'
 ];
 
 const COMMON_FEATURES = [
-  'Water',
-  'Electricity',
-  'Gas',
-  'Internet/WiFi',
-  'Cable TV',
-  'Maintenance',
-  'Security',
-  'Cleaning Service'
+  'water',
+  'gas',
+  'electricity'
 ];
 
 // Common rules
@@ -518,11 +513,9 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     bedrooms: 0,
     bathrooms: 0,
     area: 0,
-    price: {
-      monthly: 0,
+    price: 0,
     deposit: 0,
-      serviceFee: 0
-    },
+    serviceFee: 0,
     minstay: '',
     availableFrom: '',
     images: [],
@@ -811,23 +804,21 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         bedrooms: 1,
         bathrooms: 1,
         area: 0,
-        price: {
-          monthly: 0,
+        price: 0,
         deposit: 0,
-          serviceFee: 0
-        },
+        serviceFee: 0,
         minstay: '',
         availableFrom: new Date().toISOString().split('T')[0],
         images: bookingData.images || [],
         amenities: [],
-        features: [],
+        features: COMMON_FEATURES,
         status: 'available',
           location: bookingData.location || null,
         rooms: [],
         isFurnished: false,
         capacity: 2,
-        rules: [...COMMON_RULES], // Use the common rules as defaults
-        nearbyPlaces: [...COMMON_NEARBY_PLACES], // Use the common nearby places as defaults
+        rules: [...COMMON_RULES],
+        nearbyPlaces: [...COMMON_NEARBY_PLACES],
       });
       
       // Load teams for assignment
@@ -1117,120 +1108,177 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   };
   
   const handleCompleteBooking = async () => {
-    console.clear(); // Clear previous console logs
-    console.log('Button clicked - Starting booking completion process');
+    console.clear();
+    console.log('=== STARTING PROPERTY CREATION ===');
+    
+    if (!booking || !bookingId) {
+      alert('No booking data available');
+      return;
+    }
+    
+    // Get owner ID from booking
+    const ownerId = booking.advertiserId || booking.userId;
+    if (!ownerId) {
+      alert('No owner ID found in booking');
+      return;
+    }
     
     try {
-      // Basic validation
-      if (!booking || !bookingId) {
-        throw new Error('No booking data available');
+    setLoading(true);
+    
+      // Collect all images from various sources to ensure none are missed
+      const allImages = [
+        ...(booking.images || []),
+        ...(propertyData.images || []),
+        ...(images || [])  // Include any images from the local images state
+      ].filter(Boolean); // Remove any null/undefined values
+      
+      console.log(`Total images collected: ${allImages.length}`);
+      console.log('Images:', allImages);
+      
+      if (allImages.length === 0) {
+        alert('Please add at least one image to the property');
+        setLoading(false);
+        return;
       }
-
-      if (!propertyData.title || !propertyData.description || !propertyData.address.street) {
-        throw new Error('Please fill in all required fields (title, description, and address)');
+      
+      // Upload any pending image files if needed
+      if (imageFiles.length > 0) {
+        console.log(`Uploading ${imageFiles.length} image files...`);
+        try {
+          const tempPropertyId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+          const basePath = `public/properties/${tempPropertyId}/images`;
+          
+          const uploadedUrls = await secureUploadMultipleFiles(
+            imageFiles,
+            basePath,
+            'property_'
+          );
+          
+          console.log(`Successfully uploaded ${uploadedUrls.length} files:`, uploadedUrls);
+          
+          // Add the newly uploaded images to our collection
+          allImages.push(...uploadedUrls);
+          
+          // Clear the image files
+          setImageFiles([]);
+        } catch (uploadError) {
+          console.error('Error uploading image files:', uploadError);
+          alert(`Error uploading images: ${uploadError instanceof Error ? uploadError.message : String(uploadError)}`);
+          // Continue with existing images
+        }
       }
-
-      const ownerId = booking.advertiserId || booking.userId;
-      if (!ownerId) {
-        throw new Error('No owner ID found in booking');
-      }
-
-      // Calculate total area and room counts
-      const totalArea = propertyData.rooms.reduce((total, room) => total + room.area, 0);
-      const bedroomsCount = propertyData.rooms.filter(room => room.type === 'bedroom').length;
-      const bathroomsCount = propertyData.rooms.filter(room => room.type === 'bathroom').length;
-
-      // Create the property document
+      
+      // Create the property in Firestore
       const propertiesRef = collection(db, 'properties');
       const newPropertyRef = doc(propertiesRef);
+      const propertyId = newPropertyRef.id;
       
-      // Prepare complete property data
-      const propertyToSave = {
-        // Basic Information
-        id: newPropertyRef.id,
+      // Create timestamp for Date objects
+      const now = new Date();
+      
+      // Ensure location data is properly prepared
+      const propertyLocation = propertyData.location || booking.location;
+      
+      // Format the availableFrom date as Date object
+      let availableFromDate: Date;
+      if (propertyData.availableFrom) {
+        // Convert from string to Date
+        availableFromDate = new Date(propertyData.availableFrom);
+      } else {
+        availableFromDate = new Date(); // Default to today
+      }
+      
+      console.log('Available from date:', availableFromDate);
+      
+      // Create a typed property object without location first (to satisfy TypeScript)
+      const propertyToSave: Omit<Property, 'location'> = {
+        id: propertyId,
         ownerId: ownerId,
-        title: propertyData.title,
-        description: propertyData.description,
-        propertyType: propertyData.propertyType || 'apartment',
-        status: propertyData.status || 'available',
-
-        // Address Information
+        title: propertyData.title || `Property in ${propertyData.address.city || ''}`,
+        description: propertyData.description || '',
         address: {
-          street: propertyData.address.street,
-          city: propertyData.address.city,
-          state: propertyData.address.state,
-          zipCode: propertyData.address.zipCode,
+          street: propertyData.address.street || '',
+          city: propertyData.address.city || '',
+          state: propertyData.address.state || '',
+          zipCode: propertyData.address.zipCode || '',
           country: propertyData.address.country || 'Morocco',
-          streetNumber: propertyData.address.streetNumber,
-          floor: propertyData.address.floor,
-          flat: propertyData.address.flat
         },
-
-        // Property Details
-        bedrooms: bedroomsCount || propertyData.bedrooms || 0,
-        bathrooms: bathroomsCount || propertyData.bathrooms || 0,
-        area: totalArea || propertyData.area || 0,
-        
-        // Price Information
-        price: {
-          monthly: propertyData.price.monthly || 0,
-          deposit: propertyData.price.deposit || 0,
-          serviceFee: propertyData.price.serviceFee || 0
-        },
-
-        // Additional Information
+        propertyType: (propertyData.propertyType as 'apartment' | 'house' | 'condo' | 'land' | 'commercial') || 'apartment',
+        bedrooms: propertyData.bedrooms || 0,
+        bathrooms: propertyData.bathrooms || 0,
+        area: propertyData.area || 0,
+        price: propertyData.price || 0,
+        deposit: propertyData.deposit || 0,
+        serviceFee: propertyData.serviceFee || 0,
         minstay: propertyData.minstay || '',
-        availableFrom: propertyData.availableFrom || new Date().toISOString().split('T')[0],
-        images: propertyData.images || [],
+        availableFrom: availableFromDate,
+        images: allImages,
         amenities: propertyData.amenities || [],
-        
-        // Features (included bills/utilities)
         features: propertyData.features || COMMON_FEATURES,
-
-        // Location
-        location: propertyData.location ? {
-          lat: propertyData.location.lat || 0,
-          lng: propertyData.location.lng || 0
-        } : null,
-
-        // Rooms Detail
+        status: 'available',
+        createdAt: now,
+        updatedAt: now,
         rooms: propertyData.rooms || [],
-        
-        // Additional Features
         isFurnished: propertyData.isFurnished || false,
         capacity: propertyData.capacity || 2,
-        
-        // Rules and Nearby Places
-        rules: propertyData.rules || [],
-        nearbyPlaces: propertyData.nearbyPlaces || [],
-
-        // Timestamps
-        createdAt: Timestamp.fromDate(new Date()),
-        updatedAt: Timestamp.fromDate(new Date())
+        rules: propertyData.rules || COMMON_RULES,
+        nearbyPlaces: propertyData.nearbyPlaces || COMMON_NEARBY_PLACES,
       };
-
-      console.log('Saving complete property data to Firestore:', propertyToSave);
+      
+      // Then create the Firestore data object with location added
+      const firestoreProperty = {
+        ...propertyToSave,
+        location: propertyLocation, // Add location here for Firestore
+        createdAt: Timestamp.fromDate(propertyToSave.createdAt),
+        updatedAt: Timestamp.fromDate(propertyToSave.updatedAt),
+        availableFrom: propertyToSave.availableFrom ? Timestamp.fromDate(propertyToSave.availableFrom) : null
+      };
+      
+      console.log('SAVING PROPERTY TO FIRESTORE WITH IMAGES:', propertyToSave.images);
+      console.log('Final property data with location:', firestoreProperty);
       
       // Save to Firestore
-      await setDoc(newPropertyRef, propertyToSave);
-      console.log('Property saved successfully with ID:', newPropertyRef.id);
-
-      // Update the booking
-      console.log('Updating booking...');
-      await PhotoshootBookingServerActions.completeBooking(bookingId, newPropertyRef.id, propertyData.images);
-      console.log('Booking updated successfully');
-
-      // Show success and close modal
-      alert('Property created and booking completed successfully!');
-      setShowCompleteModal(false);
+      await setDoc(newPropertyRef, firestoreProperty);
+      console.log(`Property created with ID: ${propertyId}`);
+      console.log(`Property has ${propertyToSave.images.length} images`);
       
-      // Refresh the page data
+      // Link property to user
+      try {
+        const userRef = doc(db, 'users', ownerId);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists()) {
+          await updateDoc(userRef, {
+            properties: arrayUnion(propertyId),
+            updatedAt: Timestamp.fromDate(now)
+          });
+          console.log(`Added property to user ${ownerId}'s properties list`);
+        } else {
+          console.warn(`User document ${ownerId} not found. Cannot update properties array.`);
+        }
+      } catch (error: any) {
+        console.error('Error updating user properties:', error);
+        // Continue anyway, as the property was created
+      }
+      
+      // Complete the booking, passing the correct images
+      await PhotoshootBookingServerActions.completeBooking(bookingId, propertyId, allImages);
+      console.log(`Booking ${bookingId} marked as completed with ${allImages.length} images`);
+      
+      // Show success message with image count
+      alert(`Property created with ${allImages.length} images and booking completed successfully!`);
+      
+      // Update UI
+      setShowCompleteModal(false);
       loadData(bookingId);
       onUpdateBooking();
-
-    } catch (error) {
-      console.error('Error:', error);
-      alert(error instanceof Error ? error.message : 'An error occurred');
+      
+    } catch (error: any) {
+      console.error('Error creating property:', error);
+      alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -1522,10 +1570,10 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                   <Label>Monthly Price*</Label>
                   <Input 
                     type="number" 
-                    value={propertyData.price.monthly} 
+                    value={propertyData.price} 
                     onChange={(e) => setPropertyData({
                       ...propertyData,
-                      price: { ...propertyData.price, monthly: parseFloat(e.target.value) || 0 }
+                      price: parseFloat(e.target.value) || 0
                     })}
                     placeholder="Monthly Price"
                   />
@@ -1535,10 +1583,10 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                   <Label>Deposit</Label>
                   <Input 
                     type="number" 
-                    value={propertyData.price.deposit} 
+                    value={propertyData.deposit} 
                     onChange={(e) => setPropertyData({
                       ...propertyData,
-                      price: { ...propertyData.price, deposit: parseFloat(e.target.value) || 0 }
+                      deposit: parseFloat(e.target.value) || 0
                     })}
                     placeholder="Deposit"
                   />
@@ -1548,10 +1596,10 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                   <Label>Service Fee</Label>
                   <Input 
                     type="number" 
-                    value={propertyData.price.serviceFee} 
+                    value={propertyData.serviceFee} 
                     onChange={(e) => setPropertyData({
                       ...propertyData,
-                      price: { ...propertyData.price, serviceFee: parseFloat(e.target.value) || 0 }
+                      serviceFee: parseFloat(e.target.value) || 0
                     })}
                     placeholder="Service Fee"
                   />

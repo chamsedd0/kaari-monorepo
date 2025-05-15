@@ -6,7 +6,6 @@ import PhotoSlider from "../../components/skeletons/constructed/slider/photo-sli
 import pictures from '../../assets/images/propertyExamplePic.png'
 import PropertyRequestCard from "../../components/skeletons/cards/send-request-card";
 import ProfilePic from '../../assets/images/ProfilePicture.png'
-import LivingRoom from '../../assets/images/livingRoomExample.png'
 import TimeLine from '../../components/skeletons/icons/safeMoneyTimeLine.svg'
 import { CertificationBanner } from "../../components/skeletons/banners/static/certification-banner";
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
@@ -28,14 +27,7 @@ import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { useStore } from "../../backend/store";
 import { IoEyeOutline, IoPersonCircleOutline, IoLogInOutline, IoHomeOutline } from 'react-icons/io5';
 
-// Import additional image examples
-import smallPic1 from '../../assets/images/smallPicCity1.png';
-import smallPic2 from '../../assets/images/smallPicCity2.png';
-import smallPic3 from '../../assets/images/smallPicCity3.png';
-import bigCityPic0 from '../../assets/images/BigCityPic0.png';
-import bigCityPic1 from '../../assets/images/BigCityPic1.png';
-import photoshoot1 from '../../assets/images/photoshoot1.png';
-import photoshoot2 from '../../assets/images/Photoshoot2.png';
+
 
 // Define types for Property and User
 interface Room {
@@ -565,10 +557,7 @@ const PropertyPageComponent = () => {
                 <span className="label">Minimal rent length</span>
                 <span className="value">{minstay}</span>
               </div>
-              <div className="condition">
-                <span className="label">Available from</span>
-                <span className="value">{availableFrom}</span>
-              </div>
+
             </div>
             
             {/* Rules section */}
