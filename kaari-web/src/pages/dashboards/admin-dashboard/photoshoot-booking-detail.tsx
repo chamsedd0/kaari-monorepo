@@ -29,6 +29,7 @@ import { db } from '../../../backend/firebase/config';
 import { secureUploadMultipleFiles } from '../../../backend/firebase/storage';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
+import NotificationService from '../../../services/NotificationService';
 
 interface PhotoshootBookingDetailProps {
   onUpdateBooking: () => void;
@@ -1273,6 +1274,26 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       setShowCompleteModal(false);
       loadData(bookingId);
       onUpdateBooking();
+      
+      // Create notification for the property owner
+      try {
+        if (ownerId) {
+          const notificationService = new NotificationService();
+          await notificationService.createNotification(
+            ownerId,
+            'advertiser',
+            'property_created',
+            'Property Created Successfully',
+            `Your property "${propertyToSave.title}" has been created with ${allImages.length} images.`,
+            `/dashboard/advertiser/properties/${propertyId}`,
+            { propertyId, imageCount: allImages.length }
+          );
+          console.log(`Additional frontend notification sent to advertiser ${ownerId} about property creation`);
+        }
+      } catch (notifError) {
+        // Don't fail if notification fails
+        console.error('Error sending property creation notification:', notifError);
+      }
       
     } catch (error: any) {
       console.error('Error creating property:', error);

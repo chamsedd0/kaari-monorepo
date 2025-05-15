@@ -38,11 +38,18 @@ export type ClientNotificationType =
   | 'cancellation_request_handled'
   | 'new_message';
 
+// Add a new type for admin notifications
+export type AdminNotificationType = 
+  | 'new_photoshoot_booking'
+  | 'team_assignment_needed'
+  | 'photoshoot_completed';
+
 // Combined notification types
-export type NotificationType = AdvertiserNotificationType | ClientNotificationType;
+export type NotificationType = AdvertiserNotificationType | ClientNotificationType | AdminNotificationType;
 
 // Helper type to differentiate by user type
 export type UserNotifications = {
   advertiser: AdvertiserNotificationType[];
   client: ClientNotificationType[];
+  admin: AdminNotificationType[];
 }; 

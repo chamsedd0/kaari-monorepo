@@ -20,6 +20,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { PhotoshootBooking } from '../entities';
+import NotificationService from '../../services/NotificationService';
 
 // Collection reference
 const COLLECTION_NAME = 'photoshoot-bookings';
@@ -198,6 +199,44 @@ export class PhotoshootBookingServerActions {
       
       const firestoreData = toFirestoreBooking(booking as PhotoshootBooking);
       const docRef = await addDoc(bookingsCollection, firestoreData);
+      
+      // Send notification to the advertiser
+      const advertiserId = bookingData.advertiserId || bookingData.userId;
+      if (advertiserId) {
+        const notificationService = new NotificationService();
+        await notificationService.createNotification(
+          advertiserId,
+          'advertiser',
+          'photoshoot_reminder',
+          'Photoshoot Booking Created',
+          `Your photoshoot booking for ${new Date(bookingData.date).toLocaleDateString()} at ${bookingData.timeSlot} has been created and is waiting for team assignment.`,
+          `/dashboard/advertiser/photoshoot-bookings/${docRef.id}`,
+          { bookingId: docRef.id, date: bookingData.date, timeSlot: bookingData.timeSlot }
+        );
+        console.log(`Notification sent to advertiser ${advertiserId} about new booking creation`);
+      }
+      
+      // Also send a notification to admins
+      try {
+        // This is a simplified approach - in production, you'd have a separate system to identify admin users
+        // For now, we'll use a fixed admin ID if you have one, or you can create a more sophisticated system
+        const adminUserId = 'admin123'; // Replace with your actual admin user ID or a system to fetch admin IDs
+        
+        const notificationService = new NotificationService();
+        await notificationService.createNotification(
+          adminUserId,
+          'admin',
+          'new_photoshoot_booking',
+          'New Photoshoot Booking',
+          `A new photoshoot booking has been created for ${new Date(bookingData.date).toLocaleDateString()} and needs a team assignment.`,
+          `/dashboard/admin/photoshoot-bookings`,
+          { bookingId: docRef.id }
+        );
+      } catch (adminNotifError) {
+        // Don't fail the whole operation if admin notification fails
+        console.error('Error sending admin notification:', adminNotifError);
+      }
+      
       return docRef.id;
     } catch (error) {
       console.error('Error creating photoshoot booking:', error);
@@ -374,22 +413,46 @@ export class PhotoshootBookingServerActions {
     teamMembers: string[]
   ): Promise<void> {
     try {
-      const docRef = doc(db, COLLECTION_NAME, bookingId);
+      // Get the booking document reference
+      const bookingRef = doc(db, COLLECTION_NAME, bookingId);
       
-      await updateDoc(docRef, {
+      // Update the booking
+      await updateDoc(bookingRef, {
         teamId,
         teamMembers,
         status: 'assigned',
-        updatedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       });
+      
+      // Get the booking data to access the advertiser ID
+      const bookingDoc = await getDoc(bookingRef);
+      if (bookingDoc.exists()) {
+        const bookingData = bookingDoc.data();
+        const advertiserId = bookingData.advertiserId || bookingData.userId;
+        
+        if (advertiserId) {
+          // Create a notification
+          const notificationService = new NotificationService();
+          await notificationService.createNotification(
+            advertiserId,
+            'advertiser',
+            'team_assigned_photoshoot',
+            'Team Assigned for Photoshoot',
+            `A team has been assigned for your photoshoot scheduled on ${new Date(bookingData.date.toDate()).toLocaleDateString()}.`,
+            `/dashboard/advertiser/photoshoot-bookings/${bookingId}`,
+            { bookingId, teamId, teamMembers }
+          );
+          console.log(`Notification sent to advertiser ${advertiserId} about team assignment`);
+        }
+      }
     } catch (error) {
-      console.error(`Error assigning team to booking ${bookingId}:`, error);
+      console.error('Error assigning team to booking:', error);
       throw error;
     }
   }
 
   /**
-   * Complete a photoshoot booking and link it to a property
+   * Complete a booking and create a property
    */
   static async completeBooking(
     bookingId: string, 
@@ -397,36 +460,108 @@ export class PhotoshootBookingServerActions {
     images: string[]
   ): Promise<void> {
     try {
-      const docRef = doc(db, COLLECTION_NAME, bookingId);
+      // Get the booking document reference
+      const bookingRef = doc(db, COLLECTION_NAME, bookingId);
       
-      await updateDoc(docRef, {
+      // Check if booking exists
+      const bookingDoc = await getDoc(bookingRef);
+      if (!bookingDoc.exists()) {
+        throw new Error(`Booking with ID ${bookingId} not found`);
+      }
+      
+      // Get booking data for notification
+      const bookingData = bookingDoc.data();
+      const advertiserId = bookingData.advertiserId || bookingData.userId;
+      
+      // Update the booking
+      await updateDoc(bookingRef, {
         status: 'completed',
+        completedAt: serverTimestamp(),
         propertyId,
         images,
-        completedAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       });
+      
+      // Create a notification if advertiser exists
+      if (advertiserId) {
+        const notificationService = new NotificationService();
+        await notificationService.createNotification(
+          advertiserId,
+          'advertiser',
+          'property_created',
+          'Photoshoot Completed and Property Created',
+          `Your photoshoot has been completed and a property listing has been created.`,
+          `/dashboard/advertiser/properties/${propertyId}`,
+          { bookingId, propertyId, imageCount: images.length }
+        );
+        console.log(`Notification sent to advertiser ${advertiserId} about photoshoot completion and property creation`);
+      }
+      
+      // Also notify admin about completion
+      try {
+        const adminUserId = 'admin123'; // Replace with your actual admin user ID or a system to fetch admin IDs
+        
+        const notificationService = new NotificationService();
+        await notificationService.createNotification(
+          adminUserId,
+          'admin',
+          'photoshoot_completed',
+          'Photoshoot Completed',
+          `Photoshoot booking ${bookingId} has been completed and property ${propertyId} has been created with ${images.length} images.`,
+          `/dashboard/admin/properties/${propertyId}`,
+          { bookingId, propertyId, imageCount: images.length }
+        );
+      } catch (adminNotifError) {
+        // Don't fail the whole operation if admin notification fails
+        console.error('Error sending admin notification for completion:', adminNotifError);
+      }
     } catch (error) {
-      console.error(`Error completing booking ${bookingId}:`, error);
+      console.error('Error completing booking:', error);
       throw error;
     }
   }
 
   /**
-   * Cancel a photoshoot booking
+   * Cancel a booking
    */
   static async cancelBooking(bookingId: string, reason?: string): Promise<void> {
     try {
-      const docRef = doc(db, COLLECTION_NAME, bookingId);
+      // Get booking reference
+      const bookingRef = doc(db, COLLECTION_NAME, bookingId);
       
-      await updateDoc(docRef, {
+      // Get booking data for notification
+      const bookingDoc = await getDoc(bookingRef);
+      if (!bookingDoc.exists()) {
+        throw new Error(`Booking with ID ${bookingId} not found`);
+      }
+      
+      const bookingData = bookingDoc.data();
+      const advertiserId = bookingData.advertiserId || bookingData.userId;
+      const bookingDate = bookingData.date ? new Date(bookingData.date.toDate()).toLocaleDateString() : 'Unknown date';
+      
+      // Update booking status
+      await updateDoc(bookingRef, {
         status: 'cancelled',
         updatedAt: serverTimestamp(),
-        cancellationReason: reason || 'No reason provided',
-        cancelledAt: serverTimestamp(),
+        cancellationReason: reason || 'No reason provided'
       });
+      
+      // Create a notification
+      if (advertiserId) {
+        const notificationService = new NotificationService();
+        await notificationService.createNotification(
+          advertiserId,
+          'advertiser',
+          'photoshoot_reminder', // Using this type as a workaround since there's no specific cancellation type
+          'Photoshoot Booking Cancelled',
+          `Your photoshoot booking for ${bookingDate} has been cancelled${reason ? `: ${reason}` : '.'}`,
+          `/dashboard/advertiser/photoshoot-bookings`,
+          { bookingId, reason }
+        );
+        console.log(`Notification sent to advertiser ${advertiserId} about booking cancellation`);
+      }
     } catch (error) {
-      console.error(`Error cancelling booking ${bookingId}:`, error);
+      console.error('Error cancelling booking:', error);
       throw error;
     }
   }
@@ -493,17 +628,44 @@ export class PhotoshootBookingServerActions {
     newTimeSlot: string
   ): Promise<void> {
     try {
-      const docRef = doc(db, COLLECTION_NAME, bookingId);
+      // Get the booking reference
+      const bookingRef = doc(db, COLLECTION_NAME, bookingId);
       
-      await updateDoc(docRef, {
-        date: Timestamp.fromDate(new Date(newDate)),
+      // Check if booking exists and get data for notification
+      const bookingDoc = await getDoc(bookingRef);
+      if (!bookingDoc.exists()) {
+        throw new Error(`Booking with ID ${bookingId} not found`);
+      }
+      
+      // Get booking data
+      const bookingData = bookingDoc.data();
+      const advertiserId = bookingData.advertiserId || bookingData.userId;
+      const oldDate = bookingData.date ? new Date(bookingData.date.toDate()).toLocaleDateString() : 'Unknown date';
+      const oldTimeSlot = bookingData.timeSlot || 'Unknown time';
+      
+      // Update the booking
+      await updateDoc(bookingRef, {
+        date: Timestamp.fromDate(newDate),
         timeSlot: newTimeSlot,
-        updatedAt: serverTimestamp(),
-        rescheduledAt: serverTimestamp(),
-        previousRescheduleTimes: increment(1), // Keep count of how many times it was rescheduled
+        updatedAt: serverTimestamp()
       });
+      
+      // Create a notification
+      if (advertiserId) {
+        const notificationService = new NotificationService();
+        await notificationService.createNotification(
+          advertiserId,
+          'advertiser',
+          'photoshoot_reminder',
+          'Photoshoot Rescheduled',
+          `Your photoshoot has been rescheduled from ${oldDate} at ${oldTimeSlot} to ${newDate.toLocaleDateString()} at ${newTimeSlot}.`,
+          `/dashboard/advertiser/photoshoot-bookings/${bookingId}`,
+          { bookingId, oldDate, oldTimeSlot, newDate, newTimeSlot }
+        );
+        console.log(`Notification sent to advertiser ${advertiserId} about booking reschedule`);
+      }
     } catch (error) {
-      console.error(`Error rescheduling booking ${bookingId}:`, error);
+      console.error('Error rescheduling booking:', error);
       throw error;
     }
   }
