@@ -3,7 +3,8 @@
 import { User } from '../entities';
 import { 
   getDocumentById, 
-  updateDocument
+  updateDocument,
+  getDocuments
 } from '../firebase/firestore';
 import { getCurrentUserProfile } from '../firebase/auth';
 import { 
@@ -15,6 +16,26 @@ import { auth } from '../firebase/config';
 
 // Collection name for users
 const USERS_COLLECTION = 'users';
+
+/**
+ * Get all users, with optional filtering by role
+ */
+export async function getAllUsers(role?: 'admin' | 'advertiser' | 'client'): Promise<User[]> {
+  try {
+    let options = {};
+    
+    if (role) {
+      options = {
+        filters: [{ field: 'role', operator: '==', value: role }]
+      };
+    }
+    
+    return await getDocuments<User>(USERS_COLLECTION, options);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw new Error('Failed to fetch users');
+  }
+}
 
 /**
  * Fetch a user by ID
@@ -248,5 +269,35 @@ export async function getUserStatistics(): Promise<{
   } catch (error) {
     console.error('Error getting user statistics:', error);
     throw new Error('Failed to get user statistics');
+  }
+}
+
+/**
+ * Block a user (disable their account)
+ */
+export async function blockUser(userId: string): Promise<User> {
+  try {
+    return await updateDocument<User>(USERS_COLLECTION, userId, {
+      isBlocked: true,
+      updatedAt: new Date()
+    });
+  } catch (error) {
+    console.error('Error blocking user:', error);
+    throw new Error('Failed to block user');
+  }
+}
+
+/**
+ * Unblock a user (re-enable their account)
+ */
+export async function unblockUser(userId: string): Promise<User> {
+  try {
+    return await updateDocument<User>(USERS_COLLECTION, userId, {
+      isBlocked: false,
+      updatedAt: new Date()
+    });
+  } catch (error) {
+    console.error('Error unblocking user:', error);
+    throw new Error('Failed to unblock user');
   }
 } 

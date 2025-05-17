@@ -16,7 +16,8 @@ import {
   Button,
   StatusBadge,
 } from './styles';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
 
 import { PhotoshootBookingServerActions } from '../../../backend/server-actions/PhotoshootBookingServerActions';
 import { TeamServerActions } from '../../../backend/server-actions/TeamServerActions';
@@ -32,6 +33,8 @@ const OverviewPage: React.FC = () => {
   
   const [recentBookings, setRecentBookings] = useState<PhotoshootBooking[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const navigate = useNavigate();
   
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -126,38 +129,44 @@ const OverviewPage: React.FC = () => {
               <TableHead>
                 <TableRow>
                   <TableHeader>Date</TableHeader>
-                  <TableHeader>Address</TableHeader>
                   <TableHeader>Property Type</TableHeader>
                   <TableHeader>Status</TableHeader>
                   <TableHeader>Actions</TableHeader>
                 </TableRow>
               </TableHead>
               <tbody>
-                {recentBookings.map((booking) => (
+                {recentBookings.map(booking => (
                   <TableRow key={booking.id}>
-                    <TableCell>{booking.date ? formatDate(booking.date) : 'N/A'}</TableCell>
                     <TableCell>
-                      {booking.propertyAddress ? 
-                        `${booking.propertyAddress.street || 'No street'}, ${booking.propertyAddress.city || 'No city'}` : 
-                        'No address provided'}
+                      {booking.date 
+                        ? new Date(booking.date).toLocaleDateString() 
+                        : 'N/A'}
                     </TableCell>
                     <TableCell>{booking.propertyType || 'N/A'}</TableCell>
                     <TableCell>
-                      <StatusBadge $status={booking.status}>
+                      <StatusBadge status={booking.status}>
                         {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                       </StatusBadge>
                     </TableCell>
                     <TableCell>
-                      <Link to={`/dashboard/admin/photoshoot-bookings/view/${booking.id}`} style={{ textDecoration: 'none' }}>
-                        <Button>View</Button>
-                      </Link>
+                      <button 
+                        onClick={() => navigate(`/dashboard/admin/photoshoot-bookings/view/${booking.id}`)}
+                        style={{ 
+                          background: 'none', 
+                          border: 'none', 
+                          color: '#4a90e2', 
+                          cursor: 'pointer' 
+                        }}
+                      >
+                        View Details
+                      </button>
                     </TableCell>
                   </TableRow>
                 ))}
               </tbody>
             </Table>
           ) : (
-            <p>No recent bookings found.</p>
+            <p>No recent photoshoot bookings found.</p>
           )}
           
           <div style={{ marginTop: '20px', textAlign: 'right' }}>

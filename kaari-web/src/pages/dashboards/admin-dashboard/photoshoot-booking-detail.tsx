@@ -1391,6 +1391,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
               <h3>Booking Information</h3>
               <p><strong>Date:</strong> {booking.date ? formatDate(booking.date) : 'N/A'}</p>
               <p><strong>Time Slot:</strong> {booking.timeSlot || 'N/A'}</p>
+              <p><strong>Status:</strong> <StatusBadge status={booking.status}>{booking.status}</StatusBadge></p>
               <p><strong>Created:</strong> {booking.createdAt ? formatDate(booking.createdAt) : 'N/A'}</p>
               <p><strong>Last Updated:</strong> {booking.updatedAt ? formatDate(booking.updatedAt) : 'N/A'}</p>
               {booking.completedAt && <p><strong>Completed:</strong> {formatDate(booking.completedAt)}</p>}

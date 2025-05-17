@@ -14,7 +14,8 @@ import {
   FaBan,
   FaPhotoVideo,
   FaListAlt,
-  FaMoneyBillAlt
+  FaMoneyBillAlt,
+  FaUserCog
 } from 'react-icons/fa';
 import { 
   MdDashboard, 
@@ -23,7 +24,8 @@ import {
   MdList, 
   MdMoneyOff,
   MdCancel,
-  MdPhotoCamera
+  MdPhotoCamera,
+  MdPerson
 } from 'react-icons/md';
 
 import {
@@ -53,10 +55,12 @@ import OverviewPage from './overview';
 import TestDataGenerator from './test-data-generator';
 import PropertyPage from './properties/page';
 import PropertyEditPage from './properties/[id]/edit/page';
+import UsersPage from './users';
+import UserDetailPage from './user-detail';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useStore();
+  const { user, logout } = useStore();
   const [activePage, setActivePage] = useState('overview');
 
   const handleNavigation = (page: string) => {
@@ -66,7 +70,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await signOut();
+      await logout();
       navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
@@ -85,6 +89,13 @@ const AdminDashboard: React.FC = () => {
           onClick={() => handleNavigation('overview')}
         >
           <MdDashboard /> Overview
+        </NavItem>
+        
+        <NavItem 
+          $active={activePage === 'users'} 
+          onClick={() => handleNavigation('users')}
+        >
+          <FaUserCog /> Users Management
         </NavItem>
         
         <NavItem 
@@ -154,7 +165,13 @@ const AdminDashboard: React.FC = () => {
             {activePage.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
           </PageTitle>
           <UserInfo>
-            <Avatar src={user?.profilePicture} alt="User avatar" />
+            <Avatar>
+              {user?.profilePicture ? (
+                <img src={user.profilePicture} alt="User avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              ) : (
+                user?.name?.charAt(0).toUpperCase() || 'A'
+              )}
+            </Avatar>
             <UserName>{user?.name || 'Admin User'}</UserName>
           </UserInfo>
         </Header>
@@ -162,6 +179,8 @@ const AdminDashboard: React.FC = () => {
         <Routes>
           <Route path="/" element={<Navigate to="overview" replace />} />
           <Route path="overview" element={<OverviewPage />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="users/:id" element={<UserDetailPage />} />
           <Route path="photoshoot-bookings" element={<PhotoshootBookings />} />
           <Route path="photoshoot-bookings/view/:id" element={<PhotoshootBookingDetail onUpdateBooking={() => {}} />} />
           <Route path="teams" element={<TeamsPage />} />

@@ -166,7 +166,7 @@ export const Button = styled.button`
   }
 `;
 
-export const StatusBadge = styled.span<{ $status: string }>`
+export const StatusBadge = styled.span<{ status: string }>`
   display: inline-block;
   padding: 4px 8px;
   border-radius: 4px;
@@ -174,7 +174,7 @@ export const StatusBadge = styled.span<{ $status: string }>`
   font-weight: 500;
   
   background-color: ${props => {
-    switch (props.$status) {
+    switch (props.status) {
       case 'pending':
         return '#ffeeba';
       case 'assigned':
@@ -183,13 +183,19 @@ export const StatusBadge = styled.span<{ $status: string }>`
         return '#d4edda';
       case 'cancelled':
         return '#f8d7da';
+      case 'active':
+        return '#d4edda';
+      case 'blocked':
+        return '#f8d7da';
+      case 'admin':
+        return '#cce5ff';
       default:
         return '#e2e3e5';
     }
   }};
   
   color: ${props => {
-    switch (props.$status) {
+    switch (props.status) {
       case 'pending':
         return '#856404';
       case 'assigned':
@@ -198,6 +204,12 @@ export const StatusBadge = styled.span<{ $status: string }>`
         return '#155724';
       case 'cancelled':
         return '#721c24';
+      case 'active':
+        return '#155724';
+      case 'blocked':
+        return '#721c24';
+      case 'admin':
+        return '#004085';
       default:
         return '#383d41';
     }
@@ -226,6 +238,15 @@ export const Select = styled.select`
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
+`;
+
+export const TextArea = styled.textarea`
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-height: 100px;
+  resize: vertical;
 `;
 
 export const Modal = styled.div`
