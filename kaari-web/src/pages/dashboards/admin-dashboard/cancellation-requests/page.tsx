@@ -303,7 +303,8 @@ const ErrorState = styled.div`
     margin: 1rem auto;
 
     &:hover {
-      background-color: ${Theme.colors.secondaryDark};
+      background-color: ${Theme.colors.secondary};
+      opacity: 0.8;
     }
   }
 `;
@@ -329,41 +330,41 @@ const CancellationRequests: React.FC = () => {
   const [processing, setProcessing] = useState<string | null>(null);
   const toast = useToastService();
   
+  const fetchCancellationRequests = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Fetching cancellation requests...');
+      const data = await getCancellationRequests();
+      console.log('Received cancellation requests:', data);
+      
+      // Filter out any malformed data
+      const validRequests = data.filter(request => {
+        const isValid = 
+          request.id &&
+          request.userId &&
+          request.propertyId &&
+          typeof request.originalAmount === 'number' &&
+          request.status;
+        
+        if (!isValid) {
+          console.warn('Found invalid cancellation request:', request);
+        }
+        return isValid;
+      });
+      
+      setCancellationRequests(validRequests);
+    } catch (err: any) {
+      console.error('Error fetching cancellation requests:', err);
+      setError(err.message || 'Failed to load cancellation requests');
+      setCancellationRequests([]); // Clear any partial data
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        console.log('Fetching cancellation requests...');
-        const data = await getCancellationRequests();
-        console.log('Received cancellation requests:', data);
-        
-        // Filter out any malformed data
-        const validRequests = data.filter(request => {
-          const isValid = 
-            request.id &&
-            request.userId &&
-            request.propertyId &&
-            typeof request.originalAmount === 'number' &&
-            request.status;
-          
-          if (!isValid) {
-            console.warn('Found invalid cancellation request:', request);
-          }
-          return isValid;
-        });
-        
-        setCancellationRequests(validRequests);
-      } catch (err: any) {
-        console.error('Error fetching cancellation requests:', err);
-        setError(err.message || 'Failed to load cancellation requests');
-        setCancellationRequests([]); // Clear any partial data
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchCancellationRequests();
   }, []);
   
   // Filter requests based on search term and status filter

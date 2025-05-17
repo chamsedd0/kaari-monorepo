@@ -23,6 +23,7 @@ import {
 import { PhotoshootBookingServerActions } from '../../../backend/server-actions/PhotoshootBookingServerActions';
 import { PhotoshootBooking } from '../../../backend/entities';
 import PhotoshootBookingDetail from './photoshoot-booking-detail';
+import NotificationService from '../../../services/NotificationService';
 
 const PhotoshootBookingsPage: React.FC = () => {
   const [bookings, setBookings] = useState<PhotoshootBooking[]>([]);

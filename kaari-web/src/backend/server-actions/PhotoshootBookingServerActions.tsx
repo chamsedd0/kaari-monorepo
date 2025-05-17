@@ -21,6 +21,7 @@ import {
 import { db } from '../firebase/config';
 import { PhotoshootBooking } from '../entities';
 import NotificationService from '../../services/NotificationService';
+import { createPhotoshootTeamAssignedNotification } from '../../utils/notification-helpers';
 
 // Collection reference
 const COLLECTION_NAME = 'photoshoot-bookings';
@@ -413,36 +414,46 @@ export class PhotoshootBookingServerActions {
     teamMembers: string[]
   ): Promise<void> {
     try {
-      // Get the booking document reference
       const bookingRef = doc(db, COLLECTION_NAME, bookingId);
       
-      // Update the booking
+      // Update booking status, team info
       await updateDoc(bookingRef, {
+        status: 'assigned',
         teamId,
         teamMembers,
-        status: 'assigned',
         updatedAt: serverTimestamp()
       });
       
-      // Get the booking data to access the advertiser ID
+      // Get booking data for notification
       const bookingDoc = await getDoc(bookingRef);
-      if (bookingDoc.exists()) {
-        const bookingData = bookingDoc.data();
-        const advertiserId = bookingData.advertiserId || bookingData.userId;
-        
-        if (advertiserId) {
-          // Create a notification
-          const notificationService = new NotificationService();
-          await notificationService.createNotification(
+      if (!bookingDoc.exists()) {
+        throw new Error(`Booking with ID ${bookingId} not found`);
+      }
+      
+      const bookingData = bookingDoc.data();
+      const advertiserId = bookingData.advertiserId || bookingData.userId;
+      
+      // Create notification for the advertiser if available
+      if (advertiserId) {
+        try {
+          // Get booking details for the notification
+          const bookingDate = bookingData.date ? new Date(bookingData.date.toDate()).toLocaleDateString() : 'Unknown date';
+          const timeSlot = bookingData.timeSlot || 'scheduled time';
+          const propertyAddress = bookingData.propertyAddress?.city || '';
+          
+          await createPhotoshootTeamAssignedNotification(
             advertiserId,
-            'advertiser',
-            'team_assigned_photoshoot',
-            'Team Assigned for Photoshoot',
-            `A team has been assigned for your photoshoot scheduled on ${new Date(bookingData.date.toDate()).toLocaleDateString()}.`,
-            `/dashboard/advertiser/photoshoot-bookings/${bookingId}`,
-            { bookingId, teamId, teamMembers }
+            teamMembers.join(', '),
+            bookingId,
+            propertyAddress,
+            bookingDate,
+            timeSlot
           );
+          
           console.log(`Notification sent to advertiser ${advertiserId} about team assignment`);
+        } catch (error) {
+          console.error('Error sending notification about team assignment:', error);
+          // Don't fail the whole operation if notification fails
         }
       }
     } catch (error) {
@@ -484,8 +495,7 @@ export class PhotoshootBookingServerActions {
       
       // Create a notification if advertiser exists
       if (advertiserId) {
-        const notificationService = new NotificationService();
-        await notificationService.createNotification(
+        await NotificationService.createNotification(
           advertiserId,
           'advertiser',
           'property_created',
@@ -501,8 +511,7 @@ export class PhotoshootBookingServerActions {
       try {
         const adminUserId = 'admin123'; // Replace with your actual admin user ID or a system to fetch admin IDs
         
-        const notificationService = new NotificationService();
-        await notificationService.createNotification(
+        await NotificationService.createNotification(
           adminUserId,
           'admin',
           'photoshoot_completed',
@@ -548,11 +557,10 @@ export class PhotoshootBookingServerActions {
       
       // Create a notification
       if (advertiserId) {
-        const notificationService = new NotificationService();
-        await notificationService.createNotification(
+        await NotificationService.createNotification(
           advertiserId,
           'advertiser',
-          'photoshoot_reminder', // Using this type as a workaround since there's no specific cancellation type
+          'photoshoot_cancelled',
           'Photoshoot Booking Cancelled',
           `Your photoshoot booking for ${bookingDate} has been cancelled${reason ? `: ${reason}` : '.'}`,
           `/dashboard/advertiser/photoshoot-bookings`,
@@ -652,8 +660,7 @@ export class PhotoshootBookingServerActions {
       
       // Create a notification
       if (advertiserId) {
-        const notificationService = new NotificationService();
-        await notificationService.createNotification(
+        await NotificationService.createNotification(
           advertiserId,
           'advertiser',
           'photoshoot_reminder',

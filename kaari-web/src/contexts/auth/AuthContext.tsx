@@ -121,6 +121,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (firebaseUser) {
         // This will trigger our store listener to update local state
         setStatus('authenticated');
+        
+        // Make sure the user has userType (role) properly set in the application
+        if (user && !user.userType && user.role) {
+          console.log('Setting userType from role:', user.role);
+          // @ts-ignore - We're adding userType to be compatible with our notification system
+          user.userType = user.role;
+        }
       } else {
         setStatus('unauthenticated');
       }

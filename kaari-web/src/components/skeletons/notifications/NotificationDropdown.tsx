@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
 import { useNotifications } from '../../../contexts/notifications/NotificationContext';
+import { useAuth } from '../../../contexts/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import NotificationItem from './NotificationItem';
@@ -186,7 +187,8 @@ const Footer = styled.div`
 `;
 
 const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ notifications, onClose, onMarkAsRead, onViewAll }) => {
-  const { unreadCount, loading } = useNotifications();
+  const { unreadCount, loading, refreshNotifications } = useNotifications();
+  const { user } = useAuth();
 
   const handleMarkAllAsRead = async () => {
     // Mark each notification as read

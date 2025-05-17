@@ -154,8 +154,8 @@ const AdminDashboard: React.FC = () => {
             {activePage.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
           </PageTitle>
           <UserInfo>
-            <Avatar src={user?.photoURL || '/default-avatar.png'} alt="User avatar" />
-            <UserName>{user?.displayName || 'Admin User'}</UserName>
+            <Avatar src={user?.profilePicture} alt="User avatar" />
+            <UserName>{user?.name || 'Admin User'}</UserName>
           </UserInfo>
         </Header>
 

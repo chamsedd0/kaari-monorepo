@@ -1,11 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { Theme } from '../../../../../../theme/theme';
-import { FaArrowLeft, FaSave } from 'react-icons/fa';
+import { FaArrowLeft, FaSave, FaTrash, FaPlus, FaUpload } from 'react-icons/fa';
 import { getPropertyById, updateProperty } from '../../../../../../backend/server-actions/PropertyServerActions';
-import { Property } from '../../../../../../backend/models/entities';
+import { Property } from '../../../../../../backend/entities';
 import { useToastService } from '../../../../../../services/ToastService';
+
+// Mock function for image upload until the real one is implemented
+const uploadPropertyImage = async (file: File, propertyId: string): Promise<string> => {
+  // This is a temporary implementation until the Firebase Storage is set up
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      // Return the base64 string as the image URL for now
+      resolve(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  });
+};
 
 const PropertyEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -41,12 +54,8 @@ const PropertyEditPage: React.FC = () => {
     city: '',
     state: '',
     country: '',
-    postalCode: '',
-    streetNumber: '',
-    floor: '',
-    flat: ''
+    zipCode: ''
   });
-  const [propertyLocation, setPropertyLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [rooms, setRooms] = useState<Array<{ type: 'bedroom' | 'bathroom' | 'kitchen' | 'storage' | 'living'; area: number }>>([]);
   const [isFurnished, setIsFurnished] = useState(false);
   const [capacity, setCapacity] = useState('');
@@ -55,6 +64,9 @@ const PropertyEditPage: React.FC = () => {
   const [newNearbyPlace, setNewNearbyPlace] = useState({ name: '', timeDistance: '' });
   const [newRule, setNewRule] = useState({ name: '', allowed: true });
   const [newRoom, setNewRoom] = useState({ type: 'bedroom' as const, area: 0 });
+  const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (id) {
@@ -81,7 +93,6 @@ const PropertyEditPage: React.FC = () => {
       if (requestedChanges.amenities) setAmenities(requestedChanges.amenities);
       if (requestedChanges.features) setFeatures(requestedChanges.features);
       if (requestedChanges.address) setAddress(requestedChanges.address);
-      if (requestedChanges.location) setPropertyLocation(requestedChanges.location);
       if (requestedChanges.rooms) setRooms(requestedChanges.rooms);
       if (requestedChanges.isFurnished) setIsFurnished(requestedChanges.isFurnished);
       if (requestedChanges.capacity) setCapacity(requestedChanges.capacity.toString());
@@ -90,6 +101,7 @@ const PropertyEditPage: React.FC = () => {
       if (requestedChanges.newNearbyPlace) setNewNearbyPlace(requestedChanges.newNearbyPlace);
       if (requestedChanges.newRule) setNewRule(requestedChanges.newRule);
       if (requestedChanges.newRoom) setNewRoom(requestedChanges.newRoom);
+      if (requestedChanges.images) setImages(requestedChanges.images);
 
       // Show notification about applied changes
       toast.showToast('info', 'Changes Applied', 'Edit request changes have been applied. Please review and save the changes.');
@@ -132,13 +144,19 @@ const PropertyEditPage: React.FC = () => {
         setStatus(propertyData.status);
         setAmenities(propertyData.amenities || []);
         setFeatures(propertyData.features || []);
-        setAddress(propertyData.address);
-        setPropertyLocation(propertyData.location || null);
+        setAddress({
+          street: propertyData.address.street || '',
+          city: propertyData.address.city || '',
+          state: propertyData.address.state || '',
+          country: propertyData.address.country || '',
+          zipCode: propertyData.address.zipCode || ''
+        });
         setRooms(propertyData.rooms || []);
         setIsFurnished(propertyData.isFurnished || false);
         setCapacity(propertyData.capacity?.toString() || '');
         setNearbyPlaces(propertyData.nearbyPlaces || []);
         setRules(propertyData.rules || []);
+        setImages(propertyData.images || []);
       }
     } catch (err) {
       console.error('Error loading property:', err);
@@ -147,6 +165,42 @@ const PropertyEditPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFileSelection = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    try {
+      setUploading(true);
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        // Call the upload function from your StorageServerActions
+        const imageUrl = await uploadPropertyImage(file, property?.id || 'temp');
+        if (imageUrl) {
+          setImages(prev => [...prev, imageUrl]);
+        }
+      }
+      
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      
+      toast.showToast('success', 'Upload Complete', 'Images have been uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast.showToast('error', 'Upload Failed', 'There was a problem uploading your images');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const updatedImages = [...images];
+    updatedImages.splice(index, 1);
+    setImages(updatedImages);
   };
 
   const handleSave = async () => {
@@ -161,15 +215,15 @@ const PropertyEditPage: React.FC = () => {
         title,
         description,
         price: parseFloat(price),
-        propertyType,
+        propertyType: propertyType as 'apartment' | 'house' | 'condo' | 'land' | 'commercial',
         area: parseFloat(area),
         status,
         amenities,
         features,
         address,
-        location: propertyLocation,
         rooms,
         isFurnished,
+        images,
         updatedAt: new Date()
       };
 
@@ -390,36 +444,15 @@ const PropertyEditPage: React.FC = () => {
           </div>
 
           <div className="form-group">
-            <label>Street Number</label>
+            <label>Zip Code</label>
             <input
               type="text"
-              value={address.streetNumber}
-              onChange={(e) => setAddress({ ...address, streetNumber: e.target.value })}
-              placeholder="Street Number"
+              value={address.zipCode}
+              onChange={(e) => setAddress({ ...address, zipCode: e.target.value })}
+              placeholder="Zip Code"
             />
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Floor</label>
-              <input
-                type="text"
-                value={address.floor}
-                onChange={(e) => setAddress({ ...address, floor: e.target.value })}
-                placeholder="Floor"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Flat</label>
-              <input
-                type="text"
-                value={address.flat}
-                onChange={(e) => setAddress({ ...address, flat: e.target.value })}
-                placeholder="Flat Number"
-              />
-            </div>
-          </div>
 
           <div className="form-row">
             <div className="form-group">
@@ -454,15 +487,6 @@ const PropertyEditPage: React.FC = () => {
               />
             </div>
 
-            <div className="form-group">
-              <label>Postal Code</label>
-              <input
-                type="text"
-                value={address.postalCode}
-                onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
-                placeholder="Postal Code"
-              />
-            </div>
           </div>
         </div>
 
@@ -626,6 +650,54 @@ const PropertyEditPage: React.FC = () => {
         </div>
 
         <div className="form-section">
+          <h2>Property Images</h2>
+          <div className="upload-container">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelection}
+              accept="image/*"
+              multiple
+              style={{ display: 'none' }}
+            />
+            <button 
+              className="upload-button" 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              <FaUpload /> {uploading ? 'Uploading...' : 'Upload Images'}
+            </button>
+            <div className="upload-note">
+              Supported formats: JPG, PNG, WebP. Max size: 5MB per image.
+            </div>
+          </div>
+          
+          <div className="images-grid">
+            {images.map((imageUrl, index) => (
+              <div key={index} className="image-item">
+                <div className="image-preview">
+                  <img src={imageUrl} alt={`Property ${index + 1}`} />
+                </div>
+                <div className="image-controls">
+                  <button
+                    className="remove-button"
+                    onClick={() => handleRemoveImage(index)}
+                    type="button"
+                  >
+                    <FaTrash /> Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+            {images.length === 0 && (
+              <div className="no-images">
+                No images have been uploaded for this property.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="form-section">
           <h2>Amenities & Features</h2>
           <div className="form-group">
             <label>Amenities</label>
@@ -677,7 +749,6 @@ const PropertyEditPage: React.FC = () => {
 };
 
 const AMENITIES_OPTIONS = [
-  { id: 'furnished', label: 'Furnished' },
   { id: 'sofabed', label: 'Sofabed' },
   { id: 'dining-table', label: 'Dining Table' },
   { id: 'wardrobe', label: 'Wardrobe' },
@@ -706,7 +777,6 @@ const FEATURES_OPTIONS = [
   { id: 'water', label: 'Water' },
   { id: 'electricity', label: 'Electricity' },
   { id: 'wifi', label: 'Wi-Fi' },
-  { id: 'women-only', label: 'Women Only' }
 ];
 
 const PropertyEditPageContainer = styled.div`
@@ -772,7 +842,7 @@ const PropertyEditPageContainer = styled.div`
     border: ${Theme.borders.primary};
 
     h2 {
-      font: ${Theme.typography.fonts.h4};
+      font: ${Theme.typography.fonts.h4B};
       margin: 0 0 1.5rem;
       color: ${Theme.colors.black};
     }
@@ -903,6 +973,102 @@ const PropertyEditPageContainer = styled.div`
 
       &:hover {
         background: ${Theme.colors.secondary};
+      }
+    }
+  }
+
+  .upload-container {
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .upload-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background-color: ${Theme.colors.secondary};
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font: ${Theme.typography.fonts.mediumB};
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: ${Theme.colors.primary};
+    }
+
+    &:disabled {
+      background-color: ${Theme.colors.gray};
+      cursor: not-allowed;
+    }
+  }
+
+  .upload-note {
+    margin-top: 0.5rem;
+    font: ${Theme.typography.fonts.smallM};
+    color: ${Theme.colors.gray2};
+  }
+
+  .no-images {
+    grid-column: 1 / -1;
+    padding: 2rem;
+    text-align: center;
+    background-color: ${Theme.colors.tertiary}20;
+    border-radius: 8px;
+    font: ${Theme.typography.fonts.mediumM};
+    color: ${Theme.colors.gray2};
+  }
+
+  .images-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+
+  .image-item {
+    border: ${Theme.borders.primary};
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .image-preview {
+    height: 150px;
+    overflow: hidden;
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .image-controls {
+    padding: 0.75rem;
+    display: flex;
+    justify-content: center;
+
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background-color: ${Theme.colors.error}20;
+      color: ${Theme.colors.error};
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font: ${Theme.typography.fonts.smallB};
+      transition: all 0.2s ease;
+
+      &:hover {
+        background-color: ${Theme.colors.error};
+        color: white;
       }
     }
   }

@@ -71,7 +71,14 @@ export const useStore = create<StoreState>()(
         requestsLoading: false,
         
         // Actions
-        setUser: (user) => set({ user, isAuthenticated: !!user }),
+        setUser: (user) => {
+          // If user exists, ensure userType is set based on role for notification system
+          if (user && user.role) {
+            // @ts-ignore - Add userType for notification system compatibility
+            user.userType = user.role;
+          }
+          set({ user, isAuthenticated: !!user });
+        },
         setIsAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
         setProperties: (properties) => set({ properties }),
         setSelectedProperty: (property) => set({ selectedProperty: property }),
@@ -85,6 +92,13 @@ export const useStore = create<StoreState>()(
           try {
             set({ authLoading: true });
             const user = await signUpWithEmail(email, password, name, role);
+            
+            // Ensure userType is set based on role for notification system
+            if (user && user.role) {
+              // @ts-ignore - Add userType for notification system compatibility
+              user.userType = user.role;
+            }
+            
             set({ user, isAuthenticated: true, authLoading: false });
             return user;
           } catch (error) {
@@ -97,6 +111,13 @@ export const useStore = create<StoreState>()(
           try {
             set({ authLoading: true });
             const user = await signInWithEmail(email, password);
+            
+            // Ensure userType is set based on role for notification system
+            if (user && user.role) {
+              // @ts-ignore - Add userType for notification system compatibility
+              user.userType = user.role;
+            }
+            
             set({ user, isAuthenticated: true, authLoading: false });
             return user;
           } catch (error) {
@@ -109,6 +130,13 @@ export const useStore = create<StoreState>()(
           try {
             set({ authLoading: true });
             const user = await signInWithGoogle(role, isNewAdvertiser);
+            
+            // Ensure userType is set based on role for notification system
+            if (user && user.role) {
+              // @ts-ignore - Add userType for notification system compatibility
+              user.userType = user.role;
+            }
+            
             set({ user, isAuthenticated: true, authLoading: false });
             return user;
           } catch (error) {
@@ -166,6 +194,13 @@ export const useStore = create<StoreState>()(
               if (firebaseUser) {
                 // User is signed in
                 const userProfile = await getCurrentUserProfile();
+                
+                // Ensure userType is set based on role for notification system
+                if (userProfile && userProfile.role) {
+                  // @ts-ignore - Add userType for notification system compatibility
+                  userProfile.userType = userProfile.role;
+                }
+                
                 set({ 
                   user: userProfile, 
                   isAuthenticated: true, 

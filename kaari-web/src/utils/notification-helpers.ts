@@ -863,4 +863,35 @@ export const createCustomNotification = async (
     link,
     metadata
   );
+};
+
+/**
+ * Creates a notification for a photoshoot team assignment
+ */
+export const createPhotoshootTeamAssignedNotification = async (
+  advertiserId: string,
+  teamName: string,
+  bookingId: string,
+  propertyLocation: string,
+  bookingDate: string,
+  timeSlot: string
+): Promise<string | undefined> => {
+  try {
+    return await NotificationService.createNotification(
+      advertiserId,
+      'advertiser',
+      'photoshoot_team_assigned',
+      'Photoshoot Team Assigned',
+      `A team has been assigned to your photoshoot booking${propertyLocation ? ` for your property in ${propertyLocation}` : ''} on ${bookingDate} at ${timeSlot}.`,
+      `/dashboard/advertiser/bookings`,
+      { 
+        bookingId,
+        teamName,
+        bookingDate,
+        timeSlot
+      }
+    );
+  } catch (error) {
+    console.error('Failed to create photoshoot team assigned notification:', error);
+  }
 }; 

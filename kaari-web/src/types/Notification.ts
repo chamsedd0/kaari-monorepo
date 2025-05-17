@@ -22,6 +22,7 @@ export type AdvertiserNotificationType =
   | 'reservation_cancelled'
   | 'payment_confirmed'
   | 'client_moved_in'
+  | 'photoshoot_cancelled'
   | 'new_message';
 
 // Notification types for clients/users

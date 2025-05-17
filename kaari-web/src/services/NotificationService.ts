@@ -98,6 +98,8 @@ class NotificationService {
     limit2 = 20
   ): Promise<Notification[]> {
     try {
+      console.log(`getNotifications called with userId: ${userId}, userType: ${userType}, limit: ${limit2}`);
+      
       const q = query(
         collection(db, this.collection),
         where('userId', '==', userId),
@@ -106,7 +108,24 @@ class NotificationService {
         limit(limit2)
       );
 
+      console.log(`Executing Firestore query: collection=${this.collection}, userId=${userId}, userType=${userType}`);
       const querySnapshot = await getDocs(q);
+      console.log(`Query returned ${querySnapshot.size} documents`);
+      
+      if (querySnapshot.empty) {
+        // No documents found, let's check if we have any notifications at all
+        const allNotificationsQuery = query(collection(db, this.collection), limit(5));
+        const allNotificationsSnapshot = await getDocs(allNotificationsQuery);
+        console.log(`Database has ${allNotificationsSnapshot.size} notifications in total. Sample:`, 
+          allNotificationsSnapshot.docs.map(doc => ({
+            id: doc.id, 
+            userId: doc.data().userId,
+            userType: doc.data().userType,
+            title: doc.data().title
+          }))
+        );
+      }
+      
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),

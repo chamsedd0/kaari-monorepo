@@ -162,8 +162,8 @@ const EditRequestsPage: React.FC = () => {
           {filteredRequests.map(request => (
             <div key={request.id} className="request-card">
               <div className="request-info">
-                <h3>{request.propertyTitle}</h3>
-                <p className="requester">Requested by: {request.requesterName}</p>
+                <h3>{request.reason}</h3>
+                <p className="requester">Requested by: {request.propertyId}</p>
                 <p className="timestamp">
                   {new Date(request.createdAt).toLocaleDateString()} at{' '}
                   {new Date(request.createdAt).toLocaleTimeString()}
@@ -180,10 +180,10 @@ const EditRequestsPage: React.FC = () => {
                   </ul>
                     </div>
                   
-                  {request.additionalComments && (
+                  {request.requestedChanges && (
                   <div className="comments">
                       <h4>Additional Comments:</h4>
-                    <p>{request.additionalComments}</p>
+                    <p>{request.reason}</p>
                   </div>
                 )}
               </div>
@@ -339,7 +339,8 @@ const EditRequestsPageContainer = styled.div`
       cursor: pointer;
       
       &:hover {
-        background-color: ${Theme.colors.secondaryDark};
+        background-color: ${Theme.colors.secondary};
+        opacity: 0.8;
       }
     }
   }

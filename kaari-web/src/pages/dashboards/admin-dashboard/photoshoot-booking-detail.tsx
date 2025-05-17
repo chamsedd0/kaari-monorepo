@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaCalendarAlt, FaUsers, FaUpload, FaCheck, FaPlus, FaTimes, FaTrash, FaBan, FaExclamationCircle, FaSync, FaExclamationTriangle } from 'react-icons/fa';
 import {
@@ -30,6 +30,7 @@ import { secureUploadMultipleFiles } from '../../../backend/firebase/storage';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
 import NotificationService from '../../../services/NotificationService';
+import { createPhotoshootTeamAssignedNotification } from '../../../utils/notification-helpers';
 
 interface PhotoshootBookingDetailProps {
   onUpdateBooking: () => void;
@@ -855,7 +856,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         return;
       }
       
-      // Assign team to booking
+      // Assign team to booking - this will also handle sending the notification
       await PhotoshootBookingServerActions.assignTeamToBooking(bookingId, selectedTeam, team.members);
       
       // Refresh booking data
@@ -1278,8 +1279,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       // Create notification for the property owner
       try {
         if (ownerId) {
-          const notificationService = new NotificationService();
-          await notificationService.createNotification(
+          await NotificationService.createNotification(
             ownerId,
             'advertiser',
             'property_created',
@@ -1308,7 +1308,11 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     
     if (window.confirm('Are you sure you want to cancel this booking?')) {
       try {
-        await PhotoshootBookingServerActions.cancelBooking(bookingId);
+        // Reason could be added through a prompt or modal in a more sophisticated UI
+        const reason = "Cancelled by administrator";
+        
+        // Cancel the booking - this will also send a notification through the server action
+        await PhotoshootBookingServerActions.cancelBooking(bookingId, reason);
         
         // Refresh booking data
         loadData(bookingId);
