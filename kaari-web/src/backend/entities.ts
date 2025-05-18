@@ -8,6 +8,7 @@ export interface User {
   phoneNumber?: string;
   profilePicture?: string;
   role: 'admin' | 'advertiser' | 'client';
+  userType?: 'admin' | 'advertiser' | 'client' | 'user';
   createdAt: Date;
   updatedAt: Date;
   dateOfBirth?: string;

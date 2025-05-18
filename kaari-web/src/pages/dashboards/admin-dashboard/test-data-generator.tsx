@@ -28,7 +28,7 @@ const Container = styled.div`
     padding: 1.5rem;
     
     h3 {
-      font: ${Theme.typography.fonts.h4};
+      font: ${Theme.typography.fonts.h4B};
       margin-bottom: 1rem;
     }
     
@@ -52,7 +52,7 @@ const Container = styled.div`
       }
       
       &:disabled {
-        background-color: ${Theme.colors.gray1};
+        background-color: ${Theme.colors.gray};
         cursor: not-allowed;
       }
     }

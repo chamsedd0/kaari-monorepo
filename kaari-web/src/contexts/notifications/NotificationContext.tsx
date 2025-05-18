@@ -42,7 +42,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           // Ensure user type is properly set 
           // @ts-ignore - Add userType if not present
           if (!user.userType && user.role) {
-            console.log(`Setting userType from role: ${user.role}`);
             // @ts-ignore - Add userType property
             user.userType = user.role;
           }
@@ -51,7 +50,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           // @ts-ignore - TypeScript doesn't know about userType
           const userType = user.userType || user.role || 'user';
           
-          console.log(`Initializing notifications for ${userType} ${user.id}`);
           
           // Force an initial refresh of notifications
           await refreshNotifications();
@@ -66,26 +64,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 const unreadNotifications = updatedNotifications.filter(n => !n.isRead);
                 setUnreadCount(unreadNotifications.length);
                 setLoading(false);
-                console.log(`Got ${updatedNotifications.length} notifications, ${unreadNotifications.length} unread`);
               }
             );
           } catch (subscribeError) {
-            console.error('Error subscribing to notifications:', subscribeError);
             // Silent failure, we'll use polling as fallback
           }
           
           // Set up a fallback polling mechanism in case real-time updates fail
           refreshInterval = setInterval(async () => {
             try {
-              console.log('Polling for notifications...');
               await refreshNotifications();
             } catch (pollingError) {
-              console.error('Error in notification polling:', pollingError);
             }
           }, 15000); // Poll every 15 seconds
           
         } catch (error) {
-          console.error('Error initializing notifications:', error);
           setLoading(false);
         }
       } else {
@@ -170,7 +163,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Ensure userType consistency
       // @ts-ignore - Add userType if not present
       if (!user.userType && user.role) {
-        console.log(`Setting userType from role: ${user.role}`);
         // @ts-ignore - Add userType property
         user.userType = user.role;
       }
@@ -178,24 +170,19 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // @ts-ignore - TypeScript doesn't know about userType
       const userType = user.userType || user.role || 'user';
       
-      console.log(`Manually refreshing notifications for ${userType} ${user.id}`);
-      console.log('Current user object:', user);
+      
       
       // Get debug info first
       const debugInfo = await NotificationService.getNotificationsDebugInfo(user.id, userType);
-      console.log(`Notification debug info:`, debugInfo);
       
       // Then get the actual notifications
       const refreshedNotifications = await NotificationService.getNotifications(user.id, userType);
-      console.log(`Refreshed ${refreshedNotifications.length} notifications:`, 
-        refreshedNotifications.map(n => ({ id: n.id, title: n.title, type: n.type, userType: n.userType })));
       
       setNotifications(refreshedNotifications);
       const unreadNotifications = refreshedNotifications.filter(n => !n.isRead);
-      console.log(`Found ${unreadNotifications.length} unread notifications`);
       setUnreadCount(unreadNotifications.length);
     } catch (error) {
-      console.error('Error refreshing notifications:', error);
+        console.error('Error refreshing notifications:', error);
     } finally {
       setLoading(false);
     }

@@ -222,12 +222,6 @@
     "clear_all_filters": "Clear all filters",
     "apply_filters": "Apply filters",
     "advanced_filtering": "Advanced filtering",
-    "property_type": {
-      "apartment": "Apartment",
-      "house": "House",
-      "condo": "Condo",
-      "commercial": "Commercial"
-    },
     "amenities": "Amenities",
     "studio": "Studio",
     "bedroom": "Bedroom",
@@ -716,10 +710,11 @@
         "walk_in_closet": "Walk-in Closet",
         "oven": "Oven",
         "washing_machine": "Washing Machine",
-        "hotplate": "Hotplate/Cooktop",
+        "hotplate_cooktop": "Hotplate/Cooktop",
         "water_heater": "Water Heater",
         "microwave": "Microwave",
-        "bathtub": "Bathtub"
+        "bathtub": "Bathtub",
+        "gym": "Gym"
       },
       "edit_request": {
         "title": "Ask for Edit",

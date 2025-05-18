@@ -190,6 +190,11 @@
     "property_type": {
       "apartment": "Appartement",
       "house": "Maison",
+      "studio": "Studio",
+      "room": "Chambre",
+      "villa": "Villa",
+      "penthouse": "Penthouse",
+      "townhouse": "Maison de ville",
       "condo": "Condo",
       "land": "Terrain",
       "commercial": "Commercial"
@@ -208,12 +213,6 @@
     "filters": "Filtres",
     "clear_all_filters": "Effacer tous les filtres",
     "advanced_filtering": "Filtrage avancé",
-    "property_type": {
-      "apartment": "Appartement",
-      "house": "Maison",
-      "condo": "Condo",
-      "commercial": "Commercial"
-    },
     "amenities": "Équipements",
     "studio": "Studio",
     "bedroom": "Chambre",
@@ -710,8 +709,11 @@
         "walk_in_closet": "Dressing",
         "oven": "Four",
         "washing_machine": "Machine à laver",
-        "hotplate": "Plaque de cuisson",
-        "water_heater": "Chauffe-eau"
+        "hotplate_cooktop": "Plaque de cuisson",
+        "water_heater": "Chauffe-eau",
+        "microwave": "Micro-ondes",
+        "bathtub": "Baignoire",
+        "gym": "Salle de sport"
       }
     }
   }

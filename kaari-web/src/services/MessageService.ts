@@ -239,13 +239,13 @@ class MessageService {
   }
 
   // Get messages for a conversation
-  async getMessages(conversationId: string, limit = 50): Promise<Message[]> {
+  async getMessages(conversationId: string, limitCount = 50): Promise<Message[]> {
     try {
       const q = query(
         collection(db, this.messagesCollection),
         where('conversationId', '==', conversationId),
         orderBy('timestamp', 'desc'),
-        limit(limit)
+        limit(limitCount)
       );
       
       const querySnapshot = await getDocs(q);

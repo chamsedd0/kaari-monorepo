@@ -2,16 +2,7 @@ import { DEFAULT_TIME_SLOTS } from '../config/constants';
 import firebaseBookings from '../firebase/firestore/photoshoot-bookings';
 import { getAuth } from 'firebase/auth';
 
-// Fallback API URL in case the import from constants fails
-const API_URL = (() => {
-  try {
-    const { API_URL } = require('../config/constants');
-    return API_URL;
-  } catch (error) {
-    console.warn('Failed to import API_URL from constants, using fallback');
-    return 'https://api.kaari.com';
-  }
-})();
+
 
 export interface PhotoshootBookingData {
   streetName: string;

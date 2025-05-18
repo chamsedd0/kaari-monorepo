@@ -604,6 +604,28 @@ export const advertiserNotifications = {
     } catch (error) {
       console.error('Failed to create property liked notification:', error);
     }
+  },
+  
+  // Notify advertiser about new message
+  newMessage: async (
+    advertiserId: string,
+    senderId: string,
+    senderName: string,
+    conversationId: string
+  ): Promise<string> => {
+    const title = 'New Message';
+    const message = `You have received a new message from ${senderName}.`;
+    const link = `/dashboard/advertiser/messages/${conversationId}`;
+    
+    return NotificationService.createNotification(
+      advertiserId,
+      'advertiser',
+      'new_message',
+      title,
+      message,
+      link,
+      { conversationId, senderId }
+    );
   }
 };
 
