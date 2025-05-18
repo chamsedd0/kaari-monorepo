@@ -2,10 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-import { FaSearch, FaFilter, FaCheck, FaTimes, FaSpinner } from 'react-icons/fa';
+import { FaSearch, FaFilter, FaCheck, FaTimes, FaSpinner, FaPaw, FaSmoking } from 'react-icons/fa';
+import { ImWoman } from 'react-icons/im';
+import { BiGroup } from 'react-icons/bi';
 import { getDocumentsByField } from '../../../../backend/firebase/firestore';
-import { PropertyEditRequest } from '../../../../backend/models/entities';
-import { approvePropertyEditRequest } from '../../../../backend/server-actions/PropertyEditRequestServerActions';
+import { 
+  PropertyEditRequest,
+  getAllPendingEditRequests, 
+  updateEditRequestStatus,
+  approvePropertyEditRequest
+} from '../../../../backend/server-actions/PropertyEditRequestServerActions';
 import { useToastService } from '../../../../services/ToastService';
 
 const EditRequestsPage: React.FC = () => {
@@ -24,56 +30,153 @@ const EditRequestsPage: React.FC = () => {
   }, []);
 
   const loadEditRequests = async () => {
-      try {
+    try {
       setLoading(true);
-        setError(null);
+      setError(null);
       const requests = await getDocumentsByField('propertyEditRequests', 'status', 'pending');
       setEditRequests(requests as PropertyEditRequest[]);
-      } catch (err) {
-        console.error('Error loading edit requests:', err);
+    } catch (err) {
+      console.error('Error loading edit requests:', err);
       setError('Failed to load edit requests');
-      toast.error('Failed to load edit requests');
-      } finally {
+      toast.showToast('error', 'Error', 'Failed to load edit requests');
+    } finally {
       setLoading(false);
-      }
-    };
+    }
+  };
 
   const handleApproveRequest = async (requestId: string) => {
     try {
       const result = await approvePropertyEditRequest(requestId);
       if (result.success) {
-        toast.success('Edit request approved');
+        toast.showToast('success', 'Success', 'Edit request approved');
         // Navigate to the property edit page with the requested changes
         navigate(`/dashboard/admin/properties/edit/${result.propertyId}`, {
-          state: { requestedChanges: result.requestedChanges }
+          state: { 
+            requestedChanges: {
+              ...result.requestedChanges,
+              // Pass separate properties for different types of changes
+              amenities: result.requestedChanges.amenities || [],
+              features: result.requestedChanges.features || [],
+              // Add housing preference if in comments
+              housingPreference: result.requestedChanges.additionalComments?.includes('Housing Preference: womenOnly') 
+                ? 'womenOnly' 
+                : result.requestedChanges.additionalComments?.includes('Housing Preference: familiesOnly')
+                ? 'familiesOnly'
+                : undefined,
+              // Extract rules from comments
+              petsAllowed: result.requestedChanges.additionalComments?.includes('petsAllowed') || undefined,
+              smokingAllowed: result.requestedChanges.additionalComments?.includes('smokingAllowed') || undefined,
+            }
+          }
         });
       }
     } catch (err) {
       console.error('Error approving edit request:', err);
-      toast.error('Failed to approve edit request');
+      toast.showToast('error', 'Error', 'Failed to approve edit request');
     }
   };
 
   const handleRejectRequest = async (requestId: string) => {
     try {
       // Implement reject logic here
-      toast.success('Edit request rejected');
+      toast.showToast('success', 'Success', 'Edit request rejected');
       await loadEditRequests(); // Reload the list
     } catch (err) {
       console.error('Error rejecting edit request:', err);
-      toast.error('Failed to reject edit request');
+      toast.showToast('error', 'Error', 'Failed to reject edit request');
     }
   };
 
   const filteredRequests = editRequests.filter(request => {
     const matchesSearch = 
       request.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.propertyId.toLowerCase().includes(searchTerm.toLowerCase());
+      request.propertyId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (request.propertyTitle && request.propertyTitle.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = filterStatus === 'all' || request.status === filterStatus;
     
     return matchesSearch && matchesStatus;
   });
+
+  // Helper function to format and categorize changes
+  const formatChanges = (request: PropertyEditRequest) => {
+    const changes: { type: string, items: string[] }[] = [];
+    
+    // Add amenities
+    if (request.additionalAmenities && request.additionalAmenities.length > 0) {
+      changes.push({
+        type: 'Amenities',
+        items: request.additionalAmenities
+      });
+    }
+    
+    // Add features
+    if (request.features && request.features.length > 0) {
+      changes.push({
+        type: 'Features',
+        items: request.features
+      });
+    }
+    
+    // Extract housing preference from comments
+    const comments = request.additionalComments || '';
+    
+    if (comments.includes('Housing Preference:')) {
+      const housingPref = comments.includes('womenOnly') 
+        ? ['Women Only'] 
+        : comments.includes('familiesOnly') 
+        ? ['Families Only'] 
+        : [];
+      
+      if (housingPref.length > 0) {
+        changes.push({
+          type: 'Housing Preference',
+          items: housingPref
+        });
+      }
+    }
+    
+    // Extract rules from comments
+    if (comments.includes('Rules:')) {
+      const rules = [];
+      if (comments.includes('petsAllowed')) rules.push('Pets Allowed');
+      if (comments.includes('smokingAllowed')) rules.push('Smoking Allowed');
+      
+      if (rules.length > 0) {
+        changes.push({
+          type: 'Rules',
+          items: rules
+        });
+      }
+    }
+    
+    return changes;
+  };
+  
+  // Get icon for a specific change type and item
+  const getChangeIcon = (type: string, item: string) => {
+    if (type === 'Housing Preference') {
+      if (item === 'Women Only') return <ImWoman />;
+      if (item === 'Families Only') return <BiGroup />;
+    }
+    
+    if (type === 'Rules') {
+      if (item === 'Pets Allowed') return <FaPaw />;
+      if (item === 'Smoking Allowed') return <FaSmoking />;
+    }
+    
+    return null;
+  };
+  
+  // Extract clean comments (without special tags)
+  const getCleanComments = (comments: string) => {
+    if (!comments) return '';
+    
+    return comments
+      .replace(/Housing Preference: \w+/g, '')
+      .replace(/Rules: [\w, ]+/g, '')
+      .trim();
+  };
 
   return (
     <EditRequestsPageContainer>
@@ -116,7 +219,7 @@ const EditRequestsPage: React.FC = () => {
                   }}
                 >
                   Pending
-        </div>
+                </div>
                 <div 
                   className={`dropdown-item ${filterStatus === 'approved' ? 'active' : ''}`}
                   onClick={() => {
@@ -138,8 +241,8 @@ const EditRequestsPage: React.FC = () => {
               </div>
             )}
           </div>
-                      </div>
-                    </div>
+        </div>
+      </div>
 
       {loading ? (
         <div className="loading-state">
@@ -162,8 +265,8 @@ const EditRequestsPage: React.FC = () => {
           {filteredRequests.map(request => (
             <div key={request.id} className="request-card">
               <div className="request-info">
-                <h3>{request.reason}</h3>
-                <p className="requester">Requested by: {request.propertyId}</p>
+                <h3>{request.propertyTitle || 'Property Edit Request'}</h3>
+                <p className="requester">Requested by: {request.requesterName || request.requesterId}</p>
                 <p className="timestamp">
                   {new Date(request.createdAt).toLocaleDateString()} at{' '}
                   {new Date(request.createdAt).toLocaleTimeString()}
@@ -171,21 +274,31 @@ const EditRequestsPage: React.FC = () => {
                 
                 <div className="changes-summary">
                   <h4>Requested Changes:</h4>
-                  <ul>
-                    {Object.entries(request.requestedChanges).map(([key, value]) => (
-                      <li key={key}>
-                        <strong>{key}:</strong> {JSON.stringify(value)}
-                      </li>
-                        ))}
-                  </ul>
-                    </div>
                   
-                  {request.requestedChanges && (
-                  <div className="comments">
-                      <h4>Additional Comments:</h4>
-                    <p>{request.reason}</p>
-                  </div>
-                )}
+                  {formatChanges(request).length > 0 ? (
+                    <div className="changes-grid">
+                      {formatChanges(request).map((change, idx) => (
+                        <div key={idx} className="change-category">
+                          <h5>{change.type}</h5>
+                          <ul>
+                            {change.items.map((item, itemIdx) => (
+                              <li key={itemIdx}>
+                                {getChangeIcon(change.type, item)} {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="no-changes">No specific changes requested</p>
+                  )}
+                </div>
+                
+                <div className="comments">
+                  <h4>Additional Comments:</h4>
+                  <p>{getCleanComments(request.additionalComments || '') || 'No additional comments'}</p>
+                </div>
               </div>
 
               <div className="request-actions">
@@ -203,7 +316,7 @@ const EditRequestsPage: React.FC = () => {
                 >
                   <FaTimes /> Reject
                 </button>
-                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -261,8 +374,8 @@ const EditRequestsPageContainer = styled.div`
         position: relative;
         
         .filter-button {
-    display: flex;
-    align-items: center;
+          display: flex;
+          align-items: center;
           gap: 0.5rem;
           padding: 0.75rem 1rem;
           background-color: white;
@@ -372,7 +485,7 @@ const EditRequestsPageContainer = styled.div`
         h3 {
           font: ${Theme.typography.fonts.mediumB};
           margin-bottom: 0.5rem;
-      }
+        }
       
         .requester {
           color: ${Theme.colors.gray2};
@@ -393,20 +506,44 @@ const EditRequestsPageContainer = styled.div`
             font: ${Theme.typography.fonts.smallB};
             margin-bottom: 0.5rem;
           }
-
-          ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-
-            li {
-              font: ${Theme.typography.fonts.smallM};
-              margin-bottom: 0.25rem;
-
-              strong {
+          
+          .changes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            
+            .change-category {
+              h5 {
+                font: ${Theme.typography.fonts.smallB};
                 color: ${Theme.colors.gray2};
+                margin-bottom: 0.25rem;
+              }
+              
+              ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                
+                li {
+                  font: ${Theme.typography.fonts.smallM};
+                  margin-bottom: 0.25rem;
+                  display: flex;
+                  align-items: center;
+                  gap: 0.25rem;
+                  
+                  svg {
+                    color: ${Theme.colors.secondary};
+                    font-size: 1rem;
+                  }
+                }
               }
             }
+          }
+          
+          .no-changes {
+            font: ${Theme.typography.fonts.smallM};
+            color: ${Theme.colors.gray2};
+            font-style: italic;
           }
         }
 
@@ -421,7 +558,7 @@ const EditRequestsPageContainer = styled.div`
             color: ${Theme.colors.gray2};
           }
         }
-          }
+      }
           
       .request-actions {
         display: flex;
@@ -430,7 +567,7 @@ const EditRequestsPageContainer = styled.div`
         min-width: 120px;
 
         button {
-            display: flex;
+          display: flex;
           align-items: center;
           justify-content: center;
           gap: 0.5rem;
@@ -447,8 +584,8 @@ const EditRequestsPageContainer = styled.div`
             &:hover {
               background-color: ${Theme.colors.success};
               color: white;
+            }
           }
-        }
         
           &.reject-button {
             background-color: ${Theme.colors.error}20;

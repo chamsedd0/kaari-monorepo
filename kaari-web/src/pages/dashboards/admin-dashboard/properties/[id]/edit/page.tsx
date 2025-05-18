@@ -2,10 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { Theme } from '../../../../../../theme/theme';
-import { FaArrowLeft, FaSave, FaTrash, FaPlus, FaUpload } from 'react-icons/fa';
+import { FaArrowLeft, FaSave, FaTrash, FaPlus, FaUpload, FaMapMarkerAlt } from 'react-icons/fa';
 import { getPropertyById, updateProperty } from '../../../../../../backend/server-actions/PropertyServerActions';
 import { Property } from '../../../../../../backend/entities';
 import { useToastService } from '../../../../../../services/ToastService';
+
+// Extend Property type to include location
+type ExtendedProperty = Property & {
+  location?: {
+    lat: number;
+    lng: number;
+  };
+};
 
 // Mock function for image upload until the real one is implemented
 const uploadPropertyImage = async (file: File, propertyId: string): Promise<string> => {
@@ -23,13 +31,13 @@ const uploadPropertyImage = async (file: File, propertyId: string): Promise<stri
 const PropertyEditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const location = useLocation();
+  const routeLocation = useLocation(); // Renamed from 'location' to avoid conflict
   const toast = useToastService();
   
   // Get requested changes from navigation state if coming from edit request
-  const requestedChanges = location.state?.requestedChanges;
+  const requestedChanges = routeLocation.state?.requestedChanges;
 
-  const [property, setProperty] = useState<Property | null>(null);
+  const [property, setProperty] = useState<ExtendedProperty | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +63,10 @@ const PropertyEditPage: React.FC = () => {
     state: '',
     country: '',
     zipCode: ''
+  });
+  const [location, setLocation] = useState({
+    lat: 0,
+    lng: 0
   });
   const [rooms, setRooms] = useState<Array<{ type: 'bedroom' | 'bathroom' | 'kitchen' | 'storage' | 'living'; area: number }>>([]);
   const [isFurnished, setIsFurnished] = useState(false);
@@ -102,29 +114,61 @@ const PropertyEditPage: React.FC = () => {
       if (requestedChanges.deposit) setDeposit(requestedChanges.deposit.toString());
       if (requestedChanges.serviceFee) setServiceFee(requestedChanges.serviceFee.toString());
       if (requestedChanges.minstay) setMinstay(requestedChanges.minstay.toString());
-      if (requestedChanges.availableFrom) setAvailableFrom(requestedChanges.availableFrom);
+      
+      // Handle availableFrom date
+      if (requestedChanges.availableFrom) {
+        const date = new Date(requestedChanges.availableFrom);
+        if (!isNaN(date.getTime())) {
+          setAvailableFrom(date.toISOString().split('T')[0]);
+        }
+      }
+      
       if (requestedChanges.propertyType) setPropertyType(requestedChanges.propertyType);
       if (requestedChanges.bedrooms) setBedrooms(requestedChanges.bedrooms.toString());
       if (requestedChanges.bathrooms) setBathrooms(requestedChanges.bathrooms.toString());
       if (requestedChanges.area) setArea(requestedChanges.area.toString());
       if (requestedChanges.status) setStatus(requestedChanges.status);
       if (requestedChanges.amenities) setAmenities(requestedChanges.amenities);
-      if (requestedChanges.features) setFeatures(requestedChanges.features);
+      if (requestedChanges.features) {
+        setFeatures(requestedChanges.features);
+        
+        // Update individual feature states based on the features array
+        const features = requestedChanges.features || [];
+        setIncludesWater(features.includes('water'));
+        setIncludesElectricity(features.includes('electricity'));
+        setIncludesWifi(features.includes('wifi'));
+        setIncludesGas(features.includes('gas'));
+        setHasBalcony(features.includes('balcony'));
+        setHasCentralHeating(features.includes('central-heating'));
+        setHasParking(features.includes('parking-space'));
+        setHasAirConditioning(features.includes('air-conditioning'));
+        setHasWoodenFloors(features.includes('wooden-floors'));
+        setHasElevator(features.includes('elevator'));
+        setHasSwimmingPool(features.includes('swimming-pool'));
+        setHasFireplace(features.includes('fireplace'));
+        setIsAccessible(features.includes('accessible'));
+      }
+      
       if (requestedChanges.address) setAddress(requestedChanges.address);
+      if (requestedChanges.location) setLocation(requestedChanges.location);
       if (requestedChanges.rooms) setRooms(requestedChanges.rooms);
-      if (requestedChanges.isFurnished) setIsFurnished(requestedChanges.isFurnished);
+      if (requestedChanges.isFurnished !== undefined) setIsFurnished(requestedChanges.isFurnished);
       if (requestedChanges.capacity) setCapacity(requestedChanges.capacity.toString());
       if (requestedChanges.nearbyPlaces) setNearbyPlaces(requestedChanges.nearbyPlaces);
       if (requestedChanges.rules) setRules(requestedChanges.rules);
-      if (requestedChanges.newNearbyPlace) setNewNearbyPlace(requestedChanges.newNearbyPlace);
-      if (requestedChanges.newRule) setNewRule(requestedChanges.newRule);
-      if (requestedChanges.newRoom) setNewRoom(requestedChanges.newRoom);
+      if (requestedChanges.housingPreference) setHousingPreference(requestedChanges.housingPreference);
+      
+      // For petsAllowed and smokingAllowed, set them to false by default 
+      // if not explicitly mentioned in the requested changes
+      setPetsAllowed(requestedChanges.petsAllowed === true);
+      setSmokingAllowed(requestedChanges.smokingAllowed === true);
+      
       if (requestedChanges.images) setImages(requestedChanges.images);
 
       // Show notification about applied changes
       toast.showToast('info', 'Changes Applied', 'Edit request changes have been applied. Please review and save the changes.');
     }
-  }, [requestedChanges, property]);
+  }, [requestedChanges, property, toast]);
 
   const loadProperty = async () => {
     try {
@@ -133,21 +177,23 @@ const PropertyEditPage: React.FC = () => {
       
       const propertyData = await getPropertyById(id!);
       if (propertyData) {
-        setProperty(propertyData);
+        // Cast to ExtendedProperty to handle location property
+        const extendedPropertyData = propertyData as ExtendedProperty;
+        setProperty(extendedPropertyData);
         // Populate form fields
-        setTitle(propertyData.title);
-        setDescription(propertyData.description);
-        setPrice(propertyData.price.toString());
-        setDeposit(propertyData.deposit?.toString() || '');
-        setServiceFee(propertyData.serviceFee?.toString() || '');
-        setMinstay(propertyData.minstay || '');
+        setTitle(extendedPropertyData.title);
+        setDescription(extendedPropertyData.description);
+        setPrice(extendedPropertyData.price.toString());
+        setDeposit(extendedPropertyData.deposit?.toString() || '');
+        setServiceFee(extendedPropertyData.serviceFee?.toString() || '');
+        setMinstay(extendedPropertyData.minstay || '');
         
         // Handle availableFrom date
         let formattedDate = '';
-        if (propertyData.availableFrom) {
-          const date = propertyData.availableFrom instanceof Date 
-            ? propertyData.availableFrom 
-            : new Date(propertyData.availableFrom);
+        if (extendedPropertyData.availableFrom) {
+          const date = extendedPropertyData.availableFrom instanceof Date 
+            ? extendedPropertyData.availableFrom 
+            : new Date(extendedPropertyData.availableFrom);
           
           if (!isNaN(date.getTime())) {
             formattedDate = date.toISOString().split('T')[0];
@@ -155,44 +201,58 @@ const PropertyEditPage: React.FC = () => {
         }
         setAvailableFrom(formattedDate);
 
-        setPropertyType(propertyData.propertyType);
-        setBedrooms(propertyData.bedrooms?.toString() || '');
-        setBathrooms(propertyData.bathrooms?.toString() || '');
-        setArea(propertyData.area.toString());
-        setStatus(propertyData.status);
-        setAmenities(propertyData.amenities || []);
-        setFeatures(propertyData.features || []);
+        setPropertyType(extendedPropertyData.propertyType);
+        setBedrooms(extendedPropertyData.bedrooms?.toString() || '');
+        setBathrooms(extendedPropertyData.bathrooms?.toString() || '');
+        setArea(extendedPropertyData.area.toString());
+        setStatus(extendedPropertyData.status);
+        setAmenities(extendedPropertyData.amenities || []);
+        setFeatures(extendedPropertyData.features || []);
         setAddress({
-          street: propertyData.address.street || '',
-          city: propertyData.address.city || '',
-          state: propertyData.address.state || '',
-          country: propertyData.address.country || '',
-          zipCode: propertyData.address.zipCode || ''
+          street: extendedPropertyData.address.street || '',
+          city: extendedPropertyData.address.city || '',
+          state: extendedPropertyData.address.state || '',
+          country: extendedPropertyData.address.country || '',
+          zipCode: extendedPropertyData.address.zipCode || ''
         });
-        setRooms(propertyData.rooms || []);
-        setIsFurnished(propertyData.isFurnished || false);
-        setCapacity(propertyData.capacity?.toString() || '');
-        setNearbyPlaces(propertyData.nearbyPlaces || []);
-        setRules(propertyData.rules || []);
-        setImages(propertyData.images || []);
+        
+        // Set location data if available
+        if (extendedPropertyData.location) {
+          setLocation({
+            lat: extendedPropertyData.location.lat || 0,
+            lng: extendedPropertyData.location.lng || 0
+          });
+        }
+        
+        setRooms(extendedPropertyData.rooms || []);
+        setIsFurnished(extendedPropertyData.isFurnished || false);
+        setCapacity(extendedPropertyData.capacity?.toString() || '');
+        setNearbyPlaces(extendedPropertyData.nearbyPlaces || []);
+        setRules(extendedPropertyData.rules || []);
+        setImages(extendedPropertyData.images || []);
 
         // Set new fields
-        setHousingPreference(propertyData.housingPreference || '');
-        setPetsAllowed(propertyData.petsAllowed || false);
-        setSmokingAllowed(propertyData.smokingAllowed || false);
-        setIncludesWater(propertyData.includesWater || false);
-        setIncludesElectricity(propertyData.includesElectricity || false);
-        setIncludesWifi(propertyData.includesWifi || false);
-        setIncludesGas(propertyData.includesGas || false);
-        setHasBalcony(propertyData.hasBalcony || false);
-        setHasCentralHeating(propertyData.hasCentralHeating || false);
-        setHasParking(propertyData.hasParking || false);
-        setHasAirConditioning(propertyData.hasAirConditioning || false);
-        setHasWoodenFloors(propertyData.hasWoodenFloors || false);
-        setHasElevator(propertyData.hasElevator || false);
-        setHasSwimmingPool(propertyData.hasSwimmingPool || false);
-        setHasFireplace(propertyData.hasFireplace || false);
-        setIsAccessible(propertyData.isAccessible || false);
+        setHousingPreference(extendedPropertyData.housingPreference || '');
+        setPetsAllowed(extendedPropertyData.petsAllowed || false);
+        setSmokingAllowed(extendedPropertyData.smokingAllowed || false);
+        
+        // Set included utilities based on features
+        const features = extendedPropertyData.features || [];
+        setIncludesWater(features.includes('water'));
+        setIncludesElectricity(features.includes('electricity'));
+        setIncludesWifi(features.includes('wifi'));
+        setIncludesGas(features.includes('gas'));
+        
+        // Set property features based on features array
+        setHasBalcony(features.includes('balcony'));
+        setHasCentralHeating(features.includes('central-heating'));
+        setHasParking(features.includes('parking-space'));
+        setHasAirConditioning(features.includes('air-conditioning'));
+        setHasWoodenFloors(features.includes('wooden-floors'));
+        setHasElevator(features.includes('elevator'));
+        setHasSwimmingPool(features.includes('swimming-pool'));
+        setHasFireplace(features.includes('fireplace'));
+        setIsAccessible(features.includes('accessible'));
       }
     } catch (err) {
       console.error('Error loading property:', err);
@@ -245,22 +305,45 @@ const PropertyEditPage: React.FC = () => {
     try {
       setSaving(true);
       setError(null);
+      
+      // Build features array from individual feature states
+      const updatedFeatures = [];
+      if (includesWater) updatedFeatures.push('water');
+      if (includesElectricity) updatedFeatures.push('electricity');
+      if (includesWifi) updatedFeatures.push('wifi');
+      if (includesGas) updatedFeatures.push('gas');
+      if (hasBalcony) updatedFeatures.push('balcony');
+      if (hasCentralHeating) updatedFeatures.push('central-heating');
+      if (hasParking) updatedFeatures.push('parking-space');
+      if (hasAirConditioning) updatedFeatures.push('air-conditioning');
+      if (hasWoodenFloors) updatedFeatures.push('wooden-floors');
+      if (hasElevator) updatedFeatures.push('elevator');
+      if (hasSwimmingPool) updatedFeatures.push('swimming-pool');
+      if (hasFireplace) updatedFeatures.push('fireplace');
+      if (isAccessible) updatedFeatures.push('accessible');
 
       // Create the base property update object
-      const updatedProperty: Partial<Property> = {
+      const updatedProperty: Partial<ExtendedProperty> = {
+        // Start with any fields already in the property to maintain structure
+        ...property,
+        // Now update with the new values
         title,
         description,
         price: parseFloat(price),
         propertyType: propertyType as 'apartment' | 'house' | 'condo' | 'land' | 'commercial',
-        area: parseFloat(area),
+        area: parseFloat(area) || 0,
         status,
         amenities,
-        features,
+        features: updatedFeatures,
         address,
+        location,
         rooms,
         isFurnished,
         images,
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        petsAllowed,
+        smokingAllowed,
+        housingPreference
       };
 
       // Add optional fields only if they have valid values
@@ -280,24 +363,6 @@ const PropertyEditPage: React.FC = () => {
           updatedProperty.availableFrom = date;
         }
       }
-
-      // Add new fields
-      updatedProperty.housingPreference = housingPreference;
-      updatedProperty.petsAllowed = petsAllowed;
-      updatedProperty.smokingAllowed = smokingAllowed;
-      updatedProperty.includesWater = includesWater;
-      updatedProperty.includesElectricity = includesElectricity;
-      updatedProperty.includesWifi = includesWifi;
-      updatedProperty.includesGas = includesGas;
-      updatedProperty.hasBalcony = hasBalcony;
-      updatedProperty.hasCentralHeating = hasCentralHeating;
-      updatedProperty.hasParking = hasParking;
-      updatedProperty.hasAirConditioning = hasAirConditioning;
-      updatedProperty.hasWoodenFloors = hasWoodenFloors;
-      updatedProperty.hasElevator = hasElevator;
-      updatedProperty.hasSwimmingPool = hasSwimmingPool;
-      updatedProperty.hasFireplace = hasFireplace;
-      updatedProperty.isAccessible = isAccessible;
 
       await updateProperty(property.id, updatedProperty);
       toast.showToast('success', 'Success', 'Property updated successfully');
@@ -486,7 +551,7 @@ const PropertyEditPage: React.FC = () => {
         </div>
 
         <div className="form-section">
-          <h2>Address</h2>
+          <h2>Address & Location</h2>
           <div className="form-group">
             <label>Street</label>
             <input
@@ -496,17 +561,6 @@ const PropertyEditPage: React.FC = () => {
               placeholder="Street Name"
             />
           </div>
-
-          <div className="form-group">
-            <label>Zip Code</label>
-            <input
-              type="text"
-              value={address.zipCode}
-              onChange={(e) => setAddress({ ...address, zipCode: e.target.value })}
-              placeholder="Zip Code"
-            />
-          </div>
-
 
           <div className="form-row">
             <div className="form-group">
@@ -520,17 +574,27 @@ const PropertyEditPage: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label>State</label>
+              <label>State/Province</label>
               <input
                 type="text"
                 value={address.state}
                 onChange={(e) => setAddress({ ...address, state: e.target.value })}
-                placeholder="State"
+                placeholder="State/Province"
               />
             </div>
           </div>
 
           <div className="form-row">
+            <div className="form-group">
+              <label>Zip/Postal Code</label>
+              <input
+                type="text"
+                value={address.zipCode}
+                onChange={(e) => setAddress({ ...address, zipCode: e.target.value })}
+                placeholder="Zip/Postal Code"
+              />
+            </div>
+
             <div className="form-group">
               <label>Country</label>
               <input
@@ -540,7 +604,41 @@ const PropertyEditPage: React.FC = () => {
                 placeholder="Country"
               />
             </div>
+          </div>
 
+          <div className="form-row">
+            <div className="form-group">
+              <label>Latitude</label>
+              <input
+                type="number"
+                step="0.0000001"
+                value={location.lat}
+                onChange={(e) => setLocation({
+                  ...location,
+                  lat: parseFloat(e.target.value) || 0
+                })}
+                placeholder="Latitude"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Longitude</label>
+              <input
+                type="number"
+                step="0.0000001"
+                value={location.lng}
+                onChange={(e) => setLocation({
+                  ...location,
+                  lng: parseFloat(e.target.value) || 0
+                })}
+                placeholder="Longitude"
+              />
+            </div>
+          </div>
+          
+          <div className="location-note">
+            <FaMapMarkerAlt /> 
+            <span>Note: You can also set the exact location on the map in the property details page.</span>
           </div>
         </div>
 
@@ -655,7 +753,41 @@ const PropertyEditPage: React.FC = () => {
         </div>
 
         <div className="form-section">
-          <h2>Rules</h2>
+          <h2>Rules & Preferences</h2>
+          <div className="form-group">
+            <label>Housing Preference</label>
+            <select 
+              value={housingPreference}
+              onChange={(e) => setHousingPreference(e.target.value)}
+            >
+              <option value="">No Specific Preference</option>
+              <option value="womenOnly">Women Only</option>
+              <option value="familiesOnly">Families Only</option>
+              <option value="studentsOnly">Students Only</option>
+              <option value="professionalsOnly">Professionals Only</option>
+            </select>
+          </div>
+
+          <div className="checkbox-grid">
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={petsAllowed}
+                onChange={(e) => setPetsAllowed(e.target.checked)}
+              />
+              <span className="checkbox-label">Pets Allowed</span>
+            </label>
+            
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={smokingAllowed}
+                onChange={(e) => setSmokingAllowed(e.target.checked)}
+              />
+              <span className="checkbox-label">Smoking Allowed</span>
+            </label>
+          </div>
+          
           <div className="rules-list">
             {rules.map((rule, index) => (
               <div key={index} className="rule-item">
@@ -669,15 +801,18 @@ const PropertyEditPage: React.FC = () => {
                   }}
                   placeholder="Rule Name"
                 />
-                <input
-                  type="checkbox"
-                  checked={rule.allowed}
-                  onChange={(e) => {
-                    const newRules = [...rules];
-                    newRules[index].allowed = e.target.checked;
-                    setRules(newRules);
-                  }}
-                />
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={rule.allowed}
+                    onChange={(e) => {
+                      const newRules = [...rules];
+                      newRules[index].allowed = e.target.checked;
+                      setRules(newRules);
+                    }}
+                  />
+                  <span>Allowed</span>
+                </label>
                 <button onClick={() => setRules(rules.filter((_, i) => i !== index))}>Remove</button>
               </div>
             ))}
@@ -688,11 +823,14 @@ const PropertyEditPage: React.FC = () => {
                 onChange={(e) => setNewRule({ ...newRule, name: e.target.value })}
                 placeholder="Rule Name"
               />
-              <input
-                type="checkbox"
-                checked={newRule.allowed}
-                onChange={(e) => setNewRule({ ...newRule, allowed: e.target.checked })}
-              />
+              <label>
+                <input
+                  type="checkbox"
+                  checked={newRule.allowed}
+                  onChange={(e) => setNewRule({ ...newRule, allowed: e.target.checked })}
+                />
+                <span>Allowed</span>
+              </label>
               <button onClick={() => {
                 if (newRule.name) {
                   setRules([...rules, newRule]);
@@ -704,17 +842,50 @@ const PropertyEditPage: React.FC = () => {
         </div>
 
         <div className="form-section">
-          <h2>Housing Preferences</h2>
-          <div className="form-group">
-            <label>Housing Preference</label>
-            <select 
-              value={housingPreference}
-              onChange={(e) => setHousingPreference(e.target.value)}
+          <h2>Property Images</h2>
+          <div className="upload-container">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelection}
+              accept="image/*"
+              multiple
+              style={{ display: 'none' }}
+            />
+            <button 
+              className="upload-button" 
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
             >
-              <option value="">No Specific Preference</option>
-              <option value="womenOnly">Women Only</option>
-              <option value="familiesOnly">Families Only</option>
-            </select>
+              <FaUpload /> {uploading ? 'Uploading...' : 'Upload Images'}
+            </button>
+            <div className="upload-note">
+              Supported formats: JPG, PNG, WebP. Max size: 5MB per image.
+            </div>
+          </div>
+          
+          <div className="images-grid">
+            {images.map((imageUrl, index) => (
+              <div key={index} className="image-item">
+                <div className="image-preview">
+                  <img src={imageUrl} alt={`Property ${index + 1}`} />
+                </div>
+                <div className="image-controls">
+                  <button
+                    className="remove-button"
+                    onClick={() => handleRemoveImage(index)}
+                    type="button"
+                  >
+                    <FaTrash /> Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+            {images.length === 0 && (
+              <div className="no-images">
+                No images have been uploaded for this property.
+              </div>
+            )}
           </div>
         </div>
 
@@ -835,97 +1006,24 @@ const PropertyEditPage: React.FC = () => {
         </div>
 
         <div className="form-section">
-          <h2>Property Images</h2>
-          <div className="upload-container">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileSelection}
-              accept="image/*"
-              multiple
-              style={{ display: 'none' }}
-            />
-            <button 
-              className="upload-button" 
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-            >
-              <FaUpload /> {uploading ? 'Uploading...' : 'Upload Images'}
-            </button>
-            <div className="upload-note">
-              Supported formats: JPG, PNG, WebP. Max size: 5MB per image.
-            </div>
-          </div>
-          
-          <div className="images-grid">
-            {images.map((imageUrl, index) => (
-              <div key={index} className="image-item">
-                <div className="image-preview">
-                  <img src={imageUrl} alt={`Property ${index + 1}`} />
-                </div>
-                <div className="image-controls">
-                  <button
-                    className="remove-button"
-                    onClick={() => handleRemoveImage(index)}
-                    type="button"
-                  >
-                    <FaTrash /> Remove
-                  </button>
-                </div>
-              </div>
+          <h2>Amenities</h2>
+          <div className="checkbox-grid">
+            {AMENITIES_OPTIONS.map(amenity => (
+              <label key={amenity.id} className="checkbox-item">
+                <input
+                  type="checkbox"
+                  checked={amenities.includes(amenity.id)}
+                  onChange={() => {
+                    if (amenities.includes(amenity.id)) {
+                      setAmenities(amenities.filter(a => a !== amenity.id));
+                    } else {
+                      setAmenities([...amenities, amenity.id]);
+                    }
+                  }}
+                />
+                <span className="checkbox-label">{amenity.label}</span>
+              </label>
             ))}
-            {images.length === 0 && (
-              <div className="no-images">
-                No images have been uploaded for this property.
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="form-section">
-          <h2>Amenities & Features</h2>
-          <div className="form-group">
-            <label>Amenities</label>
-            <div className="checkbox-grid">
-              {AMENITIES_OPTIONS.map(amenity => (
-                <label key={amenity.id} className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={amenities.includes(amenity.id)}
-                    onChange={() => {
-                      if (amenities.includes(amenity.id)) {
-                        setAmenities(amenities.filter(a => a !== amenity.id));
-                      } else {
-                        setAmenities([...amenities, amenity.id]);
-                      }
-                    }}
-                  />
-                  <span className="checkbox-label">{amenity.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Features</label>
-            <div className="checkbox-grid">
-              {FEATURES_OPTIONS.map(feature => (
-                <label key={feature.id} className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={features.includes(feature.id)}
-                    onChange={() => {
-                      if (features.includes(feature.id)) {
-                        setFeatures(features.filter(f => f !== feature.id));
-                      } else {
-                        setFeatures([...features, feature.id]);
-                      }
-                    }}
-                  />
-                  <span className="checkbox-label">{feature.label}</span>
-                </label>
-              ))}
-            </div>
           </div>
         </div>
       </div>
@@ -947,7 +1045,7 @@ const AMENITIES_OPTIONS = [
   { id: 'walk-in-closet', label: 'Walk-in Closet' },
   { id: 'oven', label: 'Oven' },
   { id: 'washing-machine', label: 'Washing Machine' },
-  { id: 'hotplate', label: 'Hotplate/Cooktop' },
+  { id: 'hotplate-cooktop', label: 'Hotplate/Cooktop' },
   { id: 'water-heater', label: 'Water Heater' },
   { id: 'microwave', label: 'Microwave' },
   { id: 'bathtub', label: 'Bathtub' },
@@ -1268,6 +1366,18 @@ const PropertyEditPageContainer = styled.div`
         color: white;
       }
     }
+  }
+
+  .location-note {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background-color: ${Theme.colors.tertiary}30;
+    border-radius: 8px;
+    font: ${Theme.typography.fonts.smallM};
+    color: ${Theme.colors.gray2};
   }
 `;
 

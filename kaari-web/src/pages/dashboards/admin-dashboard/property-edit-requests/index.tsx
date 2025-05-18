@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaCheck, FaTimes, FaEye } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaEye, FaPaw, FaSmoking } from 'react-icons/fa';
+import { ImWoman } from 'react-icons/im';
+import { Theme } from '../../../../theme/theme';
 
 import { 
   PropertyEditRequest, 
@@ -49,7 +51,23 @@ const PropertyEditRequestsPage: React.FC = () => {
       if (result.success) {
         // Navigate to the property edit page with the requested changes
         navigate(`/dashboard/admin/properties/edit/${result.propertyId}`, {
-          state: { requestedChanges: result.requestedChanges }
+          state: { 
+            requestedChanges: {
+              ...result.requestedChanges,
+              // Pass separate properties for different types of changes
+              amenities: result.requestedChanges.amenities || [],
+              features: result.requestedChanges.features || [],
+              // Add housing preference if in comments
+              housingPreference: result.requestedChanges.additionalComments?.includes('Housing Preference: womenOnly') 
+                ? 'womenOnly' 
+                : result.requestedChanges.additionalComments?.includes('Housing Preference: familiesOnly')
+                ? 'familiesOnly'
+                : undefined,
+              // Extract rules from comments
+              petsAllowed: result.requestedChanges.additionalComments?.includes('petsAllowed') || undefined,
+              smokingAllowed: result.requestedChanges.additionalComments?.includes('smokingAllowed') || undefined,
+            }
+          }
         });
         
         // Update local state
@@ -88,6 +106,72 @@ const PropertyEditRequestsPage: React.FC = () => {
   // View property details
   const viewProperty = (propertyId: string) => {
     navigate(`/dashboard/admin/properties/edit/${propertyId}`);
+  };
+
+  // Helper function to categorize and display changes
+  const formatRequestedChanges = (request: PropertyEditRequest) => {
+    const categories = [
+      { 
+        title: 'Amenities', 
+        items: request.additionalAmenities || [],
+        icon: null 
+      },
+      { 
+        title: 'Features', 
+        items: request.features || [],
+        icon: null 
+      }
+    ];
+    
+    // Extract housing preference and rules from comments
+    const comments = request.additionalComments || '';
+    
+    // Check for housing preferences
+    if (comments.includes('Housing Preference: womenOnly')) {
+      categories.push({
+        title: 'Housing Preference',
+        items: ['Women Only'],
+        icon: null
+      });
+    } else if (comments.includes('Housing Preference: familiesOnly')) {
+      categories.push({
+        title: 'Housing Preference',
+        items: ['Families Only'],
+        icon: null
+      });
+    }
+    
+    // Check for rules
+    const rules: string[] = [];
+    if (comments.includes('Rules:')) {
+      if (comments.includes('petsAllowed')) {
+        rules.push('Pets Allowed');
+      }
+      if (comments.includes('smokingAllowed')) {
+        rules.push('Smoking Allowed');
+      }
+    }
+    
+    if (rules.length > 0) {
+      categories.push({
+        title: 'Rules',
+        items: rules,
+        icon: null
+      });
+    }
+    
+    // Filter out any empty categories
+    return categories.filter(cat => cat.items.length > 0);
+  };
+  
+  // Get cleaned comments without the special tags
+  const getCleanedComments = (comments: string) => {
+    if (!comments) return '';
+    
+    return comments
+      .replace(/Housing Preference: \w+/g, '')
+      .replace(/Rules: [\w, ]+/g, '')
+      .trim();
   };
 
   return (
@@ -149,33 +233,27 @@ const PropertyEditRequestsPage: React.FC = () => {
                     })}
                   </Value>
                 </DetailItem>
-                <DetailItem>
-                  <Label>Additional Amenities:</Label>
-                  {selectedRequest.additionalAmenities.length > 0 ? (
-                    <ItemList>
-                      {selectedRequest.additionalAmenities.map((amenity, index) => (
-                        <li key={index}>{amenity}</li>
-                      ))}
-                    </ItemList>
-                  ) : (
-                    <Value>None specified</Value>
-                  )}
-                </DetailItem>
-                <DetailItem>
-                  <Label>Features:</Label>
-                  {selectedRequest.features.length > 0 ? (
-                    <ItemList>
-                      {selectedRequest.features.map((feature, index) => (
-                        <li key={index}>{feature}</li>
-                      ))}
-                    </ItemList>
-                  ) : (
-                    <Value>None specified</Value>
-                  )}
-                </DetailItem>
+                
+                {formatRequestedChanges(selectedRequest).map((category, idx) => (
+                  <DetailItem key={idx}>
+                    <Label>{category.title}:</Label>
+                    {category.items.length > 0 ? (
+                      <ItemList>
+                        {category.items.map((item, index) => (
+                          <li key={index}>
+                            {category.icon} {item}
+                          </li>
+                        ))}
+                      </ItemList>
+                    ) : (
+                      <Value>None specified</Value>
+                    )}
+                  </DetailItem>
+                ))}
+                
                 <DetailItem>
                   <Label>Additional Comments:</Label>
-                  <Value>{selectedRequest.additionalComments || 'None'}</Value>
+                  <Value>{getCleanedComments(selectedRequest.additionalComments) || 'None'}</Value>
                 </DetailItem>
               </DetailSection>
               
@@ -351,6 +429,8 @@ const ItemList = styled.ul`
   
   li {
     margin-bottom: 3px;
+    display: flex;
+    align-items: center;
   }
 `;
 

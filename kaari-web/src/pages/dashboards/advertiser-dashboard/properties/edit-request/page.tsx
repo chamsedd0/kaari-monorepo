@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FaArrowLeft, FaChevronRight, FaBed, FaCouch, FaTable, FaChair, FaDesktop } from 'react-icons/fa';
-import { BiCloset, BiCabinet } from 'react-icons/bi';
-import { MdTableRestaurant, MdOutlineCoffee, MdWaterDrop, MdOutlineLocalLaundryService, MdOutlineKitchen, MdOutlineMicrowave } from 'react-icons/md';
-import { RiWaterFlashFill, RiWifiFill } from 'react-icons/ri';
+import { FaArrowLeft, FaChevronRight, FaBed, FaCouch, FaTable, FaChair, FaDesktop, FaPaw, FaSmoking, FaParking, FaSwimmingPool, FaWheelchair } from 'react-icons/fa';
+import { BiCloset, BiCabinet, BiWind } from 'react-icons/bi';
+import { MdTableRestaurant, MdOutlineCoffee, MdWaterDrop, MdOutlineLocalLaundryService, MdOutlineKitchen, MdOutlineMicrowave, MdOutlineBalcony, MdOutlineFireplace, MdOutlineBathtub, MdOutlineHeatPump } from 'react-icons/md';
+import { RiWaterFlashFill, RiWifiFill, RiParkingBoxLine } from 'react-icons/ri';
 import { BsFillLightningFill } from 'react-icons/bs';
 import { ImWoman } from 'react-icons/im';
+import { TbAirConditioning, TbWood } from 'react-icons/tb';
+import { GiHeatHaze } from 'react-icons/gi';
 import { Theme } from '../../../../../theme/theme';
 import { submitPropertyEditRequest } from '../../../../../backend/server-actions/PropertyEditRequestServerActions';
 import { getPropertyById } from '../../../../../backend/server-actions/PropertyServerActions';
@@ -28,32 +30,50 @@ const PropertyEditRequestPage: React.FC = () => {
   const toast = useToastService();
   const { t } = useTranslation();
   
-  // Amenities options with icons and translations
+  // Amenities options with icons and translations - updated to match the new structure
   const AMENITIES_OPTIONS = [
-    { id: 'furnished', label: t('common.furnished'), icon: <FaBed style={{ color: Theme.colors.secondary }} /> },
-    { id: 'sofabed', label: t('advertiser_dashboard.properties.amenities.sofabed'), icon: <FaCouch style={{ color: Theme.colors.secondary }} /> },
+    { id: 'desk', label: t('advertiser_dashboard.properties.amenities.desk'), icon: <FaDesktop style={{ color: Theme.colors.secondary }} /> },
+    { id: 'cabinet', label: t('advertiser_dashboard.properties.amenities.cabinet'), icon: <BiCabinet style={{ color: Theme.colors.secondary }} /> },
     { id: 'dining-table', label: t('advertiser_dashboard.properties.amenities.dining_table'), icon: <MdTableRestaurant style={{ color: Theme.colors.secondary }} /> },
     { id: 'wardrobe', label: t('advertiser_dashboard.properties.amenities.wardrobe'), icon: <BiCloset style={{ color: Theme.colors.secondary }} /> },
-    { id: 'cabinet', label: t('advertiser_dashboard.properties.amenities.cabinet'), icon: <BiCabinet style={{ color: Theme.colors.secondary }} /> },
     { id: 'chair', label: t('advertiser_dashboard.properties.amenities.chair'), icon: <FaChair style={{ color: Theme.colors.secondary }} /> },
-    { id: 'desk', label: t('advertiser_dashboard.properties.amenities.desk'), icon: <FaDesktop style={{ color: Theme.colors.secondary }} /> },
     { id: 'sofa', label: t('advertiser_dashboard.properties.amenities.sofa'), icon: <FaCouch style={{ color: Theme.colors.secondary }} /> },
-    { id: 'coffee-table', label: t('advertiser_dashboard.properties.amenities.coffee_table'), icon: <MdOutlineCoffee style={{ color: Theme.colors.secondary }} /> },
-    { id: 'dresser', label: t('advertiser_dashboard.properties.amenities.dresser'), icon: <FaTable style={{ color: Theme.colors.secondary }} /> },
-    { id: 'mirror', label: t('advertiser_dashboard.properties.amenities.mirror'), icon: <BiCloset style={{ color: Theme.colors.secondary }} /> },
+    { id: 'dresser', label: t('advertiser_dashboard.properties.amenities.dresser'), icon: <BiCabinet style={{ color: Theme.colors.secondary }} /> },
     { id: 'walk-in-closet', label: t('advertiser_dashboard.properties.amenities.walk_in_closet'), icon: <BiCloset style={{ color: Theme.colors.secondary }} /> },
     { id: 'oven', label: t('advertiser_dashboard.properties.amenities.oven'), icon: <MdOutlineKitchen style={{ color: Theme.colors.secondary }} /> },
+    { id: 'hotplate-cooktop', label: t('advertiser_dashboard.properties.amenities.hotplate_cooktop'), icon: <MdOutlineKitchen style={{ color: Theme.colors.secondary }} /> },
+    { id: 'mirror', label: t('advertiser_dashboard.properties.amenities.mirror'), icon: <BiCloset style={{ color: Theme.colors.secondary }} /> },
     { id: 'washing-machine', label: t('advertiser_dashboard.properties.amenities.washing_machine'), icon: <MdOutlineLocalLaundryService style={{ color: Theme.colors.secondary }} /> },
-    { id: 'hotplate-cooktop', label: t('advertiser_dashboard.properties.amenities.hotplate'), icon: <MdOutlineMicrowave style={{ color: Theme.colors.secondary }} /> },
-    { id: 'water-heater', label: t('advertiser_dashboard.properties.amenities.water_heater'), icon: <MdWaterDrop style={{ color: Theme.colors.secondary }} /> }
+    { id: 'gym', label: t('advertiser_dashboard.properties.amenities.gym'), icon: <FaDesktop style={{ color: Theme.colors.secondary }} /> },
   ];
 
-  // Fees options with icons and translations
-  const FEES_OPTIONS = [
+  // Features options with icons and translations - updated to match the new structure
+  const FEATURES_OPTIONS = [
     { id: 'water', label: t('common.water'), icon: <RiWaterFlashFill style={{ color: Theme.colors.secondary }} /> },
     { id: 'electricity', label: t('common.electricity'), icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> },
     { id: 'wifi', label: t('common.wifi'), icon: <RiWifiFill style={{ color: Theme.colors.secondary }} /> },
-    { id: 'women-only', label: t('common.women_only'), icon: <ImWoman style={{ color: Theme.colors.secondary }} /> }
+    { id: 'gas', label: t('common.gas'), icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> },
+    { id: 'balcony', label: t('property_features.balcony'), icon: <MdOutlineBalcony style={{ color: Theme.colors.secondary }} /> },
+    { id: 'central-heating', label: t('property_features.central_heating'), icon: <GiHeatHaze style={{ color: Theme.colors.secondary }} /> },
+    { id: 'parking-space', label: t('property_features.parking_space'), icon: <RiParkingBoxLine style={{ color: Theme.colors.secondary }} /> },
+    { id: 'air-conditioning', label: t('property_features.air_conditioning'), icon: <TbAirConditioning style={{ color: Theme.colors.secondary }} /> },
+    { id: 'wooden-floors', label: t('property_features.wooden_floors'), icon: <TbWood style={{ color: Theme.colors.secondary }} /> },
+    { id: 'elevator', label: t('property_features.elevator'), icon: <FaWheelchair style={{ color: Theme.colors.secondary }} /> },
+    { id: 'swimming-pool', label: t('property_features.swimming_pool'), icon: <FaSwimmingPool style={{ color: Theme.colors.secondary }} /> },
+    { id: 'fireplace', label: t('property_features.fireplace'), icon: <MdOutlineFireplace style={{ color: Theme.colors.secondary }} /> },
+    { id: 'accessible', label: t('property_features.accessible'), icon: <FaWheelchair style={{ color: Theme.colors.secondary }} /> },
+  ];
+  
+  // Housing preference options
+  const HOUSING_PREFERENCES = [
+    { id: 'womenOnly', label: t('common.women_only'), icon: <ImWoman style={{ color: Theme.colors.secondary }} /> },
+    { id: 'familiesOnly', label: t('common.families_only'), icon: <FaDesktop style={{ color: Theme.colors.secondary }} /> }
+  ];
+  
+  // Rules options
+  const RULES_OPTIONS = [
+    { id: 'petsAllowed', label: t('common.pets_allowed'), icon: <FaPaw style={{ color: Theme.colors.secondary }} /> },
+    { id: 'smokingAllowed', label: t('common.smoking_allowed'), icon: <FaSmoking style={{ color: Theme.colors.secondary }} /> }
   ];
   
   const [isLoading, setIsLoading] = useState(true);
@@ -61,7 +81,9 @@ const PropertyEditRequestPage: React.FC = () => {
   const [propertyTitle, setPropertyTitle] = useState('');
   const [propertyLocation, setPropertyLocation] = useState('');
   const [additionalAmenities, setAdditionalAmenities] = useState<string[]>([]);
-  const [includedFees, setIncludedFees] = useState<string[]>([]);
+  const [includedFeatures, setIncludedFeatures] = useState<string[]>([]);
+  const [housingPreference, setHousingPreference] = useState<string>('');
+  const [propertyRules, setPropertyRules] = useState<string[]>([]);
   const [additionalComments, setAdditionalComments] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -79,17 +101,37 @@ const PropertyEditRequestPage: React.FC = () => {
         const property = await getPropertyById(propertyId);
         if (property) {
           setPropertyTitle(property.title || t('advertiser_dashboard.properties.default_apartment_title'));
-          setPropertyLocation(`${property.address?.city || t('common.default_city')}, ${property.address?.country || t('common.default_country')}`);
+          
+          // Format location from address components
+          const address = property.address || {};
+          const locationParts = [
+            address.city,
+            address.state,
+            address.country
+          ].filter(Boolean);
+          setPropertyLocation(locationParts.join(', '));
           
           // Set existing amenities from property data
           if (property.amenities && Array.isArray(property.amenities)) {
             setAdditionalAmenities(property.amenities);
           }
           
-          // Set existing included fees from property data
+          // Set existing features from property data
           if (property.features && Array.isArray(property.features)) {
-            setIncludedFees(property.features);
+            setIncludedFeatures(property.features);
           }
+          
+          // Set housing preference if available
+          if (property.housingPreference) {
+            setHousingPreference(property.housingPreference);
+          }
+          
+          // Set rules based on boolean properties
+          const rules: string[] = [];
+          if (property.petsAllowed) rules.push('petsAllowed');
+          if (property.smokingAllowed) rules.push('smokingAllowed');
+          setPropertyRules(rules);
+          
         } else {
           setError(t('advertiser_dashboard.properties.errors.property_not_found'));
         }
@@ -112,11 +154,24 @@ const PropertyEditRequestPage: React.FC = () => {
     );
   };
 
-  const handleFeeChange = (feeId: string) => {
-    setIncludedFees(prev => 
-      prev.includes(feeId) 
-        ? prev.filter(f => f !== feeId) 
-        : [...prev, feeId]
+  const handleFeatureChange = (featureId: string) => {
+    setIncludedFeatures(prev => 
+      prev.includes(featureId) 
+        ? prev.filter(f => f !== featureId) 
+        : [...prev, featureId]
+    );
+  };
+  
+  const handleHousingPreferenceChange = (preferenceId: string) => {
+    // Only allow one housing preference at a time
+    setHousingPreference(prev => prev === preferenceId ? '' : preferenceId);
+  };
+  
+  const handleRuleChange = (ruleId: string) => {
+    setPropertyRules(prev => 
+      prev.includes(ruleId) 
+        ? prev.filter(r => r !== ruleId) 
+        : [...prev, ruleId]
     );
   };
 
@@ -131,9 +186,27 @@ const PropertyEditRequestPage: React.FC = () => {
         propertyId,
         propertyTitle,
         additionalAmenities,
-        includedFees, 
+        includedFees: includedFeatures, // Map to the expected field in the API
         additionalComments
       };
+      
+      // Add housing preference and rules to additional comments if selected
+      if (housingPreference || propertyRules.length > 0) {
+        const preferences = [];
+        if (housingPreference) {
+          preferences.push(`Housing Preference: ${housingPreference}`);
+        }
+        if (propertyRules.length > 0) {
+          preferences.push(`Rules: ${propertyRules.join(', ')}`);
+        }
+        
+        if (preferences.length > 0) {
+          formData.additionalComments = [
+            formData.additionalComments,
+            ...preferences
+          ].filter(Boolean).join('\n\n');
+        }
+      }
       
       await submitPropertyEditRequest(formData);
       
@@ -189,17 +262,53 @@ const PropertyEditRequestPage: React.FC = () => {
             </div>
             
             <div className="form-section">
-              <h3>{t('advertiser_dashboard.properties.edit_request.other')}</h3>
+              <h3>{t('property_features.title')}</h3>
               <div className="checkbox-grid">
-                {FEES_OPTIONS.map(fee => (
-                  <label key={fee.id} className="checkbox-item">
+                {FEATURES_OPTIONS.map(feature => (
+                  <label key={feature.id} className="checkbox-item">
                     <input 
                       type="checkbox" 
-                      checked={includedFees.includes(fee.id)}
-                      onChange={() => handleFeeChange(fee.id)}
+                      checked={includedFeatures.includes(feature.id)}
+                      onChange={() => handleFeatureChange(feature.id)}
                     />
-                    <div className="amenity-icon">{fee.icon}</div>
-                    <span className="amenity-text">{fee.label}</span>
+                    <div className="amenity-icon">{feature.icon}</div>
+                    <span className="amenity-text">{feature.label}</span>
+                    <span className="checkbox-square"></span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            <div className="form-section">
+              <h3>{t('common.housing_preferences')}</h3>
+              <div className="checkbox-grid">
+                {HOUSING_PREFERENCES.map(preference => (
+                  <label key={preference.id} className="checkbox-item">
+                    <input 
+                      type="checkbox" 
+                      checked={housingPreference === preference.id}
+                      onChange={() => handleHousingPreferenceChange(preference.id)}
+                    />
+                    <div className="amenity-icon">{preference.icon}</div>
+                    <span className="amenity-text">{preference.label}</span>
+                    <span className="checkbox-square"></span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            <div className="form-section">
+              <h3>{t('common.allowed')}</h3>
+              <div className="checkbox-grid">
+                {RULES_OPTIONS.map(rule => (
+                  <label key={rule.id} className="checkbox-item">
+                    <input 
+                      type="checkbox" 
+                      checked={propertyRules.includes(rule.id)}
+                      onChange={() => handleRuleChange(rule.id)}
+                    />
+                    <div className="amenity-icon">{rule.icon}</div>
+                    <span className="amenity-text">{rule.label}</span>
                     <span className="checkbox-square"></span>
                   </label>
                 ))}
@@ -223,7 +332,13 @@ const PropertyEditRequestPage: React.FC = () => {
               <button 
                 className="submit-button" 
                 onClick={handleSubmit}
-                disabled={isSubmitting || (additionalAmenities.length === 0 && includedFees.length === 0 && !additionalComments.trim())}
+                disabled={isSubmitting || (
+                  additionalAmenities.length === 0 && 
+                  includedFeatures.length === 0 && 
+                  !housingPreference &&
+                  propertyRules.length === 0 &&
+                  !additionalComments.trim()
+                )}
               >
                 {t('advertiser_dashboard.properties.edit_request.submit_request')}
               </button>
