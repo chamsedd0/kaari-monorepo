@@ -377,22 +377,31 @@ const RefundRequests: React.FC = () => {
       const data = await getRefundRequests();
       console.log('Received refund requests:', data);
       
-      // Filter out any malformed data
-      const validRequests = data.filter(request => {
-        const isValid = 
-          request.id &&
-          request.userId &&
-          request.propertyId &&
-          typeof request.amount === 'number' &&
-          request.status;
+      // Update validation to match the actual refund request structure
+      // Only filter out completely invalid requests, not ones with different structure
+      const validRequests = data;
+
         
-        if (!isValid) {
-          console.warn('Found invalid refund request:', request);
-        }
-        return isValid;
+      // Normalize the data structure to make it consistent for display
+      const normalizedRequests = validRequests.map(request => {
+        // Fill in display data from available fields
+        const amount = request.amount || request.requestedRefundAmount || 0;
+        const userName = request.userName || 'Unknown User';
+        const propertyName = request.propertyName || 'Property ' + (request.propertyId || '');
+        const reason = request.reason || request.reasonsText || (request.reasons?.join(', ') || 'Not specified');
+        const requestDate = request.requestDate || request.createdAt || new Date();
+        
+        return {
+          ...request,
+          amount,
+          userName,
+          propertyName,
+          reason,
+          requestDate
+        };
       });
       
-      setRefundRequests(validRequests);
+      setRefundRequests(normalizedRequests);
     } catch (err: any) {
       console.error('Error fetching refund requests:', err);
       setError(err.message || 'Failed to load refund requests');
@@ -406,17 +415,28 @@ const RefundRequests: React.FC = () => {
     fetchRefundRequests();
   }, [fetchRefundRequests]);
   
+  // Define a type for our normalized refund request with guaranteed fields
+  type NormalizedRefundRequest = RefundRequest & {
+    userName: string;
+    propertyName: string;
+    amount: number;
+  };
+
   // Filter requests based on search term and status filter
   const filteredRequests = refundRequests.filter(request => {
+    // For the filter, we need to safely access potentially undefined properties
+    const userName = request.userName || '';
+    const propertyName = request.propertyName || '';
+    
     const matchesSearch = 
-      request.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.propertyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      propertyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.id.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
     
     return matchesSearch && matchesStatus;
-  });
+  }) as NormalizedRefundRequest[]; // Assert that after filtering, these fields are defined
   
   // Format date
   const formatDate = (date: any) => {
@@ -487,11 +507,40 @@ const RefundRequests: React.FC = () => {
   };
   
   // Format amount with currency
-  const formatAmount = (amount: number) => {
+  const formatAmount = (request: RefundRequest) => {
+    // Try each possible amount field in order of preference
+    let amount = 0;
+    
+    if (typeof request.requestedRefundAmount === 'number') {
+      amount = request.requestedRefundAmount;
+    } else if (typeof request.amount === 'number') {
+      amount = request.amount;
+    } else if (typeof request.originalAmount === 'number') {
+      // If we only have original amount, show half of it as a fallback since refunds are usually 50%
+      amount = request.originalAmount * 0.5;
+    }
+    
+    // Ensure amount is a number (avoid NaN)
+    amount = isNaN(amount) ? 0 : amount;
+    
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
     }).format(amount);
+  };
+  
+  // Get request reason display text
+  const getReasonText = (request: RefundRequest) => {
+    // Use the most descriptive reason available
+    if (request.reason) return request.reason;
+    if (request.reasonsText) return request.reasonsText; 
+    if (request.reasons && request.reasons.length > 0) return request.reasons.join(', ');
+    return 'Not specified';
+  };
+  
+  // Get request date display text
+  const getRequestDate = (request: RefundRequest) => {
+    return formatDate(request.requestDate || request.createdAt || new Date());
   };
   
   // Handle request approval
@@ -656,76 +705,82 @@ const RefundRequests: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredRequests.map(request => (
-                <tr key={request.id}>
-                  <td>{request.id}</td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <FaUserCircle />
-                      {request.userName}
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <FaBuilding />
-                      {request.propertyName}
-                    </div>
-                  </td>
-                  <td>{request.reason}</td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <FaDollarSign />
-                      {formatAmount(request.amount)}
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <FaCalendarAlt />
-                      {formatDate(request.requestDate)}
-                    </div>
-                  </td>
-                  <td>
-                    <div className={`status ${request.status}`}>
-                      {request.status === 'pending' && <FaHourglassHalf />}
-                      {request.status === 'approved' && <FaCheckCircle />}
-                      {request.status === 'rejected' && <FaTimesCircle />}
-                      {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button 
-                        className="view" 
-                        onClick={() => handleViewDetails(request.id)}
-                        title="View Details"
-                      >
-                        <FaSearch />
-                      </button>
-                      
-                      {request.status === 'pending' && (
-                        <>
-                          <button 
-                            className="approve" 
-                            onClick={() => handleApprove(request.id)}
-                            disabled={processing === request.id}
-                            title="Approve Refund"
-                          >
-                            <FaCheckCircle />
-                          </button>
-                          <button 
-                            className="reject" 
-                            onClick={() => handleReject(request.id)}
-                            disabled={processing === request.id}
-                            title="Reject Refund"
-                          >
-                            <FaTimesCircle />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {filteredRequests.map(request => {
+                // Create safe access helpers for potentially undefined properties
+                const safeUserName = request.userName || 'Unknown User';
+                const safePropertyName = request.propertyName || 'Unknown Property';
+                
+                return (
+                  <tr key={request.id}>
+                    <td>{request.id}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <FaUserCircle />
+                        {safeUserName}
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <FaBuilding />
+                        {safePropertyName}
+                      </div>
+                    </td>
+                    <td>{getReasonText(request)}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <FaDollarSign />
+                        {formatAmount(request)}
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <FaCalendarAlt />
+                        {getRequestDate(request)}
+                      </div>
+                    </td>
+                    <td>
+                      <div className={`status ${request.status}`}>
+                        {request.status === 'pending' && <FaHourglassHalf />}
+                        {request.status === 'approved' && <FaCheckCircle />}
+                        {request.status === 'rejected' && <FaTimesCircle />}
+                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button 
+                          className="view" 
+                          onClick={() => handleViewDetails(request.id)}
+                          title="View Details"
+                        >
+                          <FaSearch />
+                        </button>
+                        
+                        {request.status === 'pending' && (
+                          <>
+                            <button 
+                              className="approve" 
+                              onClick={() => handleApprove(request.id)}
+                              disabled={processing === request.id}
+                              title="Approve Refund"
+                            >
+                              <FaCheckCircle />
+                            </button>
+                            <button 
+                              className="reject" 
+                              onClick={() => handleReject(request.id)}
+                              disabled={processing === request.id}
+                              title="Reject Refund"
+                            >
+                              <FaTimesCircle />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

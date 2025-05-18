@@ -493,14 +493,12 @@ export const advertiserNotifications = {
   // Notify advertiser about payment confirmation
   paymentConfirmed: async (
     advertiserId: string,
-    payment: Payment,
-    property: Property,
-    client: User
+    reservation: Reservation
   ): Promise<string> => {
     console.log(`advertiserNotifications.paymentConfirmed called for advertiser ${advertiserId}`);
-    const title = 'Payment Confirmed';
-    const message = `Payment of ${payment.amount} ${payment.currency} has been confirmed for ${property.title} from ${client.name}.`;
-    const link = `/dashboard/advertiser/financials`;
+    const title = 'Payment Received';
+    const message = `${reservation.clientName} has completed payment for their reservation at ${reservation.propertyTitle}.`;
+    const link = `/dashboard/advertiser/reservations`;
     
     return NotificationService.createNotification(
       advertiserId,
@@ -509,7 +507,7 @@ export const advertiserNotifications = {
       title,
       message,
       link,
-      { paymentId: payment.id, propertyId: property.id, clientId: client.id }
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
     );
   },
   
@@ -519,9 +517,9 @@ export const advertiserNotifications = {
     reservation: Reservation
   ): Promise<string> => {
     console.log(`advertiserNotifications.clientMovedIn called for advertiser ${advertiserId}`);
-    const title = 'Client Moved In';
-    const message = `${reservation.clientName} has confirmed move-in for ${reservation.propertyTitle}.`;
-    const link = `/dashboard/advertiser/reservations/${reservation.id}`;
+    const title = 'Client Has Moved In';
+    const message = `${reservation.clientName} has confirmed they have moved into ${reservation.propertyTitle}.`;
+    const link = `/dashboard/advertiser/reservations`;
     
     return NotificationService.createNotification(
       advertiserId,
@@ -534,26 +532,48 @@ export const advertiserNotifications = {
     );
   },
   
-  // Notify advertiser about new message
-  newMessage: async (
+  // Notify advertiser when client requests cancellation
+  cancellationUnderReview: async (
     advertiserId: string,
-    senderId: string,
-    senderName: string,
-    conversationId: string
+    reservation: Reservation
   ): Promise<string> => {
-    const title = 'New Message';
-    const message = `You have received a new message from ${senderName}.`;
-    const link = `/dashboard/advertiser/messages/${conversationId}`;
+    console.log(`advertiserNotifications.cancellationUnderReview called for advertiser ${advertiserId}`);
+    const title = 'Cancellation Request Received';
+    const message = `${reservation.clientName} has requested to cancel their reservation for ${reservation.propertyTitle}.`;
+    const link = `/dashboard/advertiser/reservations`;
     
     return NotificationService.createNotification(
       advertiserId,
       'advertiser',
-      'new_message',
+      'reservation_cancelled',
       title,
       message,
       link,
-      { conversationId, senderId }
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
     );
+  },
+  
+  // Property liked notification 
+  propertyLiked: async (
+    advertiserId: string,
+    clientName: string,
+    propertyName: string,
+    propertyId: string
+  ): Promise<string | undefined> => {
+    console.log(`advertiserNotifications.propertyLiked called for advertiser ${advertiserId}`);
+    try {
+      return await NotificationService.createNotification(
+        advertiserId,
+        'advertiser',
+        'property_liked',
+        'Property Added to Favorites',
+        `${clientName} has added your property "${propertyName}" to their favorites.`,
+        `/dashboard/advertiser/properties/${propertyId}`,
+        { propertyId }
+      );
+    } catch (error) {
+      console.error('Failed to create property liked notification:', error);
+    }
   }
 };
 
@@ -839,6 +859,28 @@ export const userNotifications = {
       link,
       { reservationId: reservation.id, propertyId: reservation.propertyId }
     );
+  },
+
+  // Property liked notification helper
+  propertyLiked: async (
+    advertiserId: string,
+    clientName: string,
+    propertyName: string,
+    propertyId: string
+  ): Promise<string | undefined> => {
+    try {
+      return await NotificationService.createNotification(
+        advertiserId,
+        'advertiser',
+        'property_liked',
+        'Property Added to Favorites',
+        `${clientName} has added your property "${propertyName}" to their favorites.`,
+        `/dashboard/advertiser/properties/${propertyId}`,
+        { propertyId }
+      );
+    } catch (error) {
+      console.error('Failed to create property liked notification:', error);
+    }
   }
 };
 

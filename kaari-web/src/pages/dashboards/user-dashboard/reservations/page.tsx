@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
 import { getClientReservations, cancelReservation, completeReservation, requestRefund } from '../../../../backend/server-actions/ClientServerActions';
@@ -11,6 +11,9 @@ import { useNavigate } from 'react-router-dom';
 import emptyBoxSvg from '../../../../assets/images/emptybox.svg';
 import SpinningLoading from '../../../../components/skeletons/icons/SpinningLoading'
 import ConfirmationModal from '../../../../components/modals/ConfirmationModal';
+import { useToastService } from '../../../../services/ToastService';
+import ProfilePic from "../../../../assets/images/ProfilePicture.png";
+import advertiserPic from "../../../../assets/images/advertiser.png";
 
 const ReservationsContainer = styled.div`
   padding: 2rem;
@@ -223,7 +226,7 @@ interface Reservation {
   reservation: {
     id: string;
     requestType: string;
-    status: 'pending' | 'accepted' | 'rejected' | 'paid' | 'movedIn' | 'cancelled' | 'refundProcessing' | 'refundCompleted' | 'refundFailed' | 'cancellationUnderReview';
+    status: 'pending' | 'accepted' | 'rejected' | 'paid' | 'movedIn' | 'cancelled' | 'refundProcessing' | 'refundComplete' | 'refundFailed' | 'cancellationUnderReview';
     createdAt: Date;
     updatedAt: Date;
     scheduledDate?: Date;
@@ -255,6 +258,7 @@ interface Reservation {
     name: string;
     email: string;
     phoneNumber?: string;
+    profilePicture?: string;
   } | null;
 }
 
@@ -993,7 +997,7 @@ const ReservationsPage: React.FC = () => {
       }
       
       return status === 'rejected' || status === 'cancelled' || 
-             status === 'refundCompleted' || status === 'refundFailed';
+             status === 'refundComplete' || status === 'refundFailed';
     });
   }, [reservations]);
     
@@ -1232,7 +1236,7 @@ const ReservationsPage: React.FC = () => {
               res.reservation.status === 'paid' ? 'Paid' :
               res.reservation.status === 'movedIn' ? 'MovedIn' :
               res.reservation.status === 'refundProcessing' ? 'Refund Processing' :
-              res.reservation.status === 'refundCompleted' ? 'Refund Completed' :
+              res.reservation.status === 'refundComplete' ? 'Refund Completed' :
               res.reservation.status === 'refundFailed' ? 'Refund Failed' :
               res.reservation.status === 'cancellationUnderReview' ? 'Cancellation Under Review' :
               'Pending';
@@ -1334,14 +1338,19 @@ const ReservationsPage: React.FC = () => {
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       <img 
-                        src="https://randomuser.me/api/portraits/men/32.jpg" 
-                        alt="Avatar" 
+                        src={res.advertiser?.profilePicture || advertiserPic} 
+                        alt="Advertiser Avatar" 
                         style={{ 
                           width: '32px', 
                           height: '32px', 
                           borderRadius: '50%', 
-                          marginRight: '8px' 
+                          marginRight: '8px',
+                          objectFit: 'cover'
                         }} 
+                        onError={(e) => {
+                          // Fallback if the profile picture fails to load
+                          e.currentTarget.src = advertiserPic;
+                        }}
                       />
                       {res.advertiser?.name || "Leonardo V."}
                     </div>
@@ -1354,7 +1363,7 @@ const ReservationsPage: React.FC = () => {
                        res.reservation.status === 'paid' ? 'Paid' :
                        res.reservation.status === 'movedIn' ? 'Moved In' :
                        res.reservation.status === 'refundProcessing' ? 'Refund Processing' :
-                       res.reservation.status === 'refundCompleted' ? 'Refund Completed' :
+                       res.reservation.status === 'refundComplete' ? 'Refund Completed' :
                        res.reservation.status === 'refundFailed' ? 'Refund Failed' :
                        res.reservation.status === 'cancellationUnderReview' ? 'Under Review' :
                        'Pending'}

@@ -1,6 +1,7 @@
 import { useToast, ToastType } from '../contexts/ToastContext';
 import { useStore } from '../backend/store';
 import eventBus, { EventType } from '../utils/event-bus';
+import React from 'react';
 
 /**
  * ToastService - Utility service to provide standardized toast notifications
@@ -8,6 +9,30 @@ import eventBus, { EventType } from '../utils/event-bus';
  */
 export const useToastService = () => {
   const { addToast } = useToast();
+  
+  // Simple cache to prevent duplicate toast messages within a short time window
+  const toastCache = React.useRef<{[key: string]: number}>({});
+  
+  // Cache duration in milliseconds (1 minute)
+  const CACHE_DURATION = 60000;
+  
+  /**
+   * Check if a similar toast was recently shown
+   * @param key Unique identifier for the toast type
+   * @returns Whether the toast should be suppressed
+   */
+  const shouldSuppressToast = (key: string): boolean => {
+    const now = Date.now();
+    const lastShown = toastCache.current[key];
+    
+    if (lastShown && now - lastShown < CACHE_DURATION) {
+      return true; // Suppress if shown recently
+    }
+    
+    // Not shown recently or never shown, update cache
+    toastCache.current[key] = now;
+    return false;
+  };
 
   /**
    * Show a toast notification
@@ -19,6 +44,15 @@ export const useToastService = () => {
     autoClose = true,
     duration = 5000
   ) => {
+    // Create a cache key based on type + title
+    const cacheKey = `${type}:${title}`;
+    
+    // Check if we should suppress this toast
+    if (shouldSuppressToast(cacheKey)) {
+      console.log(`Toast suppressed (duplicate): ${title}`);
+      return;
+    }
+    
     addToast(type, title, description, autoClose, duration);
   };
 
@@ -29,6 +63,25 @@ export const useToastService = () => {
     },
     loginError: (error?: string) => {
       showToast('error', 'Login Failed', error || 'There was a problem logging you in. Please try again.');
+    },
+    userBlocked: () => {
+      // Use a special flag to ensure this message only shows once per session
+      const cacheKey = 'error:Account_Blocked';
+      if (shouldSuppressToast(cacheKey)) {
+        console.log('Blocked account message already shown, suppressing duplicate');
+        return;
+      }
+      
+      // Set timestamp in cache with a very long duration
+      toastCache.current[cacheKey] = Date.now();
+      
+      showToast(
+        'error',
+        'Account Blocked',
+        'Your account has been blocked. Please contact support at support@kaari.com for assistance.',
+        false,  // Don't auto-close this message
+        10000   // Display for longer time (10 seconds)
+      );
     },
     logoutSuccess: () => {
       showToast('success', 'Logout Successful', 'You have been logged out successfully.');

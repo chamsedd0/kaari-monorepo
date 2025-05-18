@@ -15,6 +15,8 @@ export interface User {
   nationality?: string;
   languages?: string[];
   aboutMe?: string;
+  /** Whether the user's account is blocked/disabled (cannot log in if true) */
+  isBlocked?: boolean;
   emailVerified?: boolean;
   googleConnected?: boolean;
   googleId?: string;

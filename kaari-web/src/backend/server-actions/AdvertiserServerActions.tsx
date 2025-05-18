@@ -3,7 +3,6 @@
 import { 
   User, 
   Property, 
-  Listing, 
   Request,
   Review
 } from '../entities';
@@ -23,7 +22,19 @@ import { userNotifications } from '../../utils/notification-helpers';
 // Collection names
 const USERS_COLLECTION = 'users';
 const PROPERTIES_COLLECTION = 'properties';
-const LISTINGS_COLLECTION = 'listings';
+
+// Define Inquiry interface
+interface Inquiry {
+  id: string;
+  userId: string;
+  propertyId: string;
+  message: string;
+  status: 'pending' | 'answered' | 'rejected';
+  response?: string;
+  respondedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 /**
  * Create a new property
@@ -112,70 +123,6 @@ export async function uploadPropertyImages(
 }
 
 /**
- * Create a listing for a property
- */
-export async function createListing(
-  propertyId: string,
-  listingData: Omit<Listing, 'id' | 'propertyId' | 'agentId' | 'createdAt' | 'updatedAt' | 'viewCount' | 'contactCount'>
-): Promise<Listing> {
-  try {
-    // Check if user is authenticated and an advertiser
-    const currentUser = await getCurrentUserProfile();
-    if (!currentUser) {
-      throw new Error('User not authenticated');
-    }
-    
-    if (currentUser.role !== 'advertiser') {
-      throw new Error('Only advertisers can create listings');
-    }
-    
-    // Verify property exists and belongs to user
-    const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, propertyId);
-    if (!property) {
-      throw new Error('Property not found');
-    }
-    
-    if (property.ownerId !== currentUser.id) {
-      throw new Error('Not authorized to create listing for this property');
-    }
-    
-    // Prepare listing data
-    const fullListingData = {
-      ...listingData,
-      propertyId,
-      agentId: currentUser.id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      viewCount: 0,
-      contactCount: 0
-    };
-    
-    // Create the listing using createDocument instead of createDocumentWithId
-    const listing = await createDocument<Listing>(
-      LISTINGS_COLLECTION,
-      fullListingData as Omit<Listing, 'id'>
-    );
-    
-    // Update property with listing reference
-    await updateDocument<Property>(PROPERTIES_COLLECTION, propertyId, {
-      listingId: listing.id,
-      updatedAt: new Date()
-    });
-    
-    // Add listing to user's listings array
-    const userListings = currentUser.listings || [];
-    await updateDocument<User>(USERS_COLLECTION, currentUser.id, {
-      listings: [...userListings, listing.id]
-    });
-    
-    return listing;
-  } catch (error) {
-    console.error('Error creating listing:', error);
-    throw new Error('Failed to create listing');
-  }
-}
-
-/**
  * Get advertiser properties
  */
 export async function getAdvertiserProperties(): Promise<Property[]> {
@@ -205,42 +152,11 @@ export async function getAdvertiserProperties(): Promise<Property[]> {
 }
 
 /**
- * Get advertiser listings
- */
-export async function getAdvertiserListings(): Promise<Listing[]> {
-  try {
-    // Check if user is authenticated and an advertiser
-    const currentUser = await getCurrentUserProfile();
-    if (!currentUser) {
-      throw new Error('User not authenticated');
-    }
-    
-    if (currentUser.role !== 'advertiser') {
-      throw new Error('Only advertisers can access their listings');
-    }
-    
-    // Get all listings created by this user
-    const listings = await getDocumentsByField<Listing>(
-      LISTINGS_COLLECTION,
-      'agentId',
-      currentUser.id
-    );
-    
-    return listings;
-  } catch (error) {
-    console.error('Error fetching advertiser listings:', error);
-    throw new Error('Failed to fetch advertiser listings');
-  }
-}
-
-/**
  * Get advertiser dashboard statistics
  */
 export async function getAdvertiserStatistics(): Promise<{
   totalProperties: number;
-  activeListings: number;
   pendingReservations: number;
-  viewsCount: number;
   photoshootsScheduled: number;
   inquiriesCount: number;
 }> {
@@ -262,23 +178,10 @@ export async function getAdvertiserStatistics(): Promise<{
       currentUser.id
     );
     
-    // Get listings created by this user
-    const listings = await getDocumentsByField<Listing>(
-      LISTINGS_COLLECTION,
-      'agentId',
-      currentUser.id
-    );
-    
-    // Get active listings count
-    const activeListings = listings.filter(listing => listing.status === 'active').length;
-    
-    // Get total view count across all listings
-    const viewsCount = listings.reduce((total, listing) => total + (listing.viewCount || 0), 0);
-    
     // Get requests/inquiries for this advertiser's listings
     const requests = await getAdvertiserRequests();
     const pendingReservations = requests.filter(req => 
-      req.requestType === 'viewing' && req.status === 'pending'
+      req.requestType === 'rent' && req.status === 'pending'
     ).length;
     
     const inquiriesCount = requests.length;
@@ -289,9 +192,7 @@ export async function getAdvertiserStatistics(): Promise<{
     
     return {
       totalProperties: properties.length,
-      activeListings,
       pendingReservations,
-      viewsCount,
       photoshootsScheduled,
       inquiriesCount
     };
@@ -374,26 +275,8 @@ export async function getAdvertiserRequests(): Promise<Request[]> {
       throw new Error('Only advertisers can access their requests');
     }
     
-    // Get listings created by this user
-    const listings = await getDocumentsByField<Listing>(
-      LISTINGS_COLLECTION,
-      'agentId',
-      currentUser.id
-    );
-    
     // Get all requests for these listings
-    const listingIds = listings.map(listing => listing.id);
     const requests: Request[] = [];
-    
-    // For each listing, get its requests
-    for (const listingId of listingIds) {
-      const listingRequests = await getDocumentsByField<Request>(
-        'requests',
-        'listingId',
-        listingId
-      );
-      requests.push(...listingRequests);
-    }
     
     // Get property-specific requests too
     const properties = await getDocumentsByField<Property>(
@@ -431,7 +314,6 @@ export async function getAdvertiserRequests(): Promise<Request[]> {
  */
 export async function getAdvertiserReservationRequests(): Promise<{
   reservation: Request;
-  listing?: Listing | null;
   property?: Property | null;
   client?: User | null;
 }[]> {
@@ -467,57 +349,21 @@ export async function getAdvertiserReservationRequests(): Promise<{
       requests.push(...propertyRequests);
     }
     
-    // Get listing-specific requests too
-    const listings = await getDocumentsByField<Listing>(
-      LISTINGS_COLLECTION,
-      'agentId',
-      currentUser.id
-    );
-    
-    const listingIds = listings.map(listing => listing.id);
-    
-    for (const listingId of listingIds) {
-      const listingRequests = await getDocumentsByField<Request>(
-        'requests',
-        'listingId',
-        listingId
-      );
-      
-      // Filter out duplicates (requests that were already counted under properties)
-      const uniqueRequests = listingRequests.filter(
-        req => !requests.some(r => r.id === req.id)
-      );
-      
-      requests.push(...uniqueRequests);
-    }
-    
     // For each request, get associated listing, property, and client info
     const reservationsWithDetails = await Promise.all(
       requests.map(async (request) => {
-        let listing = null;
         let property = null;
         let client = null;
         
         // Get the client info
         client = await getDocumentById<User>(USERS_COLLECTION, request.userId);
         
-        // If request has a listing ID, get the listing
-        if (request.listingId) {
-          listing = await getDocumentById<Listing>(LISTINGS_COLLECTION, request.listingId);
-          
-          // If listing found, get the property
-          if (listing) {
-            property = await getDocumentById<Property>(PROPERTIES_COLLECTION, listing.propertyId);
-          }
-        } 
-        // If request has a property ID but no listing ID, get the property directly
-        else if (request.propertyId) {
+        if (request.propertyId) {
           property = await getDocumentById<Property>(PROPERTIES_COLLECTION, request.propertyId);
         }
         
         return {
           reservation: request,
-          listing,
           property,
           client
         };
@@ -584,28 +430,32 @@ export async function approveReservationRequest(requestId: string): Promise<bool
     // Send notification to client about approved reservation
     try {
       if (property) {
-        // Import NotificationService dynamically to avoid circular dependencies
-        const NotificationService = (await import('../../services/NotificationService')).default;
+        // Get user details for more personalized notifications
+        const client = await getDocumentById<User>(USERS_COLLECTION, request.userId);
         
-        // Send a direct notification to the client
-        await NotificationService.createNotification(
+        // Create a reservation object for the notification
+        const reservationForNotification = {
+          id: request.id,
+          propertyId: request.propertyId,
+          propertyTitle: property.title || 'Property',
+          startDate: request.scheduledDate || new Date(),
+          endDate: null,
+          clientId: request.userId,
+          clientName: client ? `${client.name} ${client.surname}`.trim() : 'Client',
+          advertiserName: `${currentUser.name} ${currentUser.surname}`.trim()
+        };
+        
+        // Send notification using userNotifications helper
+        await userNotifications.reservationAccepted(
           request.userId,
-          'user',
-          'reservation_accepted',
-          'Reservation Request Accepted',
-          `Your reservation request for ${property.title || 'Property'} has been accepted. Please complete payment to secure your booking.`,
-          `/dashboard/user/reservations`,
-          { 
-            reservationId: request.id, 
-            propertyId: request.propertyId,
-            status: 'accepted'
-          }
+          reservationForNotification as any
         );
         
-        console.log(`Direct acceptance notification sent to client: ${request.userId}`);
+        console.log(`Reservation acceptance notification sent to client: ${request.userId}`);
       }
     } catch (error) {
       console.error('Error sending reservation accepted notification:', error);
+      // Don't throw error here so the main action can still succeed
     }
     
     return true;
@@ -667,28 +517,36 @@ export async function rejectReservationRequest(requestId: string): Promise<boole
     // Send notification to client about rejected reservation
     try {
       if (property) {
-        // Import NotificationService dynamically to avoid circular dependencies
-        const NotificationService = (await import('../../services/NotificationService')).default;
+        // Get user details for more personalized notifications
+        const client = await getDocumentById<User>(USERS_COLLECTION, request.userId);
         
-        // Send a direct notification to the client
-        await NotificationService.createNotification(
+        // Create a reservation object for the notification
+        const reservationForNotification = {
+          id: request.id,
+          propertyId: request.propertyId,
+          propertyTitle: property.title || 'Property',
+          startDate: request.scheduledDate || new Date(),
+          endDate: null,
+          clientId: request.userId,
+          clientName: client ? `${client.name} ${client.surname}`.trim() : 'Client',
+          advertiserName: `${currentUser.name} ${currentUser.surname}`.trim()
+        };
+        
+        // Optional reason for rejection
+        const reason = request.message || 'No specific reason provided by advertiser.';
+        
+        // Send notification using userNotifications helper
+        await userNotifications.reservationRejected(
           request.userId,
-          'user',
-          'reservation_rejected',
-          'Reservation Request Rejected',
-          `Your reservation request for ${property.title || 'Property'} has been rejected. You can try booking a different property.`,
-          `/dashboard/user/reservations`,
-          { 
-            reservationId: request.id, 
-            propertyId: request.propertyId,
-            status: 'rejected'
-          }
+          reservationForNotification as any,
+          reason
         );
         
-        console.log(`Direct rejection notification sent to client: ${request.userId}`);
+        console.log(`Reservation rejection notification sent to client: ${request.userId}`);
       }
     } catch (error) {
       console.error('Error sending reservation rejected notification:', error);
+      // Don't throw error here so the main action can still succeed
     }
     
     return true;
@@ -748,7 +606,7 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
     
     // Check for completed reservations
     const hasCompletedReservation = requests.some(req => 
-      (req.requestType === 'rent' || req.requestType === 'viewing') && req.status === 'completed'
+      req.requestType === 'rent' && req.status === 'movedIn'
     );
     
     if (hasCompletedReservation) {
@@ -757,7 +615,7 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
     
     // Check for accepted reservations
     const hasAcceptedReservation = requests.some(req => 
-      (req.requestType === 'rent' || req.requestType === 'viewing') && req.status === 'accepted'
+      (req.requestType === 'rent' ) && req.status === 'accepted'
     );
     
     if (hasAcceptedReservation) {
@@ -766,7 +624,7 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
     
     // Check for pending reservations
     const hasPendingReservation = requests.some(req => 
-      (req.requestType === 'rent' || req.requestType === 'viewing') && req.status === 'pending'
+      (req.requestType === 'rent' ) && req.status === 'pending'
     );
     
     if (hasPendingReservation) {
@@ -854,5 +712,183 @@ export async function getAdvertiserPropertyReviews(): Promise<{
   } catch (error) {
     console.error('Error getting advertiser property reviews:', error);
     throw new Error('Failed to get advertiser property reviews');
+  }
+}
+
+/**
+ * Responds to a property inquiry from a client
+ */
+export async function respondToPropertyInquiry(
+  inquiryId: string, 
+  response: string, 
+  status: 'answered' | 'rejected' = 'answered'
+): Promise<boolean> {
+  try {
+    // Check if user is authenticated and an advertiser
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    if (currentUser.role !== 'advertiser') {
+      throw new Error('Only advertisers can respond to inquiries');
+    }
+    
+    // Get the inquiry
+    const inquiry = await getDocumentById<any>('inquiries', inquiryId);
+    if (!inquiry) {
+      throw new Error('Inquiry not found');
+    }
+    
+    // Verify that the inquiry is for a property owned by this advertiser
+    let isAuthorized = false;
+    let property = null;
+    
+    if (inquiry.propertyId) {
+      property = await getDocumentById<Property>(PROPERTIES_COLLECTION, inquiry.propertyId);
+      if (property && property.ownerId === currentUser.id) {
+        isAuthorized = true;
+      }
+    }
+    
+    if (!isAuthorized) {
+      throw new Error('Not authorized to respond to this inquiry');
+    }
+    
+    // Update the inquiry
+    await updateDocument<Inquiry>('inquiries', inquiryId, {
+      status: status,
+      response: response,
+      respondedAt: new Date(),
+      updatedAt: new Date()
+    });
+    
+    // Send notification to client about the response
+    try {
+      if (property) {
+        // Get the client info
+        const client = await getDocumentById<User>(USERS_COLLECTION, inquiry.userId);
+        
+        // Import NotificationService dynamically to avoid circular dependencies
+        const NotificationService = (await import('../../services/NotificationService')).default;
+        
+        // Send notification
+        await NotificationService.createNotification(
+          inquiry.userId,
+          'user',
+          'inquiry_response' as any,
+          status === 'answered' ? 'You Have a Response' : 'Inquiry Rejected',
+          status === 'answered' 
+            ? `Your inquiry about ${property.title} has been answered. Check your messages for the response.`
+            : `Your inquiry about ${property.title} was rejected by the advertiser.`,
+          `/dashboard/user/properties/${property.id}`,
+          { 
+            inquiryId,
+            propertyId: property.id,
+            response
+          }
+        );
+        
+        console.log(`Inquiry response notification sent to client: ${inquiry.userId}`);
+      }
+    } catch (error) {
+      console.error('Error sending inquiry response notification:', error);
+      // Don't throw error here so the main action can still succeed
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error responding to inquiry:', error);
+    throw new Error('Failed to respond to inquiry');
+  }
+}
+
+/**
+ * Update property availability
+ */
+export async function updatePropertyAvailability(
+  propertyId: string,
+  isAvailable: boolean
+): Promise<boolean> {
+  try {
+    // Check if user is authenticated and an advertiser
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    if (currentUser.role !== 'advertiser') {
+      throw new Error('Only advertisers can update property availability');
+    }
+    
+    // Get the property
+    const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, propertyId);
+    if (!property) {
+      throw new Error('Property not found');
+    }
+    
+    // Verify ownership
+    if (property.ownerId !== currentUser.id) {
+      throw new Error('Not authorized to update this property');
+    }
+    
+    // Check if property has reservations before making it unavailable
+    if (!isAvailable) {
+      const { hasActiveReservations } = await checkPropertyHasActiveReservations(propertyId);
+      if (hasActiveReservations) {
+        throw new Error('Cannot make property unavailable while it has active reservations');
+      }
+    }
+    
+    // Update property status
+    await updateDocument<Property>(PROPERTIES_COLLECTION, propertyId, {
+      status: isAvailable ? 'available' : 'occupied',
+      updatedAt: new Date()
+    });
+    
+    // Notify users who have this property in their favorites or have viewed it recently
+    try {
+      // Get users who have favorited this property
+      const usersWithFavorite = await getDocumentsByField<User>(
+        USERS_COLLECTION,
+        'favorites',
+        propertyId
+      );
+      
+      if (usersWithFavorite.length > 0) {
+        // Create notifications for these users about property availability change
+        for (const user of usersWithFavorite) {
+          // Only notify if the property status changed in a relevant way
+          if ((!isAvailable && property.status === 'available') || 
+              (isAvailable && property.status !== 'available')) {
+                
+            // Import NotificationService dynamically to avoid circular dependencies
+            const NotificationService = (await import('../../services/NotificationService')).default;
+            
+            await NotificationService.createNotification(
+              user.id,
+              'user',
+              'property_availability' as any,
+              isAvailable ? 'Property Now Available' : 'Property No Longer Available',
+              isAvailable 
+                ? `A property you favorited, "${property.title}", is now available for booking.`
+                : `A property you favorited, "${property.title}", is no longer available for booking.`,
+              `/properties/${propertyId}`,
+              { propertyId }
+            );
+            
+            console.log(`Property availability notification sent to user: ${user.id}`);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error sending property availability notifications:', error);
+      // Don't throw error here so the main action can still succeed
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating property availability:', error);
+    throw new Error('Failed to update property availability');
   }
 } 

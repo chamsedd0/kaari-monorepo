@@ -23,6 +23,7 @@ export type AdvertiserNotificationType =
   | 'payment_confirmed'
   | 'client_moved_in'
   | 'photoshoot_cancelled'
+  | 'property_liked'
   | 'new_message';
 
 // Notification types for clients/users
@@ -37,6 +38,8 @@ export type ClientNotificationType =
   | 'move_in_confirmation'
   | 'refund_request_handled'
   | 'cancellation_request_handled'
+  | 'inquiry_response'
+  | 'property_availability'
   | 'new_message';
 
 // Add a new type for admin notifications

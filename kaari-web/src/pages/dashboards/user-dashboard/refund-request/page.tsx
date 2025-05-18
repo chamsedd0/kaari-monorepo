@@ -287,12 +287,31 @@ const RefundRequestPage: React.FC = () => {
   const [reasonDetails, setReasonDetails] = useState('');
   const [proofFiles, setProofFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [redirectAttempted, setRedirectAttempted] = useState(false);
   
   // Parse query parameters
   const queryParams = new URLSearchParams(location.search);
   const reservationId = queryParams.get('reservationId');
   
+  // Debug render count
+  const renderCount = React.useRef(0);
+  
+  // Log component renders for debugging
+  console.log(`RefundRequestPage render #${++renderCount.current}, redirectAttempted: ${redirectAttempted}, reservationId: ${reservationId}`);
+  
   useEffect(() => {
+    console.log(`UseEffect for reservation data triggered, redirectAttempted: ${redirectAttempted}`);
+    
+    // Skip loading if we've already attempted a redirect
+    if (redirectAttempted) {
+      console.log('Skipping reservation data loading due to previous redirect attempt');
+      setLoading(false); // Ensure loading is set to false to avoid endless spinner
+      return;
+    }
+    
+    let isActive = true; // Flag to track if the component is still mounted
+    let redirectTimer: NodeJS.Timeout | null = null; // Store the timeout ID
+    
     const loadReservationDetails = async () => {
       if (!reservationId) {
         setError('No reservation ID provided');
@@ -304,6 +323,10 @@ const RefundRequestPage: React.FC = () => {
         setLoading(true);
         // Get all client reservations and filter for the requested one
         const reservationsData = await getClientReservations();
+        
+        // Check if component is still mounted
+        if (!isActive) return;
+        
         const foundReservation = reservationsData.find(res => res.reservation.id === reservationId);
         
         if (!foundReservation) {
@@ -312,18 +335,84 @@ const RefundRequestPage: React.FC = () => {
           return;
         }
         
+        // Check reservation status and redirect based on status
+        if (!foundReservation.reservation) {
+          setError('Reservation details not found');
+          setLoading(false);
+          return;
+        }
+        
+        const reservationStatus = foundReservation.reservation.status;
+        
+        // If the user hasn't moved in yet, they should be using the cancellation page, not the refund page
+        if (reservationStatus !== 'movedIn') {
+          console.log(`User has reservation in '${reservationStatus}' status - redirecting to cancellation page`);
+          
+          // Mark that we've attempted redirection to prevent loops
+          setRedirectAttempted(true);
+          
+          // Show a brief message before redirecting
+          setLoading(false);
+          toast.showToast(
+            'info', 
+            'Redirecting to Cancellation Page', 
+            'You will be redirected to the cancellation page which is appropriate for reservations that have not reached "moved in" status.'
+          );
+          
+          // Redirect after a short delay and store the timer ID
+          redirectTimer = setTimeout(() => {
+            if (isActive) { // Only navigate if component is still mounted
+              navigate(`/dashboard/user/cancellation-request?reservationId=${reservationId}`);
+            }
+          }, 1500);
+          return;
+        }
+        
+        // Continue with refund flow for moved-in reservations
+        // Check if the refund window is still open (24 hours after move-in)
+        if (foundReservation.reservation.movedInAt) {
+          const moveInDate = new Date(
+            typeof foundReservation.reservation.movedInAt === 'object' && 'seconds' in foundReservation.reservation.movedInAt
+              ? foundReservation.reservation.movedInAt.seconds * 1000
+              : foundReservation.reservation.movedInAt
+          );
+          
+          const refundDeadline = new Date(moveInDate);
+          refundDeadline.setHours(refundDeadline.getHours() + 24);
+          
+          if (new Date() > refundDeadline) {
+            setError('The refund window has closed. Refunds must be requested within 24 hours of moving in.');
+            setLoading(false);
+            return;
+          }
+        }
+        
         console.log('Loaded reservation data:', foundReservation);
-        setReservation(foundReservation);
+        if (isActive) {
+          setReservation(foundReservation);
+        }
       } catch (err: any) {
         console.error('Error loading reservation details:', err);
-        setError(err.message || 'Failed to load reservation details');
+        if (isActive) {
+          setError(getErrorMessage(err));
+        }
       } finally {
-        setLoading(false);
+        if (isActive) {
+          setLoading(false);
+        }
       }
     };
     
     loadReservationDetails();
-  }, [reservationId]);
+    
+    // Cleanup function to handle component unmount or dependency changes
+    return () => {
+      isActive = false; // Mark component as unmounted
+      if (redirectTimer) {
+        clearTimeout(redirectTimer); // Clear any pending redirects
+      }
+    };
+  }, [reservationId, redirectAttempted]); // Keep minimal dependencies
   
   const handleBack = () => {
     navigate('/dashboard/user/reservations');
@@ -357,6 +446,16 @@ const RefundRequestPage: React.FC = () => {
     fileInput.click();
   };
   
+  // Add this helper function to handle error messages
+  const getErrorMessage = (error: any): string => {
+    if (!error) return 'An unknown error occurred';
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'string') return error;
+    if (typeof error === 'object' && 'message' in error) return error.message as string;
+    return JSON.stringify(error);
+  };
+  
+  // Modify the handleSubmit function to check reservation status first
   const handleSubmit = async () => {
     if (selectedReasons.length === 0) {
       toast.showToast('error', 'Missing Information', 'Please select at least one reason for the refund request');
@@ -376,14 +475,44 @@ const RefundRequestPage: React.FC = () => {
     try {
       setSubmitting(true);
       
+      // Double check reservation status - safety check
+      if (!reservation.reservation) {
+        toast.showToast('error', 'Invalid Reservation', 'Reservation details are missing');
+        setSubmitting(false);
+        return;
+      }
+      
+      const reservationStatus = reservation.reservation.status;
+      
+      // If not in movedIn status, redirect to cancellation page (only if not already attempted)
+      if (reservationStatus !== 'movedIn' && !redirectAttempted) {
+        console.log(`User trying to submit refund for '${reservationStatus}' status - redirecting to cancellation page`);
+        
+        // Mark that we've attempted redirection to prevent loops
+        setRedirectAttempted(true);
+        
+        toast.showToast(
+          'info', 
+          'Redirecting to Cancellation Page', 
+          'You need to use the cancellation page for reservations that have not reached "moved in" status.'
+        );
+        
+        setTimeout(() => {
+          navigate(`/dashboard/user/cancellation-request?reservationId=${reservationId}`);
+        }, 1500);
+        
+        setSubmitting(false);
+        return;
+      }
+      
       // Show initial processing toast
       toast.showToast('info', 'Processing', 'Submitting your refund request...');
       
       // Calculate refund amounts for submission
       const propertyPrice = reservation.property.price;
       const serviceFee = reservation.reservation?.serviceFee || 
-                         reservation.property.serviceFee || 
-                         (propertyPrice * 0.1);
+                       reservation.property.serviceFee || 
+                       (propertyPrice * 0.1);
       const refundableRent = propertyPrice * 0.5;
       
       // Call the refund request function with comprehensive data
@@ -402,7 +531,7 @@ const RefundRequestPage: React.FC = () => {
       toast.showToast('success', 'Refund Requested', 'Your refund request has been submitted for review and your reservation status has been updated to "Refund Processing"');
       
       // Navigate back to dashboard
-      navigate('/dashboard/reservations');
+      navigate('/dashboard/user/reservations');
     } catch (error) {
       console.error('Error submitting refund request:', error);
       toast.showToast('error', 'Submission Error', getErrorMessage(error));
@@ -450,12 +579,25 @@ const RefundRequestPage: React.FC = () => {
   
   // Calculate refund amount based on property price and service fee
   const calculateRefund = () => {
-    if (!reservation?.property?.price) return { 
-      originalAmount: '0$', 
-      serviceFee: '0$', 
-      cancellationFee: '0$', 
-      refundTotal: '0$' 
-    };
+    if (!reservation?.property?.price) {
+      console.warn('Missing property price data for refund calculation', reservation);
+      return { 
+        originalAmount: '0$', 
+        serviceFee: '0$', 
+        cancellationFee: '0$', 
+        refundTotal: '0$' 
+      };
+    }
+    
+    console.log('Calculating refund with reservation data:', {
+      reservationId: reservationId,
+      propertyId: reservation.property?.id,
+      status: reservation.reservation?.status,
+      price: reservation.property?.price,
+      serviceFee: reservation.reservation?.serviceFee || reservation.property?.serviceFee,
+      movedIn: reservation.reservation?.movedIn,
+      movedInAt: reservation.reservation?.movedInAt
+    });
     
     // Get the rent amount from property price
     const propertyPrice = reservation.property.price;
@@ -474,7 +616,7 @@ const RefundRequestPage: React.FC = () => {
     const refundAmount = refundableRent; // User gets 50% of the rent back
     
     // Log the values for debugging
-    console.log('Refund calculation:', {
+    console.log('Refund calculation result:', {
       propertyPrice,
       serviceFee,
       refundableRent,
@@ -526,8 +668,52 @@ const RefundRequestPage: React.FC = () => {
   if (error) {
     return (
       <RefundRequestContainer>
-        <div style={{ textAlign: 'center', padding: '3rem', color: Theme.colors.error }}>
-          Error: {error}
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '3rem', 
+          backgroundColor: '#fff', 
+          borderRadius: Theme.borders.radius.lg,
+          boxShadow: '0 4px 8px rgba(0,0,0,0.05)'
+        }}>
+          <svg 
+            width="60" 
+            height="60" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ margin: '0 auto 1rem', display: 'block', color: Theme.colors.error }}
+          >
+            <path d="M12 22C6.477 22 2 17.523 2 12C2 6.477 6.477 2 12 2C17.523 2 22 6.477 22 12C22 17.523 17.523 22 12 22ZM12 20C16.418 20 20 16.418 20 12C20 7.582 16.418 4 12 4C7.582 4 4 7.582 4 12C4 16.418 7.582 20 12 20ZM11 15H13V17H11V15ZM11 7H13V13H11V7Z" fill="currentColor"/>
+          </svg>
+          <h2 style={{ 
+            color: Theme.colors.error, 
+            marginBottom: '1rem',
+            font: Theme.typography.fonts.h4B
+          }}>
+            Unable to Process Refund Request
+          </h2>
+          <p style={{ 
+            color: Theme.colors.gray2, 
+            marginBottom: '2rem',
+            font: Theme.typography.fonts.mediumM
+          }}>
+            {error}
+          </p>
+          <button 
+            onClick={handleBack}
+            style={{
+              backgroundColor: Theme.colors.secondary,
+              color: '#fff',
+              border: 'none',
+              borderRadius: Theme.borders.radius.sm,
+              padding: '0.75rem 1.5rem',
+              font: Theme.typography.fonts.mediumB,
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+          >
+            Return to Reservations
+          </button>
         </div>
       </RefundRequestContainer>
     );

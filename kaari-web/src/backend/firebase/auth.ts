@@ -71,9 +71,18 @@ export const signInWithEmail = async (email: string, password: string): Promise<
     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
     
     if (userDoc.exists()) {
+      const userData = userDoc.data() as User;
+      
+      // Check if user is blocked
+      if (userData.isBlocked) {
+        // Sign out the user immediately since they are blocked
+        await firebaseSignOut(auth);
+        throw new Error('Your account has been blocked. Please contact support at support@kaari.com');
+      }
+      
       return {
         id: firebaseUser.uid,
-        ...userDoc.data()
+        ...userData
       } as User;
     } else {
       throw new Error('User document not found in Firestore');
@@ -104,12 +113,21 @@ export const signInWithGoogle = async (role: 'client' | 'advertiser' = 'client',
         throw new Error('This email is already registered. Please use a different email to create an advertiser account.');
       }
       
+      const userData = userDoc.data() as User;
+      
+      // Check if user is blocked
+      if (userData.isBlocked) {
+        // Sign out the user immediately since they are blocked
+        await firebaseSignOut(auth);
+        throw new Error('Your account has been blocked. Please contact support at support@kaari.com');
+      }
+      
       // User exists, update last login
       await setDoc(userDocRef, { updatedAt: serverTimestamp() }, { merge: true });
       
       return {
         id: firebaseUser.uid,
-        ...userDoc.data()
+        ...userData
       } as User;
     } else {
       // Create new user document

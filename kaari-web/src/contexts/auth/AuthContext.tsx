@@ -154,19 +154,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleError = useCallback((err: any): AuthError => {
     console.error('Auth error:', err);
     
+    const message = err.message || 'An unknown error occurred';
+    const code = (err.code as AuthErrorType) || 'unknown';
+    
+    // Check if this is a blocked user error
+    const isBlockedError = message.includes('account has been blocked') || 
+                          message.includes('has been blocked') ||
+                          code === 'auth/user-disabled';
+    
     const authError: AuthError = {
-      code: (err.code as AuthErrorType) || 'unknown',
-      message: err.message || 'An unknown error occurred'
+      code: isBlockedError ? 'auth/user-disabled' : code,
+      message: message
     };
     
     setError(authError);
     setStatus('error');
     
-    // Emit auth error event
-    eventBus.emit(EventType.AUTH_ERROR, {
-      code: authError.code,
-      message: authError.message
-    });
+    // Only emit auth error event for non-blocked users
+    // Blocked user errors are handled in the UI components with toast notifications
+    if (!isBlockedError) {
+      eventBus.emit(EventType.AUTH_ERROR, {
+        code: authError.code,
+        message: authError.message
+      });
+    }
     
     return authError;
   }, []);

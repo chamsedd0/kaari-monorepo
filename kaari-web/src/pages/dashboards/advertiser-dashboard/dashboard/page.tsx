@@ -12,15 +12,14 @@ import { useNavigate } from 'react-router-dom';
 import { 
     getAdvertiserStatistics, 
     getAdvertiserProperties, 
-    getAdvertiserListings, 
     getAdvertiserRequests,
     getAdvertiserReservationRequests,
     getAdvertiserPhotoshoots,
     Photoshoot,
-    Request
+   
 } from '../../../../backend/server-actions/AdvertiserServerActions';
 import { useStore } from '../../../../backend/store';
-import { Property, Listing } from '../../../../backend/entities';
+import { Property, Request } from '../../../../backend/entities';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 
@@ -39,7 +38,6 @@ const DashboardPage: React.FC = () => {
         inquiriesCount: 0
     });
     const [properties, setProperties] = useState<Property[]>([]);
-    const [listings, setListings] = useState<Listing[]>([]);
     const [requests, setRequests] = useState<Request[]>([]);
     const [photoshoots, setPhotoshoots] = useState<Photoshoot[]>([]);
     const [reservationRequests, setReservationRequests] = useState<{
@@ -55,18 +53,14 @@ const DashboardPage: React.FC = () => {
             setLoading(true);
             try {
                 // Fetch statistics, properties, listings, requests, and photoshoots in parallel
-                const [stats, props, lists, reqs, reservationReqs, shoots] = await Promise.all([
-                    getAdvertiserStatistics(),
+                const [props, reqs, reservationReqs, shoots] = await Promise.all([
                     getAdvertiserProperties(),
-                    getAdvertiserListings(),
                     getAdvertiserRequests(),
                     getAdvertiserReservationRequests(),
                     getAdvertiserPhotoshoots()
                 ]);
                 
-                setStatistics(stats);
                 setProperties(props);
-                setListings(lists);
                 setRequests(reqs);
                 setReservationRequests(reservationReqs);
                 setPhotoshoots(shoots);
@@ -85,8 +79,7 @@ const DashboardPage: React.FC = () => {
     
     // Prepare property data for chart with real metrics
     const propertyDataForChart = properties.map(property => {
-        const listingForProperty = listings.find(listing => listing.propertyId === property.id);
-        const propertyRequests = requests.filter(req => req.propertyId === property.id || req.listingId === listingForProperty?.id);
+        const propertyRequests = requests.filter(req => req.propertyId === property.id);
         
         // Calculate this month's views
         const now = new Date();
@@ -117,14 +110,14 @@ const DashboardPage: React.FC = () => {
             trend: trend,
             thisMonth: thisMonthViews.toString(),
             lastMonth: lastMonthViews.toString(),
-            clicks: (listingForProperty?.contactCount || 0).toString(),
+            clicks: (0).toString(),
             requests: propertyRequests.length.toString(),
-            listedOn: listingForProperty ? new Date(listingForProperty.createdAt).toLocaleDateString(locale, {
+            listedOn: property ? new Date(property.createdAt).toLocaleDateString(locale, {
                 day: '2-digit',
                 month: 'short',
                 year: 'numeric'
             }) : t('advertiser_dashboard.dashboard.not_listed'),
-            views: (listingForProperty?.viewCount || 0).toString()
+            views: (0).toString()
         };
     });
     
@@ -152,12 +145,7 @@ const DashboardPage: React.FC = () => {
     const hasStats = propertyDataForChart.some(p => Number(p.views) > 0 || Number(p.clicks) > 0 || Number(p.requests) > 0);
     const hasProperties = properties.length > 0 && propertyDataForChart.some(p => Number(p.views) > 0);
 
-    // Prepare property data for chart with real metrics
-    // (Assume you have a function to aggregate chart data, here is a simple example)
-    const chartData = [];
-    // Example: aggregate by week or day, or use propertyDataForChart as needed
-    // chartData = [{ date: '1 Apr', views: 0, clicks: 0, bookings: 0 }, ...]
-    // For now, just pass an empty array to trigger the empty state
+
 
     return (
         <DashboardPageStyle>
@@ -168,7 +156,6 @@ const DashboardPage: React.FC = () => {
                     inquiryCount={statistics.inquiriesCount}
                     bookingCount={statistics.pendingReservations}
                     loading={loading}
-                    data={chartData}
                 />
                 {latestReservationRequest ? (
                     <LatestRequestDashboardCard 
@@ -184,7 +171,7 @@ const DashboardPage: React.FC = () => {
                         moveInDate={format(new Date(new Date().setDate(new Date().getDate() + 15)), 'MMM dd, yyyy')}
                         appliedOn={format(new Date(), 'MMM dd, yyyy')}
                         photographerInfo={latestReservationRequest.reservation.numPeople 
-                            ? t('advertiser_dashboard.dashboard.occupants', 'Occupants: {{count}}', { count: latestReservationRequest.reservation.numPeople })
+                            ? t('advertiser_dashboard.dashboard.occupants', 'Occupants: {{count}}', { count: Number(latestReservationRequest.reservation.numPeople) })
                             : undefined}
                         requestCount={statistics.inquiriesCount}
                         requestStatus={latestReservationRequest.reservation.status}
@@ -273,7 +260,7 @@ const DashboardPage: React.FC = () => {
                 )}
                 
                 <PaymentCardComponent 
-                    incomeAmount={`${t('advertiser_dashboard.payments.currency', '$')}${listings.reduce((sum, listing) => sum + listing.price, 0).toLocaleString()}`}
+                    incomeAmount={`${t('advertiser_dashboard.payments.currency', '$')}${properties.reduce((sum, property) => sum + property.price, 0).toLocaleString()}`}
                     infoItems={[
                         { title: t('advertiser_dashboard.dashboard.active_listings'), number: statistics.activeListings.toString() },
                         { title: t('advertiser_dashboard.dashboard.properties'), number: statistics.totalProperties.toString() }

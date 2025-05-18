@@ -8,6 +8,7 @@ import {
 } from '../firebase/firestore';
 import { getCurrentUserProfile } from '../firebase/auth';
 import { advertiserNotifications, userNotifications } from '../../utils/notification-helpers';
+import NotificationService from '../../services/NotificationService';
 
 // Collection names
 const USERS_COLLECTION = 'users';
@@ -124,6 +125,9 @@ export async function createPaymentMethod(
       }
     }
     
+    // Get user's payment methods to check if this is the first card
+    const userPaymentMethods = await getUserPaymentMethods(currentUser.id);
+    
     // Create the payment method
     const paymentMethodData = {
       userId: currentUser.id,
@@ -133,7 +137,7 @@ export async function createPaymentMethod(
       expiryMonth: cardDetails.expiryMonth,
       expiryYear: cardDetails.expiryYear,
       cardholderName: cardDetails.cardholderName,
-      isDefault: cardDetails.makeDefault || paymentMethods.length === 0, // Make default if it's the first card
+      isDefault: cardDetails.makeDefault || userPaymentMethods.length === 0, // Make default if it's the first card
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -268,6 +272,65 @@ export async function createCheckoutReservation(data: {
       status: 'occupied',
       updatedAt: new Date()
     });
+
+    // Send a direct notification to the advertiser
+    try {
+      // Get property details for notification
+      const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, data.propertyId);
+      if (property) {
+        const clientName = currentUser.name && currentUser.surname 
+          ? `${currentUser.name} ${currentUser.surname}` 
+          : currentUser.email || 'A client';
+
+        // Send notification to the property owner
+        await NotificationService.createNotification(
+          property.ownerId,
+          'advertiser',
+          'reservation_request',
+          'New Reservation Request',
+          `${clientName} has requested to rent your property: ${property.title || 'Property'}.`,
+          `/dashboard/advertiser/reservations`,
+          { 
+            requestId: request.id, 
+            propertyId: property.id,
+            clientId: currentUser.id,
+            status: 'pending'
+          }
+        );
+        
+        // Also use the advertiserNotifications helper for more structured notifications
+        try {
+          // Create a reservation object for structured notifications
+          const reservationForNotification = {
+            id: request.id,
+            propertyId: property.id,
+            propertyTitle: property.title || 'Property',
+            startDate: scheduledDate,
+            endDate: leavingDate,
+            clientId: currentUser.id,
+            clientName: clientName,
+            clientEmail: currentUser.email || '',
+            clientPhone: currentUser.phoneNumber || '',
+            advertiserId: property.ownerId,
+            status: 'pending'
+          };
+          
+          // Send using the helper
+          await advertiserNotifications.reservationRequest(
+            property.ownerId,
+            reservationForNotification
+          );
+          
+          console.log(`Reservation request notifications sent to advertiser: ${property.ownerId}`);
+        } catch (helperError) {
+          console.error('Error using notification helper:', helperError);
+          // The direct notification above should still work even if this fails
+        }
+      }
+    } catch (notifError) {
+      console.error('Error sending reservation request notification:', notifError);
+      // Don't throw error here so the main action can still succeed
+    }
     
     return request;
   } catch (error) {

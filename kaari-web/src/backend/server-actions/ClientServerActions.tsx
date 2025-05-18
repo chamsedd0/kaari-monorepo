@@ -74,111 +74,6 @@ export async function getClientReservations(): Promise<{
 }
 
 /**
- * Create a new viewing request (reservation)
- */
-export async function createReservation(
-  propertyId: string | undefined,
-  scheduledDate: Date | undefined,
-  message: string
-): Promise<Request> {
-  try {
-    // Check if user is authenticated
-    const currentUser = await getCurrentUserProfile();
-    if (!currentUser) {
-      throw new Error('User not authenticated');
-    }
-    
-    // Verify that propertyId is provided
-    if (!propertyId) {
-      throw new Error('Property ID must be provided');
-    }
-    
-    // Create the request data
-    const requestData = {
-      userId: currentUser.id,
-      propertyId,
-      requestType: 'rent' as const,
-      message,
-      status: 'pending' as const,
-      scheduledDate: scheduledDate || new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    
-    // Create the request
-    const request = await createDocument<Request>(
-      REQUESTS_COLLECTION,
-      requestData as Omit<Request, 'id'>
-    );
-    
-    // Add request to user's requests array
-    const userRequests = currentUser.requests || [];
-    await updateDocument<User>(USERS_COLLECTION, currentUser.id, {
-      requests: [...userRequests, request.id]
-    });
-    
-    // Update property status to 'occupied' immediately when reservation is created
-    await updateDocument<Property>(PROPERTIES_COLLECTION, propertyId, {
-      status: 'occupied',
-      updatedAt: new Date()
-    });
-    
-    // Get property details for notification
-    const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, propertyId);
-    if (property) {
-      // Send notification to the property owner
-      const clientName = currentUser.name && currentUser.surname 
-        ? `${currentUser.name} ${currentUser.surname}` 
-        : currentUser.email || 'A client';
-        
-      // Create a reservation object for notification
-      const reservationForNotification = {
-        id: request.id,
-        propertyId,
-        propertyTitle: property.title || 'Property',
-        advertiserId: property.ownerId,
-        clientId: currentUser.id,
-        clientName,
-        startDate: scheduledDate,
-        endDate: new Date(scheduledDate.getTime() + 86400000 * 30), // Default to 30 days
-        totalPrice: property.rent || 0,
-        currency: property.currency || 'USD',
-        status: 'pending'
-      };
-      
-      // Skip helpers and use direct notification
-      try {
-        // Import NotificationService dynamically to avoid circular dependencies
-        const NotificationService = (await import('../../services/NotificationService')).default;
-        
-        // Send a direct notification to the advertiser
-        await NotificationService.createNotification(
-          property.ownerId,
-          'advertiser',
-          'reservation_request',
-          'New Reservation Request',
-          `${clientName} has requested to book ${property.title || 'Property'}.`,
-          `/dashboard/advertiser/reservations`,
-          { 
-            reservationId: request.id, 
-            propertyId: propertyId
-          }
-        );
-        
-        console.log(`Direct reservation notification sent to advertiser: ${property.ownerId}`);
-      } catch (notifError) {
-        console.error('Error sending reservation notification:', notifError);
-      }
-    }
-    
-    return request;
-  } catch (error) {
-    console.error('Error creating reservation:', error);
-    throw new Error('Failed to create reservation');
-  }
-}
-
-/**
  * Cancel a reservation
  */
 export async function cancelReservation(reservationId: string): Promise<boolean> {
@@ -376,6 +271,56 @@ export async function processPayment(reservationId: string): Promise<boolean> {
       updatedAt: new Date()
     });
     
+    // Send notification to the advertiser about the payment
+    try {
+      if (reservation.propertyId) {
+        const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
+        if (property) {
+          const clientName = currentUser.name && currentUser.surname 
+            ? `${currentUser.name} ${currentUser.surname}` 
+            : currentUser.email || 'A client';
+            
+          // Import NotificationService dynamically to avoid circular dependencies
+          const NotificationService = (await import('../../services/NotificationService')).default;
+          
+          // Send notification to the advertiser
+          await NotificationService.createNotification(
+            property.ownerId,
+            'advertiser',
+            'payment_confirmed',
+            'Payment Received',
+            `${clientName} has completed payment for their reservation.`,
+            `/dashboard/advertiser/reservations`,
+            { 
+              reservationId: reservationId, 
+              propertyId: reservation.propertyId,
+              status: 'paid'
+            }
+          );
+          
+          // Also send a confirmation to the client
+          await NotificationService.createNotification(
+            currentUser.id,
+            'user',
+            'payment_confirmation',
+            'Payment Confirmed',
+            `Your payment for ${property.title || 'Property'} has been successfully processed.`,
+            `/dashboard/user/reservations`,
+            { 
+              reservationId: reservationId, 
+              propertyId: reservation.propertyId,
+              status: 'paid'
+            }
+          );
+          
+          console.log(`Payment notifications sent to advertiser and client`);
+        }
+      }
+    } catch (notifError) {
+      console.error('Error sending payment notification:', notifError);
+      // Don't throw error here so the main action can still succeed
+    }
+    
     return true;
   } catch (error) {
     console.error('Error processing payment:', error);
@@ -446,12 +391,15 @@ export async function processCancellation(
       if (reservation.propertyId) {
         const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
         if (property) {
+          // Determine status to include in notification
+          const finalStatus = approved ? 'cancelled' : (reservation.paymentMethodId ? 'paid' : 'accepted');
+          
           // Create reservation object for notification
           const reservationData = {
             id: reservationId,
             propertyId: reservation.propertyId,
             propertyTitle: property.title || 'Property',
-            status: approved ? 'cancelled' : previousStatus
+            status: finalStatus
           };
           
           // Send notification to the client
@@ -515,7 +463,7 @@ export async function toggleFavoriteProperty(propertyId: string): Promise<{ adde
     }
     
     // Check if this property is already saved by this user
-    const savedProperties = await queryDocuments(SAVED_PROPERTIES_COLLECTION, [
+    const savedProperties = await queryDocuments<any>(SAVED_PROPERTIES_COLLECTION, [
       { field: 'userId', operator: '==', value: currentUser.id },
       { field: 'propertyId', operator: '==', value: propertyId }
     ]);
@@ -532,6 +480,30 @@ export async function toggleFavoriteProperty(propertyId: string): Promise<{ adde
       propertyId: propertyId,
       createdAt: new Date()
     });
+    
+    // Send notification to the property owner when a property is added to favorites
+    try {
+      const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, propertyId);
+      if (property && property.ownerId) {
+        // Create user info for the notification
+        const clientName = currentUser.name && currentUser.surname 
+          ? `${currentUser.name} ${currentUser.surname}` 
+          : currentUser.email || 'A user';
+        
+        // Only send notification when property is added to favorites, not when removed
+        await advertiserNotifications.propertyLiked(
+          property.ownerId,
+          clientName,
+          property.title || 'Property',
+          propertyId
+        );
+        
+        console.log(`Favorite notification sent to advertiser: ${property.ownerId}`);
+      }
+    } catch (notifError) {
+      console.error('Error sending favorite notification:', notifError);
+      // Don't throw error here so the main action can still succeed
+    }
     
     return { added: true };
   } catch (error) {
@@ -551,7 +523,7 @@ export async function isPropertyFavorited(propertyId: string): Promise<boolean> 
     }
     
     // Check if this property is saved by this user
-    const savedProperties = await queryDocuments(SAVED_PROPERTIES_COLLECTION, [
+    const savedProperties = await queryDocuments<any>(SAVED_PROPERTIES_COLLECTION, [
       { field: 'userId', operator: '==', value: currentUser.id },
       { field: 'propertyId', operator: '==', value: propertyId }
     ]);
@@ -571,7 +543,7 @@ async function getSavedProperties(): Promise<any[]> {
   }
   
   // Query saved properties where userId matches the current user's ID
-  const savedProperties = await queryDocuments(SAVED_PROPERTIES_COLLECTION, [
+  const savedProperties = await queryDocuments<any>(SAVED_PROPERTIES_COLLECTION, [
     { field: 'userId', operator: '==', value: currentUser.id }
   ]);
   

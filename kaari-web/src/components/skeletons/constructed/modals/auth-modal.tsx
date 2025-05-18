@@ -341,6 +341,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   // Use toast service
   const toast = useToastService();
 
+  // Track if a blocked user message has already been shown
+  const [hasShownBlockedMessage, setHasShownBlockedMessage] = useState(false);
+
   // Listen for successful auth events to close modal
   useEffect(() => {
     const unsubscribe = eventBus.on(EventType.AUTH_SIGNED_IN, () => {
@@ -382,6 +385,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     try {
       setErrorMessage(null);
       setIsSubmitting(true);
+      // Reset blocked message flag
+      setHasShownBlockedMessage(false);
       
       // Prevent default redirection behavior
       event?.preventDefault?.();
@@ -434,8 +439,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         errorText = 'Could not sign in with Google. Please try again.';
       }
       
-      setErrorMessage(errorText);
-      toast.auth.loginError(formatErrorMessage(errorText));
+      // Use formatErrorMessage to ensure toast notifications are handled consistently
+      const formattedError = formatErrorMessage(errorText);
+      setErrorMessage(formattedError);
+      
+      // Only show toast for non-blocked errors, as blocked errors are handled in formatErrorMessage
+      if (!errorText.includes('account has been blocked') && !errorText.includes('has been blocked')) {
+        toast.auth.loginError(formattedError);
+      }
     }
   };
 
@@ -443,6 +454,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     if (e && 'preventDefault' in e) {
       e.preventDefault();
     }
+    
+    // Reset blocked message flag at the start of each attempt
+    setHasShownBlockedMessage(false);
     
     if (!email.trim()) {
       setErrorMessage('Please enter your email');
@@ -558,8 +572,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       } catch (error: any) {
         console.error('Auth error:', error);
         setIsSubmitting(false);
-        setErrorMessage(formatErrorMessage(error.message || String(error)));
-        toast.auth.loginError(formatErrorMessage(error.message || String(error)));
+        
+        // Get error message
+        const errorText = error.message || String(error);
+        
+        // Use formatErrorMessage to ensure toast notifications are handled consistently
+        const formattedError = formatErrorMessage(errorText);
+        setErrorMessage(formattedError);
+        
+        // Only show toast for non-blocked errors, as blocked errors are handled in formatErrorMessage
+        if (!errorText.includes('account has been blocked') && !errorText.includes('has been blocked')) {
+          toast.auth.loginError(formattedError);
+        }
       }
     }
   };
@@ -613,6 +637,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return 'Network error. Please check your internet connection and try again.';
     } else if (message.includes('auth/too-many-requests')) {
       return 'Too many attempts. Please try again later or reset your password.';
+    } else if (message.includes('account has been blocked') || message.includes('has been blocked')) {
+      // Special case for blocked user - only show once
+      if (!hasShownBlockedMessage) {
+        setHasShownBlockedMessage(true);
+        toast.auth.userBlocked();
+      }
+      return 'Your account has been blocked. Please contact support for assistance.';
     }
     return message;
   };

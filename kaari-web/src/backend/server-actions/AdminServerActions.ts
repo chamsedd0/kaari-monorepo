@@ -15,28 +15,37 @@ import {
   limit,
   setDoc,
 } from 'firebase/firestore';
+import { userNotifications } from '../../utils/notification-helpers';
 
 // Interface for refund request
 export interface RefundRequest {
   id: string;
   userId: string;
-  userName: string;
+  userName?: string; // May not be populated immediately
   propertyId: string;
-  propertyName: string;
-  reservationId: string;
-  amount: number;
-  requestDate: any; // Timestamp
-  status: 'pending' | 'approved' | 'rejected';
-  reason: string;
-  moveInDate: any; // Timestamp
-  movedInDate: any; // Timestamp
-  requestDetails: string;
-  cancellationRequestId?: string; // Optional reference to the original cancellation request
+  propertyName?: string; // May not be populated immediately
+  reservationId?: string;
+  amount?: number; // Original field
+  requestedRefundAmount?: number; // New field matching actual data structure
+  originalAmount?: number; // New field matching actual data structure
+  serviceFee?: number; // New field matching actual data structure
+  requestDate?: any; // Timestamp
   createdAt?: any; // Timestamp
   updatedAt?: any; // Timestamp
+  status: 'pending' | 'approved' | 'rejected';
+  reason?: string; // Original field
+  reasonsText?: string; // New field matching actual data structure
+  reasons?: string[]; // New field matching actual data structure - array of reason codes
+  moveInDate?: any; // Timestamp
+  movedInDate?: any; // Timestamp
+  requestDetails?: string;
+  details?: string; // New field matching actual data structure
+  proofUrls?: string[]; // New field for uploaded proof files
+  cancellationRequestId?: string; // Optional reference to the original cancellation request
   createdBy?: string;
   approvedBy?: string;
   rejectedBy?: string;
+  adminReviewed?: boolean; // New field to track if admin has reviewed this request
 }
 
 // Interface for cancellation request
@@ -67,7 +76,7 @@ export const getRefundRequests = async (): Promise<RefundRequest[]> => {
   try {
     console.log('Fetching refund requests');
     const refundRequestsRef = collection(db, 'refundRequests');
-    const q = query(refundRequestsRef, orderBy('requestDate', 'desc'));
+    const q = query(refundRequestsRef);
     const querySnapshot = await getDocs(q);
     
     console.log(`Found ${querySnapshot.docs.length} refund requests`);
@@ -146,7 +155,15 @@ export const getRefundRequests = async (): Promise<RefundRequest[]> => {
           updatedAt: data.updatedAt || null,
           createdBy: data.createdBy || undefined,
           approvedBy: data.approvedBy || undefined,
-          rejectedBy: data.rejectedBy || undefined
+          rejectedBy: data.rejectedBy || undefined,
+          adminReviewed: data.adminReviewed || false,
+          requestedRefundAmount: data.requestedRefundAmount || undefined,
+          originalAmount: data.originalAmount || undefined,
+          serviceFee: data.serviceFee || undefined,
+          reasonsText: data.reasonsText || undefined,
+          reasons: data.reasons || undefined,
+          details: data.details || undefined,
+          proofUrls: data.proofUrls || undefined
         });
       } catch (itemError) {
         console.error('Error processing refund request item:', itemError);
@@ -285,19 +302,68 @@ export const approveRefundRequest = async (refundRequestId: string): Promise<voi
     
     // Update the reservation status if it exists
     if (refundData.reservationId) {
-      const reservationRef = doc(db, 'reservations', refundData.reservationId);
-      const reservationDoc = await getDoc(reservationRef);
+      // First check in 'requests' collection
+      const reservationRef = doc(db, 'requests', refundData.reservationId);
+      let reservationDoc = await getDoc(reservationRef);
+      let reservationData = null;
+      let reservationCollection = 'requests';
       
-      if (reservationDoc.exists()) {
+      // If not found in 'requests', try 'reservations' collection
+      if (!reservationDoc.exists()) {
+        const alternativeReservationRef = doc(db, 'reservations', refundData.reservationId);
+        reservationDoc = await getDoc(alternativeReservationRef);
+        reservationCollection = 'reservations';
+        
+        if (reservationDoc.exists()) {
+          reservationData = reservationDoc.data();
+          await updateDoc(alternativeReservationRef, {
+            status: 'refundComplete',
+            updatedAt: serverTimestamp(),
+          });
+          
+          // Determine the refund amount - try multiple fields with fallback
+          // This ensures we always have a valid numeric value
+          const refundAmount = 
+            (typeof refundData.amount === 'number' && !isNaN(refundData.amount)) ? refundData.amount : 
+            (typeof refundData.requestedRefundAmount === 'number' && !isNaN(refundData.requestedRefundAmount)) ? refundData.requestedRefundAmount : 
+            (typeof refundData.originalAmount === 'number' && !isNaN(refundData.originalAmount)) ? refundData.originalAmount * 0.5 : 
+            0; // Default to 0 if no valid amount found
+          
+          // Create a refund payment record (for tracking purposes)
+          const refundsRef = collection(db, 'refunds');
+          const newRefundRef = doc(refundsRef);
+          await setDoc(newRefundRef, {
+            userId: refundData.userId,
+            reservationId: refundData.reservationId,
+            propertyId: refundData.propertyId,
+            refundRequestId: refundRequestId,
+            amount: refundAmount, // Use the determined amount that will never be undefined
+            reason: refundData.reason || refundData.reasonsText || 'Refund approved by admin',
+            status: 'completed',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            processedBy: auth.currentUser?.uid
+          });
+          
+          console.log(`Updated reservation in 'reservations' collection and created refund record with ID: ${newRefundRef.id} for amount: ${refundAmount}`);
+        } else {
+          console.log(`Reservation ${refundData.reservationId} not found in either collection. Only the refund request status has been updated.`);
+        }
+      } else {
+        // Found in 'requests' collection
+        reservationData = reservationDoc.data();
         await updateDoc(reservationRef, {
           status: 'refundComplete',
           updatedAt: serverTimestamp(),
-          statusHistory: arrayUnion({
-            status: 'refundComplete',
-            timestamp: now,
-            updatedBy: auth.currentUser?.uid
-          })
         });
+        
+        // Determine the refund amount - try multiple fields with fallback
+        // This ensures we always have a valid numeric value
+        const refundAmount = 
+          (typeof refundData.amount === 'number' && !isNaN(refundData.amount)) ? refundData.amount : 
+          (typeof refundData.requestedRefundAmount === 'number' && !isNaN(refundData.requestedRefundAmount)) ? refundData.requestedRefundAmount : 
+          (typeof refundData.originalAmount === 'number' && !isNaN(refundData.originalAmount)) ? refundData.originalAmount * 0.5 : 
+          0; // Default to 0 if no valid amount found
         
         // Create a refund payment record (for tracking purposes)
         const refundsRef = collection(db, 'refunds');
@@ -307,17 +373,45 @@ export const approveRefundRequest = async (refundRequestId: string): Promise<voi
           reservationId: refundData.reservationId,
           propertyId: refundData.propertyId,
           refundRequestId: refundRequestId,
-          amount: refundData.amount,
-          reason: refundData.reason || 'Refund approved by admin',
+          amount: refundAmount, // Use the determined amount that will never be undefined
+          reason: refundData.reason || refundData.reasonsText || 'Refund approved by admin',
           status: 'completed',
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           processedBy: auth.currentUser?.uid
         });
         
-        console.log(`Refund record created with ID: ${newRefundRef.id}`);
-      } else {
-        console.log(`Reservation ${refundData.reservationId} not found. Only the refund request status has been updated.`);
+        console.log(`Updated reservation in 'requests' collection and created refund record with ID: ${newRefundRef.id} for amount: ${refundAmount}`);
+      }
+      
+      // Send notification to the user about the approved refund
+      if (refundData.userId && reservationData) {
+        try {
+          // Get property details for the notification
+          const propertyRef = doc(db, 'properties', refundData.propertyId);
+          const propertyDoc = await getDoc(propertyRef);
+          const propertyTitle = propertyDoc.exists() ? propertyDoc.data().title : 'your reservation';
+          
+          // Create a minimal reservation object for the notification
+          const reservationForNotification = {
+            id: refundData.reservationId,
+            propertyId: refundData.propertyId,
+            propertyTitle: propertyTitle,
+            status: 'refundComplete'
+          };
+          
+          await userNotifications.refundRequestHandled(
+            refundData.userId,
+            reservationForNotification as any,
+            true, // approved
+            refundData.reason || refundData.reasonsText || 'Your refund request has been approved.'
+          );
+          
+          console.log(`Sent refund approval notification to user ${refundData.userId}`);
+        } catch (notifError) {
+          console.error('Error sending refund approved notification:', notifError);
+          // Don't throw error, just log it (non-critical)
+        }
       }
     }
     
@@ -335,6 +429,9 @@ export const approveRefundRequest = async (refundRequestId: string): Promise<voi
         console.log(`Updated related cancellation request ${refundData.cancellationRequestId} with refund status`);
       }
     }
+    
+    // Explicitly return undefined to satisfy the Promise<void> return type
+    return;
     
   } catch (error) {
     console.error('Error approving refund request:', error);
@@ -370,23 +467,68 @@ export const rejectRefundRequest = async (refundRequestId: string): Promise<void
     
     // Update the reservation status if it exists
     if (refundData.reservationId) {
-      const reservationRef = doc(db, 'reservations', refundData.reservationId);
-      const reservationDoc = await getDoc(reservationRef);
+      // First check in 'requests' collection
+      const reservationRef = doc(db, 'requests', refundData.reservationId);
+      let reservationDoc = await getDoc(reservationRef);
+      let reservationData = null;
+      let reservationCollection = 'requests';
       
-      if (reservationDoc.exists()) {
+      // If not found in 'requests', try 'reservations' collection
+      if (!reservationDoc.exists()) {
+        const alternativeReservationRef = doc(db, 'reservations', refundData.reservationId);
+        reservationDoc = await getDoc(alternativeReservationRef);
+        reservationCollection = 'reservations';
+        
+        if (reservationDoc.exists()) {
+          reservationData = reservationDoc.data();
+          await updateDoc(alternativeReservationRef, {
+            status: 'refundFailed',
+            updatedAt: serverTimestamp(),
+          });
+          
+          console.log(`Updated reservation ${refundData.reservationId} in 'reservations' collection status to refundFailed`);
+        } else {
+          console.log(`Reservation ${refundData.reservationId} not found in either collection. Only the refund request status has been updated.`);
+        }
+      } else {
+        // Found in 'requests' collection
+        reservationData = reservationDoc.data();
         await updateDoc(reservationRef, {
           status: 'refundFailed',
           updatedAt: serverTimestamp(),
-          statusHistory: arrayUnion({
-            status: 'refundFailed',
-            timestamp: now,
-            updatedBy: auth.currentUser?.uid
-          })
         });
         
-        console.log(`Updated reservation ${refundData.reservationId} status to refundFailed`);
-      } else {
-        console.log(`Reservation ${refundData.reservationId} not found. Only the refund request status has been updated.`);
+        console.log(`Updated reservation ${refundData.reservationId} in 'requests' collection status to refundFailed`);
+      }
+      
+      // Send notification to the user about the rejected refund
+      if (refundData.userId && reservationData) {
+        try {
+          // Get property details for the notification
+          const propertyRef = doc(db, 'properties', refundData.propertyId);
+          const propertyDoc = await getDoc(propertyRef);
+          const propertyTitle = propertyDoc.exists() ? propertyDoc.data().title : 'your reservation';
+          
+          // Create a minimal reservation object for the notification
+          const reservationForNotification = {
+            id: refundData.reservationId,
+            propertyId: refundData.propertyId,
+            propertyTitle: propertyTitle,
+            status: 'refundFailed'
+          };
+          
+          await userNotifications.refundRequestHandled(
+            refundData.userId,
+            reservationForNotification as any,
+            false, // rejected
+            refundData.reason || refundData.reasonsText || 'Your refund request has been rejected.'
+          );
+          
+          console.log(`Sent refund rejection notification to user ${refundData.userId}`);
+        } catch (notifError) {
+          console.error('Error sending refund rejected notification:', notifError);
+          // Don't throw error, just log it (non-critical)
+        }
       }
     }
     
@@ -404,6 +546,9 @@ export const rejectRefundRequest = async (refundRequestId: string): Promise<void
         console.log(`Updated related cancellation request ${refundData.cancellationRequestId} with refund status (failed)`);
       }
     }
+    
+    // Explicitly return undefined to satisfy the Promise<void> return type
+    return;
     
   } catch (error) {
     console.error('Error rejecting refund request:', error);
@@ -438,22 +583,103 @@ export const approveCancellationRequest = async (cancellationRequestId: string):
       approvedBy: auth.currentUser?.uid
     });
     
+    // Property title for notifications
+    let propertyTitle = 'your reservation';
+    try {
+      if (cancellationData.propertyId) {
+        const propertyRef = doc(db, 'properties', cancellationData.propertyId);
+        const propertyDoc = await getDoc(propertyRef);
+        if (propertyDoc.exists()) {
+          propertyTitle = propertyDoc.data().title || 'your reservation';
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching property details for notification:', error);
+    }
+    
     // Now check if the reservation exists before attempting to update it
     if (cancellationData.reservationId) {
-      const reservationRef = doc(db, 'reservations', cancellationData.reservationId);
-      const reservationDoc = await getDoc(reservationRef);
+      // First check in 'requests' collection
+      const reservationRef = doc(db, 'requests', cancellationData.reservationId);
+      let reservationDoc = await getDoc(reservationRef);
+      let reservationData = null;
       
-      if (reservationDoc.exists()) {
+      // If not found in 'requests', try 'reservations' collection
+      if (!reservationDoc.exists()) {
+        const alternativeReservationRef = doc(db, 'reservations', cancellationData.reservationId);
+        reservationDoc = await getDoc(alternativeReservationRef);
+        
+        if (reservationDoc.exists()) {
+          reservationData = reservationDoc.data();
+          // Update reservation status to refundProcessing instead of cancelled
+          await updateDoc(alternativeReservationRef, {
+            status: 'refundProcessing',
+            updatedAt: serverTimestamp(),
+          });
+          
+          // Calculate refund amount safely with fallbacks
+          const originalAmount = typeof cancellationData.originalAmount === 'number' && !isNaN(cancellationData.originalAmount) 
+            ? cancellationData.originalAmount 
+            : 0;
+            
+          const cancellationFee = typeof cancellationData.cancellationFee === 'number' && !isNaN(cancellationData.cancellationFee)
+            ? cancellationData.cancellationFee
+            : 0;
+            
+          // Try to get the requestedRefundAmount first, otherwise calculate it
+          const refundAmount = 
+            (typeof cancellationData.requestedRefundAmount === 'number' && !isNaN(cancellationData.requestedRefundAmount))
+              ? cancellationData.requestedRefundAmount
+              : originalAmount - cancellationFee;
+          
+          // Create a refund request based on the cancellation request
+          const refundRequestsRef = collection(db, 'refundRequests');
+          const newRefundRequestRef = doc(refundRequestsRef);
+          
+          await setDoc(newRefundRequestRef, {
+            userId: cancellationData.userId,
+            propertyId: cancellationData.propertyId,
+            reservationId: cancellationData.reservationId,
+            amount: refundAmount, // Now safely calculated with fallbacks
+            requestDate: serverTimestamp(),
+            status: 'pending',
+            reason: `Auto-generated from approved cancellation request: ${cancellationRequestId}`,
+            moveInDate: null,
+            movedInDate: null,
+            requestDetails: cancellationData.details || cancellationData.requestDetails || 'Cancellation approved by admin',
+            cancellationRequestId: cancellationRequestId, // Reference to the original cancellation request
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            createdBy: auth.currentUser?.uid
+          });
+          
+          console.log(`Updated reservation in 'reservations' collection and created refund request ${newRefundRequestRef.id} for amount: ${refundAmount}`);
+        } else {
+          console.log(`Reservation ${cancellationData.reservationId} not found in either collection. Only the cancellation request status has been updated.`);
+        }
+      } else {
+        // Found in 'requests' collection
+        reservationData = reservationDoc.data();
         // Update reservation status to refundProcessing instead of cancelled
         await updateDoc(reservationRef, {
           status: 'refundProcessing',
           updatedAt: serverTimestamp(),
-          statusHistory: arrayUnion({
-            status: 'refundProcessing',
-            timestamp: now,
-            updatedBy: auth.currentUser?.uid
-          })
         });
+        
+        // Calculate refund amount safely with fallbacks
+        const originalAmount = typeof cancellationData.originalAmount === 'number' && !isNaN(cancellationData.originalAmount) 
+          ? cancellationData.originalAmount 
+          : 0;
+          
+        const cancellationFee = typeof cancellationData.cancellationFee === 'number' && !isNaN(cancellationData.cancellationFee)
+          ? cancellationData.cancellationFee
+          : 0;
+          
+        // Try to get the requestedRefundAmount first, otherwise calculate it
+        const refundAmount = 
+          (typeof cancellationData.requestedRefundAmount === 'number' && !isNaN(cancellationData.requestedRefundAmount))
+            ? cancellationData.requestedRefundAmount
+            : originalAmount - cancellationFee;
         
         // Create a refund request based on the cancellation request
         const refundRequestsRef = collection(db, 'refundRequests');
@@ -463,24 +689,51 @@ export const approveCancellationRequest = async (cancellationRequestId: string):
           userId: cancellationData.userId,
           propertyId: cancellationData.propertyId,
           reservationId: cancellationData.reservationId,
-          amount: cancellationData.requestedRefundAmount || cancellationData.originalAmount - cancellationData.cancellationFee,
+          amount: refundAmount, // Now safely calculated with fallbacks
           requestDate: serverTimestamp(),
           status: 'pending',
           reason: `Auto-generated from approved cancellation request: ${cancellationRequestId}`,
           moveInDate: null,
           movedInDate: null,
-          requestDetails: cancellationData.details || 'Cancellation approved by admin',
+          requestDetails: cancellationData.details || cancellationData.requestDetails || 'Cancellation approved by admin',
           cancellationRequestId: cancellationRequestId, // Reference to the original cancellation request
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           createdBy: auth.currentUser?.uid
         });
         
-        console.log(`Created refund request ${newRefundRequestRef.id} from cancellation request ${cancellationRequestId}`);
-      } else {
-        console.log(`Reservation ${cancellationData.reservationId} not found. Only the cancellation request status has been updated.`);
+        console.log(`Updated reservation in 'requests' collection and created refund request ${newRefundRequestRef.id} for amount: ${refundAmount}`);
+      }
+      
+      // Send notification to the user about the approved cancellation
+      if (cancellationData.userId) {
+        try {
+          // Create a minimal reservation object for the notification
+          const reservationForNotification = {
+            id: cancellationData.reservationId,
+            propertyId: cancellationData.propertyId,
+            propertyTitle: propertyTitle,
+            status: 'refundProcessing'
+          };
+          
+          await userNotifications.cancellationRequestHandled(
+            cancellationData.userId,
+            reservationForNotification as any,
+            true, // approved
+            'Your cancellation request has been approved and a refund is being processed.'
+          );
+          
+          console.log(`Sent cancellation approval notification to user ${cancellationData.userId}`);
+        } catch (notifError) {
+          console.error('Error sending cancellation approved notification:', notifError);
+          // Don't throw error, just log it (non-critical)
+        }
       }
     }
+    
+    // Explicitly return undefined to satisfy the Promise<void> return type
+    return;
+    
   } catch (error) {
     console.error('Error approving cancellation request:', error);
     throw new Error('Failed to approve cancellation request');
@@ -514,25 +767,81 @@ export const rejectCancellationRequest = async (cancellationRequestId: string): 
       rejectedBy: auth.currentUser?.uid
     });
     
+    // Property title for notifications
+    let propertyTitle = 'your reservation';
+    try {
+      if (cancellationData.propertyId) {
+        const propertyRef = doc(db, 'properties', cancellationData.propertyId);
+        const propertyDoc = await getDoc(propertyRef);
+        if (propertyDoc.exists()) {
+          propertyTitle = propertyDoc.data().title || 'your reservation';
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching property details for notification:', error);
+    }
+    
     // Optional: Update the reservation to indicate the cancellation was rejected
     // This keeps the reservation in its original state but adds a history entry
     if (cancellationData.reservationId) {
-      const reservationRef = doc(db, 'reservations', cancellationData.reservationId);
-      const reservationDoc = await getDoc(reservationRef);
+      // First check in 'requests' collection (as used in other functions)
+      const reservationRef = doc(db, 'requests', cancellationData.reservationId);
+      let reservationDoc = await getDoc(reservationRef);
+      let reservationData = null;
       
-      if (reservationDoc.exists()) {
-        await updateDoc(reservationRef, {
-          updatedAt: serverTimestamp(),
-          statusHistory: arrayUnion({
-            status: 'cancellationRejected',
-            timestamp: now,
-            updatedBy: auth.currentUser?.uid
-          })
-        });
+      // If not found in 'requests', try 'reservations' collection
+      if (!reservationDoc.exists()) {
+        const alternativeReservationRef = doc(db, 'reservations', cancellationData.reservationId);
+        reservationDoc = await getDoc(alternativeReservationRef);
+        
+        if (reservationDoc.exists()) {
+          reservationData = reservationDoc.data();
+          await updateDoc(alternativeReservationRef, {
+            status: 'cancelled',
+            updatedAt: serverTimestamp(),
+          });
+          console.log(`Updated reservation ${cancellationData.reservationId} in 'reservations' collection status to cancelled`);
+        } else {
+          console.log(`Reservation ${cancellationData.reservationId} not found in either collection. Only the cancellation request status has been updated.`);
+        }
       } else {
-        console.log(`Reservation ${cancellationData.reservationId} not found. Only the cancellation request status has been updated.`);
+        // Found in 'requests' collection
+        reservationData = reservationDoc.data();
+        await updateDoc(reservationRef, {
+          status: 'cancelled',
+          updatedAt: serverTimestamp(),
+        });
+        console.log(`Updated reservation ${cancellationData.reservationId} in 'requests' collection status to cancelled`);
+      }
+      
+      // Send notification to the user about the rejected cancellation
+      if (cancellationData.userId) {
+        try {
+          // Create a minimal reservation object for the notification
+          const reservationForNotification = {
+            id: cancellationData.reservationId,
+            propertyId: cancellationData.propertyId,
+            propertyTitle: propertyTitle,
+            status: 'cancelled'
+          };
+          
+          await userNotifications.cancellationRequestHandled(
+            cancellationData.userId,
+            reservationForNotification as any,
+            false, // rejected
+            'Your cancellation request has been rejected. Please contact support for more information.'
+          );
+          
+          console.log(`Sent cancellation rejection notification to user ${cancellationData.userId}`);
+        } catch (notifError) {
+          console.error('Error sending cancellation rejected notification:', notifError);
+          // Don't throw error, just log it (non-critical)
+        }
       }
     }
+    
+    // Explicitly return undefined to satisfy the Promise<void> return type
+    return;
     
   } catch (error) {
     console.error('Error rejecting cancellation request:', error);
