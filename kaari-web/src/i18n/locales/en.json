@@ -49,6 +49,7 @@
     "wifi": "Wi-Fi",
     "water": "Water",
     "electricity": "Electricity",
+    "gas": "Gas",
     "women_only": "Women Only",
     "families_only": "Families Only",
     "pets_allowed": "Pets Allowed",
@@ -59,6 +60,8 @@
     "min_stay": "{{count}} month minimum stay",
     "default_city": "Agadir",
     "default_country": "Morocco",
+    "housing_preferences": "Housing Preferences",
+    "allowed": "Allowed",
     "date_picker": {
       "day": "DD",
       "month": "MM",
@@ -190,9 +193,16 @@
     "browse_properties": "Browse Properties",
     "apply_filters": "Apply Filters",
     "advanced_filtering": "Advanced Filtering",
+    "select_bedrooms": "Select number of bedrooms",
+    "select_property_type": "Select property type",
     "property_type": {
       "apartment": "Apartment",
       "house": "House",
+      "studio": "Studio",
+      "room": "Room",
+      "villa": "Villa",
+      "penthouse": "Penthouse",
+      "townhouse": "Townhouse",
       "condo": "Condo",
       "land": "Land",
       "commercial": "Commercial"
@@ -693,7 +703,7 @@
         "has_pending_reservation": "This property has a pending reservation and cannot be listed."
       },
       "amenities": {
-        "sofabed": "Sofabed",
+        "sofabed": "Sofa Bed",
         "dining_table": "Dining Table",
         "wardrobe": "Wardrobe",
         "cabinet": "Cabinet",
@@ -707,7 +717,9 @@
         "oven": "Oven",
         "washing_machine": "Washing Machine",
         "hotplate": "Hotplate/Cooktop",
-        "water_heater": "Water Heater"
+        "water_heater": "Water Heater",
+        "microwave": "Microwave",
+        "bathtub": "Bathtub"
       },
       "edit_request": {
         "title": "Ask for Edit",
@@ -719,5 +731,17 @@
         "submit_request": "Submit Request"
       }
     }
+  },
+  "property_features": {
+    "title": "Property Features",
+    "balcony": "Balcony",
+    "central_heating": "Central Heating",
+    "parking_space": "Parking Space",
+    "air_conditioning": "Air Conditioning",
+    "wooden_floors": "Wooden Floors",
+    "elevator": "Elevator",
+    "swimming_pool": "Swimming Pool",
+    "fireplace": "Fireplace",
+    "accessible": "Accessible"
   }
 } 

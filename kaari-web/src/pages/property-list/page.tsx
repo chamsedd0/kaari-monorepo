@@ -1254,7 +1254,10 @@ export default function PropertyListPage() {
         }
         
         // Handle amenity filters - make this more robust by handling case sensitivity and format variations
-        const amenityFilters = ['wifi', 'washing-machine', 'desk', 'wardrobe', 'oven', 'coffee-table', 'sofabed', 'sofa', 'dining-table', 'cabinet'];
+        const amenityFilters = [
+          'wifi', 'washing-machine', 'desk', 'wardrobe', 'oven', 'coffee-table', 'sofabed', 
+          'sofa', 'dining-table', 'cabinet', 'microwave', 'bathtub'
+        ];
         if (amenityFilters.includes(filter.toLowerCase())) {
           console.log(`Checking amenity filter: ${filter} for property ${property.id}`);
           console.log(`Property ${property.id} amenities:`, property.amenities);
@@ -1274,7 +1277,10 @@ export default function PropertyListPage() {
         }
         
         // Handle features filters - with improved matching
-        const featureFilters = ['balcony', 'central-heating', 'parking-space', 'air-conditioning', 'wooden-floors', 'elevator'];
+        const featureFilters = [
+          'balcony', 'central-heating', 'parking-space', 'air-conditioning', 'wooden-floors', 
+          'elevator', 'swimming-pool', 'fireplace', 'accessible'
+        ];
         if (featureFilters.includes(filter.toLowerCase())) {
           console.log(`Checking feature filter: ${filter} for property ${property.id}`);
           console.log(`Property ${property.id} features:`, property.features);
@@ -1293,8 +1299,49 @@ export default function PropertyListPage() {
           console.log(`Property ${property.id} matched feature: ${filter}`);
         }
         
+        // Handle housing preferences (women-only and families-only) as a separate category
+        const housingPreferenceFilters = ['women-only', 'families-only'];
+        if (housingPreferenceFilters.includes(filter.toLowerCase())) {
+          console.log(`Checking housing preference filter: ${filter} for property ${property.id}`);
+          console.log(`Property ${property.id} rules:`, property.rules);
+          
+          // Check if property has rules array
+          if (!property.rules || !Array.isArray(property.rules)) {
+            console.log(`Property ${property.id} has no rules array, filtering out`);
+            return false;
+          }
+          
+          // Map filter names to rule names in the property
+          let ruleName = '';
+          switch(filter.toLowerCase()) {
+            case 'women-only':
+              ruleName = 'Women only';
+              break;
+            case 'families-only':
+              ruleName = 'Families only';
+              break;
+          }
+          
+          console.log(`Looking for housing preference: "${ruleName}" with allowed=true`);
+          
+          // Check if the property has the rule and it's allowed
+          // Use case-insensitive search to avoid case mismatches
+          const ruleMatch = property.rules.find(r => 
+            r.name.toLowerCase() === ruleName.toLowerCase() ||
+            r.name.toLowerCase().includes(ruleName.toLowerCase())
+          );
+          
+          // If the rule doesn't exist or is not allowed, filter out this property
+          if (!ruleMatch || !ruleMatch.allowed) {
+            console.log(`Property ${property.id} does not have "${ruleName}" allowed, filtering out`);
+            return false;
+          }
+          
+          console.log(`Property ${property.id} has housing preference "${ruleMatch.name}" allowed: true`);
+        }
+        
         // Handle included services filters - fix the quotation marks issue and match IDs from FilteringSection
-        const includedFilters = ['water', 'electricity', 'wifi'];
+        const includedFilters = ['water', 'electricity', 'wifi', 'gas'];
         if (includedFilters.includes(filter.toLowerCase())) {
           console.log(`Checking included filter: ${filter} for property ${property.id}`);
           console.log(`Property ${property.id} features:`, property.features);
@@ -1338,10 +1385,10 @@ export default function PropertyListPage() {
           console.log(`Property ${property.id} includes ${filter} in features or amenities`);
         }
         
-        // Rules filters
-        const ruleFilters = ['women-only', 'families-only', 'pets-allowed', 'smoking-allowed'];
-        if (ruleFilters.includes(filter)) {
-          console.log(`Checking rule filter: ${filter} for property ${property.id}`);
+        // Handle allowed rules (pets and smoking) separately from housing preferences
+        const allowedFilters = ['pets-allowed', 'smoking-allowed'];
+        if (allowedFilters.includes(filter.toLowerCase())) {
+          console.log(`Checking allowed filter: ${filter} for property ${property.id}`);
           
           // Check if property has rules array
           if (!property.rules || !Array.isArray(property.rules)) {
@@ -1353,13 +1400,7 @@ export default function PropertyListPage() {
           
           // Map filter names to rule names in the property
           let ruleName = '';
-          switch(filter) {
-            case 'women-only':
-              ruleName = 'Women only';
-              break;
-            case 'families-only':
-              ruleName = 'Families only';
-              break;
+          switch(filter.toLowerCase()) {
             case 'pets-allowed':
               ruleName = 'Pets';
               break;

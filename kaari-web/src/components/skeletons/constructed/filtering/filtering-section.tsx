@@ -3,13 +3,15 @@ import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { Theme } from '../../../../theme/theme';
 import SearchFilterBar from '../../inputs/search-bars/search-filter-bar';
-import { FaBed, FaCouch, FaTable, FaChair, FaDesktop, FaArrowLeft, FaUsers, FaPaw, FaSmoking } from 'react-icons/fa';
-import { BiCloset, BiCabinet } from 'react-icons/bi';
-import { MdTableRestaurant, MdOutlineCoffee, MdWaterDrop, MdOutlineLocalLaundryService, MdOutlineKitchen, MdOutlineMicrowave } from 'react-icons/md';
-import { RiWaterFlashFill, RiWifiFill } from 'react-icons/ri';
-import { BsFillLightningFill } from 'react-icons/bs';
+import { FaBed, FaCouch, FaTable, FaChair, FaDesktop, FaArrowLeft, FaUsers, FaPaw, FaSmoking, FaParking, FaSnowflake, FaWheelchair, FaSwimmingPool } from 'react-icons/fa';
+import { BiCloset, BiCabinet, BiWind } from 'react-icons/bi';
+import { MdTableRestaurant, MdOutlineCoffee, MdWaterDrop, MdOutlineLocalLaundryService, MdOutlineKitchen, MdOutlineMicrowave, MdOutlineBalcony, MdOutlineFireplace, MdOutlineBathtub, MdOutlineHeatPump, MdOutlineWindow } from 'react-icons/md';
+import { RiWaterFlashFill, RiWifiFill, RiParkingBoxLine } from 'react-icons/ri';
+import { BsFillLightningFill, BsHouseDoor } from 'react-icons/bs';
 import { ImWoman } from 'react-icons/im';
 import { IoChevronDown } from 'react-icons/io5';
+import { TbAirConditioning, TbWood } from 'react-icons/tb';
+import { GiHeatHaze } from 'react-icons/gi';
 
 const FilteringSectionContainer = styled.div`
   width: 100%;
@@ -358,7 +360,8 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
     { id: 'coffee-table', label: t('advertiser_dashboard.properties.amenities.coffee_table'), icon: <MdOutlineCoffee style={{ color: Theme.colors.secondary }} /> },
     { id: 'washing-machine', label: t('advertiser_dashboard.properties.amenities.washing_machine'), icon: <MdOutlineLocalLaundryService style={{ color: Theme.colors.secondary }} /> },
     { id: 'oven', label: t('advertiser_dashboard.properties.amenities.oven'), icon: <MdOutlineKitchen style={{ color: Theme.colors.secondary }} /> },
-    { id: 'wifi', label: t('common.wifi'), icon: <RiWifiFill style={{ color: Theme.colors.secondary }} /> }
+    { id: 'microwave', label: t('advertiser_dashboard.properties.amenities.microwave'), icon: <MdOutlineMicrowave style={{ color: Theme.colors.secondary }} /> },
+    { id: 'bathtub', label: t('advertiser_dashboard.properties.amenities.bathtub'), icon: <MdOutlineBathtub style={{ color: Theme.colors.secondary }} /> }
   ];
 
   // Define furnished filter
@@ -368,13 +371,31 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
   const includedFees = [
     { id: 'water', label: t('common.water'), icon: <RiWaterFlashFill style={{ color: Theme.colors.secondary }} /> },
     { id: 'electricity', label: t('common.electricity'), icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> },
-    { id: 'wifi', label: t('common.wifi'), icon: <RiWifiFill style={{ color: Theme.colors.secondary }} /> }
+    { id: 'wifi', label: t('common.wifi'), icon: <RiWifiFill style={{ color: Theme.colors.secondary }} /> },
+    { id: 'gas', label: t('common.gas'), icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> }
+  ];
+  
+  // Add property features as a separate category
+  const propertyFeatures = [
+    { id: 'balcony', label: t('property_features.balcony'), icon: <MdOutlineBalcony style={{ color: Theme.colors.secondary }} /> },
+    { id: 'central-heating', label: t('property_features.central_heating'), icon: <GiHeatHaze style={{ color: Theme.colors.secondary }} /> },
+    { id: 'parking-space', label: t('property_features.parking_space'), icon: <RiParkingBoxLine style={{ color: Theme.colors.secondary }} /> },
+    { id: 'air-conditioning', label: t('property_features.air_conditioning'), icon: <TbAirConditioning style={{ color: Theme.colors.secondary }} /> },
+    { id: 'wooden-floors', label: t('property_features.wooden_floors'), icon: <TbWood style={{ color: Theme.colors.secondary }} /> },
+    { id: 'elevator', label: t('property_features.elevator'), icon: <FaWheelchair style={{ color: Theme.colors.secondary }} /> },
+    { id: 'swimming-pool', label: t('property_features.swimming_pool'), icon: <FaSwimmingPool style={{ color: Theme.colors.secondary }} /> },
+    { id: 'fireplace', label: t('property_features.fireplace'), icon: <MdOutlineFireplace style={{ color: Theme.colors.secondary }} /> },
+    { id: 'accessible', label: t('property_features.accessible'), icon: <FaWheelchair style={{ color: Theme.colors.secondary }} /> }
   ];
 
-  // Updated accepts only rules
-  const acceptsOnlyRules = [
+  // Separate women-only and families-only from other rules
+  const housingPreferences = [
     { id: 'women-only', label: t('common.women_only'), icon: <ImWoman style={{ color: Theme.colors.secondary }} /> },
-    { id: 'families-only', label: t('common.families_only'), icon: <FaUsers style={{ color: Theme.colors.secondary }} /> },
+    { id: 'families-only', label: t('common.families_only'), icon: <FaUsers style={{ color: Theme.colors.secondary }} /> }
+  ];
+
+  // Updated accepts only rules (now without women-only and families-only)
+  const acceptsOnlyRules = [
     { id: 'pets-allowed', label: t('common.pets_allowed'), icon: <FaPaw style={{ color: Theme.colors.secondary }} /> },
     { id: 'smoking-allowed', label: t('common.smoking_allowed'), icon: <FaSmoking style={{ color: Theme.colors.secondary }} /> }
   ];
@@ -492,6 +513,24 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
         </AmenitiesGrid>
       </FilteringRow>
 
+      {/* New dedicated section for housing preferences */}
+      <FilteringRow>
+        <FilteringTitle>{t('common.housing_preferences')}</FilteringTitle>
+        <AmenitiesGrid>
+          {housingPreferences.map(preference => (
+            <AmenityItem key={preference.id}>
+              <div 
+                className={`checkbox ${isAmenityChecked(preference.id) ? 'checked' : ''}`}
+                onClick={() => handleAmenityToggle(preference.id)}
+              ></div>
+              <label onClick={() => handleAmenityToggle(preference.id)}>
+                {preference.icon} {preference.label}
+              </label>
+            </AmenityItem>
+          ))}
+        </AmenitiesGrid>
+      </FilteringRow>
+
       <FilteringRow>
         <FilteringTitle>{t('property_list.amenities')}</FilteringTitle>
         <AmenitiesGrid>
@@ -503,6 +542,24 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
               ></div>
               <label onClick={() => handleAmenityToggle(amenity.id)}>
                 {amenity.icon} {amenity.label}
+              </label>
+            </AmenityItem>
+          ))}
+        </AmenitiesGrid>
+      </FilteringRow>
+      
+      {/* New Property Features section */}
+      <FilteringRow>
+        <FilteringTitle>{t('property_features.title')}</FilteringTitle>
+        <AmenitiesGrid>
+          {propertyFeatures.map(feature => (
+            <AmenityItem key={feature.id}>
+              <div 
+                className={`checkbox ${isAmenityChecked(feature.id) ? 'checked' : ''}`}
+                onClick={() => handleAmenityToggle(feature.id)}
+              ></div>
+              <label onClick={() => handleAmenityToggle(feature.id)}>
+                {feature.icon} {feature.label}
               </label>
             </AmenityItem>
           ))}
@@ -527,7 +584,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
       </FilteringRow>
 
       <FilteringRow>
-        <FilteringTitle>{t('common.accepts_only')}</FilteringTitle>
+        <FilteringTitle>{t('common.allowed')}</FilteringTitle>
         <AmenitiesGrid>
           {acceptsOnlyRules.map(rule => (
             <AmenityItem key={rule.id}>
