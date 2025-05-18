@@ -553,7 +553,37 @@ export const advertiserNotifications = {
     );
   },
   
-  // Property liked notification 
+  // Notify advertiser when client requests a refund
+  refundRequested: async (
+    advertiserId: string,
+    clientName: string,
+    propertyTitle: string,
+    propertyId: string,
+    reservationId: string,
+    refundAmount?: number
+  ): Promise<string | undefined> => {
+    console.log(`advertiserNotifications.refundRequested called for advertiser ${advertiserId}`);
+    try {
+      const amountText = refundAmount ? ` of ${refundAmount}` : '';
+      return await NotificationService.createNotification(
+        advertiserId,
+        'advertiser',
+        'refund_requested',
+        'Refund Requested',
+        `${clientName} has requested a refund${amountText} for ${propertyTitle}.`,
+        `/dashboard/advertiser/refunds`,
+        { 
+          reservationId, 
+          propertyId,
+          refundAmount 
+        }
+      );
+    } catch (error) {
+      console.error('Failed to create refund requested notification:', error);
+    }
+  },
+  
+  // Property liked notification
   propertyLiked: async (
     advertiserId: string,
     clientName: string,
