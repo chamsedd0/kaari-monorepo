@@ -43,7 +43,7 @@ export interface Property {
     zipCode: string;
     country: string;
   };
-  propertyType: 'apartment' | 'house' | 'condo' | 'land' | 'commercial';
+  propertyType: 'apartment' | 'house' | 'condo' | 'land' | 'commercial' | 'studio' | 'room' | 'villa' | 'penthouse' | 'townhouse';
   bedrooms?: number;
   bathrooms?: number;
   area: number; // in square feet/meters
@@ -73,6 +73,30 @@ export interface Property {
     timeDistance: string; // e.g., "10 minutes"
   }>;
   reviews?: string[]; // References to review IDs related to this property
+  
+  // Housing preferences
+  housingPreference?: string; // 'womenOnly' | 'familiesOnly' | etc.
+  
+  // Dedicated fields for allowed rules
+  petsAllowed?: boolean;
+  smokingAllowed?: boolean;
+  
+  // Dedicated fields for included utilities
+  includesWater?: boolean;
+  includesElectricity?: boolean;
+  includesWifi?: boolean;
+  includesGas?: boolean;
+  
+  // Dedicated fields for property features
+  hasBalcony?: boolean;
+  hasCentralHeating?: boolean;
+  hasParking?: boolean;
+  hasAirConditioning?: boolean;
+  hasWoodenFloors?: boolean;
+  hasElevator?: boolean;
+  hasSwimmingPool?: boolean;
+  hasFireplace?: boolean;
+  isAccessible?: boolean;
 }
 
 export interface Request {

@@ -68,6 +68,30 @@ interface PropertyType {
     allowed: boolean;
   }>;
   isFurnished: boolean;
+  
+  // Housing preferences
+  housingPreference?: string; // 'womenOnly' | 'familiesOnly' | etc.
+  
+  // Dedicated fields for allowed rules
+  petsAllowed?: boolean;
+  smokingAllowed?: boolean;
+  
+  // Dedicated fields for included utilities
+  includesWater?: boolean;
+  includesElectricity?: boolean;
+  includesWifi?: boolean;
+  includesGas?: boolean;
+  
+  // Dedicated fields for property features
+  hasBalcony?: boolean;
+  hasCentralHeating?: boolean;
+  hasParking?: boolean;
+  hasAirConditioning?: boolean;
+  hasWoodenFloors?: boolean;
+  hasElevator?: boolean;
+  hasSwimmingPool?: boolean;
+  hasFireplace?: boolean;
+  isAccessible?: boolean;
 }
 
 // Define sort option type 
@@ -674,6 +698,18 @@ const normalizeText = (text: string): string => {
   return text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 };
 
+// Handle amenities, features and other array-based filters with string normalization
+const arrayBasedFilters = {
+  amenities: [
+    'desk', 'cabinet', 'dining-table', 'wardrobe', 'chair', 'sofa', 'dresser',
+    'walk-in-closet', 'oven', 'hotplate-cooktop', 'mirror', 'washing-machine', 'gym'
+  ],
+  features: [
+    'balcony', 'central-heating', 'parking-space', 'air-conditioning', 'wooden-floors',
+    'elevator', 'swimming-pool', 'fireplace', 'accessible', 'water', 'electricity', 'wifi', 'gas'
+  ]
+};
+
 export default function PropertyListPage() {
   // Hooks
   const { t } = useTranslation();
@@ -966,7 +1002,7 @@ export default function PropertyListPage() {
         return false;
       }
       
-      // Check each filter from our active filters list
+      // Important: Each filter must pass for the property to be included (AND logic)
       for (const filter of filtersToUse) {
         console.log(`Testing filter: ${filter} on property ${property.id}`);
         
@@ -1008,6 +1044,7 @@ export default function PropertyListPage() {
           }
           
           console.log(`Property ${property.id} matches location filter "${filterLoc}"`);
+          continue; // Continue to next filter since this one passed
         }
         
         // Handle price filters
@@ -1022,8 +1059,122 @@ export default function PropertyListPage() {
           }
         }
         
+        // Handle amenities, features and other array-based filters with string normalization
+        if ([...arrayBasedFilters.amenities, ...arrayBasedFilters.features].includes(filter)) {
+          console.log(`Processing filter: ${filter} for property ${property.id}`);
+          
+          // Function to safely normalize strings
+          const normalize = (str: any): string => {
+            if (!str) return '';
+            // More aggressive normalization - remove all non-alphanumeric characters
+            return str.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+          };
+          
+          // Get the normalized filter value
+          const normalizedFilter = normalize(filter);
+          console.log(`Normalized filter: "${normalizedFilter}" (from "${filter}")`);
+          
+          // Determine which array to check based on the filter
+          let arrayToCheck: string[] = [];
+          let arrayName = '';
+          
+          if (arrayBasedFilters.amenities.includes(filter)) {
+            arrayToCheck = property.amenities || [];
+            arrayName = 'amenities';
+          } else if (arrayBasedFilters.features.includes(filter)) {
+            arrayToCheck = property.features || [];
+            arrayName = 'features';
+          }
+
+          // No array to check
+          if (!arrayToCheck.length) {
+            console.log(`Property ${property.id} has no ${arrayName} array, filtering out`);
+            return false;
+          }
+          
+          // Log the array contents for debugging
+          console.log(`Property ${property.id} ${arrayName}:`, arrayToCheck);
+          
+          // Additional validation - check if any array item is empty or null
+          const hasEmptyItems = arrayToCheck.some(item => !item || item.trim() === '');
+          if (hasEmptyItems) {
+            console.warn(`Property ${property.id} has empty or null items in ${arrayName} array`);
+          }
+          
+          // Check if any array item matches after normalization
+          const hasMatch = arrayToCheck.some(item => {
+            if (!item) return false;
+            
+            const normalizedItem = normalize(item);
+            
+            // Try multiple matching approaches
+            // 1. Direct match after normalization
+            const exactMatch = normalizedItem === normalizedFilter;
+            
+            // 2. One contains the other (to handle partial matches)
+            // For walk-in-closet we need to be more careful with partial matches
+            // Let's use stricter matching for composite terms
+            let containmentMatch = false;
+            
+            if (filter.includes('-')) {
+              // For composite terms like "walk-in-closet", use more careful matching
+              // either exact match or item must explicitly contain the whole composite term
+              containmentMatch = normalizedItem.includes(normalizedFilter);
+            } else {
+              // For simple terms, allow either direction of containment
+              containmentMatch = normalizedItem.includes(normalizedFilter) || 
+                                 normalizedFilter.includes(normalizedItem);
+            }
+            
+            // Special handling for composite names (with dashes)
+            // Ensure all parts are present and in the right order
+            const isCompositeMatch = filter.includes('-') && 
+                                    filter.split('-').every(part => {
+                                      const normalizedPart = normalize(part);
+                                      return normalizedItem.includes(normalizedPart);
+                                    }) &&
+                                    // Additional check for proper ordering of terms
+                                    filter.split('-').reduce((lastIndex, part) => {
+                                      const normalizedPart = normalize(part);
+                                      const partIndex = normalizedItem.indexOf(normalizedPart, lastIndex);
+                                      return partIndex !== -1 ? partIndex + normalizedPart.length : -1;
+                                    }, 0) !== -1;
+            
+            console.log(`  Comparing: "${item}" → normalized: "${normalizedItem}"`);
+            console.log(`    - Exact match: ${exactMatch}`);
+            console.log(`    - Contains relationship: ${containmentMatch}`);
+            console.log(`    - Composite match: ${isCompositeMatch}`);
+            
+            // For walk-in-closet, be more strict
+            if (filter === 'walk-in-closet') {
+              // Only accept exact matches or very specific composite matches
+              return exactMatch || (isCompositeMatch && containmentMatch);
+            }
+            
+            // Also be strict with simple closet or wardrobe terms to avoid confusion with walk-in-closet
+            if (filter === 'wardrobe' || filter === 'closet') {
+              // Avoid matching if the item contains "walk-in" or "walk in"
+              if (normalizedItem.includes('walkin') || normalizedItem.includes('walk')) {
+                return false;
+              }
+            }
+            
+            return exactMatch || containmentMatch || isCompositeMatch;
+          });
+          
+          if (!hasMatch) {
+            console.log(`Property ${property.id} does not match ${arrayName} filter: "${filter}", filtering out`);
+            return false;
+          }
+          
+          console.log(`Property ${property.id} matches ${arrayName} filter: "${filter}"`);
+          continue; // Continue to next filter since this one passed
+        }
+        
         // Handle date filter - check if property is available from the selected date
-        if (filter.includes('-') || filter.includes('/')) {
+        if ((filter.includes('-') || filter.includes('/')) && 
+            // Make sure it's not an amenity with a dash
+            ![...arrayBasedFilters.amenities, ...arrayBasedFilters.features].includes(filter)) {
           try {
             // Standardize date format from either MM/DD/YYYY or YYYY-MM-DD
             let selectedDate: Date;
@@ -1031,7 +1182,7 @@ export default function PropertyListPage() {
             if (filter.includes('/')) {
               // Handle MM/DD/YYYY format
               const [month, day, year] = filter.split('/').map(num => parseInt(num, 10));
-              selectedDate = new Date(year, month - 1, day); // month is 0-indexed in JS Date
+              selectedDate = new Date(year, month - 1, day);
             } else {
               // Handle YYYY-MM-DD format (possibly with time)
               selectedDate = new Date(filter.split('T')[0]);
@@ -1233,202 +1384,153 @@ export default function PropertyListPage() {
         // Handle the isFurnished filter separately
         if (filter === 'isFurnished') {
           console.log(`Checking isFurnished filter for property ${property.id}: ${property.isFurnished}`);
-          if (!property.isFurnished) {
+          if (property.isFurnished !== true) {
             console.log(`Property ${property.id} is not furnished, filtering out`);
             return false;
           }
+          console.log(`Property ${property.id} is furnished, passing filter`);
+          continue; // Continue to next filter since this one passed
         }
         
-        // Property type filters
-        if (filter === 'Apartment' || filter === 'House' || filter === 'Studio' || filter === 'Condo' || filter === 'Commercial' || filter === 'Room' || filter === 'Villa' || filter === 'Penthouse' || filter === 'Townhouse') {
-          // Normalize case for comparison
-          const normalizedPropertyType = property.propertyType.toLowerCase();
-          const normalizedFilter = filter.toLowerCase();
-          
-          if (normalizedPropertyType !== normalizedFilter) {
-            console.log(`Property ${property.id} type ${normalizedPropertyType} doesn't match ${normalizedFilter}, filtering out`);
-            return false;
-          }
-          
-          console.log(`Property ${property.id} matched property type ${filter}`);
-        }
-        
-        // Handle amenity filters - make this more robust by handling case sensitivity and format variations
-        const amenityFilters = [
-          'wifi', 'washing-machine', 'desk', 'wardrobe', 'oven', 'coffee-table', 'sofabed', 
-          'sofa', 'dining-table', 'cabinet', 'microwave', 'bathtub'
-        ];
-        if (amenityFilters.includes(filter.toLowerCase())) {
-          console.log(`Checking amenity filter: ${filter} for property ${property.id}`);
-          console.log(`Property ${property.id} amenities:`, property.amenities);
-          
-          // Check for the filter in the amenities array, normalizing for case and format variations
-          const isMatch = property.amenities && property.amenities.some(amenity => {
-            const normalizedAmenity = amenity.toLowerCase().replace(/\s+/g, '-');
-            const normalizedFilter = filter.toLowerCase().replace(/\s+/g, '-');
-            return normalizedAmenity === normalizedFilter || normalizedAmenity.includes(normalizedFilter) || normalizedFilter.includes(normalizedAmenity);
-          });
-          
-          if (!isMatch) {
-            console.log(`Property ${property.id} doesn't have amenity: ${filter}, filtering out`);
-            return false;
-          }
-          console.log(`Property ${property.id} matched amenity: ${filter}`);
-        }
-        
-        // Handle features filters - with improved matching
-        const featureFilters = [
-          'balcony', 'central-heating', 'parking-space', 'air-conditioning', 'wooden-floors', 
-          'elevator', 'swimming-pool', 'fireplace', 'accessible'
-        ];
-        if (featureFilters.includes(filter.toLowerCase())) {
-          console.log(`Checking feature filter: ${filter} for property ${property.id}`);
-          console.log(`Property ${property.id} features:`, property.features);
-          
-          // Check for the filter in the features array, normalizing for case and format variations
-          const isMatch = property.features && property.features.some(feature => {
-            const normalizedFeature = feature.toLowerCase().replace(/\s+/g, '-');
-            const normalizedFilter = filter.toLowerCase().replace(/\s+/g, '-');
-            return normalizedFeature === normalizedFilter || normalizedFeature.includes(normalizedFilter) || normalizedFilter.includes(normalizedFeature);
-          });
-          
-          if (!isMatch) {
-            console.log(`Property ${property.id} doesn't have feature: ${filter}, filtering out`);
-            return false;
-          }
-          console.log(`Property ${property.id} matched feature: ${filter}`);
-        }
-        
-        // Handle housing preferences (women-only and families-only) as a separate category
-        const housingPreferenceFilters = ['women-only', 'families-only'];
-        if (housingPreferenceFilters.includes(filter.toLowerCase())) {
+        // Handle housing preferences (womenOnly, familiesOnly)
+        if (filter === 'womenOnly' || filter === 'familiesOnly') {
           console.log(`Checking housing preference filter: ${filter} for property ${property.id}`);
-          console.log(`Property ${property.id} rules:`, property.rules);
           
-          // Check if property has rules array
-          if (!property.rules || !Array.isArray(property.rules)) {
-            console.log(`Property ${property.id} has no rules array, filtering out`);
+          // Check if we have a direct match on the housingPreference field
+          if (property.housingPreference === filter) {
+            console.log(`Property ${property.id} matches housing preference via housingPreference field: ${filter}`);
+            continue; // Continue to next filter since this one passed
+          }
+          
+          // If no match and housingPreference is set to something else, filter out
+          if (property.housingPreference) {
+            console.log(`Property ${property.id} has different housingPreference: ${property.housingPreference}, filtering out`);
             return false;
           }
           
-          // Map filter names to rule names in the property
-          let ruleName = '';
-          switch(filter.toLowerCase()) {
-            case 'women-only':
-              ruleName = 'Women only';
-              break;
-            case 'families-only':
-              ruleName = 'Families only';
-              break;
-          }
-          
-          console.log(`Looking for housing preference: "${ruleName}" with allowed=true`);
-          
-          // Check if the property has the rule and it's allowed
-          // Use case-insensitive search to avoid case mismatches
-          const ruleMatch = property.rules.find(r => 
-            r.name.toLowerCase() === ruleName.toLowerCase() ||
-            r.name.toLowerCase().includes(ruleName.toLowerCase())
-          );
-          
-          // If the rule doesn't exist or is not allowed, filter out this property
-          if (!ruleMatch || !ruleMatch.allowed) {
-            console.log(`Property ${property.id} does not have "${ruleName}" allowed, filtering out`);
-            return false;
-          }
-          
-          console.log(`Property ${property.id} has housing preference "${ruleMatch.name}" allowed: true`);
-        }
-        
-        // Handle included services filters - fix the quotation marks issue and match IDs from FilteringSection
-        const includedFilters = ['water', 'electricity', 'wifi', 'gas'];
-        if (includedFilters.includes(filter.toLowerCase())) {
-          console.log(`Checking included filter: ${filter} for property ${property.id}`);
-          console.log(`Property ${property.id} features:`, property.features);
-          
-          // Create variations of the filter to check (with/without quotes)
-          const variations = [
-            filter.toLowerCase(),
-            `"${filter.toLowerCase()}"`,
-            filter.toLowerCase().replace(/"/g, '')
-          ];
-          
-          // Check if any of the variations exist in features
-          let isMatch = false;
-          
-          // First check features array
-          if (property.features && Array.isArray(property.features)) {
-            isMatch = property.features.some(feature => {
-              const featureStr = String(feature).toLowerCase();
-              return variations.some(v => featureStr === v || featureStr.includes(v));
+          // If no housingPreference field, check rules array as fallback (older data)
+          if (property.rules && Array.isArray(property.rules)) {
+            const ruleMap = {
+              'womenOnly': ['women only', 'womenonly', 'women-only', 'women'],
+              'familiesOnly': ['families only', 'familiesonly', 'families-only', 'families', 'family only']
+            };
+            
+            const possibleRuleNames = ruleMap[filter as keyof typeof ruleMap] || [];
+            
+            // Check if the property has any matching rule and it's allowed
+            const ruleMatch = property.rules.find(r => {
+              if (!r.name) return false;
+              const ruleName = r.name.toLowerCase().replace(/[\s-_]+/g, '');
+              return possibleRuleNames.some(possibleName => 
+                ruleName === possibleName || ruleName.includes(possibleName)
+              );
             });
             
-            console.log(`Feature match result in features array: ${isMatch}`);
+            if (ruleMatch && ruleMatch.allowed) {
+              console.log(`Property ${property.id} has matching rule "${ruleMatch.name}" allowed: true`);
+              continue; // Continue to next filter since this one passed
+            }
           }
           
-          // If not found in features, also check amenities as a fallback
-          // (some properties might have these stored in either array)
-          if (!isMatch && property.amenities && Array.isArray(property.amenities)) {
-            isMatch = property.amenities.some(amenity => {
-              const amenityStr = String(amenity).toLowerCase();
-              return variations.some(v => amenityStr === v || amenityStr.includes(v));
-            });
-            
-            console.log(`Feature match result in amenities array: ${isMatch}`);
-          }
-          
-          if (!isMatch) {
-            console.log(`Property ${property.id} doesn't include: ${filter} in features or amenities, filtering out`);
-            return false;
-          }
-          
-          console.log(`Property ${property.id} includes ${filter} in features or amenities`);
+          console.log(`Property ${property.id} does not match housing preference: ${filter}, filtering out`);
+          return false;
         }
         
-        // Handle allowed rules (pets and smoking) separately from housing preferences
-        const allowedFilters = ['pets-allowed', 'smoking-allowed'];
-        if (allowedFilters.includes(filter.toLowerCase())) {
-          console.log(`Checking allowed filter: ${filter} for property ${property.id}`);
+        // Handle special boolean filters: isFurnished, petsAllowed, smokingAllowed
+        const booleanFilters = ['isFurnished', 'petsAllowed', 'smokingAllowed'];
+        if (booleanFilters.includes(filter)) {
+          console.log(`Checking boolean filter: ${filter} for property ${property.id}`);
           
-          // Check if property has rules array
-          if (!property.rules || !Array.isArray(property.rules)) {
-            console.log(`Property ${property.id} has no rules array, filtering out`);
+          // For these filters, check if the corresponding property field is true
+          if (property[filter as keyof PropertyType] === true) {
+            console.log(`Property ${property.id} has ${filter} = true`);
+            continue; // Continue to next filter since this one passed
+          }
+          
+          // For petsAllowed and smokingAllowed, try the rules array as fallback
+          if ((filter === 'petsAllowed' || filter === 'smokingAllowed') && property.rules && Array.isArray(property.rules)) {
+            const ruleTerms = {
+              'petsAllowed': ['pet', 'pets', 'animal', 'animals'],
+              'smokingAllowed': ['smoking', 'smoke']
+            };
+            
+            const relevantTerms = filter === 'petsAllowed' ? ruleTerms.petsAllowed : ruleTerms.smokingAllowed;
+            
+            // Look for matching rule
+            const matchingRule = property.rules.find(rule => {
+              if (!rule.name) return false;
+              const ruleName = rule.name.toLowerCase();
+              return relevantTerms.some(term => ruleName.includes(term));
+            });
+            
+            if (matchingRule && matchingRule.allowed === true) {
+              console.log(`Property ${property.id} has ${filter} allowed via rules array`);
+              continue; // Continue to next filter since this one passed
+            }
+          }
+          
+          console.log(`Property ${property.id} doesn't have ${filter} = true, filtering out`);
+          return false;
+        }
+        
+        // Housing preference filters
+        if (filter === 'womenOnly' || filter === 'familiesOnly') {
+          console.log(`Checking housing preference filter: ${filter} for property ${property.id}`);
+          
+          // Exact match on the housingPreference field
+          if (property.housingPreference === filter) {
+            console.log(`Property ${property.id} matches housing preference via housingPreference field: ${filter}`);
+            continue; // Continue to next filter since this one passed
+          }
+          
+          // If a different preference is set, filter out
+          if (property.housingPreference) {
+            console.log(`Property ${property.id} has different housingPreference: ${property.housingPreference}, filtering out`);
             return false;
           }
           
-          console.log(`Property ${property.id} rules:`, property.rules);
-          
-          // Map filter names to rule names in the property
-          let ruleName = '';
-          switch(filter.toLowerCase()) {
-            case 'pets-allowed':
-              ruleName = 'Pets';
-              break;
-            case 'smoking-allowed':
-              ruleName = 'Smoking';
-              break;
+          // Fallback to rules for older data format
+          if (property.rules && Array.isArray(property.rules)) {
+            const ruleTerms = {
+              'womenOnly': ['women', 'woman', 'female'],
+              'familiesOnly': ['family', 'families', 'children']
+            };
+            
+            const relevantTerms = filter === 'womenOnly' ? ruleTerms.womenOnly : ruleTerms.familiesOnly;
+            
+            const matchingRule = property.rules.find(rule => {
+              if (!rule.name) return false;
+              const ruleName = rule.name.toLowerCase();
+              return relevantTerms.some(term => ruleName.includes(term));
+            });
+            
+            if (matchingRule && matchingRule.allowed === true) {
+              console.log(`Property ${property.id} matches ${filter} via rules array`);
+              continue; // Continue to next filter since this one passed
+            }
           }
           
-          console.log(`Looking for rule: "${ruleName}" with allowed=true`);
+          console.log(`Property ${property.id} does not match housing preference: ${filter}, filtering out`);
+          return false;
+        }
+
+        // Property type filters
+        if (['apartment', 'house', 'studio', 'room', 'condo', 'commercial', 'villa', 'penthouse', 'townhouse'].includes(filter)) {
+          console.log(`Checking property type filter: ${filter} for property ${property.id}, has type: ${property.propertyType}`);
           
-          // Check if the property has the rule and it's allowed
-          // Use case-insensitive search to avoid case mismatches
-          const ruleMatch = property.rules.find(r => 
-            r.name.toLowerCase() === ruleName.toLowerCase() ||
-            r.name.toLowerCase().includes(ruleName.toLowerCase())
-          );
-          
-          // If the rule doesn't exist or is not allowed, filter out this property
-          if (!ruleMatch || !ruleMatch.allowed) {
-            console.log(`Property ${property.id} does not have "${ruleName}" allowed, filtering out`);
-            return false;
+          // Case-insensitive property type comparison
+          if (property.propertyType && property.propertyType.toLowerCase() === filter.toLowerCase()) {
+            console.log(`Property ${property.id} matches property type: ${filter}`);
+            continue; // Continue to next filter since this one passed
           }
           
-          console.log(`Property ${property.id} has rule "${ruleMatch.name}" allowed: true`);
+          console.log(`Property ${property.id} does not match property type: ${filter}, filtering out`);
+          return false;
         }
       }
       
-      // If the property passed all filters, include it
+      // If we reach here, it means the property passed ALL filters
+      console.log(`Property ${property.id} passed ALL filters`);
       return true;
     });
     

@@ -36,7 +36,12 @@ export async function createProperty(
     const fullPropertyData = {
       ...propertyData,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      // Initialize new fields with default values if not provided
+      housingPreference: propertyData.housingPreference || '',
+      petsAllowed: propertyData.petsAllowed || false,
+      smokingAllowed: propertyData.smokingAllowed || false,
+
     };
     
     // Call createDocument with the right type and omit patterns

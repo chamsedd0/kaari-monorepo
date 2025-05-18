@@ -41,7 +41,7 @@ interface PropertyFormData {
   ownerId: string;
   title: string;
   description: string;
-  propertyType: 'apartment' | 'house' | 'studio' | 'room';
+  propertyType: 'apartment' | 'house' | 'studio' | 'room' | 'villa' | 'penthouse' | 'townhouse';
   address: {
     street: string;
     city: string;
@@ -82,6 +82,15 @@ interface PropertyFormData {
     name: string;
     allowed: boolean;
   }>;
+  
+  // Housing preferences
+  housingPreference?: string; // 'womenOnly' | 'familiesOnly' | ''
+  
+  // Dedicated fields for allowed rules
+  petsAllowed?: boolean;
+  smokingAllowed?: boolean;
+  
+
 }
 
 // Room type options
@@ -110,19 +119,26 @@ const COMMON_AMENITIES = [
   'washing-machine',
   'hotplate-cooktop',
   'water-heater',
-  'air-conditioning',
   'heating',
   'parking',
-  'elevator',
   'security',
   'gym',
-  'pool'
 ];
 
 const COMMON_FEATURES = [
   'water',
   'gas',
-  'electricity'
+  'electricity',
+  'wifi',
+  'balcony',
+  'central-heating',
+  'parking-space',
+  'air-conditioning',
+  'wooden-floors',
+  'elevator',
+  'swimming-pool',
+  'fireplace',
+  'accessible'
 ];
 
 // Common rules
@@ -182,6 +198,12 @@ const PropertyFormContainer = styled.div`
     font: ${Theme.typography.fonts.mediumB};
     color: ${Theme.colors.secondary};
     margin: 1.5rem 0 1rem;
+  }
+  
+  .subsection-title {
+    font: ${Theme.typography.fonts.smallB};
+    color: ${Theme.colors.primary};
+    margin: 0.5rem 0 0.75rem;
   }
 `;
 
@@ -529,7 +551,13 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     isFurnished: false,
     capacity: 2,
     nearbyPlaces: [],
-    rules: []
+    rules: [],
+    
+    // Initialize new fields
+    housingPreference: '',
+    petsAllowed: false,
+    smokingAllowed: false,
+
   });
   
   const [amenityInput, setAmenityInput] = useState('');
@@ -701,6 +729,77 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         updatedAt: Timestamp.fromDate(new Date())
       };
       
+      // Ensure dedicated fields are also in the features array for backward compatibility
+      let processedFeatures = [...(propertyData.features || [])];
+      
+      // Add included services to features array for backward compatibility
+      if (!processedFeatures.includes('water')) {
+        processedFeatures.push('water');
+      }
+      if (!processedFeatures.includes('electricity')) {
+        processedFeatures.push('electricity');
+      }
+      if (!processedFeatures.includes('wifi')) {
+        processedFeatures.push('wifi');
+      }
+      if (!processedFeatures.includes('gas')) {
+        processedFeatures.push('gas');
+      }
+      
+      // Add property features to features array
+      if (!processedFeatures.includes('balcony')) {
+        processedFeatures.push('balcony');
+      }
+      if (!processedFeatures.includes('central-heating')) {
+        processedFeatures.push('central-heating');
+      }
+      if (!processedFeatures.includes('parking-space')) {
+        processedFeatures.push('parking-space');
+      }
+      if (!processedFeatures.includes('air-conditioning')) {
+        processedFeatures.push('air-conditioning');
+      }
+      if (!processedFeatures.includes('wooden-floors')) {
+        processedFeatures.push('wooden-floors');
+      }
+      if (!processedFeatures.includes('elevator')) {
+        processedFeatures.push('elevator');
+      }
+      if (!processedFeatures.includes('swimming-pool')) {
+        processedFeatures.push('swimming-pool');
+      }
+      if (!processedFeatures.includes('fireplace')) {
+        processedFeatures.push('fireplace');
+      }
+      if (!processedFeatures.includes('accessible')) {
+        processedFeatures.push('accessible');
+      }
+      
+      // Update the features array with the processed features
+      propertyWithTimestamps.features = processedFeatures;
+      
+      // Ensure pets/smoking allowed are in rules for backward compatibility
+      let processedRules = [...(propertyData.rules || [])];
+      
+      // Check if we have a 'Pets' rule, add/update it based on petsAllowed field
+      let petsRule = processedRules.find(r => r.name.toLowerCase().includes('pet'));
+      if (petsRule) {
+        petsRule.allowed = propertyData.petsAllowed || false;
+      } else if (propertyData.petsAllowed) {
+        processedRules.push({ name: 'Pets', allowed: true });
+      }
+      
+      // Check if we have a 'Smoking' rule, add/update it based on smokingAllowed field
+      let smokingRule = processedRules.find(r => r.name.toLowerCase().includes('smok'));
+      if (smokingRule) {
+        smokingRule.allowed = propertyData.smokingAllowed || false;
+      } else if (propertyData.smokingAllowed) {
+        processedRules.push({ name: 'Smoking', allowed: true });
+      }
+      
+      // Update the rules array with the processed rules
+      propertyWithTimestamps.rules = processedRules;
+      
       console.log('Property data with timestamps:', JSON.stringify(propertyWithTimestamps, null, 2));
       
       console.log('Attempting to set document in Firestore...');
@@ -815,12 +914,18 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         amenities: [],
         features: COMMON_FEATURES,
         status: 'available',
-          location: bookingData.location || null,
+        location: bookingData.location || null,
         rooms: [],
         isFurnished: false,
         capacity: 2,
         rules: [...COMMON_RULES],
         nearbyPlaces: [...COMMON_NEARBY_PLACES],
+        
+        // Initialize new fields
+        housingPreference: '',
+        petsAllowed: false,
+        smokingAllowed: false,
+
       });
       
       // Load teams for assignment
@@ -1193,6 +1298,84 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       
       console.log('Available from date:', availableFromDate);
       
+      // Process features array to include service inclusions and property features
+      let processedFeatures = [...(propertyData.features || [])];
+      
+      // Add included services to features array for backward compatibility
+      if (!processedFeatures.includes('water')) {
+        processedFeatures.push('water');
+      }
+      if (!processedFeatures.includes('electricity')) {
+        processedFeatures.push('electricity');
+      }
+      if (!processedFeatures.includes('wifi')) {
+        processedFeatures.push('wifi');
+      }
+      if (!processedFeatures.includes('gas')) {
+        processedFeatures.push('gas');
+      }
+      
+      // Add property features to features array
+      if (!processedFeatures.includes('balcony')) {
+        processedFeatures.push('balcony');
+      }
+      if (!processedFeatures.includes('central-heating')) {
+        processedFeatures.push('central-heating');
+      }
+      if (!processedFeatures.includes('parking-space')) {
+        processedFeatures.push('parking-space');
+      }
+      if (!processedFeatures.includes('air-conditioning')) {
+        processedFeatures.push('air-conditioning');
+      }
+      if (!processedFeatures.includes('wooden-floors')) {
+        processedFeatures.push('wooden-floors');
+      }
+      if (!processedFeatures.includes('elevator')) {
+        processedFeatures.push('elevator');
+      }
+      if (!processedFeatures.includes('swimming-pool')) {
+        processedFeatures.push('swimming-pool');
+      }
+      if (!processedFeatures.includes('fireplace')) {
+        processedFeatures.push('fireplace');
+      }
+      if (!processedFeatures.includes('accessible')) {
+        processedFeatures.push('accessible');
+      }
+      
+      // Process housing preference
+      let housingPreferenceFormatted = '';
+      if (propertyData.housingPreference) {
+        // Ensure we're using camelCase without hyphens for filtering to match correctly
+        if (propertyData.housingPreference === 'women-only' || propertyData.housingPreference.toLowerCase() === 'womenonly') {
+          housingPreferenceFormatted = 'womenOnly';
+        } else if (propertyData.housingPreference === 'families-only' || propertyData.housingPreference.toLowerCase() === 'familiesonly') {
+          housingPreferenceFormatted = 'familiesOnly';
+        } else {
+          housingPreferenceFormatted = propertyData.housingPreference;
+        }
+      }
+      
+      // Ensure pets/smoking allowed are in rules for backward compatibility
+      let processedRules = [...(propertyData.rules || [])];
+      
+      // Check if we have a 'Pets' rule, add/update it based on petsAllowed field
+      let petsRule = processedRules.find(r => r.name.toLowerCase().includes('pet'));
+      if (petsRule) {
+        petsRule.allowed = propertyData.petsAllowed || false;
+      } else if (propertyData.petsAllowed) {
+        processedRules.push({ name: 'Pets', allowed: true });
+      }
+      
+      // Check if we have a 'Smoking' rule, add/update it based on smokingAllowed field
+      let smokingRule = processedRules.find(r => r.name.toLowerCase().includes('smok'));
+      if (smokingRule) {
+        smokingRule.allowed = propertyData.smokingAllowed || false;
+      } else if (propertyData.smokingAllowed) {
+        processedRules.push({ name: 'Smoking', allowed: true });
+      }
+      
       // Create a typed property object without location first (to satisfy TypeScript)
       const propertyToSave: Omit<Property, 'location'> = {
         id: propertyId,
@@ -1217,15 +1400,21 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         availableFrom: availableFromDate,
         images: allImages,
         amenities: propertyData.amenities || [],
-        features: propertyData.features || COMMON_FEATURES,
+        features: processedFeatures,
         status: 'available',
         createdAt: now,
         updatedAt: now,
         rooms: propertyData.rooms || [],
         isFurnished: propertyData.isFurnished || false,
         capacity: propertyData.capacity || 2,
-        rules: propertyData.rules || COMMON_RULES,
+        rules: processedRules,
         nearbyPlaces: propertyData.nearbyPlaces || COMMON_NEARBY_PLACES,
+        
+        // Add all the new fields
+        housingPreference: housingPreferenceFormatted,
+        petsAllowed: propertyData.petsAllowed || false,
+        smokingAllowed: propertyData.smokingAllowed || false,
+
       };
       
       // Then create the Firestore data object with location added
@@ -1564,6 +1753,9 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                     <option value="house">House</option>
                     <option value="studio">Studio</option>
                     <option value="room">Room</option>
+                    <option value="villa">Villa</option>
+                    <option value="penthouse">Penthouse</option>
+                    <option value="townhouse">Townhouse</option>
                   </Select>
                 </StyledFormGroup>
                 
@@ -1711,30 +1903,165 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                 </GridContainer>
               </StyledFormGroup>
               
+              {/* Housing Preferences */}
+              <div className="section-title">Housing Preferences</div>
+              <StyledFormGroup>
+                <Label>Housing Preference</Label>
+                <Select 
+                  value={propertyData.housingPreference} 
+                  onChange={(e) => setPropertyData({ ...propertyData, housingPreference: e.target.value })}
+                >
+                  <option value="">No Specific Preference</option>
+                  <option value="womenOnly">Women Only</option>
+                  <option value="familiesOnly">Families Only</option>
+                </Select>
+              </StyledFormGroup>
+              
               {/* Features */}
               <div className="section-title">Features</div>
               <StyledFormGroup>
+                <div className="subsection-title">Included Services</div>
                 <CheckboxGrid>
-                  {COMMON_FEATURES.map((feature) => (
-                    <CheckboxLabel key={feature}>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.features.includes('water')}
+                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'water'] })}
+                    />
+                    <span>Water</span>
+                  </CheckboxLabel>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.features.includes('electricity')}
+                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'electricity'] })}
+                    />
+                    <span>Electricity</span>
+                  </CheckboxLabel>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.features.includes('wifi')}
+                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'wifi'] })}
+                    />
+                    <span>Wi-Fi</span>
+                  </CheckboxLabel>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.features.includes('gas')}
+                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'gas'] })}
+                    />
+                    <span>Gas</span>
+                  </CheckboxLabel>
+                </CheckboxGrid>
+              </StyledFormGroup>
+
+              <StyledFormGroup>
+                <div className="subsection-title">Property Features</div>
+                <CheckboxGrid>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.features.includes('balcony')}
+                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'balcony'] })}
+                    />
+                    <span>Balcony</span>
+                  </CheckboxLabel>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.features.includes('central-heating')}
+                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'central-heating'] })}
+                    />
+                    <span>Central Heating</span>
+                  </CheckboxLabel>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.features.includes('parking-space')}
+                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'parking-space'] })}
+                    />
+                    <span>Parking Space</span>
+                  </CheckboxLabel>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.features.includes('air-conditioning')}
+                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'air-conditioning'] })}
+                    />
+                    <span>Air Conditioning</span>
+                  </CheckboxLabel>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.features.includes('wooden-floors')}
+                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'wooden-floors'] })}
+                    />
+                    <span>Wooden Floors</span>
+                  </CheckboxLabel>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.features.includes('elevator')}
+                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'elevator'] })}
+                    />
+                    <span>Elevator</span>
+                  </CheckboxLabel>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.features.includes('swimming-pool')}    
+                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'swimming-pool'] })}
+                    />
+                    <span>Swimming Pool</span>
+                  </CheckboxLabel>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.features.includes('fireplace')}
+                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'fireplace'] })}
+                    />
+                    <span>Fireplace</span>
+                  </CheckboxLabel>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.features.includes('accessible')}
+                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'accessible'] })}
+                    />
+                    <span>Accessible</span>
+                  </CheckboxLabel>
+                </CheckboxGrid>
+              </StyledFormGroup>
+
+              <StyledFormGroup>
+                <div className="subsection-title">Allowed Rules</div>
+                <CheckboxGrid>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.petsAllowed}
+                      onChange={(e) => setPropertyData({ ...propertyData, petsAllowed: e.target.checked })}
+                    />
+                    <span>Pets Allowed</span>
+                  </CheckboxLabel>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.smokingAllowed}
+                      onChange={(e) => setPropertyData({ ...propertyData, smokingAllowed: e.target.checked })}
+                    />
+                    <span>Smoking Allowed</span>
+                  </CheckboxLabel>
+                  {propertyData.rules.map((rule, index) => (
+                    <CheckboxLabel key={rule.name}>
                       <input
                         type="checkbox"
-                        checked={propertyData.features.includes(feature)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setPropertyData({
-                              ...propertyData,
-                              features: [...propertyData.features, feature]
-                            });
-                          } else {
-                            setPropertyData({
-                              ...propertyData,
-                              features: propertyData.features.filter(f => f !== feature)
-                            });
-                          }
-                        }}
+                        checked={rule.allowed}
+                        onChange={(e) => handleRuleToggle(index)}
                       />
-                      {feature}
+                      {rule.name}
                     </CheckboxLabel>
                   ))}
                 </CheckboxGrid>

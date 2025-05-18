@@ -472,16 +472,7 @@ const UserDetailPage = () => {
     setEditedUser({ ...editedUser, [name]: value });
   };
   
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value && e.key === 'Enter') {
-      setEditedUser({ 
-        ...editedUser, 
-        languages: [...(editedUser.languages || []), value] 
-      });
-      e.target.value = '';
-    }
-  };
+
   
   const handleRemoveLanguage = (language: string) => {
     setEditedUser({
@@ -596,7 +587,7 @@ const UserDetailPage = () => {
               <div className="info-item">
                 <FaCalendarAlt />
                 <div className="label">DOB:</div>
-                <div className="value">{formatDate(user.dateOfBirth)}</div>
+                <div className="value">{formatDate(user.dateOfBirth || '')}</div>
               </div>
               
               <div className="info-item">
@@ -737,7 +728,7 @@ const UserDetailPage = () => {
                 <div>
                   <p><strong>Full Name:</strong> {user.name} {user.surname || ''}</p>
                   <p><strong>Phone Number:</strong> {user.phoneNumber || 'Not provided'}</p>
-                  <p><strong>Date of Birth:</strong> {formatDate(user.dateOfBirth)}</p>
+                  <p><strong>Date of Birth:</strong> {formatDate(user.dateOfBirth || '')}</p>
                   <p><strong>Gender:</strong> {user.gender || 'Not provided'}</p>
                   <p><strong>Nationality:</strong> {user.nationality || 'Not provided'}</p>
                 </div>

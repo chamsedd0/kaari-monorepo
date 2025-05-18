@@ -312,28 +312,69 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
     // Handle property type
     if (propertyType) {
       const existingTypeFilter = finalFilters.find(f => 
-        (f === 'Apartment' || f === 'House' || f === 'Condo' || f === 'Commercial'));
+        (f === 'apartment' || f === 'house' || f === 'condo' || f === 'commercial' || 
+         f === 'studio' || f === 'room' || f === 'villa' || f === 'penthouse' || f === 'townhouse'));
       
       // Remove existing property type filter if any
       if (existingTypeFilter) {
         finalFilters = finalFilters.filter(f => f !== existingTypeFilter);
       }
       
-      // Add new property type filter
-      finalFilters.push(propertyType);
+      // Add new property type filter with lowercase to match the database structure
+      finalFilters.push(propertyType.toLowerCase());
     }
     
-    // Handle amenities - replace with the current local state
-    // First remove any existing amenity filters
-    const allAmenityIds = [...amenities, ...includedFees, ...acceptsOnlyRules].map(item => item.id);
-    // Also include the furnished filter ID
-    const allFilterIds = [...allAmenityIds, furnishedFilter.id];
-    finalFilters = finalFilters.filter(filter => !allFilterIds.includes(filter));
+    // Get all ids from our amenity and feature arrays
+    const allAmenityIds = [...amenities.map(item => item.id)];
+    const allFeatureIds = [...propertyFeatures.map(item => item.id)];
+    const allHousingPrefIds = [...housingPreferences.map(item => item.id)];
+    const allRuleIds = [...propertyRules.map(item => item.id)];
+    const furnishedId = furnishedFilter.id;
     
-    // Then add the ones that are checked in the local state
-    localActiveFilters.forEach(filter => {
-      if (allFilterIds.includes(filter) && !finalFilters.includes(filter)) {
-        finalFilters.push(filter);
+    // Create a map to group the filter IDs by category
+    const filterCategories = {
+      amenities: allAmenityIds,
+      features: allFeatureIds,
+      housingPreference: allHousingPrefIds,
+      rules: allRuleIds,
+      furnished: [furnishedId]
+    };
+    
+    // Get a flat array of all filter IDs for easier reference
+    const allFilterIds = [
+      ...allAmenityIds, 
+      ...allFeatureIds, 
+      ...allHousingPrefIds, 
+      ...allRuleIds, 
+      furnishedId
+    ];
+    
+    // Handle housing preference separately since it's a string field, not an array
+    const housingPrefId = localActiveFilters.find(id => allHousingPrefIds.includes(id));
+    
+    // Remove existing filters for each category except housing preference
+    Object.values(filterCategories).flat().forEach(id => {
+      if (!allHousingPrefIds.includes(id)) { // Don't remove housing preference filters yet
+        finalFilters = finalFilters.filter(filter => filter !== id);
+      }
+    });
+    
+    // Remove all housing preference filters
+    allHousingPrefIds.forEach(id => {
+      finalFilters = finalFilters.filter(filter => filter !== id);
+    });
+    
+    // Add housing preference if selected
+    if (housingPrefId) {
+      finalFilters.push(housingPrefId);
+    }
+    
+    // Add all checked amenities, features, and rules from the local state
+    localActiveFilters.forEach(filterId => {
+      if (allFilterIds.includes(filterId) && 
+          !allHousingPrefIds.includes(filterId) && // Skip housing preferences here
+          !finalFilters.includes(filterId)) {
+        finalFilters.push(filterId);
       }
     });
     
@@ -349,33 +390,27 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
     onApplyFilters(finalFilters);
   };
 
-  // Updated amenities with icons and matching the advertiser dashboard
+  // Updated amenities with icons to match the property structure in Firestore
   const amenities = [
-    { id: 'sofabed', label: t('advertiser_dashboard.properties.amenities.sofabed'), icon: <FaCouch style={{ color: Theme.colors.secondary }} /> },
+    { id: 'desk', label: t('advertiser_dashboard.properties.amenities.desk'), icon: <FaDesktop style={{ color: Theme.colors.secondary }} /> },
+    { id: 'cabinet', label: t('advertiser_dashboard.properties.amenities.cabinet'), icon: <BiCabinet style={{ color: Theme.colors.secondary }} /> },
     { id: 'dining-table', label: t('advertiser_dashboard.properties.amenities.dining_table'), icon: <MdTableRestaurant style={{ color: Theme.colors.secondary }} /> },
     { id: 'wardrobe', label: t('advertiser_dashboard.properties.amenities.wardrobe'), icon: <BiCloset style={{ color: Theme.colors.secondary }} /> },
-    { id: 'cabinet', label: t('advertiser_dashboard.properties.amenities.cabinet'), icon: <BiCabinet style={{ color: Theme.colors.secondary }} /> },
-    { id: 'desk', label: t('advertiser_dashboard.properties.amenities.desk'), icon: <FaDesktop style={{ color: Theme.colors.secondary }} /> },
+    { id: 'chair', label: t('advertiser_dashboard.properties.amenities.chair'), icon: <FaChair style={{ color: Theme.colors.secondary }} /> },
     { id: 'sofa', label: t('advertiser_dashboard.properties.amenities.sofa'), icon: <FaCouch style={{ color: Theme.colors.secondary }} /> },
-    { id: 'coffee-table', label: t('advertiser_dashboard.properties.amenities.coffee_table'), icon: <MdOutlineCoffee style={{ color: Theme.colors.secondary }} /> },
-    { id: 'washing-machine', label: t('advertiser_dashboard.properties.amenities.washing_machine'), icon: <MdOutlineLocalLaundryService style={{ color: Theme.colors.secondary }} /> },
+    { id: 'dresser', label: t('advertiser_dashboard.properties.amenities.dresser'), icon: <BiCabinet style={{ color: Theme.colors.secondary }} /> },
+    { id: 'walk-in-closet', label: t('advertiser_dashboard.properties.amenities.walk_in_closet'), icon: <BiCloset style={{ color: Theme.colors.secondary }} /> },
     { id: 'oven', label: t('advertiser_dashboard.properties.amenities.oven'), icon: <MdOutlineKitchen style={{ color: Theme.colors.secondary }} /> },
-    { id: 'microwave', label: t('advertiser_dashboard.properties.amenities.microwave'), icon: <MdOutlineMicrowave style={{ color: Theme.colors.secondary }} /> },
-    { id: 'bathtub', label: t('advertiser_dashboard.properties.amenities.bathtub'), icon: <MdOutlineBathtub style={{ color: Theme.colors.secondary }} /> }
+    { id: 'hotplate-cooktop', label: t('advertiser_dashboard.properties.amenities.hotplate_cooktop'), icon: <MdOutlineKitchen style={{ color: Theme.colors.secondary }} /> },
+    { id: 'mirror', label: t('advertiser_dashboard.properties.amenities.mirror'), icon: <MdOutlineWindow style={{ color: Theme.colors.secondary }} /> },
+    { id: 'washing-machine', label: t('advertiser_dashboard.properties.amenities.washing_machine'), icon: <MdOutlineLocalLaundryService style={{ color: Theme.colors.secondary }} /> },
+    { id: 'gym', label: t('advertiser_dashboard.properties.amenities.gym'), icon: <FaUsers style={{ color: Theme.colors.secondary }} /> },
   ];
 
   // Define furnished filter
   const furnishedFilter = { id: 'isFurnished', label: t('common.furnished'), icon: <FaBed style={{ color: Theme.colors.secondary }} /> };
 
-  // Updated included fees options with appropriate IDs that match the filters
-  const includedFees = [
-    { id: 'water', label: t('common.water'), icon: <RiWaterFlashFill style={{ color: Theme.colors.secondary }} /> },
-    { id: 'electricity', label: t('common.electricity'), icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> },
-    { id: 'wifi', label: t('common.wifi'), icon: <RiWifiFill style={{ color: Theme.colors.secondary }} /> },
-    { id: 'gas', label: t('common.gas'), icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> }
-  ];
-  
-  // Add property features as a separate category
+  // Property features based on the Firestore structure
   const propertyFeatures = [
     { id: 'balcony', label: t('property_features.balcony'), icon: <MdOutlineBalcony style={{ color: Theme.colors.secondary }} /> },
     { id: 'central-heating', label: t('property_features.central_heating'), icon: <GiHeatHaze style={{ color: Theme.colors.secondary }} /> },
@@ -385,19 +420,23 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
     { id: 'elevator', label: t('property_features.elevator'), icon: <FaWheelchair style={{ color: Theme.colors.secondary }} /> },
     { id: 'swimming-pool', label: t('property_features.swimming_pool'), icon: <FaSwimmingPool style={{ color: Theme.colors.secondary }} /> },
     { id: 'fireplace', label: t('property_features.fireplace'), icon: <MdOutlineFireplace style={{ color: Theme.colors.secondary }} /> },
-    { id: 'accessible', label: t('property_features.accessible'), icon: <FaWheelchair style={{ color: Theme.colors.secondary }} /> }
+    { id: 'accessible', label: t('property_features.accessible'), icon: <FaWheelchair style={{ color: Theme.colors.secondary }} /> },
+    { id: 'water', label: t('common.water'), icon: <RiWaterFlashFill style={{ color: Theme.colors.secondary }} /> },
+    { id: 'electricity', label: t('common.electricity'), icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> },
+    { id: 'wifi', label: t('common.wifi'), icon: <RiWifiFill style={{ color: Theme.colors.secondary }} /> },
+    { id: 'gas', label: t('common.gas'), icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> }
   ];
 
-  // Separate women-only and families-only from other rules
+  // Housing preferences - now matches the Firestore structure (housingPreference field)
   const housingPreferences = [
-    { id: 'women-only', label: t('common.women_only'), icon: <ImWoman style={{ color: Theme.colors.secondary }} /> },
-    { id: 'families-only', label: t('common.families_only'), icon: <FaUsers style={{ color: Theme.colors.secondary }} /> }
+    { id: 'womenOnly', label: t('common.women_only'), icon: <ImWoman style={{ color: Theme.colors.secondary }} /> },
+    { id: 'familiesOnly', label: t('common.families_only'), icon: <FaUsers style={{ color: Theme.colors.secondary }} /> }
   ];
 
-  // Updated accepts only rules (now without women-only and families-only)
-  const acceptsOnlyRules = [
-    { id: 'pets-allowed', label: t('common.pets_allowed'), icon: <FaPaw style={{ color: Theme.colors.secondary }} /> },
-    { id: 'smoking-allowed', label: t('common.smoking_allowed'), icon: <FaSmoking style={{ color: Theme.colors.secondary }} /> }
+  // Property rules - updated to match the structure in Firestore
+  const propertyRules = [
+    { id: 'petsAllowed', label: t('common.pets_allowed'), icon: <FaPaw style={{ color: Theme.colors.secondary }} /> },
+    { id: 'smokingAllowed', label: t('common.smoking_allowed'), icon: <FaSmoking style={{ color: Theme.colors.secondary }} /> }
   ];
 
   const isAmenityChecked = (id: string) => {
@@ -405,13 +444,29 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
   };
 
   const handleAmenityToggle = (id: string) => {
-    // Update local state instead of calling parent's toggle function immediately
-    setLocalActiveFilters(prevFilters => {
-      const newLocalFilters = prevFilters.includes(id)
-        ? prevFilters.filter(f => f !== id)
-        : [...prevFilters, id];
-      return newLocalFilters;
-    });
+    // For housing preferences, we want only one selected at a time
+    if (housingPreferences.some(pref => pref.id === id)) {
+      setLocalActiveFilters(prevFilters => {
+        // Remove any existing housing preference
+        const filtersWithoutHousingPrefs = prevFilters.filter(f => 
+          !housingPreferences.some(pref => pref.id === f));
+        
+        // Add the new one if it's not already the one being removed
+        if (prevFilters.includes(id)) {
+          return filtersWithoutHousingPrefs;
+        } else {
+          return [...filtersWithoutHousingPrefs, id];
+        }
+      });
+    } else {
+      // For other filters, toggle as usual
+      setLocalActiveFilters(prevFilters => {
+        const newLocalFilters = prevFilters.includes(id)
+          ? prevFilters.filter(f => f !== id)
+          : [...prevFilters, id];
+        return newLocalFilters;
+      });
+    }
   };
 
   const handlePropertyTypeChange = (value: string) => {
@@ -486,13 +541,13 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
             onChange={(e) => handlePropertyTypeChange(e.target.value)}
           >
             <option value="">{t('property_list.select_property_type')}</option>
-            <option value="Apartment">{t('property_list.property_type.apartment')}</option>
-            <option value="House">{t('property_list.property_type.house')}</option>
-            <option value="Studio">{t('property_list.property_type.studio')}</option>
-            <option value="Room">{t('property_list.property_type.room')}</option>
-            <option value="Villa">{t('property_list.property_type.villa')}</option>
-            <option value="Penthouse">{t('property_list.property_type.penthouse')}</option>
-            <option value="Townhouse">{t('property_list.property_type.townhouse')}</option>
+            <option value="apartment">{t('property_list.property_type.apartment')}</option>
+            <option value="house">{t('property_list.property_type.house')}</option>
+            <option value="studio">{t('property_list.property_type.studio')}</option>
+            <option value="room">{t('property_list.property_type.room')}</option>
+            <option value="villa">{t('property_list.property_type.villa')}</option>
+            <option value="penthouse">{t('property_list.property_type.penthouse')}</option>
+            <option value="townhouse">{t('property_list.property_type.townhouse')}</option>
           </select>
           <IoChevronDown style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', pointerEvents: 'none' }}/>
         </DropdownSelector>
@@ -513,7 +568,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
         </AmenitiesGrid>
       </FilteringRow>
 
-      {/* New dedicated section for housing preferences */}
+      {/* Housing preferences section - matches housingPreference in Firestore */}
       <FilteringRow>
         <FilteringTitle>{t('common.housing_preferences')}</FilteringTitle>
         <AmenitiesGrid>
@@ -548,7 +603,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
         </AmenitiesGrid>
       </FilteringRow>
       
-      {/* New Property Features section */}
+      {/* Property Features section - now includes features that were previously in "includes" section */}
       <FilteringRow>
         <FilteringTitle>{t('property_features.title')}</FilteringTitle>
         <AmenitiesGrid>
@@ -567,26 +622,9 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
       </FilteringRow>
       
       <FilteringRow>
-        <FilteringTitle>{t('common.includes')}</FilteringTitle>
-        <AmenitiesGrid>
-          {includedFees.map(fee => (
-            <AmenityItem key={fee.id}>
-              <div 
-                className={`checkbox ${isAmenityChecked(fee.id) ? 'checked' : ''}`}
-                onClick={() => handleAmenityToggle(fee.id)}
-              ></div>
-              <label onClick={() => handleAmenityToggle(fee.id)}>
-                {fee.icon} {fee.label}
-              </label>
-            </AmenityItem>
-          ))}
-        </AmenitiesGrid>
-      </FilteringRow>
-
-      <FilteringRow>
         <FilteringTitle>{t('common.allowed')}</FilteringTitle>
         <AmenitiesGrid>
-          {acceptsOnlyRules.map(rule => (
+          {propertyRules.map(rule => (
             <AmenityItem key={rule.id}>
               <div 
                 className={`checkbox ${isAmenityChecked(rule.id) ? 'checked' : ''}`}

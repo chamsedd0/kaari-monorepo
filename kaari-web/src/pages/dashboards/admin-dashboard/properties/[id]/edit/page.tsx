@@ -68,6 +68,24 @@ const PropertyEditPage: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // New fields
+  const [housingPreference, setHousingPreference] = useState<string>('');
+  const [petsAllowed, setPetsAllowed] = useState<boolean>(false);
+  const [smokingAllowed, setSmokingAllowed] = useState<boolean>(false);
+  const [includesWater, setIncludesWater] = useState<boolean>(false);
+  const [includesElectricity, setIncludesElectricity] = useState<boolean>(false);
+  const [includesWifi, setIncludesWifi] = useState<boolean>(false);
+  const [includesGas, setIncludesGas] = useState<boolean>(false);
+  const [hasBalcony, setHasBalcony] = useState<boolean>(false);
+  const [hasCentralHeating, setHasCentralHeating] = useState<boolean>(false);
+  const [hasParking, setHasParking] = useState<boolean>(false);
+  const [hasAirConditioning, setHasAirConditioning] = useState<boolean>(false);
+  const [hasWoodenFloors, setHasWoodenFloors] = useState<boolean>(false);
+  const [hasElevator, setHasElevator] = useState<boolean>(false);
+  const [hasSwimmingPool, setHasSwimmingPool] = useState<boolean>(false);
+  const [hasFireplace, setHasFireplace] = useState<boolean>(false);
+  const [isAccessible, setIsAccessible] = useState<boolean>(false);
+
   useEffect(() => {
     if (id) {
       loadProperty();
@@ -157,6 +175,24 @@ const PropertyEditPage: React.FC = () => {
         setNearbyPlaces(propertyData.nearbyPlaces || []);
         setRules(propertyData.rules || []);
         setImages(propertyData.images || []);
+
+        // Set new fields
+        setHousingPreference(propertyData.housingPreference || '');
+        setPetsAllowed(propertyData.petsAllowed || false);
+        setSmokingAllowed(propertyData.smokingAllowed || false);
+        setIncludesWater(propertyData.includesWater || false);
+        setIncludesElectricity(propertyData.includesElectricity || false);
+        setIncludesWifi(propertyData.includesWifi || false);
+        setIncludesGas(propertyData.includesGas || false);
+        setHasBalcony(propertyData.hasBalcony || false);
+        setHasCentralHeating(propertyData.hasCentralHeating || false);
+        setHasParking(propertyData.hasParking || false);
+        setHasAirConditioning(propertyData.hasAirConditioning || false);
+        setHasWoodenFloors(propertyData.hasWoodenFloors || false);
+        setHasElevator(propertyData.hasElevator || false);
+        setHasSwimmingPool(propertyData.hasSwimmingPool || false);
+        setHasFireplace(propertyData.hasFireplace || false);
+        setIsAccessible(propertyData.isAccessible || false);
       }
     } catch (err) {
       console.error('Error loading property:', err);
@@ -244,6 +280,24 @@ const PropertyEditPage: React.FC = () => {
           updatedProperty.availableFrom = date;
         }
       }
+
+      // Add new fields
+      updatedProperty.housingPreference = housingPreference;
+      updatedProperty.petsAllowed = petsAllowed;
+      updatedProperty.smokingAllowed = smokingAllowed;
+      updatedProperty.includesWater = includesWater;
+      updatedProperty.includesElectricity = includesElectricity;
+      updatedProperty.includesWifi = includesWifi;
+      updatedProperty.includesGas = includesGas;
+      updatedProperty.hasBalcony = hasBalcony;
+      updatedProperty.hasCentralHeating = hasCentralHeating;
+      updatedProperty.hasParking = hasParking;
+      updatedProperty.hasAirConditioning = hasAirConditioning;
+      updatedProperty.hasWoodenFloors = hasWoodenFloors;
+      updatedProperty.hasElevator = hasElevator;
+      updatedProperty.hasSwimmingPool = hasSwimmingPool;
+      updatedProperty.hasFireplace = hasFireplace;
+      updatedProperty.isAccessible = isAccessible;
 
       await updateProperty(property.id, updatedProperty);
       toast.showToast('success', 'Success', 'Property updated successfully');
@@ -650,6 +704,137 @@ const PropertyEditPage: React.FC = () => {
         </div>
 
         <div className="form-section">
+          <h2>Housing Preferences</h2>
+          <div className="form-group">
+            <label>Housing Preference</label>
+            <select 
+              value={housingPreference}
+              onChange={(e) => setHousingPreference(e.target.value)}
+            >
+              <option value="">No Specific Preference</option>
+              <option value="womenOnly">Women Only</option>
+              <option value="familiesOnly">Families Only</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="form-section">
+          <h2>Included Services</h2>
+          <div className="checkbox-grid">
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={includesWater}
+                onChange={(e) => setIncludesWater(e.target.checked)}
+              />
+              <span className="checkbox-label">Water</span>
+            </label>
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={includesElectricity}
+                onChange={(e) => setIncludesElectricity(e.target.checked)}
+              />
+              <span className="checkbox-label">Electricity</span>
+            </label>
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={includesWifi}
+                onChange={(e) => setIncludesWifi(e.target.checked)}
+              />
+              <span className="checkbox-label">Wi-Fi</span>
+            </label>
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={includesGas}
+                onChange={(e) => setIncludesGas(e.target.checked)}
+              />
+              <span className="checkbox-label">Gas</span>
+            </label>
+          </div>
+        </div>
+
+        <div className="form-section">
+          <h2>Property Features</h2>
+          <div className="checkbox-grid">
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={hasBalcony}
+                onChange={(e) => setHasBalcony(e.target.checked)}
+              />
+              <span className="checkbox-label">Balcony</span>
+            </label>
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={hasCentralHeating}
+                onChange={(e) => setHasCentralHeating(e.target.checked)}
+              />
+              <span className="checkbox-label">Central Heating</span>
+            </label>
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={hasParking}
+                onChange={(e) => setHasParking(e.target.checked)}
+              />
+              <span className="checkbox-label">Parking Space</span>
+            </label>
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={hasAirConditioning}
+                onChange={(e) => setHasAirConditioning(e.target.checked)}
+              />
+              <span className="checkbox-label">Air Conditioning</span>
+            </label>
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={hasWoodenFloors}
+                onChange={(e) => setHasWoodenFloors(e.target.checked)}
+              />
+              <span className="checkbox-label">Wooden Floors</span>
+            </label>
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={hasElevator}
+                onChange={(e) => setHasElevator(e.target.checked)}
+              />
+              <span className="checkbox-label">Elevator</span>
+            </label>
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={hasSwimmingPool}
+                onChange={(e) => setHasSwimmingPool(e.target.checked)}
+              />
+              <span className="checkbox-label">Swimming Pool</span>
+            </label>
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={hasFireplace}
+                onChange={(e) => setHasFireplace(e.target.checked)}
+              />
+              <span className="checkbox-label">Fireplace</span>
+            </label>
+            <label className="checkbox-item">
+              <input
+                type="checkbox"
+                checked={isAccessible}
+                onChange={(e) => setIsAccessible(e.target.checked)}
+              />
+              <span className="checkbox-label">Accessible</span>
+            </label>
+          </div>
+        </div>
+
+        <div className="form-section">
           <h2>Property Images</h2>
           <div className="upload-container">
             <input
@@ -764,6 +949,8 @@ const AMENITIES_OPTIONS = [
   { id: 'washing-machine', label: 'Washing Machine' },
   { id: 'hotplate', label: 'Hotplate/Cooktop' },
   { id: 'water-heater', label: 'Water Heater' },
+  { id: 'microwave', label: 'Microwave' },
+  { id: 'bathtub', label: 'Bathtub' },
   { id: 'ac', label: 'Air Conditioning' },
   { id: 'heating', label: 'Heating' },
   { id: 'parking', label: 'Parking' },
@@ -777,6 +964,16 @@ const FEATURES_OPTIONS = [
   { id: 'water', label: 'Water' },
   { id: 'electricity', label: 'Electricity' },
   { id: 'wifi', label: 'Wi-Fi' },
+  { id: 'gas', label: 'Gas' },
+  { id: 'balcony', label: 'Balcony' },
+  { id: 'central-heating', label: 'Central Heating' },
+  { id: 'parking-space', label: 'Parking Space' },
+  { id: 'air-conditioning', label: 'Air Conditioning' },
+  { id: 'wooden-floors', label: 'Wooden Floors' },
+  { id: 'elevator', label: 'Elevator' },
+  { id: 'swimming-pool', label: 'Swimming Pool' },
+  { id: 'fireplace', label: 'Fireplace' },
+  { id: 'accessible', label: 'Accessible' }
 ];
 
 const PropertyEditPageContainer = styled.div`

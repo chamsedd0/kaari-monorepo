@@ -67,7 +67,7 @@ const EditRequestsPage: React.FC = () => {
 
   const filteredRequests = editRequests.filter(request => {
     const matchesSearch = 
-      request.propertyTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.propertyId.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = filterStatus === 'all' || request.status === filterStatus;
