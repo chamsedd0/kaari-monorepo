@@ -357,17 +357,18 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
     { id: 'sofa', label: t('advertiser_dashboard.properties.amenities.sofa'), icon: <FaCouch style={{ color: Theme.colors.secondary }} /> },
     { id: 'coffee-table', label: t('advertiser_dashboard.properties.amenities.coffee_table'), icon: <MdOutlineCoffee style={{ color: Theme.colors.secondary }} /> },
     { id: 'washing-machine', label: t('advertiser_dashboard.properties.amenities.washing_machine'), icon: <MdOutlineLocalLaundryService style={{ color: Theme.colors.secondary }} /> },
-    { id: 'oven', label: t('advertiser_dashboard.properties.amenities.oven'), icon: <MdOutlineKitchen style={{ color: Theme.colors.secondary }} /> }
+    { id: 'oven', label: t('advertiser_dashboard.properties.amenities.oven'), icon: <MdOutlineKitchen style={{ color: Theme.colors.secondary }} /> },
+    { id: 'wifi', label: t('common.wifi'), icon: <RiWifiFill style={{ color: Theme.colors.secondary }} /> }
   ];
 
   // Define furnished filter
   const furnishedFilter = { id: 'isFurnished', label: t('common.furnished'), icon: <FaBed style={{ color: Theme.colors.secondary }} /> };
 
-  // Updated included fees options
+  // Updated included fees options with appropriate IDs that match the filters
   const includedFees = [
-    { id: '"water"', label: t('common.water'), icon: <RiWaterFlashFill style={{ color: Theme.colors.secondary }} /> },
-    { id: '"electricity"', label: t('common.electricity'), icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> },
-    { id: '"wifi"', label: t('common.wifi'), icon: <RiWifiFill style={{ color: Theme.colors.secondary }} /> }
+    { id: 'water', label: t('common.water'), icon: <RiWaterFlashFill style={{ color: Theme.colors.secondary }} /> },
+    { id: 'electricity', label: t('common.electricity'), icon: <BsFillLightningFill style={{ color: Theme.colors.secondary }} /> },
+    { id: 'wifi', label: t('common.wifi'), icon: <RiWifiFill style={{ color: Theme.colors.secondary }} /> }
   ];
 
   // Updated accepts only rules
@@ -466,8 +467,11 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
             <option value="">{t('property_list.select_property_type')}</option>
             <option value="Apartment">{t('property_list.property_type.apartment')}</option>
             <option value="House">{t('property_list.property_type.house')}</option>
-            <option value="Condo">{t('property_list.property_type.condo')}</option>
-            <option value="Commercial">{t('property_list.property_type.commercial')}</option>
+            <option value="Studio">{t('property_list.property_type.studio')}</option>
+            <option value="Room">{t('property_list.property_type.room')}</option>
+            <option value="Villa">{t('property_list.property_type.villa')}</option>
+            <option value="Penthouse">{t('property_list.property_type.penthouse')}</option>
+            <option value="Townhouse">{t('property_list.property_type.townhouse')}</option>
           </select>
           <IoChevronDown style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8', pointerEvents: 'none' }}/>
         </DropdownSelector>

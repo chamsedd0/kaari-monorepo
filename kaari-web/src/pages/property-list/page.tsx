@@ -33,7 +33,7 @@ interface PropertyType {
     zipCode: string;
     country: string;
   };
-  propertyType: 'apartment' | 'house' | 'condo' | 'land' | 'commercial';
+  propertyType: 'apartment' | 'house' | 'studio' | 'room' | 'villa' | 'penthouse' | 'townhouse';
   bedrooms?: number;
   bathrooms?: number;
   area: number;
@@ -1026,8 +1026,16 @@ export default function PropertyListPage() {
         if (filter.includes('-') || filter.includes('/')) {
           try {
             // Standardize date format from either MM/DD/YYYY or YYYY-MM-DD
-            const dateStr = filter.includes('/') ? filter : filter.split('T')[0]; // Handle ISO format with time
-            const selectedDate = new Date(dateStr);
+            let selectedDate: Date;
+            
+            if (filter.includes('/')) {
+              // Handle MM/DD/YYYY format
+              const [month, day, year] = filter.split('/').map(num => parseInt(num, 10));
+              selectedDate = new Date(year, month - 1, day); // month is 0-indexed in JS Date
+            } else {
+              // Handle YYYY-MM-DD format (possibly with time)
+              selectedDate = new Date(filter.split('T')[0]);
+            }
             
             // Skip this filter if the date is invalid
             if (isNaN(selectedDate.getTime())) {
@@ -1043,15 +1051,41 @@ export default function PropertyListPage() {
              
             // Convert property availableFrom to a Date object if it's not already
             let availableFromDate: Date;
+            
             if (property.availableFrom instanceof Date) {
               availableFromDate = property.availableFrom;
             } else if (typeof property.availableFrom === 'string') {
-              availableFromDate = new Date(property.availableFrom);
+              // Try to handle various string date formats
+              if (property.availableFrom.includes('T')) {
+                // ISO format
+                availableFromDate = new Date(property.availableFrom);
+              } else if (property.availableFrom.includes('/')) {
+                // MM/DD/YYYY format
+                const [month, day, year] = property.availableFrom.split('/').map(num => parseInt(num, 10));
+                availableFromDate = new Date(year, month - 1, day);
+              } else if (property.availableFrom.includes('-')) {
+                // YYYY-MM-DD format
+                availableFromDate = new Date(property.availableFrom);
+              } else {
+                // Try direct parsing as a last resort
+                availableFromDate = new Date(property.availableFrom);
+              }
             } else if (property.availableFrom && typeof (property.availableFrom as any).toDate === 'function') {
               // Handle Firestore Timestamp objects which have a toDate() method
               availableFromDate = (property.availableFrom as any).toDate();
+            } else if (property.availableFrom && typeof property.availableFrom === 'object' && 
+                      'seconds' in (property.availableFrom as any)) {
+              // Handle Firestore Timestamp-like objects
+              const timestamp = property.availableFrom as any;
+              availableFromDate = new Date(timestamp.seconds * 1000);
             } else {
               // If we can't parse the date, skip this property
+              console.log(`Property ${property.id} has invalid availableFrom date format, filtering out`);
+              return false;
+            }
+            
+            // Check if the date is valid
+            if (isNaN(availableFromDate.getTime())) {
               console.log(`Property ${property.id} has invalid availableFrom date, filtering out`);
               return false;
             }
@@ -1059,6 +1093,12 @@ export default function PropertyListPage() {
             // Reset time components for accurate day comparison
             selectedDate.setHours(0, 0, 0, 0);
             availableFromDate.setHours(0, 0, 0, 0);
+            
+            console.log(`Date comparison for property ${property.id}:`, {
+              selectedDate: selectedDate.toISOString(),
+              availableFromDate: availableFromDate.toISOString(),
+              isAvailable: availableFromDate <= selectedDate
+            });
             
             // Property must be available on or before the selected date
             if (availableFromDate > selectedDate) {
@@ -1108,36 +1148,57 @@ export default function PropertyListPage() {
           } else if (capacityText.includes('+')) {
             // Handle other "X+ People" format
             isPlus = true;
-            requiredCapacity = parseInt(capacityText.match(/(\d+)\+/)![1], 10);
+            const matches = capacityText.match(/(\d+)\+/);
+            if (matches && matches[1]) {
+              requiredCapacity = parseInt(matches[1], 10);
+            }
           } else {
             // Handle "X People" or "1 Person" format
-            requiredCapacity = parseInt(capacityText.match(/(\d+)/)![1], 10);
+            const matches = capacityText.match(/(\d+)/);
+            if (matches && matches[1]) {
+              requiredCapacity = parseInt(matches[1], 10);
+            }
           }
           
           console.log(`Checking capacity filter: ${capacityText} (${requiredCapacity}${isPlus ? '+' : ''}) for property ${property.id}`);
           
-          // If property has no capacity info, filter it out
-          if (!property.capacity || typeof property.capacity !== 'number') {
-            console.log(`Property ${property.id} has no capacity info, filtering out`);
+          // Parse property capacity, handling different formats
+          let propertyCapacity: number | undefined;
+          
+          if (property.capacity !== undefined) {
+            if (typeof property.capacity === 'number') {
+              propertyCapacity = property.capacity;
+            } else if (typeof property.capacity === 'string') {
+              // Try to parse string capacity to number
+              propertyCapacity = parseInt(property.capacity, 10);
+              if (isNaN(propertyCapacity)) {
+                propertyCapacity = undefined;
+              }
+            }
+          }
+          
+          // If property has no valid capacity info, filter it out
+          if (propertyCapacity === undefined) {
+            console.log(`Property ${property.id} has no valid capacity info, filtering out`);
             return false;
           }
           
           // Check if property's capacity meets the requirement
           if (isPlus) {
             // For "X+ People", property capacity must be at least X
-            if (property.capacity < requiredCapacity) {
-              console.log(`Property ${property.id} capacity ${property.capacity} is less than required ${requiredCapacity}+, filtering out`);
+            if (propertyCapacity < requiredCapacity) {
+              console.log(`Property ${property.id} capacity ${propertyCapacity} is less than required ${requiredCapacity}+, filtering out`);
               return false;
             }
           } else {
             // For exact capacity, property must match exactly
-            if (property.capacity !== requiredCapacity) {
-              console.log(`Property ${property.id} capacity ${property.capacity} does not match required ${requiredCapacity}, filtering out`);
+            if (propertyCapacity !== requiredCapacity) {
+              console.log(`Property ${property.id} capacity ${propertyCapacity} does not match required ${requiredCapacity}, filtering out`);
               return false;
             }
           }
           
-          console.log(`Property ${property.id} passes capacity filter with capacity ${property.capacity}`);
+          console.log(`Property ${property.id} passes capacity filter with capacity ${propertyCapacity}`);
         }
         
         // Handle bedroom filters like "Studio", "1 Bedroom", "2 Bedrooms", etc.
@@ -1179,48 +1240,102 @@ export default function PropertyListPage() {
         }
         
         // Property type filters
-        if (filter === 'Apartment' || filter === 'House' || filter === 'Condo' || filter === 'Commercial') {
+        if (filter === 'Apartment' || filter === 'House' || filter === 'Studio' || filter === 'Condo' || filter === 'Commercial' || filter === 'Room' || filter === 'Villa' || filter === 'Penthouse' || filter === 'Townhouse') {
           // Normalize case for comparison
-        const normalizedPropertyType = property.propertyType.toLowerCase();
+          const normalizedPropertyType = property.propertyType.toLowerCase();
           const normalizedFilter = filter.toLowerCase();
           
           if (normalizedPropertyType !== normalizedFilter) {
             console.log(`Property ${property.id} type ${normalizedPropertyType} doesn't match ${normalizedFilter}, filtering out`);
-          return false;
+            return false;
           }
+          
+          console.log(`Property ${property.id} matched property type ${filter}`);
         }
         
-        // Handle amenity filters
-        const amenityFilters = ['wifi', 'washing-machine', 'desk', 'wardrobe', 'oven', 'coffee-table', 'sofabed', 'sofa', 'dining-table'];
-        if (amenityFilters.includes(filter)) {
+        // Handle amenity filters - make this more robust by handling case sensitivity and format variations
+        const amenityFilters = ['wifi', 'washing-machine', 'desk', 'wardrobe', 'oven', 'coffee-table', 'sofabed', 'sofa', 'dining-table', 'cabinet'];
+        if (amenityFilters.includes(filter.toLowerCase())) {
           console.log(`Checking amenity filter: ${filter} for property ${property.id}`);
-          if (!property.amenities || !property.amenities.includes(filter)) {
+          console.log(`Property ${property.id} amenities:`, property.amenities);
+          
+          // Check for the filter in the amenities array, normalizing for case and format variations
+          const isMatch = property.amenities && property.amenities.some(amenity => {
+            const normalizedAmenity = amenity.toLowerCase().replace(/\s+/g, '-');
+            const normalizedFilter = filter.toLowerCase().replace(/\s+/g, '-');
+            return normalizedAmenity === normalizedFilter || normalizedAmenity.includes(normalizedFilter) || normalizedFilter.includes(normalizedAmenity);
+          });
+          
+          if (!isMatch) {
             console.log(`Property ${property.id} doesn't have amenity: ${filter}, filtering out`);
-          return false;
+            return false;
           }
+          console.log(`Property ${property.id} matched amenity: ${filter}`);
         }
         
-        // Handle features filters
+        // Handle features filters - with improved matching
         const featureFilters = ['balcony', 'central-heating', 'parking-space', 'air-conditioning', 'wooden-floors', 'elevator'];
-        if (featureFilters.includes(filter)) {
+        if (featureFilters.includes(filter.toLowerCase())) {
           console.log(`Checking feature filter: ${filter} for property ${property.id}`);
-          if (!property.features || !property.features.includes(filter)) {
+          console.log(`Property ${property.id} features:`, property.features);
+          
+          // Check for the filter in the features array, normalizing for case and format variations
+          const isMatch = property.features && property.features.some(feature => {
+            const normalizedFeature = feature.toLowerCase().replace(/\s+/g, '-');
+            const normalizedFilter = filter.toLowerCase().replace(/\s+/g, '-');
+            return normalizedFeature === normalizedFilter || normalizedFeature.includes(normalizedFilter) || normalizedFilter.includes(normalizedFeature);
+          });
+          
+          if (!isMatch) {
             console.log(`Property ${property.id} doesn't have feature: ${filter}, filtering out`);
             return false;
           }
+          console.log(`Property ${property.id} matched feature: ${filter}`);
         }
         
-        // Handle included services filters
-        const includedFilters = ['"water"', '"electricity"', '"wifi"'];
-        if (includedFilters.includes(filter)) {
+        // Handle included services filters - fix the quotation marks issue and match IDs from FilteringSection
+        const includedFilters = ['water', 'electricity', 'wifi'];
+        if (includedFilters.includes(filter.toLowerCase())) {
           console.log(`Checking included filter: ${filter} for property ${property.id}`);
+          console.log(`Property ${property.id} features:`, property.features);
           
-          // Find if the property has this feature (exact match with quotes)
-          if (!property.features || !property.features.includes(filter)) {
-            console.log(`Property ${property.id} doesn't include: ${filter} in features, filtering out`);
+          // Create variations of the filter to check (with/without quotes)
+          const variations = [
+            filter.toLowerCase(),
+            `"${filter.toLowerCase()}"`,
+            filter.toLowerCase().replace(/"/g, '')
+          ];
+          
+          // Check if any of the variations exist in features
+          let isMatch = false;
+          
+          // First check features array
+          if (property.features && Array.isArray(property.features)) {
+            isMatch = property.features.some(feature => {
+              const featureStr = String(feature).toLowerCase();
+              return variations.some(v => featureStr === v || featureStr.includes(v));
+            });
+            
+            console.log(`Feature match result in features array: ${isMatch}`);
+          }
+          
+          // If not found in features, also check amenities as a fallback
+          // (some properties might have these stored in either array)
+          if (!isMatch && property.amenities && Array.isArray(property.amenities)) {
+            isMatch = property.amenities.some(amenity => {
+              const amenityStr = String(amenity).toLowerCase();
+              return variations.some(v => amenityStr === v || amenityStr.includes(v));
+            });
+            
+            console.log(`Feature match result in amenities array: ${isMatch}`);
+          }
+          
+          if (!isMatch) {
+            console.log(`Property ${property.id} doesn't include: ${filter} in features or amenities, filtering out`);
             return false;
           }
-          console.log(`Property ${property.id} includes ${filter} in features`);
+          
+          console.log(`Property ${property.id} includes ${filter} in features or amenities`);
         }
         
         // Rules filters
@@ -1256,15 +1371,19 @@ export default function PropertyListPage() {
           console.log(`Looking for rule: "${ruleName}" with allowed=true`);
           
           // Check if the property has the rule and it's allowed
-          const rule = property.rules.find(r => r.name.toLowerCase() === ruleName.toLowerCase());
+          // Use case-insensitive search to avoid case mismatches
+          const ruleMatch = property.rules.find(r => 
+            r.name.toLowerCase() === ruleName.toLowerCase() ||
+            r.name.toLowerCase().includes(ruleName.toLowerCase())
+          );
           
           // If the rule doesn't exist or is not allowed, filter out this property
-          if (!rule || !rule.allowed) {
+          if (!ruleMatch || !ruleMatch.allowed) {
             console.log(`Property ${property.id} does not have "${ruleName}" allowed, filtering out`);
             return false;
           }
           
-          console.log(`Property ${property.id} has rule "${ruleName}" allowed: true`);
+          console.log(`Property ${property.id} has rule "${ruleMatch.name}" allowed: true`);
         }
       }
       
