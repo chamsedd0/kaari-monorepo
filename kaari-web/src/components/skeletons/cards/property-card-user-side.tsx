@@ -1,6 +1,7 @@
 import { CardBaseModelStyle1 } from "../../styles/cards/card-base-model-style-1";
 import { CertificationBanner } from "../banners/static/certification-banner";
 import { IoHeartOutline, IoHeart, IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
+import { FaFemale, FaUsers } from 'react-icons/fa';
 import React, { memo, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import defaultImage from "../../../assets/images/propertyExamplePic.png";
@@ -18,6 +19,7 @@ interface PropertyCardProps {
   images?: string[];
   isRecommended?: boolean;
   isFavorite: boolean;
+  housingPreference?: string;
   onToggleFavorite: (id: string | number) => void;
   onClick?: () => void;
 }
@@ -36,6 +38,7 @@ const PropertyCardComponent = ({
   images,
   isRecommended = false,
   isFavorite, 
+  housingPreference,
   onToggleFavorite,
   onClick
 }: PropertyCardProps) => {
@@ -80,6 +83,24 @@ const PropertyCardComponent = ({
     ? images[currentImageIndex] 
     : (images && images.length > 0) ? images[0] : (image || defaultImage);
 
+  // Get housing preference icon and tooltip text
+  const getHousingPreferenceInfo = () => {
+    if (housingPreference === 'womenOnly') {
+      return {
+        icon: <FaFemale />,
+        tooltip: t('property_card.women_only')
+      };
+    } else if (housingPreference === 'familiesOnly') {
+      return {
+        icon: <FaUsers />,
+        tooltip: t('property_card.families_only')
+      };
+    }
+    return null;
+  };
+
+  const preferenceInfo = getHousingPreferenceInfo();
+
   return (
     <CardBaseModelStyle1 
       $isRecommended={isRecommended}
@@ -120,6 +141,11 @@ const PropertyCardComponent = ({
             <div className="favorite-icon" onClick={toggleFavorite}>
                 {isFavorite ? <IoHeart className="filled" /> : <IoHeartOutline />}
             </div>
+            {preferenceInfo && (
+              <div className="housing-preference-icon" title={preferenceInfo.tooltip}>
+                {preferenceInfo.icon}
+              </div>
+            )}
         </div>
         <div className="title">
             <b>{title}</b>
@@ -153,6 +179,7 @@ export const PropertyCard = memo(PropertyCardComponent, (prevProps, nextProps) =
     prevProps.price === nextProps.price &&
     prevProps.onClick === nextProps.onClick &&
     prevProps.image === nextProps.image &&
-    prevProps.images === nextProps.images
+    prevProps.images === nextProps.images &&
+    prevProps.housingPreference === nextProps.housingPreference
   );
 });

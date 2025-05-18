@@ -675,6 +675,7 @@ const EnhancedPropertyCardComponent = ({ property, onToggleFavorite, isSelected 
         propertyType={property.propertyType}
         isRecommended={!!property.isRecommended}
         isFavorite={!!property.isFavorite}
+        housingPreference={property.housingPreference}
         onToggleFavorite={onToggleFavorite}
         id={propertyId}
       />

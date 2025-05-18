@@ -111,7 +111,8 @@ const UsersLanding: React.FC = () => {
       image: PropertyImage,
       isRecommended: true,
       propertyType: 'Apartment',
-      isFavorite: false
+      isFavorite: false,
+      housingPreference: 'womenOnly'
     },
     { 
       id: '2', 
@@ -137,7 +138,8 @@ const UsersLanding: React.FC = () => {
       image: PropertyImage,
       isRecommended: true,
       propertyType: 'Villa',
-      isFavorite: false
+      isFavorite: false,
+      housingPreference: 'familiesOnly'
     },
     { 
       id: '4', 
@@ -391,6 +393,7 @@ const UsersLanding: React.FC = () => {
                   isRecommended={property.isRecommended}
                   propertyType={property.propertyType}
                   isFavorite={property.isFavorite}
+                  housingPreference={property.housingPreference}
                   onToggleFavorite={() => {}}
                 />
               </div>
@@ -473,6 +476,7 @@ const UsersLanding: React.FC = () => {
                   isRecommended={property.isRecommended}
                   propertyType={property.propertyType}
                   isFavorite={property.isFavorite}
+                  housingPreference={property.housingPreference}
                   onToggleFavorite={() => {}}
                 />
               </div>

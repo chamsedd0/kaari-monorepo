@@ -25,6 +25,7 @@ export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
     position: relative;
     overflow: hidden;
     border-radius: ${Theme.borders.radius.md};
+    margin-bottom: 10px;
 
     img {
       width: 100%;
@@ -151,6 +152,32 @@ export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
         svg {
           color: #e74c3c;
         }
+      }
+    }
+
+    .housing-preference-icon {
+      position: absolute;
+      top: 15px;
+      right: 60px;
+      width: 36px;
+      height: 36px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: help;
+      z-index: 10;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: none;
+      
+      svg {
+        font-size: 18px;
+        color: ${Theme.colors.gray};
+      }
+      
+      &:hover {
+        background: #f9f9ff;
       }
     }
   }
