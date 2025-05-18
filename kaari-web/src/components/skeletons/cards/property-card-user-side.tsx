@@ -1,7 +1,7 @@
 import { CardBaseModelStyle1 } from "../../styles/cards/card-base-model-style-1";
 import { CertificationBanner } from "../banners/static/certification-banner";
-import { IoHeartOutline, IoHeart } from 'react-icons/io5';
-import React, { memo } from "react";
+import { IoHeartOutline, IoHeart, IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
+import React, { memo, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import defaultImage from "../../../assets/images/propertyExamplePic.png";
 
@@ -40,6 +40,7 @@ const PropertyCardComponent = ({
   onClick
 }: PropertyCardProps) => {
   const { t } = useTranslation();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   // Use the prop directly instead of local state to ensure consistency
   const toggleFavorite = (e: React.MouseEvent) => {
@@ -56,8 +57,28 @@ const PropertyCardComponent = ({
     }
   };
 
-  // Get the first image from images array if available, otherwise use image prop or default
-  const displayImage = (images && images.length > 0) ? images[0] : (image || defaultImage);
+  // Handle image navigation
+  const nextImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (images && images.length > 0) {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+    }
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (images && images.length > 0) {
+      setCurrentImageIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+    }
+  };
+
+  // Determine which image to display
+  const hasMultipleImages = images && images.length > 1;
+  const displayImage = hasMultipleImages 
+    ? images[currentImageIndex] 
+    : (images && images.length > 0) ? images[0] : (image || defaultImage);
 
   return (
     <CardBaseModelStyle1 
@@ -67,6 +88,31 @@ const PropertyCardComponent = ({
     >
         <div className="image">
             <img src={displayImage} alt="Property" />
+            
+            {hasMultipleImages && (
+              <>
+                <button className="nav-button prev" onClick={prevImage} aria-label="Previous image">
+                  <IoChevronBackOutline />
+                </button>
+                <button className="nav-button next" onClick={nextImage} aria-label="Next image">
+                  <IoChevronForwardOutline />
+                </button>
+                <div className="pagination-dots">
+                  {images.map((_, index) => (
+                    <span 
+                      key={index} 
+                      className={`dot ${index === currentImageIndex ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setCurrentImageIndex(index);
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+            
             <div className="certifications">
                 <CertificationBanner purple text={t('property_card.kaari_verified')}></CertificationBanner>
                 <CertificationBanner text={t('property_card.tenant_protection')}></CertificationBanner>

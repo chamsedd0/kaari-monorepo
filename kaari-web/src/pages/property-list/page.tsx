@@ -510,11 +510,22 @@ const PropertyMap = memo(({
             >
               <div className="property-info-window">
                 {selectedProperty.image && (
-                  <div className="info-window-image-container">
+                  <div className="info-window-image-container" style={{ 
+                    width: '100%', 
+                    aspectRatio: '4/3', 
+                    position: 'relative',
+                    overflow: 'hidden',
+                    borderRadius: '8px'
+                  }}>
                     <img 
                       src={selectedProperty.image} 
                       alt={selectedProperty.title} 
                       className="info-window-image"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
                     />
                     <div className="property-type-badge">
                       {t(`property_list.property_type.${selectedProperty.propertyType}`)}
@@ -526,7 +537,7 @@ const PropertyMap = memo(({
                       aria-label="Close"
                     >
                       <img src={closeIcon} alt="Close" />
-        </button>
+                    </button>
                   </div>
                 )}
                 <div className="info-window-content">
@@ -596,8 +607,8 @@ const PropertyMap = memo(({
                       onClick={() => handleViewProperty(selectedProperty.id)}
                     >
                       {t('property_list.view_property')}
-        </button>
-      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
             </InfoWindow>
@@ -695,6 +706,49 @@ export default function PropertyListPage() {
   const [mapCenter, setMapCenter] = useState(DEFAULT_MAP_CENTER);
   const [mapZoom, setMapZoom] = useState(DEFAULT_MAP_ZOOM);
 
+  // Read URL search parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const locationParam = params.get('location');
+    const dateParam = params.get('date');
+    
+    // Set initial filter values from URL parameters
+    if (locationParam) {
+      setLocationInput(locationParam);
+      setPendingFilters(prev => {
+        // Remove any existing location filter
+        const filtered = prev.filter(f => f.type !== 'Location');
+        // Add the new location filter
+        return [...filtered, { type: 'Location', value: locationParam }];
+      });
+    }
+    
+    if (dateParam) {
+      setDateInput(dateParam);
+      setPendingFilters(prev => {
+        // Remove any existing date filter
+        const filtered = prev.filter(f => f.type !== 'Date');
+        // Add the new date filter
+        return [...filtered, { type: 'Date', value: dateParam }];
+      });
+    }
+    
+    // Apply URL parameters as active filters after properties are loaded
+    if (locationParam || dateParam) {
+      const newFilters: string[] = [];
+      
+      if (locationParam) {
+        newFilters.push(`Location: ${locationParam}`);
+      }
+      
+      if (dateParam) {
+        newFilters.push(dateParam); // Date filters are just the date string
+      }
+      
+      setActiveFilters(newFilters);
+    }
+  }, [location.search]);
+
   // Load Google Maps API
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -705,7 +759,7 @@ export default function PropertyListPage() {
   // Fetch properties and set up initial state
   useEffect(() => {
     const fetchProperties = async () => {
-        setIsLoading(true);
+      setIsLoading(true);
       try {
         // Fetch properties from API with any required filters
         let fetchedProperties = await getProperties();
@@ -726,7 +780,7 @@ export default function PropertyListPage() {
         }
         
         // Set properties and filtered properties
-        setProperties(fetchedProperties.map(property => ({
+        const processedProperties = fetchedProperties.map(property => ({
           ...property,
           subtitle: property.address?.city || '',
           priceType: '/month',
@@ -736,29 +790,26 @@ export default function PropertyListPage() {
           isFavorite: (property as any).isFavorite || false,
           // Ensure isFurnished is always boolean, default to false if undefined
           isFurnished: property.isFurnished || false
-        })) as PropertyType[]);
+        })) as PropertyType[];
         
-        setFilteredProperties(fetchedProperties.map(property => ({
-          ...property,
-          subtitle: property.address?.city || '',
-          priceType: '/month',
-          minstay: property.minstay?.toString() || '1',
-          isRecommended: false,
-          isFavorite: (property as any).isFavorite || false,
-          // Ensure isFurnished is always boolean, default to false if undefined
-          isFurnished: property.isFurnished || false
-        })) as PropertyType[]);
-        
+        setProperties(processedProperties);
+        setFilteredProperties(processedProperties);
         setIsLoading(false);
-        setCurrentPage(1);
+        
+        // Apply any active filters immediately after loading properties
+        if (activeFilters.length > 0) {
+          setTimeout(() => {
+            applyCurrentFilters(activeFilters);
+          }, 0);
+        }
       } catch (error) {
         console.error('Error fetching properties:', error);
         setIsLoading(false);
       }
     };
-
+    
     fetchProperties();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, activeFilters]); // Add activeFilters as a dependency
 
   // Handler functions
   const handleDateChange = (date: string) => {
@@ -767,11 +818,11 @@ export default function PropertyListPage() {
     try {
       // If date is cleared, mark to remove this filter type
       if (!date) {
-        setPendingFilters(prev => prev.filter(filter => filter.type !== 'MoveInDate'));
-          return;
+        setPendingFilters(prev => prev.filter(filter => filter.type !== 'Date'));
+        return;
       }
       
-      // Format date for display in filter 
+      // Format date for display in filter
       const dateObj = new Date(date);
       // Check if date is valid
       if (isNaN(dateObj.getTime())) {
@@ -779,18 +830,20 @@ export default function PropertyListPage() {
         return;
       }
       
-      const displayDate = dateObj.toLocaleDateString();
+      // Use the ISO format for the date filter
+      const isoDate = date.includes('T') ? date : date + 'T00:00:00';
       
-      // Prepare move-in date filter to be added when search is executed
+      // Prepare date filter to be added when search is executed
       setPendingFilters(prev => {
         // Remove existing date filter if any
-        const filtersWithoutDate = prev.filter(filter => filter.type !== 'MoveInDate');
-        // Add the new filter to pending filters
-        return [...filtersWithoutDate, { type: 'MoveInDate', value: displayDate }];
+        const filtersWithoutDate = prev.filter(filter => filter.type !== 'Date');
+        // Add the new filter to pending filters - use the original date string
+        // This will be converted properly during filtering
+        return [...filtersWithoutDate, { type: 'Date', value: date }];
       });
       
-      console.log('Date input changed to:', displayDate, 'for date:', dateObj.toISOString());
-      } catch (error) {
+      console.log('Date input changed to:', date);
+    } catch (error) {
       console.error('Error processing date:', error);
     }
   };
@@ -970,34 +1023,54 @@ export default function PropertyListPage() {
         }
         
         // Handle date filter - check if property is available from the selected date
-        if (filter.includes('/')) {
-          const selectedDate = new Date(filter);
-           
-          // If the property doesn't have an availableFrom date, we exclude it to be safe
-          if (!property.availableFrom) {
-            console.log(`Property ${property.id} has no availableFrom date, filtering out`);
-            return false;
-          }
-           
-          // Convert property availableFrom to a Date object if it's not already
-          let availableFromDate: Date;
-          if (property.availableFrom instanceof Date) {
-            availableFromDate = property.availableFrom;
-          } else if (typeof property.availableFrom === 'string') {
-            availableFromDate = new Date(property.availableFrom);
-          } else if (property.availableFrom && typeof (property.availableFrom as any).toDate === 'function') {
-            // Handle Firestore Timestamp objects which have a toDate() method
-            availableFromDate = (property.availableFrom as any).toDate();
-          } else {
-            // If we can't parse the date, skip this property
-            console.log(`Property ${property.id} has invalid availableFrom date, filtering out`);
-            return false;
-          }
-           
-          // Compare dates - property is only valid if it's available on or before the selected date
-          if (availableFromDate > selectedDate) {
-            console.log(`Property ${property.id} available from ${availableFromDate.toISOString()} is after the requested date ${selectedDate.toISOString()}, filtering out`);
-            return false;
+        if (filter.includes('-') || filter.includes('/')) {
+          try {
+            // Standardize date format from either MM/DD/YYYY or YYYY-MM-DD
+            const dateStr = filter.includes('/') ? filter : filter.split('T')[0]; // Handle ISO format with time
+            const selectedDate = new Date(dateStr);
+            
+            // Skip this filter if the date is invalid
+            if (isNaN(selectedDate.getTime())) {
+              console.log(`Invalid date filter: ${filter}, skipping`);
+              continue;
+            }
+             
+            // If the property doesn't have an availableFrom date, we exclude it to be safe
+            if (!property.availableFrom) {
+              console.log(`Property ${property.id} has no availableFrom date, filtering out`);
+              return false;
+            }
+             
+            // Convert property availableFrom to a Date object if it's not already
+            let availableFromDate: Date;
+            if (property.availableFrom instanceof Date) {
+              availableFromDate = property.availableFrom;
+            } else if (typeof property.availableFrom === 'string') {
+              availableFromDate = new Date(property.availableFrom);
+            } else if (property.availableFrom && typeof (property.availableFrom as any).toDate === 'function') {
+              // Handle Firestore Timestamp objects which have a toDate() method
+              availableFromDate = (property.availableFrom as any).toDate();
+            } else {
+              // If we can't parse the date, skip this property
+              console.log(`Property ${property.id} has invalid availableFrom date, filtering out`);
+              return false;
+            }
+            
+            // Reset time components for accurate day comparison
+            selectedDate.setHours(0, 0, 0, 0);
+            availableFromDate.setHours(0, 0, 0, 0);
+            
+            // Property must be available on or before the selected date
+            if (availableFromDate > selectedDate) {
+              console.log(`Property ${property.id} not available from ${selectedDate.toISOString()}, filtering out. Available from: ${availableFromDate.toISOString()}`);
+              return false;
+            }
+            
+            console.log(`Property ${property.id} is available from selected date ${selectedDate.toISOString()}`);
+          } catch (err) {
+            console.error(`Error processing date filter "${filter}"`, err);
+            // Skip this filter rather than excluding all properties due to error
+            continue;
           }
         }
         

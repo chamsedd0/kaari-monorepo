@@ -66,8 +66,9 @@ export const PropertyList = styled.div<PropertyListProps>`
                 .info-window-image-container {
                     position: relative;
                     width: 100%;
-                    height: 160px;
+                    aspect-ratio: 4/3;
                     overflow: hidden;
+                    border-radius: ${Theme.borders.radius.md};
                     
                     .info-window-image {
                         width: 100%;

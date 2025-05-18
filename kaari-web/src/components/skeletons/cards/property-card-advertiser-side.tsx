@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import propertyExamplePic from "../../../assets/images/propertyExamplePic.png";
 import { CardBaseModelStyle2 } from "../../styles/cards/card-base-model-style-2";
 import { PurpleButtonLB40 } from '../buttons/purple_LB40';
 import { BpurpleButtonLB40 } from '../buttons/border_purple_LB40';
+import { Theme } from "../../../theme/theme";
+import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
 
 interface PropertyCardProps {
   title: string;
@@ -41,11 +43,68 @@ const PropertyCardAdvertiserSide: React.FC<PropertyCardProps> = ({
   propertyId,
   isSubmitting = false
 }) => {
-  const displayImage = (images && images.length > 0) ? images[0] : (imageUrl || propertyExamplePic);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Handle image navigation
+  const nextImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (images && images.length > 0) {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+    }
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (images && images.length > 0) {
+      setCurrentImageIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+    }
+  };
+
+  // Determine which image to display
+  const hasMultipleImages = images && images.length > 1;
+  const displayImage = hasMultipleImages 
+    ? images[currentImageIndex] 
+    : (images && images.length > 0) ? images[0] : (imageUrl || propertyExamplePic);
 
   return (
     <CardBaseModelStyle2>
-        <img src={displayImage} alt="Property" />
+        <div className="image-container">
+          <img src={displayImage} alt="Property" />
+          
+          {hasMultipleImages && (
+            <>
+              <button 
+                className="nav-button prev" 
+                onClick={prevImage} 
+                aria-label="Previous image"
+              >
+                <IoChevronBackOutline />
+              </button>
+              <button 
+                className="nav-button next" 
+                onClick={nextImage} 
+                aria-label="Next image"
+              >
+                <IoChevronForwardOutline />
+              </button>
+              <div className="pagination-dots">
+                {images.map((_, index) => (
+                  <span 
+                    key={index} 
+                    className={index === currentImageIndex ? 'active' : ''}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setCurrentImageIndex(index);
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
         <div className="title">
             <b>{title}</b> 
             <span> {subtitle || location}</span>

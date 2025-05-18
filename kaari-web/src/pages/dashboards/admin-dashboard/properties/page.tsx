@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
 import { FaSearch, FaEdit, FaTrash } from 'react-icons/fa';
+import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { Property } from '../../../../backend/models/entities';
 import { getProperties, deleteProperty } from '../../../../backend/server-actions/PropertyServerActions';
@@ -38,6 +39,85 @@ const ConfirmationModal = ({
         </ModalFooter>
       </ModalContent>
     </ModalOverlay>
+  );
+};
+
+// PropertyCard component with image pagination
+const PropertyCard = ({ property, onEdit, onDelete }: { 
+  property: Property, 
+  onEdit: (id: string) => void, 
+  onDelete: (property: Property) => void 
+}) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const hasMultipleImages = property.images && property.images.length > 1;
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (property.images && property.images.length > 0) {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % property.images.length);
+    }
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (property.images && property.images.length > 0) {
+      setCurrentImageIndex((prevIndex) => (prevIndex - 1 + property.images.length) % property.images.length);
+    }
+  };
+
+  return (
+    <div className="property-card">
+      <div className="property-image">
+        <img 
+          src={property.images[currentImageIndex] || property.images[0]} 
+          alt={property.title} 
+        />
+        {hasMultipleImages && (
+          <>
+            <button className="nav-button prev" onClick={prevImage} aria-label="Previous image">
+              <IoChevronBackOutline />
+            </button>
+            <button className="nav-button next" onClick={nextImage} aria-label="Next image">
+              <IoChevronForwardOutline />
+            </button>
+            <div className="pagination-dots">
+              {property.images.map((_, index) => (
+                <span 
+                  key={index} 
+                  className={`dot ${index === currentImageIndex ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentImageIndex(index);
+                  }}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      <div className="property-info">
+        <h3>{property.title}</h3>
+        <p className="property-type">{property.propertyType}</p>
+        <p className="property-price">${property.price}/month</p>
+        <p className="property-location">
+          {property.address.city}, {property.address.country}
+        </p>
+        <div className="action-buttons">
+          <button
+            className="edit-button"
+            onClick={() => onEdit(property.id)}
+          >
+            <FaEdit /> Edit
+          </button>
+          <button
+            className="delete-button"
+            onClick={() => onDelete(property)}
+          >
+            <FaTrash /> Delete
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -131,34 +211,12 @@ const PropertyPage: React.FC = () => {
       ) : (
         <div className="properties-grid">
           {filteredProperties.map(property => (
-            <div key={property.id} className="property-card">
-              <div className="property-image">
-                <img src={property.images[0]} alt={property.title} />
-              </div>
-              <div className="property-info">
-                <h3>{property.title}</h3>
-                <p className="property-type">{property.propertyType}</p>
-                <p className="property-price">${property.price}/month</p>
-                <p className="property-location">
-                  {property.address.city}, {property.address.country}
-                </p>
-                <div className="action-buttons">
-                  <button
-                    className="edit-button"
-                    onClick={() => handleEditProperty(property.id)}
-                  >
-                    <FaEdit /> Edit
-                  </button>
-                  <button
-                    className="delete-button"
-                    onClick={() => confirmDelete(property)}
-                    disabled={isDeleting}
-                  >
-                    <FaTrash /> Delete
-                  </button>
-                </div>
-              </div>
-            </div>
+            <PropertyCard 
+              key={property.id} 
+              property={property} 
+              onEdit={handleEditProperty} 
+              onDelete={confirmDelete} 
+            />
           ))}
         </div>
       )}
@@ -221,13 +279,85 @@ const PropertyPageContainer = styled.div`
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
       .property-image {
-        height: 200px;
+        aspect-ratio: 4/3;
         overflow: hidden;
+        position: relative;
 
         img {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          position: absolute;
+          top: 0;
+          left: 0;
+        }
+
+        .nav-button {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          background-color: rgba(255, 255, 255, 0.7);
+          border: none;
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          opacity: 0;
+          transition: opacity 0.3s ease, background-color 0.3s ease;
+          z-index: 5;
+
+          svg {
+            font-size: 18px;
+            color: ${Theme.colors.black};
+          }
+
+          &.prev {
+            left: 8px;
+          }
+
+          &.next {
+            right: 8px;
+          }
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+          }
+        }
+
+        .pagination-dots {
+          position: absolute;
+          bottom: 16px;
+          right: 16px;
+          display: flex;
+          gap: 6px;
+          z-index: 5;
+
+          .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+
+            &.active {
+              background-color: white;
+              transform: scale(1.2);
+            }
+
+            &:hover {
+              background-color: rgba(255, 255, 255, 0.9);
+            }
+          }
+        }
+
+        &:hover {
+          .nav-button {
+            opacity: 1;
+          }
         }
       }
 
