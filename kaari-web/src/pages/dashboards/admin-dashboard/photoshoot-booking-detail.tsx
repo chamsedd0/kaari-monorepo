@@ -257,10 +257,22 @@ const ListContainer = styled.div`
   .list-item {
     display: flex;
     align-items: center;
-    padding: 0.5rem;
+    padding: 0.75rem;
     margin-bottom: 0.5rem;
     background: ${Theme.colors.gray}20;
     border-radius: ${Theme.borders.radius.sm};
+    gap: 1rem;
+    
+    .item-content {
+      flex: 1;
+      font: ${Theme.typography.fonts.mediumM};
+    }
+    
+    .item-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
     
     span {
       flex: 1;
@@ -268,15 +280,68 @@ const ListContainer = styled.div`
     }
     
     button {
-      padding: 0.25rem;
+      padding: 0.5rem;
       margin-left: 0.5rem;
       color: ${Theme.colors.error};
       background: transparent;
       border: none;
       cursor: pointer;
+      border-radius: ${Theme.borders.radius.sm};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
       
       &:hover {
         color: ${Theme.colors.error}dd;
+        background: ${Theme.colors.error}10;
+      }
+    }
+  }
+  
+  .rule-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: ${Theme.colors.gray}20;
+    border-radius: ${Theme.borders.radius.sm};
+    gap: 1rem;
+    
+    .rule-name {
+      flex: 1;
+      font: ${Theme.typography.fonts.mediumM};
+      color: ${Theme.colors.primary};
+    }
+    
+    .rule-controls {
+      display: flex;
+      align-items: center;
+      gap: 2rem; // Increased from 1rem to 2rem for better spacing
+    }
+    
+    .rule-status {
+      font: ${Theme.typography.fonts.smallM};
+      color: ${Theme.colors.gray};
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    .delete-button {
+      padding: 0.5rem;
+      color: ${Theme.colors.error};
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      border-radius: ${Theme.borders.radius.sm};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        color: ${Theme.colors.error}dd;
+        background: ${Theme.colors.error}10;
       }
     }
   }
@@ -332,6 +397,7 @@ const ToggleSwitch = styled.label`
   display: inline-flex;
   align-items: center;
   cursor: pointer;
+  margin: 0 1rem; // Add horizontal margin for better spacing
   
   input {
     display: none;
@@ -339,12 +405,13 @@ const ToggleSwitch = styled.label`
   
   .slider {
     position: relative;
-    width: 3rem;
-    height: 1.5rem;
-    background: ${Theme.colors.gray}40;
+    width: 3.5rem;
+    height: 1.75rem;
+    background: ${Theme.colors.gray}60;
     border-radius: 1rem;
     margin-right: 0.5rem;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    border: 2px solid ${Theme.colors.gray}40;
     
     &:before {
       content: '';
@@ -355,16 +422,22 @@ const ToggleSwitch = styled.label`
       background: white;
       top: 0.125rem;
       left: 0.125rem;
-      transition: all 0.2s ease;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
   }
   
   input:checked + .slider {
     background: ${Theme.colors.secondary};
+    border-color: ${Theme.colors.secondary};
     
     &:before {
-      transform: translateX(1.5rem);
+      transform: translateX(1.75rem);
     }
+  }
+  
+  &:hover .slider {
+    box-shadow: 0 0 0 3px ${Theme.colors.secondary}20;
   }
 `;
 
@@ -484,6 +557,40 @@ const RoomAdderSection = styled.div`
   }
 `;
 
+// Add missing styled components
+const CardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid ${Theme.colors.gray}20;
+  
+  h2 {
+    font: ${Theme.typography.fonts.h2};
+    color: ${Theme.colors.primary};
+    margin: 0;
+  }
+`;
+
+const BackButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: ${Theme.colors.gray}20;
+  color: ${Theme.colors.primary};
+  border: 1px solid ${Theme.colors.gray}40;
+  border-radius: ${Theme.borders.radius.sm};
+  font: ${Theme.typography.fonts.mediumM};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${Theme.colors.gray}30;
+    border-color: ${Theme.colors.gray}60;
+  }
+`;
+
 const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpdateBooking }) => {
   const params = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -505,19 +612,16 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [selectedTeam, setSelectedTeam] = useState<string>('');
+  const [selectedTeam, setSelectedTeam] = useState('');
   const [teamDebugInfo, setTeamDebugInfo] = useState<string>('');
   
-  // Modal states
+  // Add missing state variables
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [propertyId, setPropertyId] = useState('');
   const [images, setImages] = useState<string[]>([]);
-  const [imageInput, setImageInput] = useState('');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [uploading, setUploading] = useState(false);
   
-  // Move property form state to modal only
+  // Property form state
   const [propertyData, setPropertyData] = useState<PropertyFormData>({
     id: '',
     ownerId: '',
@@ -544,7 +648,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     availableFrom: '',
     images: [],
     amenities: [],
-    features: COMMON_FEATURES,
+    features: [], // Start with empty features array instead of COMMON_FEATURES
     status: 'available',
     location: null,
     rooms: [],
@@ -912,7 +1016,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         availableFrom: new Date().toISOString().split('T')[0],
         images: bookingData.images || [],
         amenities: [],
-        features: COMMON_FEATURES,
+        features: [], // Start with empty features array instead of COMMON_FEATURES
         status: 'available',
         location: bookingData.location || null,
         rooms: [],
@@ -971,86 +1075,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       setShowAssignModal(false);
     } catch (error) {
       console.error('Error assigning team:', error);
-    }
-  };
-  
-  const handleAddImage = () => {
-    if (imageInput.trim()) {
-      setImages([...images, imageInput.trim()]);
-      setImageInput('');
-    }
-  };
-  
-  const handleRemoveImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
-  };
-  
-  // Handle file upload
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files);
-      try {
-        setUploading(true);
-        const tempPropertyId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-        const basePath = `public/properties/${tempPropertyId}/images`;
-        
-        const uploadedUrls = await secureUploadMultipleFiles(
-          newFiles,
-          basePath,
-          'property_'
-        );
-        
-        setPropertyData(prev => ({
-          ...prev,
-          images: [...prev.images, ...uploadedUrls]
-        }));
-      } catch (error) {
-        console.error('Error uploading files:', error);
-        alert(`Error uploading files: ${error instanceof Error ? error.message : String(error)}`);
-      } finally {
-        setUploading(false);
-      }
-    }
-  };
-  
-  // Function to remove a selected file
-  const handleRemoveFile = (index: number) => {
-    setImageFiles(prev => prev.filter((_, i) => i !== index));
-  };
-  
-  // Function to upload files
-  const handleUploadFiles = async () => {
-    if (imageFiles.length === 0) return;
-    
-    try {
-      setUploading(true);
-      
-      // For temporary property ID use a timestamp + random string
-      const tempPropertyId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      // Use a public folder path to avoid unauthorized path error
-      const basePath = `public/properties/${tempPropertyId}/images`;
-      
-      // Upload files using secure upload
-      const uploadedUrls = await secureUploadMultipleFiles(
-        imageFiles,
-        basePath,
-        'property_'
-      );
-      
-      // Update property data with the new image URLs
-      setPropertyData(prev => ({
-        ...prev,
-        images: [...prev.images, ...uploadedUrls]
-      }));
-      
-      // Clear the selected files after successful upload
-      setImageFiles([]);
-      
-    } catch (error) {
-      console.error('Error uploading files:', error);
-      alert(`Error uploading files: ${error instanceof Error ? error.message : String(error)}`);
-    } finally {
-      setUploading(false);
     }
   };
   
@@ -1212,6 +1236,21 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       ...prev,
       [name]: name === 'area' ? parseFloat(value) || 0 : value
     }));
+  };
+  
+  // Add missing file handler
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setImageFiles(prev => [...prev, ...files].slice(0, 10)); // Limit to 10 files
+      
+      // Create preview URLs
+      const newImageUrls = files.map(file => URL.createObjectURL(file));
+      setPropertyData(prev => ({
+        ...prev,
+        images: [...prev.images, ...newImageUrls].slice(0, 10)
+      }));
+    }
   };
   
   const handleCompleteBooking = async () => {
@@ -1461,7 +1500,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       alert(`Property created with ${allImages.length} images and booking completed successfully!`);
       
       // Update UI
-      setShowCompleteModal(false);
       loadData(bookingId);
       onUpdateBooking();
       
@@ -1642,16 +1680,849 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                     }
                     setShowCompleteModal(true);
                   }}>
-                    <FaCheck /> Complete Booking
+                <FaCheck /> Complete Booking
               </Button>
             )}
             
+            {booking.status === 'completed' && (
+              <div className="completed-status">
+                <FaCheck style={{ color: 'green' }} />
+                <span>Booking Completed</span>
+                {booking.propertyId && (
+                  <p>Property ID: {booking.propertyId}</p>
+                )}
+              </div>
+            )}
+            
             {(booking.status === 'pending' || booking.status === 'assigned') && (
-                  <Button onClick={handleCancelBooking} className="cancel-button">
-                Cancel Booking
+              <Button className="cancel-button" onClick={handleCancelBooking}>
+                <FaBan /> Cancel Booking
               </Button>
             )}
           </div>
+          
+          {/* Property Creation Form - Show directly on page when status is 'assigned' */}
+          {booking.status === 'assigned' && (
+            <div style={{ marginTop: '2rem' }}>
+              <h3>Complete Booking & Create Property</h3>
+              
+              <PropertyFormContainer>
+                {/* Basic Information */}
+                <div className="section-title">Basic Information</div>
+                <GridContainer>
+                  <StyledFormGroup>
+                  <Label>Title*</Label>
+                    <Input 
+                      type="text" 
+                      value={propertyData.title} 
+                    onChange={(e) => setPropertyData({ ...propertyData, title: e.target.value })}
+                    placeholder="Enter property title"
+                    />
+                  </StyledFormGroup>
+                  
+                  <StyledFormGroup>
+                    <Label>Property Type*</Label>
+                    <Select 
+                      value={propertyData.propertyType} 
+                      onChange={(e) => setPropertyData({ ...propertyData, propertyType: e.target.value as PropertyFormData['propertyType'] })}
+                    >
+                      <option value="apartment">Apartment</option>
+                      <option value="house">House</option>
+                      <option value="studio">Studio</option>
+                      <option value="room">Room</option>
+                      <option value="villa">Villa</option>
+                      <option value="penthouse">Penthouse</option>
+                      <option value="townhouse">Townhouse</option>
+                    </Select>
+                  </StyledFormGroup>
+                  
+                  <StyledFormGroup>
+                    <Label>Status*</Label>
+                    <Select 
+                      value={propertyData.status} 
+                      onChange={(e) => setPropertyData({ ...propertyData, status: e.target.value as 'available' | 'occupied' })}
+                    >
+                      <option value="available">Available</option>
+                      <option value="occupied">Occupied</option>
+                    </Select>
+                  </StyledFormGroup>
+                </GridContainer>
+                
+                <StyledFormGroup>
+                  <Label>Description*</Label>
+                  <Input
+                    as="textarea"
+                    value={propertyData.description}
+                    onChange={(e) => setPropertyData({ ...propertyData, description: e.target.value })}
+                    placeholder="Enter property description"
+                  />
+                </StyledFormGroup>
+                
+                {/* Pricing Information */}
+                <div className="section-title">Pricing Information</div>
+                <GridContainer>
+                  <StyledFormGroup>
+                    <Label>Monthly Price*</Label>
+                    <Input 
+                      type="number" 
+                      value={propertyData.price} 
+                      onChange={(e) => setPropertyData({
+                        ...propertyData,
+                        price: parseFloat(e.target.value) || 0
+                      })}
+                      placeholder="Monthly Price"
+                    />
+                  </StyledFormGroup>
+                  
+                  <StyledFormGroup>
+                    <Label>Deposit</Label>
+                    <Input 
+                      type="number" 
+                      value={propertyData.deposit} 
+                      onChange={(e) => setPropertyData({
+                        ...propertyData,
+                        deposit: parseFloat(e.target.value) || 0
+                      })}
+                      placeholder="Deposit"
+                    />
+                  </StyledFormGroup>
+                  
+                  <StyledFormGroup>
+                    <Label>Service Fee</Label>
+                    <Input 
+                      type="number" 
+                      value={propertyData.serviceFee} 
+                      onChange={(e) => setPropertyData({
+                        ...propertyData,
+                        serviceFee: parseFloat(e.target.value) || 0
+                      })}
+                      placeholder="Service Fee"
+                    />
+                  </StyledFormGroup>
+                </GridContainer>
+                
+                {/* Rooms */}
+                <div className="section-title">Rooms</div>
+                <StyledFormGroup>
+                  <RoomAdderSection>
+                    <div className="room-form">
+                    <Select 
+                        value={roomFormData.type}
+                        onChange={(e) => setRoomFormData({
+                          ...roomFormData,
+                          type: e.target.value as typeof roomFormData.type
+                        })}
+                      >
+                        {ROOM_TYPES.map(type => (
+                          <option key={type.value} value={type.value}>{type.label}</option>
+                        ))}
+                    </Select>
+                      <Input
+                        type="number"
+                        value={roomFormData.area}
+                        onChange={(e) => setRoomFormData({
+                          ...roomFormData,
+                          area: parseFloat(e.target.value) || 0
+                        })}
+                        placeholder="Size (m²)"
+                      />
+                      <AddButton 
+                        onClick={handleAddRoom}
+                        disabled={roomFormData.area <= 0}
+                      >
+                        <FaPlus /> Add Room
+                      </AddButton>
+                    </div>
+
+                    <div className="rooms-list">
+                      {propertyData.rooms.map((room, index) => (
+                        <div key={index} className="room-item">
+                          <div className="room-info">
+                            <span className="room-type">
+                              {ROOM_TYPES.find(type => type.value === room.type)?.label || room.type}
+                            </span>
+                            <span className="room-size">{room.area} m²</span>
+                          </div>
+                          <button 
+                            className="delete-button"
+                            onClick={() => handleRemoveRoom(index)}
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </RoomAdderSection>
+                </StyledFormGroup>
+                
+                {/* Property Summary */}
+                <div className="section-title">Property Summary</div>
+                <StyledFormGroup>
+                  <GridContainer>
+                    <div>
+                      <Label>Total Bedrooms</Label>
+                      <div className="summary-value">
+                        {propertyData.rooms.filter(room => room.type === 'bedroom').length}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Total Bathrooms</Label>
+                      <div className="summary-value">
+                        {propertyData.rooms.filter(room => room.type === 'bathroom').length}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Total Area</Label>
+                      <div className="summary-value">
+                        {propertyData.rooms.reduce((total, room) => total + room.area, 0)} m²
+                      </div>
+                    </div>
+                  </GridContainer>
+                </StyledFormGroup>
+                
+                {/* Housing Preferences */}
+                <div className="section-title">Housing Preferences</div>
+                <StyledFormGroup>
+                  <Label>Housing Preference</Label>
+                  <Select 
+                    value={propertyData.housingPreference} 
+                    onChange={(e) => setPropertyData({ ...propertyData, housingPreference: e.target.value })}
+                  >
+                    <option value="">No Specific Preference</option>
+                    <option value="womenOnly">Women Only</option>
+                    <option value="familiesOnly">Families Only</option>
+                  </Select>
+                </StyledFormGroup>
+                
+                {/* Features */}
+                <div className="section-title">Features</div>
+                <StyledFormGroup>
+                  <div className="subsection-title">Included Services</div>
+                  <CheckboxGrid>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.features.includes('water')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: [...propertyData.features, 'water'] 
+                            });
+                          } else {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: propertyData.features.filter(f => f !== 'water') 
+                            });
+                          }
+                        }}
+                      />
+                      <span>Water</span>
+                    </CheckboxLabel>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.features.includes('electricity')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: [...propertyData.features, 'electricity'] 
+                            });
+                          } else {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: propertyData.features.filter(f => f !== 'electricity') 
+                            });
+                          }
+                        }}
+                      />
+                      <span>Electricity</span>
+                    </CheckboxLabel>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.features.includes('wifi')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: [...propertyData.features, 'wifi'] 
+                            });
+                          } else {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: propertyData.features.filter(f => f !== 'wifi') 
+                            });
+                          }
+                        }}
+                      />
+                      <span>Wi-Fi</span>
+                    </CheckboxLabel>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.features.includes('gas')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: [...propertyData.features, 'gas'] 
+                            });
+                          } else {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: propertyData.features.filter(f => f !== 'gas') 
+                            });
+                          }
+                        }}
+                      />
+                      <span>Gas</span>
+                    </CheckboxLabel>
+                  </CheckboxGrid>
+                </StyledFormGroup>
+
+                <StyledFormGroup>
+                  <div className="subsection-title">Property Features</div>
+                  <CheckboxGrid>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.features.includes('balcony')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: [...propertyData.features, 'balcony'] 
+                            });
+                          } else {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: propertyData.features.filter(f => f !== 'balcony') 
+                            });
+                          }
+                        }}
+                      />
+                      <span>Balcony</span>
+                    </CheckboxLabel>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.features.includes('central-heating')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: [...propertyData.features, 'central-heating'] 
+                            });
+                          } else {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: propertyData.features.filter(f => f !== 'central-heating') 
+                            });
+                          }
+                        }}
+                      />
+                      <span>Central Heating</span>
+                    </CheckboxLabel>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.features.includes('parking-space')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: [...propertyData.features, 'parking-space'] 
+                            });
+                          } else {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: propertyData.features.filter(f => f !== 'parking-space') 
+                            });
+                          }
+                        }}
+                      />
+                      <span>Parking Space</span>
+                    </CheckboxLabel>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.features.includes('air-conditioning')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: [...propertyData.features, 'air-conditioning'] 
+                            });
+                          } else {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: propertyData.features.filter(f => f !== 'air-conditioning') 
+                            });
+                          }
+                        }}
+                      />
+                      <span>Air Conditioning</span>
+                    </CheckboxLabel>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.features.includes('wooden-floors')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: [...propertyData.features, 'wooden-floors'] 
+                            });
+                          } else {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: propertyData.features.filter(f => f !== 'wooden-floors') 
+                            });
+                          }
+                        }}
+                      />
+                      <span>Wooden Floors</span>
+                    </CheckboxLabel>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.features.includes('elevator')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: [...propertyData.features, 'elevator'] 
+                            });
+                          } else {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: propertyData.features.filter(f => f !== 'elevator') 
+                            });
+                          }
+                        }}
+                      />
+                      <span>Elevator</span>
+                    </CheckboxLabel>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.features.includes('swimming-pool')}    
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: [...propertyData.features, 'swimming-pool'] 
+                            });
+                          } else {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: propertyData.features.filter(f => f !== 'swimming-pool') 
+                            });
+                          }
+                        }}
+                      />
+                      <span>Swimming Pool</span>
+                    </CheckboxLabel>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.features.includes('fireplace')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: [...propertyData.features, 'fireplace'] 
+                            });
+                          } else {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: propertyData.features.filter(f => f !== 'fireplace') 
+                            });
+                          }
+                        }}
+                      />
+                      <span>Fireplace</span>
+                    </CheckboxLabel>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.features.includes('accessible')}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: [...propertyData.features, 'accessible'] 
+                            });
+                          } else {
+                            setPropertyData({ 
+                              ...propertyData, 
+                              features: propertyData.features.filter(f => f !== 'accessible') 
+                            });
+                          }
+                        }}
+                      />
+                      <span>Accessible</span>
+                    </CheckboxLabel>
+                  </CheckboxGrid>
+                </StyledFormGroup>
+
+                <StyledFormGroup>
+                  <div className="subsection-title">Allowed Rules</div>
+                  <CheckboxGrid>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.petsAllowed}
+                        onChange={(e) => setPropertyData({ ...propertyData, petsAllowed: e.target.checked })}
+                      />
+                      <span>Pets Allowed</span>
+                    </CheckboxLabel>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={propertyData.smokingAllowed}
+                        onChange={(e) => setPropertyData({ ...propertyData, smokingAllowed: e.target.checked })}
+                      />
+                      <span>Smoking Allowed</span>
+                    </CheckboxLabel>
+                    {propertyData.rules.map((rule, index) => (
+                      <CheckboxLabel key={rule.name}>
+                        <input
+                          type="checkbox"
+                          checked={rule.allowed}
+                          onChange={(e) => handleRuleToggle(index)}
+                        />
+                        {rule.name}
+                      </CheckboxLabel>
+                    ))}
+                  </CheckboxGrid>
+                </StyledFormGroup>
+                
+                {/* Availability */}
+                <div className="section-title">Availability</div>
+                <GridContainer>
+                  <StyledFormGroup>
+                    <Label>Available From*</Label>
+                    <Input 
+                      type="date" 
+                      value={propertyData.availableFrom} 
+                      onChange={(e) => setPropertyData({ ...propertyData, availableFrom: e.target.value })}
+                    />
+                  </StyledFormGroup>
+                  
+                  <StyledFormGroup>
+                    <Label>Minimum Stay</Label>
+                    <Input 
+                      type="text" 
+                      value={propertyData.minstay} 
+                      onChange={(e) => setPropertyData({ ...propertyData, minstay: e.target.value })}
+                      placeholder="e.g., 6 months"
+                    />
+                  </StyledFormGroup>
+                </GridContainer>
+                
+                {/* Address */}
+                <div className="section-title">Address Information</div>
+                <StyledFormGroup>
+                  <Label>Street Address*</Label>
+                    <Input 
+                      type="text" 
+                      value={propertyData.address.street} 
+                    onChange={(e) => setPropertyData({
+                      ...propertyData,
+                      address: { ...propertyData.address, street: e.target.value }
+                    })}
+                    placeholder="Street"
+                  />
+                </StyledFormGroup>
+                
+                <GridContainer>
+                  <StyledFormGroup>
+                    <Label>City*</Label>
+                    <Input 
+                      type="text" 
+                      value={propertyData.address.city} 
+                      onChange={(e) => setPropertyData({
+                        ...propertyData,
+                        address: { ...propertyData.address, city: e.target.value }
+                      })}
+                      placeholder="City"
+                    />
+                  </StyledFormGroup>
+                  
+                  <StyledFormGroup>
+                    <Label>State/Region</Label>
+                    <Input 
+                      type="text" 
+                      value={propertyData.address.state} 
+                      onChange={(e) => setPropertyData({
+                        ...propertyData,
+                        address: { ...propertyData.address, state: e.target.value }
+                      })}
+                      placeholder="State"
+                    />
+                  </StyledFormGroup>
+                  
+                  <StyledFormGroup>
+                    <Label>ZIP Code</Label>
+                    <Input 
+                      type="text" 
+                      value={propertyData.address.zipCode} 
+                      onChange={(e) => setPropertyData({
+                        ...propertyData,
+                        address: { ...propertyData.address, zipCode: e.target.value }
+                      })}
+                      placeholder="ZIP Code"
+                    />
+                  </StyledFormGroup>
+                  
+                  <StyledFormGroup>
+                    <Label>Country*</Label>
+                    <Input 
+                      type="text" 
+                      value={propertyData.address.country} 
+                      onChange={(e) => setPropertyData({
+                        ...propertyData,
+                        address: { ...propertyData.address, country: e.target.value }
+                      })}
+                      placeholder="Country"
+                    />
+                  </StyledFormGroup>
+                </GridContainer>
+                
+                {/* Location */}
+                <div className="section-title">Location Coordinates</div>
+                <GridContainer>
+                  <StyledFormGroup>
+                    <Label>Latitude</Label>
+                    <Input 
+                      type="number" 
+                      value={propertyData.location?.lat || ''} 
+                      onChange={(e) => {
+                        const currentLat = parseFloat(e.target.value) || 0;
+                        const currentLng = propertyData.location?.lng || 0;
+                        setPropertyData({
+                          ...propertyData,
+                          location: { lat: currentLat, lng: currentLng }
+                        });
+                      }}
+                      placeholder="Latitude"
+                    />
+                  </StyledFormGroup>
+                  
+                  <StyledFormGroup>
+                    <Label>Longitude</Label>
+                    <Input 
+                      type="number" 
+                      value={propertyData.location?.lng || ''} 
+                      onChange={(e) => {
+                        const currentLat = propertyData.location?.lat || 0;
+                        const currentLng = parseFloat(e.target.value) || 0;
+                        setPropertyData({
+                          ...propertyData,
+                          location: { lat: currentLat, lng: currentLng }
+                        });
+                      }}
+                      placeholder="Longitude"
+                    />
+                  </StyledFormGroup>
+                </GridContainer>
+                
+                {/* Amenities */}
+                <div className="section-title">Amenities</div>
+                <StyledFormGroup>
+                  <CheckboxGrid>
+                    {COMMON_AMENITIES.map((amenity) => (
+                      <CheckboxLabel key={amenity}>
+                        <input
+                          type="checkbox"
+                          checked={propertyData.amenities.includes(amenity)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setPropertyData({
+                                ...propertyData,
+                                amenities: [...propertyData.amenities, amenity]
+                              });
+                            } else {
+                              setPropertyData({
+                                ...propertyData,
+                                amenities: propertyData.amenities.filter(a => a !== amenity)
+                              });
+                            }
+                          }}
+                        />
+                        {amenity}
+                      </CheckboxLabel>
+                    ))}
+                  </CheckboxGrid>
+                  
+                  <CustomInputSection>
+                    <Label>Add Custom Amenity</Label>
+                    <div className="input-row">
+                      <Input 
+                        type="text" 
+                        value={amenityInput} 
+                        onChange={(e) => setAmenityInput(e.target.value)}
+                        placeholder="Enter custom amenity"
+                      />
+                      <AddButton onClick={addAmenity}>
+                        <FaPlus /> Add
+                      </AddButton>
+                  </div>
+                    {propertyData.amenities.filter(a => !COMMON_AMENITIES.includes(a)).length > 0 && (
+                      <ListContainer>
+                        {propertyData.amenities
+                          .filter(a => !COMMON_AMENITIES.includes(a))
+                          .map((amenity, index) => (
+                            <div key={index} className="list-item">
+                              <span>{amenity}</span>
+                              <button onClick={() => removeAmenity(propertyData.amenities.indexOf(amenity))}>
+                                <FaTimes />
+                              </button>
+                            </div>
+                          ))}
+                      </ListContainer>
+                    )}
+                  </CustomInputSection>
+                </StyledFormGroup>
+                
+                {/* Rules */}
+                <div className="section-title">Rules</div>
+                <StyledFormGroup>
+                  <div className="rules-section">
+                    <GridContainer>
+                      <Input
+                        type="text"
+                        value={ruleInput}
+                        onChange={(e) => setRuleInput(e.target.value)}
+                        placeholder="Add new rule"
+                      />
+                      <AddButton onClick={addRule}>
+                        <FaPlus /> Add Rule
+                      </AddButton>
+                    </GridContainer>
+                    <ListContainer>
+                      {propertyData.rules.map((rule, index) => (
+                        <div key={index} className="rule-item">
+                          <div className="rule-name">{rule.name}</div>
+                          <div className="rule-controls">
+                            <div className="rule-status">
+                              {rule.allowed ? 'Allowed' : 'Not Allowed'}
+                            </div>
+                            <ToggleSwitch>
+                              <input
+                                type="checkbox"
+                                checked={rule.allowed}
+                                onChange={() => handleRuleToggle(index)}
+                              />
+                              <span className="slider"></span>
+                            </ToggleSwitch>
+                            <button 
+                              className="delete-button"
+                              onClick={() => removeRule(index)}
+                              title="Delete rule"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </ListContainer>
+                  </div>
+                </StyledFormGroup>
+                
+                {/* Nearby Places */}
+                <div className="section-title">Nearby Places</div>
+                <StyledFormGroup>
+                  <GridContainer>
+                    <Input
+                      type="text"
+                      value={placeNameInput}
+                      onChange={(e) => setPlaceNameInput(e.target.value)}
+                      placeholder="Place name"
+                    />
+                    <Input
+                      type="text"
+                      value={placeDistanceInput}
+                      onChange={(e) => setPlaceDistanceInput(e.target.value)}
+                      placeholder="Time distance"
+                    />
+                    <AddButton onClick={addNearbyPlace}>
+                      <FaPlus /> Add Place
+                    </AddButton>
+                  </GridContainer>
+                  <ListContainer>
+                    {propertyData.nearbyPlaces.map((place, index) => (
+                      <div key={index} className="list-item">
+                        <span>{place.name} - {place.timeDistance}</span>
+                        <button onClick={() => removeNearbyPlace(index)}>
+                          <FaTrash />
+                        </button>
+                      </div>
+                    ))}
+                  </ListContainer>
+                </StyledFormGroup>
+                
+                {/* Images */}
+                <div className="section-title">Images</div>
+                <StyledFormGroup>
+                    <Input 
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleFileSelect}
+                  />
+                  <p className="helper-text">Upload property images (max 10 images)</p>
+                  {propertyData.images.length > 0 && (
+                    <ImagePreviewContainer>
+                      {propertyData.images.map((image, index) => (
+                        <div key={index} className="image-preview">
+                          <img src={image} alt={`Property ${index + 1}`} />
+                          <button onClick={() => {
+                            setPropertyData({
+                              ...propertyData,
+                              images: propertyData.images.filter((_, i) => i !== index)
+                            });
+                          }}>
+                            <FaTrash />
+                          </button>
+                    </div>
+                      ))}
+                    </ImagePreviewContainer>
+                  )}
+                </StyledFormGroup>
+                
+                {/* Furnished Status */}
+                <div className="section-title">Additional Information</div>
+                <StyledFormGroup>
+                  <CheckboxLabel>
+                    <input
+                      type="checkbox"
+                      checked={propertyData.isFurnished}
+                      onChange={(e) => setPropertyData({
+                        ...propertyData,
+                        isFurnished: e.target.checked
+                      })}
+                    />
+                    Furnished
+                  </CheckboxLabel>
+                </StyledFormGroup>
+                
+                {/* Submit Button */}
+                <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button 
+                    onClick={handleCompleteBooking}
+                    disabled={!propertyData.title || !propertyData.description || !propertyData.address.street}
+                    style={{ backgroundColor: Theme.colors.primary }}
+                  >
+                    <FaCheck /> Complete Booking & Create Property
+                  </Button>
+                </div>
+              </PropertyFormContainer>
+            </div>
+          )}
             </>
           )}
         </StyledCardContent>
@@ -1717,707 +2588,9 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
           </ModalContent>
         </Modal>
       )}
-      
-      {/* Complete Booking Modal */}
-      {showCompleteModal && (
-        <Modal>
-          <ModalContent>
-            <ModalHeader>
-              <ModalTitle>Complete Booking & Create Property</ModalTitle>
-              <CloseButton onClick={() => setShowCompleteModal(false)}>&times;</CloseButton>
-            </ModalHeader>
-            
-            <PropertyFormContainer>
-              <h3>Property Details</h3>
-              
-              {/* Basic Information */}
-              <div className="section-title">Basic Information</div>
-              <GridContainer>
-                <StyledFormGroup>
-                <Label>Title*</Label>
-                  <Input 
-                    type="text" 
-                    value={propertyData.title} 
-                  onChange={(e) => setPropertyData({ ...propertyData, title: e.target.value })}
-                  placeholder="Enter property title"
-                  />
-                </StyledFormGroup>
-                
-                <StyledFormGroup>
-                  <Label>Property Type*</Label>
-                  <Select 
-                    value={propertyData.propertyType} 
-                    onChange={(e) => setPropertyData({ ...propertyData, propertyType: e.target.value as PropertyFormData['propertyType'] })}
-                  >
-                    <option value="apartment">Apartment</option>
-                    <option value="house">House</option>
-                    <option value="studio">Studio</option>
-                    <option value="room">Room</option>
-                    <option value="villa">Villa</option>
-                    <option value="penthouse">Penthouse</option>
-                    <option value="townhouse">Townhouse</option>
-                  </Select>
-                </StyledFormGroup>
-                
-                <StyledFormGroup>
-                  <Label>Status*</Label>
-                  <Select 
-                    value={propertyData.status} 
-                    onChange={(e) => setPropertyData({ ...propertyData, status: e.target.value as 'available' | 'occupied' })}
-                  >
-                    <option value="available">Available</option>
-                    <option value="occupied">Occupied</option>
-                  </Select>
-                </StyledFormGroup>
-              </GridContainer>
-              
-              <StyledFormGroup>
-                <Label>Description*</Label>
-                <Input
-                  as="textarea"
-                  value={propertyData.description}
-                  onChange={(e) => setPropertyData({ ...propertyData, description: e.target.value })}
-                  placeholder="Enter property description"
-                />
-              </StyledFormGroup>
-              
-              {/* Pricing Information */}
-              <div className="section-title">Pricing Information</div>
-              <GridContainer>
-                <StyledFormGroup>
-                  <Label>Monthly Price*</Label>
-                  <Input 
-                    type="number" 
-                    value={propertyData.price} 
-                    onChange={(e) => setPropertyData({
-                      ...propertyData,
-                      price: parseFloat(e.target.value) || 0
-                    })}
-                    placeholder="Monthly Price"
-                  />
-                </StyledFormGroup>
-                
-                <StyledFormGroup>
-                  <Label>Deposit</Label>
-                  <Input 
-                    type="number" 
-                    value={propertyData.deposit} 
-                    onChange={(e) => setPropertyData({
-                      ...propertyData,
-                      deposit: parseFloat(e.target.value) || 0
-                    })}
-                    placeholder="Deposit"
-                  />
-                </StyledFormGroup>
-                
-                <StyledFormGroup>
-                  <Label>Service Fee</Label>
-                  <Input 
-                    type="number" 
-                    value={propertyData.serviceFee} 
-                    onChange={(e) => setPropertyData({
-                      ...propertyData,
-                      serviceFee: parseFloat(e.target.value) || 0
-                    })}
-                    placeholder="Service Fee"
-                  />
-                </StyledFormGroup>
-              </GridContainer>
-              
-              {/* Rooms */}
-              <div className="section-title">Rooms</div>
-              <StyledFormGroup>
-                <RoomAdderSection>
-                  <div className="room-form">
-                  <Select 
-                      value={roomFormData.type}
-                      onChange={(e) => setRoomFormData({
-                        ...roomFormData,
-                        type: e.target.value as typeof roomFormData.type
-                      })}
-                    >
-                      {ROOM_TYPES.map(type => (
-                        <option key={type.value} value={type.value}>{type.label}</option>
-                      ))}
-                  </Select>
-                    <Input
-                      type="number"
-                      value={roomFormData.area}
-                      onChange={(e) => setRoomFormData({
-                        ...roomFormData,
-                        area: parseFloat(e.target.value) || 0
-                      })}
-                      placeholder="Size (m²)"
-                    />
-                    <AddButton 
-                      onClick={handleAddRoom}
-                      disabled={roomFormData.area <= 0}
-                    >
-                      <FaPlus /> Add Room
-                    </AddButton>
-                  </div>
-
-                  <div className="rooms-list">
-                    {propertyData.rooms.map((room, index) => (
-                      <div key={index} className="room-item">
-                        <div className="room-info">
-                          <span className="room-type">
-                            {ROOM_TYPES.find(type => type.value === room.type)?.label || room.type}
-                          </span>
-                          <span className="room-size">{room.area} m²</span>
-                        </div>
-                        <button 
-                          className="delete-button"
-                          onClick={() => handleRemoveRoom(index)}
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </RoomAdderSection>
-              </StyledFormGroup>
-              
-              {/* Property Summary */}
-              <div className="section-title">Property Summary</div>
-              <StyledFormGroup>
-                <GridContainer>
-                  <div>
-                    <Label>Total Bedrooms</Label>
-                    <div className="summary-value">
-                      {propertyData.rooms.filter(room => room.type === 'bedroom').length}
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Total Bathrooms</Label>
-                    <div className="summary-value">
-                      {propertyData.rooms.filter(room => room.type === 'bathroom').length}
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Total Area</Label>
-                    <div className="summary-value">
-                      {propertyData.rooms.reduce((total, room) => total + room.area, 0)} m²
-                    </div>
-                  </div>
-                </GridContainer>
-              </StyledFormGroup>
-              
-              {/* Housing Preferences */}
-              <div className="section-title">Housing Preferences</div>
-              <StyledFormGroup>
-                <Label>Housing Preference</Label>
-                <Select 
-                  value={propertyData.housingPreference} 
-                  onChange={(e) => setPropertyData({ ...propertyData, housingPreference: e.target.value })}
-                >
-                  <option value="">No Specific Preference</option>
-                  <option value="womenOnly">Women Only</option>
-                  <option value="familiesOnly">Families Only</option>
-                </Select>
-              </StyledFormGroup>
-              
-              {/* Features */}
-              <div className="section-title">Features</div>
-              <StyledFormGroup>
-                <div className="subsection-title">Included Services</div>
-                <CheckboxGrid>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.features.includes('water')}
-                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'water'] })}
-                    />
-                    <span>Water</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.features.includes('electricity')}
-                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'electricity'] })}
-                    />
-                    <span>Electricity</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.features.includes('wifi')}
-                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'wifi'] })}
-                    />
-                    <span>Wi-Fi</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.features.includes('gas')}
-                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'gas'] })}
-                    />
-                    <span>Gas</span>
-                  </CheckboxLabel>
-                </CheckboxGrid>
-              </StyledFormGroup>
-
-              <StyledFormGroup>
-                <div className="subsection-title">Property Features</div>
-                <CheckboxGrid>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.features.includes('balcony')}
-                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'balcony'] })}
-                    />
-                    <span>Balcony</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.features.includes('central-heating')}
-                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'central-heating'] })}
-                    />
-                    <span>Central Heating</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.features.includes('parking-space')}
-                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'parking-space'] })}
-                    />
-                    <span>Parking Space</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.features.includes('air-conditioning')}
-                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'air-conditioning'] })}
-                    />
-                    <span>Air Conditioning</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.features.includes('wooden-floors')}
-                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'wooden-floors'] })}
-                    />
-                    <span>Wooden Floors</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.features.includes('elevator')}
-                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'elevator'] })}
-                    />
-                    <span>Elevator</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.features.includes('swimming-pool')}    
-                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'swimming-pool'] })}
-                    />
-                    <span>Swimming Pool</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.features.includes('fireplace')}
-                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'fireplace'] })}
-                    />
-                    <span>Fireplace</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.features.includes('accessible')}
-                      onChange={(e) => setPropertyData({ ...propertyData, features: [...propertyData.features, 'accessible'] })}
-                    />
-                    <span>Accessible</span>
-                  </CheckboxLabel>
-                </CheckboxGrid>
-              </StyledFormGroup>
-
-              <StyledFormGroup>
-                <div className="subsection-title">Allowed Rules</div>
-                <CheckboxGrid>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.petsAllowed}
-                      onChange={(e) => setPropertyData({ ...propertyData, petsAllowed: e.target.checked })}
-                    />
-                    <span>Pets Allowed</span>
-                  </CheckboxLabel>
-                  <CheckboxLabel>
-                    <input
-                      type="checkbox"
-                      checked={propertyData.smokingAllowed}
-                      onChange={(e) => setPropertyData({ ...propertyData, smokingAllowed: e.target.checked })}
-                    />
-                    <span>Smoking Allowed</span>
-                  </CheckboxLabel>
-                  {propertyData.rules.map((rule, index) => (
-                    <CheckboxLabel key={rule.name}>
-                      <input
-                        type="checkbox"
-                        checked={rule.allowed}
-                        onChange={(e) => handleRuleToggle(index)}
-                      />
-                      {rule.name}
-                    </CheckboxLabel>
-                  ))}
-                </CheckboxGrid>
-              </StyledFormGroup>
-              
-              {/* Availability */}
-              <div className="section-title">Availability</div>
-              <GridContainer>
-                <StyledFormGroup>
-                  <Label>Available From*</Label>
-                  <Input 
-                    type="date" 
-                    value={propertyData.availableFrom} 
-                    onChange={(e) => setPropertyData({ ...propertyData, availableFrom: e.target.value })}
-                  />
-                </StyledFormGroup>
-                
-                <StyledFormGroup>
-                  <Label>Minimum Stay</Label>
-                  <Input 
-                    type="text" 
-                    value={propertyData.minstay} 
-                    onChange={(e) => setPropertyData({ ...propertyData, minstay: e.target.value })}
-                    placeholder="e.g., 6 months"
-                  />
-                </StyledFormGroup>
-              </GridContainer>
-              
-              {/* Address */}
-              <div className="section-title">Address Information</div>
-              <StyledFormGroup>
-                <Label>Street Address*</Label>
-                  <Input 
-                    type="text" 
-                    value={propertyData.address.street} 
-                  onChange={(e) => setPropertyData({
-                    ...propertyData,
-                    address: { ...propertyData.address, street: e.target.value }
-                  })}
-                  placeholder="Street"
-                />
-              </StyledFormGroup>
-              
-              <GridContainer>
-                <StyledFormGroup>
-                  <Label>City*</Label>
-                  <Input 
-                    type="text" 
-                    value={propertyData.address.city} 
-                    onChange={(e) => setPropertyData({
-                      ...propertyData,
-                      address: { ...propertyData.address, city: e.target.value }
-                    })}
-                    placeholder="City"
-                  />
-                </StyledFormGroup>
-                
-                <StyledFormGroup>
-                  <Label>State/Region</Label>
-                  <Input 
-                    type="text" 
-                    value={propertyData.address.state} 
-                    onChange={(e) => setPropertyData({
-                      ...propertyData,
-                      address: { ...propertyData.address, state: e.target.value }
-                    })}
-                    placeholder="State"
-                  />
-                </StyledFormGroup>
-                
-                <StyledFormGroup>
-                  <Label>ZIP Code</Label>
-                  <Input 
-                    type="text" 
-                    value={propertyData.address.zipCode} 
-                    onChange={(e) => setPropertyData({
-                      ...propertyData,
-                      address: { ...propertyData.address, zipCode: e.target.value }
-                    })}
-                    placeholder="ZIP Code"
-                  />
-                </StyledFormGroup>
-                
-                <StyledFormGroup>
-                  <Label>Country*</Label>
-                  <Input 
-                    type="text" 
-                    value={propertyData.address.country} 
-                    onChange={(e) => setPropertyData({
-                      ...propertyData,
-                      address: { ...propertyData.address, country: e.target.value }
-                    })}
-                    placeholder="Country"
-                  />
-                </StyledFormGroup>
-              </GridContainer>
-              
-              {/* Location */}
-              <div className="section-title">Location Coordinates</div>
-              <GridContainer>
-                <StyledFormGroup>
-                  <Label>Latitude</Label>
-                  <Input 
-                    type="number" 
-                    value={propertyData.location?.lat || ''} 
-                    onChange={(e) => {
-                      const currentLat = parseFloat(e.target.value) || 0;
-                      const currentLng = propertyData.location?.lng || 0;
-                      setPropertyData({
-                        ...propertyData,
-                        location: { lat: currentLat, lng: currentLng }
-                      });
-                    }}
-                    placeholder="Latitude"
-                  />
-                </StyledFormGroup>
-                
-                <StyledFormGroup>
-                  <Label>Longitude</Label>
-                  <Input 
-                    type="number" 
-                    value={propertyData.location?.lng || ''} 
-                    onChange={(e) => {
-                      const currentLat = propertyData.location?.lat || 0;
-                      const currentLng = parseFloat(e.target.value) || 0;
-                      setPropertyData({
-                        ...propertyData,
-                        location: { lat: currentLat, lng: currentLng }
-                      });
-                    }}
-                    placeholder="Longitude"
-                  />
-                </StyledFormGroup>
-              </GridContainer>
-              
-              {/* Amenities */}
-              <div className="section-title">Amenities</div>
-              <StyledFormGroup>
-                <CheckboxGrid>
-                  {COMMON_AMENITIES.map((amenity) => (
-                    <CheckboxLabel key={amenity}>
-                      <input
-                        type="checkbox"
-                        checked={propertyData.amenities.includes(amenity)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setPropertyData({
-                              ...propertyData,
-                              amenities: [...propertyData.amenities, amenity]
-                            });
-                          } else {
-                            setPropertyData({
-                              ...propertyData,
-                              amenities: propertyData.amenities.filter(a => a !== amenity)
-                            });
-                          }
-                        }}
-                      />
-                      {amenity}
-                    </CheckboxLabel>
-                  ))}
-                </CheckboxGrid>
-                
-                <CustomInputSection>
-                  <Label>Add Custom Amenity</Label>
-                  <div className="input-row">
-                    <Input 
-                      type="text" 
-                      value={amenityInput} 
-                      onChange={(e) => setAmenityInput(e.target.value)}
-                      placeholder="Enter custom amenity"
-                    />
-                    <AddButton onClick={addAmenity}>
-                      <FaPlus /> Add
-                    </AddButton>
-                </div>
-                  {propertyData.amenities.filter(a => !COMMON_AMENITIES.includes(a)).length > 0 && (
-                    <ListContainer>
-                      {propertyData.amenities
-                        .filter(a => !COMMON_AMENITIES.includes(a))
-                        .map((amenity, index) => (
-                          <div key={index} className="list-item">
-                            <span>{amenity}</span>
-                            <button onClick={() => removeAmenity(propertyData.amenities.indexOf(amenity))}>
-                              <FaTimes />
-                            </button>
-                          </div>
-                        ))}
-                    </ListContainer>
-                  )}
-                </CustomInputSection>
-              </StyledFormGroup>
-              
-              {/* Rules */}
-              <div className="section-title">Rules</div>
-              <StyledFormGroup>
-                <div className="rules-section">
-                  <GridContainer>
-                    <Input
-                      type="text"
-                      value={ruleInput}
-                      onChange={(e) => setRuleInput(e.target.value)}
-                      placeholder="Add new rule"
-                    />
-                    <AddButton onClick={addRule}>
-                      <FaPlus /> Add Rule
-                    </AddButton>
-                  </GridContainer>
-                  <ListContainer>
-                    {propertyData.rules.map((rule, index) => (
-                      <div key={index} className="list-item">
-                        <span>{rule.name}</span>
-                        <ToggleSwitch>
-                          <input
-                            type="checkbox"
-                            checked={rule.allowed}
-                            onChange={() => handleRuleToggle(index)}
-                          />
-                          <span className="slider"></span>
-                        </ToggleSwitch>
-                        <button onClick={() => removeRule(index)}>
-                          <FaTrash />
-                        </button>
-                      </div>
-                    ))}
-                  </ListContainer>
-                </div>
-              </StyledFormGroup>
-              
-              {/* Nearby Places */}
-              <div className="section-title">Nearby Places</div>
-              <StyledFormGroup>
-                <GridContainer>
-                  <Input
-                    type="text"
-                    value={placeNameInput}
-                    onChange={(e) => setPlaceNameInput(e.target.value)}
-                    placeholder="Place name"
-                  />
-                  <Input
-                    type="text"
-                    value={placeDistanceInput}
-                    onChange={(e) => setPlaceDistanceInput(e.target.value)}
-                    placeholder="Time distance"
-                  />
-                  <AddButton onClick={addNearbyPlace}>
-                    <FaPlus /> Add Place
-                  </AddButton>
-                </GridContainer>
-                <ListContainer>
-                  {propertyData.nearbyPlaces.map((place, index) => (
-                    <div key={index} className="list-item">
-                      <span>{place.name} - {place.timeDistance}</span>
-                      <button onClick={() => removeNearbyPlace(index)}>
-                        <FaTrash />
-                      </button>
-                    </div>
-                  ))}
-                </ListContainer>
-              </StyledFormGroup>
-              
-              {/* Images */}
-              <div className="section-title">Images</div>
-              <StyledFormGroup>
-                  <Input 
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleFileSelect}
-                />
-                <p className="helper-text">Upload property images (max 10 images)</p>
-                {propertyData.images.length > 0 && (
-                  <ImagePreviewContainer>
-                    {propertyData.images.map((image, index) => (
-                      <div key={index} className="image-preview">
-                        <img src={image} alt={`Property ${index + 1}`} />
-                        <button onClick={() => {
-                          setPropertyData({
-                            ...propertyData,
-                            images: propertyData.images.filter((_, i) => i !== index)
-                          });
-                        }}>
-                          <FaTrash />
-                        </button>
-                  </div>
-                    ))}
-                  </ImagePreviewContainer>
-                )}
-              </StyledFormGroup>
-              
-              {/* Furnished Status */}
-              <div className="section-title">Additional Information</div>
-              <StyledFormGroup>
-                <CheckboxLabel>
-                  <input
-                    type="checkbox"
-                    checked={propertyData.isFurnished}
-                    onChange={(e) => setPropertyData({
-                      ...propertyData,
-                      isFurnished: e.target.checked
-                    })}
-                  />
-                  Furnished
-                </CheckboxLabel>
-              </StyledFormGroup>
-            </PropertyFormContainer>
-                  
-            <ModalFooter>
-              <CancelButton onClick={() => setShowCompleteModal(false)}>Cancel</CancelButton>
-              <ActionButton 
-                onClick={() => {
-                  alert('Button clicked!');
-                  handleCompleteBooking();
-                }}
-                disabled={!propertyData.title || !propertyData.description || !propertyData.address.street}
-              >
-                Complete Booking & Create Property
-              </ActionButton>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-                )}
-              </div>
+    </div>
   );
 };
-
-// Add new styled components for better states and layout
-const CardHeader = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid ${Theme.colors.gray}20;
-  
-  h2 {
-    font: ${Theme.typography.fonts.h3};
-    margin: 0;
-  }
-`;
-
-const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: ${Theme.borders.radius.sm};
-  background-color: transparent;
-  color: ${Theme.colors.secondary};
-  cursor: pointer;
-  font: ${Theme.typography.fonts.mediumB};
-  
-  &:hover {
-    background-color: ${Theme.colors.gray}10;
-  }
-`;
 
 // Extend the imported CardContent with additional styles
 const StyledCardContent = styled(CardContent)`
@@ -2496,4 +2669,4 @@ const StyledCardContent = styled(CardContent)`
   }
 `;
 
-export default PhotoshootBookingDetail; 
+export default PhotoshootBookingDetail;
