@@ -41,6 +41,7 @@ const TeamsPage: React.FC = () => {
   const [teamLead, setTeamLead] = useState('');
   const [teamMembers, setTeamMembers] = useState<string[]>([]);
   const [memberInput, setMemberInput] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [specialization, setSpecialization] = useState('');
   const [availableDays, setAvailableDays] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(true);
@@ -69,6 +70,7 @@ const TeamsPage: React.FC = () => {
     setTeamLead('');
     setTeamMembers([]);
     setMemberInput('');
+    setPhoneNumber('');
     setSpecialization('');
     setAvailableDays([]);
     setIsActive(true);
@@ -84,6 +86,7 @@ const TeamsPage: React.FC = () => {
     setTeamName(team.name);
     setTeamLead(team.lead);
     setTeamMembers(team.members);
+    setPhoneNumber(team.phoneNumber || '');
     setSpecialization(team.specialization || '');
     setAvailableDays(team.availableDays || []);
     setIsActive(team.active);
@@ -121,6 +124,7 @@ const TeamsPage: React.FC = () => {
         name: teamName,
         lead: teamLead,
         members: teamMembers,
+        phoneNumber,
         specialization,
         availableDays,
         active: isActive,
@@ -222,6 +226,7 @@ const TeamsPage: React.FC = () => {
                 <TableRow>
                   <TableHeader>Name</TableHeader>
                   <TableHeader>Specialization</TableHeader>
+                  <TableHeader>Phone Number</TableHeader>
                   <TableHeader>Members</TableHeader>
                   <TableHeader>Created</TableHeader>
                   <TableHeader>Status</TableHeader>
@@ -233,6 +238,7 @@ const TeamsPage: React.FC = () => {
                   <TableRow key={team.id}>
                     <TableCell>{team.name}</TableCell>
                     <TableCell>{team.specialization || 'N/A'}</TableCell>
+                    <TableCell>{team.phoneNumber || 'N/A'}</TableCell>
                     <TableCell>{team.members.length} members</TableCell>
                     <TableCell>{formatDate(team.createdAt)}</TableCell>
                     <TableCell>
@@ -336,6 +342,16 @@ const TeamsPage: React.FC = () => {
                   </ul>
                 </div>
               )}
+            </FormGroup>
+            
+            <FormGroup>
+              <Label>Phone Number</Label>
+              <Input 
+                type="text" 
+                value={phoneNumber} 
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="Enter team phone number"
+              />
             </FormGroup>
             
             <FormGroup>

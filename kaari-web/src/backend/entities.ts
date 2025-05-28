@@ -211,6 +211,7 @@ export interface Team {
   name: string;
   members: string[]; // References to User IDs of team members
   lead: string; // Reference to User ID of team lead
+  phoneNumber?: string; // Team contact phone number for WhatsApp
   specialization?: string;
   availableDays?: string[]; // Days of the week the team is available
   createdAt: Date;

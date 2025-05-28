@@ -68,11 +68,11 @@ const PhotoshootPage: React.FC = () => {
           try {
             const team = await TeamServerActions.getTeamById(booking.teamId);
             
-            // If team exists and has a lead, fetch leader phone number (mock for now)
-            if (team && team.lead) {
+            // If team exists, use the team's phone number
+            if (team) {
               const teamWithLeader: TeamWithLeaderInfo = {
                 ...team,
-                leaderPhone: "+1234567890" // Mock phone number - in real app, fetch from user data
+                leaderPhone: team.phoneNumber || undefined // Use team's phone number
               };
               bookingWithTeam.team = teamWithLeader;
             } else {
