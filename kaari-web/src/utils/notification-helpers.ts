@@ -48,7 +48,7 @@ export const createTeamAssignedNotification = async (
       'team_assigned_photoshoot',
       'Team Assigned to Photoshoot',
       `Team "${teamName}" has been assigned to your photoshoot on ${date}`,
-      `/dashboard/advertiser/photoshoots`,
+      `/dashboard/advertiser/photoshoot`,
       { propertyId }
     );
   } catch (error) {
@@ -72,7 +72,7 @@ export const createPhotoshootReminderNotification = async (
       'photoshoot_reminder',
       'Upcoming Photoshoot Reminder',
       `You have a photoshoot scheduled for ${date} at ${time}`,
-      `/dashboard/advertiser/photoshoots`,
+      `/dashboard/advertiser/photoshoot`,
       { propertyId }
     );
   } catch (error) {
@@ -192,7 +192,7 @@ export const createReservationAcceptedNotification = async (
       'reservation_accepted',
       'Reservation Accepted',
       `Your reservation for "${propertyName}" has been accepted!`,
-      `/dashboard/user/reservation-status`,
+      `/dashboard/user/reservations`,
       { reservationId }
     );
   } catch (error) {
@@ -209,16 +209,13 @@ export const createReservationRejectedNotification = async (
   reason?: string
 ): Promise<string | undefined> => {
   try {
-    const message = reason
-      ? `Your reservation for "${propertyName}" was not accepted. Reason: ${reason}`
-      : `Your reservation for "${propertyName}" was not accepted`;
-    
+    const reasonText = reason ? ` Reason: ${reason}` : '';
     return await NotificationService.createNotification(
       userId,
       'user',
       'reservation_rejected',
       'Reservation Rejected',
-      message,
+      `Your reservation for "${propertyName}" has been rejected.${reasonText}`,
       `/dashboard/user/reservations`,
       { reason }
     );
@@ -228,7 +225,7 @@ export const createReservationRejectedNotification = async (
 };
 
 /**
- * Creates a notification for a payment reminder
+ * Creates a notification for payment reminder
  */
 export const createPaymentReminderNotification = async (
   userId: string,
@@ -242,9 +239,9 @@ export const createPaymentReminderNotification = async (
       'user',
       'payment_reminder',
       'Payment Reminder',
-      `Your payment for "${propertyName}" is due by ${dueDate}`,
-      `/dashboard/user/reservation-status`,
-      { reservationId }
+      `Your payment for "${propertyName}" is due on ${dueDate}`,
+      `/dashboard/user/payments`,
+      { reservationId, dueDate }
     );
   } catch (error) {
     console.error('Failed to create payment reminder notification:', error);
@@ -252,7 +249,7 @@ export const createPaymentReminderNotification = async (
 };
 
 /**
- * Creates a notification for a move-in reminder
+ * Creates a notification for move-in reminder
  */
 export const createMoveInReminderNotification = async (
   userId: string,
@@ -266,9 +263,9 @@ export const createMoveInReminderNotification = async (
       'user',
       'move_in_reminder',
       'Move-in Reminder',
-      `Your move-in date for "${propertyName}" is tomorrow, ${moveInDate}`,
-      `/dashboard/user/reservation-status`,
-      { reservationId }
+      `Your move-in date for "${propertyName}" is scheduled for ${moveInDate}`,
+      `/dashboard/user/reservations`,
+      { reservationId, moveInDate }
     );
   } catch (error) {
     console.error('Failed to create move-in reminder notification:', error);
@@ -276,7 +273,7 @@ export const createMoveInReminderNotification = async (
 };
 
 /**
- * Creates a notification for a move-in confirmation request
+ * Creates a notification for move-in confirmation
  */
 export const createMoveInConfirmationNotification = async (
   userId: string,
@@ -288,9 +285,9 @@ export const createMoveInConfirmationNotification = async (
       userId,
       'user',
       'move_in_confirmation',
-      'Move-in Confirmation',
-      `Please confirm that you've moved into "${propertyName}"`,
-      `/dashboard/user/reservation-status`,
+      'Move-in Confirmed',
+      `Your move-in to "${propertyName}" has been confirmed`,
+      `/dashboard/user/reservations`,
       { reservationId }
     );
   } catch (error) {
@@ -974,10 +971,10 @@ export const createPhotoshootTeamAssignedNotification = async (
     return await NotificationService.createNotification(
       advertiserId,
       'advertiser',
-      'photoshoot_team_assigned',
+      'team_assigned_photoshoot',
       'Photoshoot Team Assigned',
       `A team has been assigned to your photoshoot booking${propertyLocation ? ` for your property in ${propertyLocation}` : ''} on ${bookingDate} at ${timeSlot}.`,
-      `/dashboard/advertiser/bookings`,
+      `/dashboard/advertiser/photoshoot`,
       { 
         bookingId,
         teamName,
@@ -987,5 +984,79 @@ export const createPhotoshootTeamAssignedNotification = async (
     );
   } catch (error) {
     console.error('Failed to create photoshoot team assigned notification:', error);
+  }
+};
+
+/**
+ * Admin notification helpers
+ */
+export const adminNotifications = {
+  // Notify admin about new photoshoot booking
+  newPhotoshootBooking: async (
+    adminId: string,
+    bookingId: string,
+    propertyLocation: string,
+    bookingDate: string,
+    timeSlot: string
+  ): Promise<string> => {
+    const title = 'New Photoshoot Booking';
+    const message = `A new photoshoot booking has been created${propertyLocation ? ` for ${propertyLocation}` : ''} on ${bookingDate} at ${timeSlot}. Team assignment needed.`;
+    const link = `/dashboard/admin/photoshoot-bookings/view/${bookingId}`;
+    
+    return NotificationService.createNotification(
+      adminId,
+      'admin',
+      'new_photoshoot_booking',
+      title,
+      message,
+      link,
+      { bookingId, propertyLocation, bookingDate, timeSlot }
+    );
+  },
+
+  // Notify admin that team assignment is needed
+  teamAssignmentNeeded: async (
+    adminId: string,
+    bookingId: string,
+    propertyLocation: string,
+    bookingDate: string,
+    timeSlot: string
+  ): Promise<string> => {
+    const title = 'Team Assignment Needed';
+    const message = `Photoshoot booking${propertyLocation ? ` for ${propertyLocation}` : ''} on ${bookingDate} at ${timeSlot} needs a team assignment.`;
+    const link = `/dashboard/admin/photoshoot-bookings/view/${bookingId}`;
+    
+    return NotificationService.createNotification(
+      adminId,
+      'admin',
+      'team_assignment_needed',
+      title,
+      message,
+      link,
+      { bookingId, propertyLocation, bookingDate, timeSlot }
+    );
+  },
+
+  // Notify admin about completed photoshoot
+  photoshootCompleted: async (
+    adminId: string,
+    bookingId: string,
+    propertyId: string,
+    propertyLocation: string,
+    imageCount: number
+  ): Promise<string> => {
+    const title = 'Photoshoot Completed';
+    const message = `Photoshoot${propertyLocation ? ` for ${propertyLocation}` : ''} has been completed. Property created with ${imageCount} images.`;
+    const link = `/dashboard/admin/properties`;
+    
+    return NotificationService.createNotification(
+      adminId,
+      'admin',
+      'photoshoot_completed',
+      title,
+      message,
+      link,
+      { bookingId, propertyId, imageCount }
+    );
   }
 }; 

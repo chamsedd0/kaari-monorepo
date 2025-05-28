@@ -21,7 +21,7 @@ import {
 import { db } from '../firebase/config';
 import { PhotoshootBooking } from '../entities';
 import NotificationService from '../../services/NotificationService';
-import { createPhotoshootTeamAssignedNotification } from '../../utils/notification-helpers';
+import { createPhotoshootTeamAssignedNotification, adminNotifications } from '../../utils/notification-helpers';
 
 // Collection reference
 const COLLECTION_NAME = 'photoshoot-bookings';
@@ -211,7 +211,7 @@ export class PhotoshootBookingServerActions {
           'photoshoot_reminder',
           'Photoshoot Booking Created',
           `Your photoshoot booking for ${new Date(bookingData.date).toLocaleDateString()} at ${bookingData.timeSlot} has been created and is waiting for team assignment.`,
-          `/dashboard/advertiser/photoshoot-bookings/${docRef.id}`,
+          `/dashboard/advertiser/photoshoot`,
           { bookingId: docRef.id, date: bookingData.date, timeSlot: bookingData.timeSlot }
         );
         console.log(`Notification sent to advertiser ${advertiserId} about new booking creation`);
@@ -223,15 +223,18 @@ export class PhotoshootBookingServerActions {
         // For now, we'll use a fixed admin ID if you have one, or you can create a more sophisticated system
         const adminUserId = 'admin123'; // Replace with your actual admin user ID or a system to fetch admin IDs
         
-        const notificationService = new NotificationService();
-        await notificationService.createNotification(
+        const propertyLocation = bookingData.propertyAddress?.city || 
+                                bookingData.city || 
+                                `${bookingData.streetName || ''} ${bookingData.city || ''}`.trim() || 
+                                'Unknown location';
+        const bookingDate = new Date(bookingData.date).toLocaleDateString();
+        
+        await adminNotifications.newPhotoshootBooking(
           adminUserId,
-          'admin',
-          'new_photoshoot_booking',
-          'New Photoshoot Booking',
-          `A new photoshoot booking has been created for ${new Date(bookingData.date).toLocaleDateString()} and needs a team assignment.`,
-          `/dashboard/admin/photoshoot-bookings`,
-          { bookingId: docRef.id }
+          docRef.id,
+          propertyLocation,
+          bookingDate,
+          bookingData.timeSlot
         );
       } catch (adminNotifError) {
         // Don't fail the whole operation if admin notification fails
@@ -501,7 +504,7 @@ export class PhotoshootBookingServerActions {
           'property_created',
           'Photoshoot Completed and Property Created',
           `Your photoshoot has been completed and a property listing has been created.`,
-          `/dashboard/advertiser/properties/${propertyId}`,
+          `/dashboard/advertiser/properties`,
           { bookingId, propertyId, imageCount: images.length }
         );
         console.log(`Notification sent to advertiser ${advertiserId} about photoshoot completion and property creation`);
@@ -511,14 +514,17 @@ export class PhotoshootBookingServerActions {
       try {
         const adminUserId = 'admin123'; // Replace with your actual admin user ID or a system to fetch admin IDs
         
-        await NotificationService.createNotification(
+        const propertyLocation = bookingData.propertyAddress?.city || 
+                                bookingData.city || 
+                                `${bookingData.streetName || ''} ${bookingData.city || ''}`.trim() || 
+                                'Unknown location';
+        
+        await adminNotifications.photoshootCompleted(
           adminUserId,
-          'admin',
-          'photoshoot_completed',
-          'Photoshoot Completed',
-          `Photoshoot booking ${bookingId} has been completed and property ${propertyId} has been created with ${images.length} images.`,
-          `/dashboard/admin/properties/${propertyId}`,
-          { bookingId, propertyId, imageCount: images.length }
+          bookingId,
+          propertyId,
+          propertyLocation,
+          images.length
         );
       } catch (adminNotifError) {
         // Don't fail the whole operation if admin notification fails
@@ -563,7 +569,7 @@ export class PhotoshootBookingServerActions {
           'photoshoot_cancelled',
           'Photoshoot Booking Cancelled',
           `Your photoshoot booking for ${bookingDate} has been cancelled${reason ? `: ${reason}` : '.'}`,
-          `/dashboard/advertiser/photoshoot-bookings`,
+          `/dashboard/advertiser/photoshoot`,
           { bookingId, reason }
         );
         console.log(`Notification sent to advertiser ${advertiserId} about booking cancellation`);
@@ -666,7 +672,7 @@ export class PhotoshootBookingServerActions {
           'photoshoot_reminder',
           'Photoshoot Rescheduled',
           `Your photoshoot has been rescheduled from ${oldDate} at ${oldTimeSlot} to ${newDate.toLocaleDateString()} at ${newTimeSlot}.`,
-          `/dashboard/advertiser/photoshoot-bookings/${bookingId}`,
+          `/dashboard/advertiser/photoshoot`,
           { bookingId, oldDate, oldTimeSlot, newDate, newTimeSlot }
         );
         console.log(`Notification sent to advertiser ${advertiserId} about booking reschedule`);
