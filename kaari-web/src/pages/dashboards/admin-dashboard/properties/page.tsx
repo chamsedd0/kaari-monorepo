@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-import { FaSearch, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaSearch, FaEdit, FaTrash, FaSync, FaFilter, FaExclamationTriangle } from 'react-icons/fa';
 import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { Property } from '../../../../backend/models/entities';
-import { getProperties, deleteProperty } from '../../../../backend/server-actions/PropertyServerActions';
+import { getProperties, deleteProperty, refreshPropertyAvailability } from '../../../../backend/server-actions/PropertyServerActions';
 import { useToastService } from '../../../../services/ToastService';
+import { getRefreshStatus, formatTimeAgo, getDaysSinceLastRefresh } from '../../../../utils/property-refresh-utils';
 
 const ConfirmationModal = ({ 
   isOpen, 
@@ -42,14 +43,22 @@ const ConfirmationModal = ({
   );
 };
 
-// PropertyCard component with image pagination
-const PropertyCard = ({ property, onEdit, onDelete }: { 
+// PropertyCard component with image pagination and refresh status
+const PropertyCard = ({ 
+  property, 
+  onEdit, 
+  onDelete
+}: { 
   property: Property, 
   onEdit: (id: string) => void, 
-  onDelete: (property: Property) => void 
+  onDelete: (property: Property) => void
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const hasMultipleImages = property.images && property.images.length > 1;
+  
+  // Get refresh status
+  const refreshStatus = getRefreshStatus(property);
+  const daysSinceRefresh = getDaysSinceLastRefresh(property);
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -64,6 +73,27 @@ const PropertyCard = ({ property, onEdit, onDelete }: {
       setCurrentImageIndex((prevIndex) => (prevIndex - 1 + property.images.length) % property.images.length);
     }
   };
+  
+  const getRefreshStatusColor = () => {
+    switch (refreshStatus.status) {
+      case 'needs_refresh': return '#ef4444'; // Red
+      case 'never_refreshed': return '#f59e0b'; // Orange
+      case 'recent': return '#10b981'; // Green
+      default: return '#6b7280'; // Gray
+    }
+  };
+  
+  const getRefreshStatusText = () => {
+    if (daysSinceRefresh === Infinity) {
+      return 'Never refreshed';
+    } else if (daysSinceRefresh >= 14) {
+      return `${daysSinceRefresh} days overdue`;
+    } else if (daysSinceRefresh >= 7) {
+      return `${daysSinceRefresh} days ago`;
+    } else {
+      return formatTimeAgo(property.lastAvailabilityRefresh);
+    }
+  };
 
   return (
     <div className="property-card">
@@ -72,6 +102,13 @@ const PropertyCard = ({ property, onEdit, onDelete }: {
           src={property.images[currentImageIndex] || property.images[0]} 
           alt={property.title} 
         />
+        
+        {/* Refresh Status Badge */}
+        <div className="refresh-status-badge" style={{ backgroundColor: getRefreshStatusColor() }}>
+          {daysSinceRefresh >= 14 && <FaExclamationTriangle />}
+          <span>{getRefreshStatusText()}</span>
+        </div>
+        
         {hasMultipleImages && (
           <>
             <button className="nav-button prev" onClick={prevImage} aria-label="Previous image">
@@ -129,6 +166,7 @@ const PropertyPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'overdue' | 'needs_refresh' | 'recent'>('all');
   
   const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -179,24 +217,103 @@ const PropertyPage: React.FC = () => {
     setPropertyToDelete(null);
   };
 
-  const filteredProperties = properties.filter(property =>
-    property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.propertyType.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProperties = properties.filter(property => {
+    // Text search filter
+    const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      property.propertyType.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+      property.id.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
+    // Status filter
+    if (filterStatus === 'all') return true;
+    
+    const refreshStatus = getRefreshStatus(property);
+    const daysSinceRefresh = getDaysSinceLastRefresh(property);
+    
+    switch (filterStatus) {
+      case 'overdue':
+        return daysSinceRefresh >= 14;
+      case 'needs_refresh':
+        return daysSinceRefresh >= 7 && daysSinceRefresh < 14;
+      case 'recent':
+        return daysSinceRefresh < 7;
+      default:
+        return true;
+    }
+  });
+  
+  // Get counts for filter badges
+  const getFilterCounts = () => {
+    const overdue = properties.filter(p => getDaysSinceLastRefresh(p) >= 14).length;
+    const needsRefresh = properties.filter(p => {
+      const days = getDaysSinceLastRefresh(p);
+      return days >= 7 && days < 14;
+    }).length;
+    const recent = properties.filter(p => getDaysSinceLastRefresh(p) < 7).length;
+    
+    return { overdue, needsRefresh, recent };
+  };
+  
+  const filterCounts = getFilterCounts();
 
   return (
     <PropertyPageContainer>
-      <h1>Properties</h1>
+      <div className="header">
+        <h1>Properties</h1>
+        <div className="header-stats">
+          <div className="stat-item">
+            <span className="stat-number">{properties.length}</span>
+            <span className="stat-label">Total Properties</span>
+          </div>
+          <div className="stat-item urgent">
+            <span className="stat-number">{filterCounts.overdue}</span>
+            <span className="stat-label">Overdue</span>
+          </div>
+          <div className="stat-item warning">
+            <span className="stat-number">{filterCounts.needsRefresh}</span>
+            <span className="stat-label">Need Refresh</span>
+          </div>
+        </div>
+      </div>
 
-      <div className="search-box">
-        <FaSearch />
-        <input
-          type="text"
-          placeholder="Search by title, type, or ID"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      <div className="filters-row">
+        <div className="search-box">
+          <FaSearch />
+          <input
+            type="text"
+            placeholder="Search by title, type, or ID"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <div className="filter-buttons">
+          <button 
+            className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
+            onClick={() => setFilterStatus('all')}
+          >
+            <FaFilter /> All ({properties.length})
+          </button>
+          <button 
+            className={`filter-btn urgent ${filterStatus === 'overdue' ? 'active' : ''}`}
+            onClick={() => setFilterStatus('overdue')}
+          >
+            <FaExclamationTriangle /> Overdue ({filterCounts.overdue})
+          </button>
+          <button 
+            className={`filter-btn warning ${filterStatus === 'needs_refresh' ? 'active' : ''}`}
+            onClick={() => setFilterStatus('needs_refresh')}
+          >
+            <FaSync /> Needs Refresh ({filterCounts.needsRefresh})
+          </button>
+          <button 
+            className={`filter-btn success ${filterStatus === 'recent' ? 'active' : ''}`}
+            onClick={() => setFilterStatus('recent')}
+          >
+            Recent ({filterCounts.recent})
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -215,7 +332,7 @@ const PropertyPage: React.FC = () => {
               key={property.id} 
               property={property} 
               onEdit={handleEditProperty} 
-              onDelete={confirmDelete} 
+              onDelete={confirmDelete}
             />
           ))}
         </div>
@@ -235,9 +352,64 @@ const PropertyPage: React.FC = () => {
 const PropertyPageContainer = styled.div`
   padding: 2rem;
 
-  h1 {
-    font: ${Theme.typography.fonts.h3};
-    margin-bottom: 1.5rem;
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    
+    h1 {
+      font: ${Theme.typography.fonts.h3};
+      margin: 0;
+    }
+    
+    .header-stats {
+      display: flex;
+      gap: 1.5rem;
+      
+      .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background-color: white;
+        border-radius: ${Theme.borders.radius.md};
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        min-width: 80px;
+        
+        .stat-number {
+          display: block;
+          font: ${Theme.typography.fonts.h4B};
+          color: ${Theme.colors.primary};
+        }
+        
+        .stat-label {
+          display: block;
+          font: ${Theme.typography.fonts.smallM};
+          color: ${Theme.colors.gray2};
+          margin-top: 0.25rem;
+        }
+        
+        &.urgent {
+          .stat-number {
+            color: #ef4444;
+          }
+        }
+        
+        &.warning {
+          .stat-number {
+            color: #f59e0b;
+          }
+        }
+      }
+    }
+  }
+
+  .filters-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1rem;
+    flex-wrap: wrap;
   }
 
   .search-box {
@@ -247,7 +419,6 @@ const PropertyPageContainer = styled.div`
     border: 1px solid ${Theme.colors.tertiary};
     border-radius: ${Theme.borders.radius.sm};
     padding: 0 1rem;
-    margin-bottom: 2rem;
     width: 300px;
     
     input {
@@ -264,6 +435,71 @@ const PropertyPageContainer = styled.div`
     svg {
       color: ${Theme.colors.gray2};
       margin-right: 0.5rem;
+    }
+  }
+  
+  .filter-buttons {
+    display: flex;
+    gap: 0.5rem;
+    
+    .filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border: 1px solid ${Theme.colors.gray}30;
+      border-radius: ${Theme.borders.radius.sm};
+      background-color: white;
+      color: ${Theme.colors.gray2};
+      font: ${Theme.typography.fonts.smallM};
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: ${Theme.colors.gray}10;
+      }
+      
+      &.active {
+        background-color: ${Theme.colors.primary};
+        color: white;
+        border-color: ${Theme.colors.primary};
+      }
+      
+      &.urgent {
+        &.active {
+          background-color: #ef4444;
+          border-color: #ef4444;
+        }
+        
+        &:not(.active):hover {
+          background-color: #fee2e2;
+          color: #ef4444;
+        }
+      }
+      
+      &.warning {
+        &.active {
+          background-color: #f59e0b;
+          border-color: #f59e0b;
+        }
+        
+        &:not(.active):hover {
+          background-color: #fef3c7;
+          color: #f59e0b;
+        }
+      }
+      
+      &.success {
+        &.active {
+          background-color: #10b981;
+          border-color: #10b981;
+        }
+        
+        &:not(.active):hover {
+          background-color: #d1fae5;
+          color: #10b981;
+        }
+      }
     }
   }
 
@@ -290,6 +526,30 @@ const PropertyPageContainer = styled.div`
           position: absolute;
           top: 0;
           left: 0;
+        }
+
+        .refresh-status-badge {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          color: white;
+          border-radius: ${Theme.borders.radius.sm};
+          padding: 0.25rem 0.5rem;
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          z-index: 5;
+          font: ${Theme.typography.fonts.smallB};
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+          span {
+            font: ${Theme.typography.fonts.smallB};
+            color: white;
+          }
+          
+          svg {
+            font-size: 12px;
+          }
         }
 
         .nav-button {
@@ -349,15 +609,13 @@ const PropertyPageContainer = styled.div`
             }
 
             &:hover {
-              background-color: rgba(255, 255, 255, 0.9);
+              background-color: rgba(255, 255, 255, 0.8);
             }
           }
         }
 
-        &:hover {
-          .nav-button {
-            opacity: 1;
-          }
+        &:hover .nav-button {
+          opacity: 1;
         }
       }
 
@@ -389,11 +647,11 @@ const PropertyPageContainer = styled.div`
         }
 
         .action-buttons {
-          display: flex;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
           gap: 0.5rem;
           
           button {
-            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -404,6 +662,11 @@ const PropertyPageContainer = styled.div`
             font: ${Theme.typography.fonts.smallB};
             cursor: pointer;
             transition: all 0.2s ease;
+            
+            &:disabled {
+              opacity: 0.5;
+              cursor: not-allowed;
+            }
           }
           
           .edit-button {
@@ -458,6 +721,15 @@ const PropertyPageContainer = styled.div`
         background-color: ${Theme.colors.secondary};
         opacity: 0.8;
       }
+    }
+  }
+  
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
     }
   }
 `;

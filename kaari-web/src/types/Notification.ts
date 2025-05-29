@@ -25,7 +25,9 @@ export type AdvertiserNotificationType =
   | 'photoshoot_cancelled'
   | 'property_liked'
   | 'refund_requested'
-  | 'new_message';
+  | 'new_message'
+  | 'property_refresh_reminder'
+  | 'property_refresh_warning';
 
 // Notification types for clients/users
 export type ClientNotificationType = 

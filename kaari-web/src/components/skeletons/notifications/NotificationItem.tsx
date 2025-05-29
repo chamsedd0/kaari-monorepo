@@ -42,6 +42,10 @@ const IconContainer = styled.div<{ type: NotificationType }>`
     // Different colors based on notification type
     if (type.includes('photoshoot')) {
       return `background-color: #fef3c7; color: #d97706;`; // Yellow/amber for photoshoot notifications
+    } else if (type.includes('property_refresh_warning')) {
+      return `background-color: #fee2e2; color: #ef4444;`; // Red for urgent refresh warnings
+    } else if (type.includes('property_refresh')) {
+      return `background-color: #fef3c7; color: #f59e0b;`; // Orange for refresh reminders
     } else if (type.includes('property')) {
       return `background-color: #d1fae5; color: #059669;`; // Green for property notifications
     } else if (type.includes('reservation')) {
@@ -110,6 +114,8 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onClo
   const getIcon = (type: NotificationType) => {
     if (type.includes('photoshoot')) {
       return '📸';
+    } else if (type.includes('property_refresh')) {
+      return '🔄';
     } else if (type.includes('property')) {
       return '🏠';
     } else if (type.includes('reservation')) {

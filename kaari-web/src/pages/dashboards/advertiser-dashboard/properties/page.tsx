@@ -6,7 +6,8 @@ import PropertyExamplePic from '../../../../assets/images/propertyExamplePic.png
 import LeftArrow from '../../../../components/skeletons/icons/Icon_Arrow_Left.svg';
 import RightArrow from '../../../../components/skeletons/icons/Icon_Arrow_Right.svg';
 import { getAdvertiserProperties, checkPropertyHasActiveReservations } from '../../../../backend/server-actions/AdvertiserServerActions';
-import { updateProperty } from '../../../../backend/server-actions/PropertyServerActions';
+import { updateProperty, refreshPropertyAvailability } from '../../../../backend/server-actions/PropertyServerActions';
+import { logPropertyRefresh } from '../../../../backend/server-actions/AdminLogServerActions';
 import { Property } from '../../../../backend/entities';
 import { useAuth } from '../../../../contexts/auth';
 import PropertyUnlistConfirmationModal from '../../../../components/skeletons/constructed/modals/property-unlist-confirmation-modal';
@@ -16,6 +17,7 @@ import { PurpleButtonLB40 } from '../../../../components/skeletons/buttons/purpl
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../../contexts/ToastContext';
+import { countPropertiesNeedingRefresh } from '../../../../utils/property-refresh-utils';
 
 const PropertiesPage: React.FC = () => {
     const { t } = useTranslation();
@@ -34,6 +36,9 @@ const PropertiesPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     // Update state for the reservation reason
     const [reservationReason, setReservationReason] = useState<'completed' | 'pending' | 'accepted' | 'paid' | 'movedIn' | 'none'>('none');
+    
+    // Refresh states
+    const [refreshingProperties, setRefreshingProperties] = useState<Set<string>>(new Set());
     
     // Add navigate
     const navigate = useNavigate();
@@ -66,6 +71,9 @@ const PropertiesPage: React.FC = () => {
         property => property.status === 'occupied'
     );
     
+    // Count properties needing refresh for dashboard reminder
+    const propertiesNeedingRefresh = countPropertiesNeedingRefresh(properties);
+    
     const handleChangePropertyStatus = async (propertyId: string, newStatus: 'available' | 'occupied') => {
         try {
             setIsSubmitting(true);
@@ -88,6 +96,66 @@ const PropertiesPage: React.FC = () => {
             setError(t('advertiser_dashboard.properties.errors.update_status_failed'));
         } finally {
             setIsSubmitting(false);
+        }
+    };
+    
+    const handleRefreshAvailability = async (propertyId: string) => {
+        try {
+            // Add property to refreshing set
+            setRefreshingProperties(prev => new Set(prev).add(propertyId));
+            
+            // Find the property to get its details for logging
+            const property = properties.find(p => p.id === propertyId);
+            
+            // Call the refresh API
+            await refreshPropertyAvailability(propertyId);
+            
+            // Log the refresh action for admin tracking
+            if (property && user) {
+                await logPropertyRefresh(
+                    propertyId,
+                    property.title,
+                    user.id,
+                    `${user.name} ${user.surname || ''}`.trim()
+                );
+            }
+            
+            // Update local state to reflect the refresh
+            setProperties(prevProperties => 
+                prevProperties.map(property => 
+                    property.id === propertyId 
+                        ? { 
+                            ...property, 
+                            lastAvailabilityRefresh: new Date(),
+                            updatedAt: new Date()
+                          } 
+                        : property
+                )
+            );
+            
+            // Show success toast
+            addToast(
+                'success',
+                t('advertiser_dashboard.properties.refresh.success_title', 'Availability Refreshed'),
+                t('advertiser_dashboard.properties.refresh.success_message', 'Property availability has been confirmed and updated.')
+            );
+            
+        } catch (err) {
+            console.error('Error refreshing property availability:', err);
+            
+            // Show error toast
+            addToast(
+                'error',
+                t('advertiser_dashboard.properties.refresh.error_title', 'Refresh Failed'),
+                t('advertiser_dashboard.properties.refresh.error_message', 'Failed to refresh property availability. Please try again.')
+            );
+        } finally {
+            // Remove property from refreshing set
+            setRefreshingProperties(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(propertyId);
+                return newSet;
+            });
         }
     };
     
@@ -229,9 +297,12 @@ const PropertiesPage: React.FC = () => {
                                             price={`${property.price} ${t('common.per_month')}`}
                             minStay={t('common.min_stay', { count: 1 })}
                                             propertyId={property.id}
+                                            property={property}
                                             onUnlist={() => handleOpenUnlistModal(property)}
                                             onAskForEdit={() => handleAskForEdit(property)}
+                                            onRefreshAvailability={() => handleRefreshAvailability(property.id)}
                                             isSubmitting={isSubmitting}
+                                            isRefreshing={refreshingProperties.has(property.id)}
                                         />
                                     ))}
                     </div>
@@ -269,9 +340,12 @@ const PropertiesPage: React.FC = () => {
                                             price={`${property.price} ${t('common.per_month')}`}
                             minStay={t('common.min_stay', { count: 1 })}
                                             propertyId={property.id}
+                                            property={property}
                                             onList={() => handleListProperty(property)}
                                             onAskForEdit={() => handleAskForEdit(property)}
+                                            onRefreshAvailability={() => handleRefreshAvailability(property.id)}
                                             isSubmitting={isSubmitting}
+                                            isRefreshing={refreshingProperties.has(property.id)}
                                         />
                                     ))}
                     </div>

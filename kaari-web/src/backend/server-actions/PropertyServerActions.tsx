@@ -9,6 +9,14 @@ import {
   getDocuments,
   getDocumentsByField
 } from '../firebase/firestore';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { 
+  createPropertyRefreshReminderNotification,
+  createPropertyRefreshWarningNotification,
+  createMultiplePropertiesRefreshNotification
+} from '../../utils/notification-helpers';
+import { getDaysSinceLastRefresh } from '../../utils/property-refresh-utils';
 
 // Collection name for properties
 const PROPERTIES_COLLECTION = 'properties';
@@ -369,5 +377,237 @@ export async function removeSampleData(): Promise<{ count: number }> {
   } catch (error) {
     console.error('Error removing sample property data:', error);
     throw error;
+  }
+}
+
+/**
+ * Refresh property availability - updates the lastAvailabilityRefresh timestamp
+ */
+export const refreshPropertyAvailability = async (propertyId: string): Promise<void> => {
+  try {
+    const propertyRef = doc(db, PROPERTIES_COLLECTION, propertyId);
+    
+    await updateDoc(propertyRef, {
+      lastAvailabilityRefresh: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    
+    console.log(`Property ${propertyId} availability refreshed successfully`);
+  } catch (error) {
+    console.error(`Error refreshing property ${propertyId} availability:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Check all properties and send refresh notifications to advertisers
+ * This function should be called daily by a scheduled job
+ */
+export async function checkAndSendPropertyRefreshNotifications(): Promise<void> {
+  try {
+    console.log('Starting property refresh notification check...');
+    
+    // Get all properties
+    const properties = await getDocuments<Property>(PROPERTIES_COLLECTION, {
+      filters: [
+        { field: 'status', operator: '==', value: 'available' }
+      ]
+    });
+    
+    // Group properties by advertiser
+    const propertiesByAdvertiser = new Map<string, Property[]>();
+    
+    for (const property of properties) {
+      if (!propertiesByAdvertiser.has(property.ownerId)) {
+        propertiesByAdvertiser.set(property.ownerId, []);
+      }
+      propertiesByAdvertiser.get(property.ownerId)!.push(property);
+    }
+    
+    // Check each advertiser's properties
+    for (const [advertiserId, advertiserProperties] of propertiesByAdvertiser) {
+      const propertiesNeedingReminder: Property[] = [];
+      const propertiesNeedingWarning: Property[] = [];
+      
+      for (const property of advertiserProperties) {
+        const daysSinceRefresh = getDaysSinceLastRefresh(property);
+        
+        // Check if property needs warning (14+ days)
+        if (daysSinceRefresh >= 14) {
+          propertiesNeedingWarning.push(property);
+        }
+        // Check if property needs reminder (7+ days but less than 14)
+        else if (daysSinceRefresh >= 7) {
+          propertiesNeedingReminder.push(property);
+        }
+      }
+      
+      // Send notifications based on what's needed
+      if (propertiesNeedingWarning.length > 0) {
+        // Send warning notifications for urgent properties
+        if (propertiesNeedingWarning.length === 1) {
+          const property = propertiesNeedingWarning[0];
+          const daysSinceRefresh = getDaysSinceLastRefresh(property);
+          await createPropertyRefreshWarningNotification(
+            advertiserId,
+            property.title,
+            property.id,
+            daysSinceRefresh
+          );
+        } else {
+          // Multiple urgent properties
+          await createMultiplePropertiesRefreshNotification(
+            advertiserId,
+            propertiesNeedingWarning.length + propertiesNeedingReminder.length,
+            propertiesNeedingWarning.length
+          );
+        }
+      } else if (propertiesNeedingReminder.length > 0) {
+        // Send reminder notifications for properties needing refresh
+        if (propertiesNeedingReminder.length === 1) {
+          const property = propertiesNeedingReminder[0];
+          const daysSinceRefresh = getDaysSinceLastRefresh(property);
+          await createPropertyRefreshReminderNotification(
+            advertiserId,
+            property.title,
+            property.id,
+            daysSinceRefresh
+          );
+        } else {
+          // Multiple properties need reminder
+          await createMultiplePropertiesRefreshNotification(
+            advertiserId,
+            propertiesNeedingReminder.length,
+            0
+          );
+        }
+      }
+      
+      // Log what was sent
+      if (propertiesNeedingWarning.length > 0 || propertiesNeedingReminder.length > 0) {
+        console.log(`Sent notifications to advertiser ${advertiserId}: ${propertiesNeedingWarning.length} warnings, ${propertiesNeedingReminder.length} reminders`);
+      }
+    }
+    
+    console.log('Property refresh notification check completed');
+  } catch (error) {
+    console.error('Error checking and sending property refresh notifications:', error);
+    throw error;
+  }
+}
+
+/**
+ * Test function to manually trigger property refresh notifications
+ * This can be called from the admin dashboard for testing
+ */
+export async function testPropertyRefreshNotifications(): Promise<{ 
+  success: boolean; 
+  message: string; 
+  details: any 
+}> {
+  try {
+    console.log('Testing property refresh notifications...');
+    
+    // Get all properties
+    const properties = await getDocuments<Property>(PROPERTIES_COLLECTION, {
+      filters: [
+        { field: 'status', operator: '==', value: 'available' }
+      ]
+    });
+    
+    // Group properties by advertiser
+    const propertiesByAdvertiser = new Map<string, Property[]>();
+    
+    for (const property of properties) {
+      if (!propertiesByAdvertiser.has(property.ownerId)) {
+        propertiesByAdvertiser.set(property.ownerId, []);
+      }
+      propertiesByAdvertiser.get(property.ownerId)!.push(property);
+    }
+    
+    const results = {
+      totalAdvertisers: propertiesByAdvertiser.size,
+      totalProperties: properties.length,
+      notificationsSent: 0,
+      details: [] as any[]
+    };
+    
+    // Check each advertiser's properties
+    for (const [advertiserId, advertiserProperties] of propertiesByAdvertiser) {
+      const propertiesNeedingReminder: Property[] = [];
+      const propertiesNeedingWarning: Property[] = [];
+      
+      for (const property of advertiserProperties) {
+        const daysSinceRefresh = getDaysSinceLastRefresh(property);
+        
+        // For testing, lower the thresholds to see results
+        if (daysSinceRefresh >= 3) { // Test: 3+ days for warning (normally 14)
+          propertiesNeedingWarning.push(property);
+        } else if (daysSinceRefresh >= 1) { // Test: 1+ days for reminder (normally 7)
+          propertiesNeedingReminder.push(property);
+        }
+      }
+      
+      // Send notifications if needed
+      if (propertiesNeedingWarning.length > 0 || propertiesNeedingReminder.length > 0) {
+        // Send test notifications
+        if (propertiesNeedingWarning.length > 0) {
+          if (propertiesNeedingWarning.length === 1) {
+            const property = propertiesNeedingWarning[0];
+            const daysSinceRefresh = getDaysSinceLastRefresh(property);
+            await createPropertyRefreshWarningNotification(
+              advertiserId,
+              property.title,
+              property.id,
+              daysSinceRefresh
+            );
+          } else {
+            await createMultiplePropertiesRefreshNotification(
+              advertiserId,
+              propertiesNeedingWarning.length + propertiesNeedingReminder.length,
+              propertiesNeedingWarning.length
+            );
+          }
+        } else if (propertiesNeedingReminder.length > 0) {
+          if (propertiesNeedingReminder.length === 1) {
+            const property = propertiesNeedingReminder[0];
+            const daysSinceRefresh = getDaysSinceLastRefresh(property);
+            await createPropertyRefreshReminderNotification(
+              advertiserId,
+              property.title,
+              property.id,
+              daysSinceRefresh
+            );
+          } else {
+            await createMultiplePropertiesRefreshNotification(
+              advertiserId,
+              propertiesNeedingReminder.length,
+              0
+            );
+          }
+        }
+        
+        results.notificationsSent++;
+        results.details.push({
+          advertiserId,
+          propertiesTotal: advertiserProperties.length,
+          propertiesNeedingReminder: propertiesNeedingReminder.length,
+          propertiesNeedingWarning: propertiesNeedingWarning.length
+        });
+      }
+    }
+    
+    return {
+      success: true,
+      message: `Test completed. Sent notifications to ${results.notificationsSent} advertisers.`,
+      details: results
+    };
+  } catch (error) {
+    console.error('Error testing property refresh notifications:', error);
+    return {
+      success: false,
+      message: `Test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      details: null
+    };
   }
 } 

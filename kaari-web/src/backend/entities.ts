@@ -59,6 +59,11 @@ export interface Property {
   status: 'available' | 'occupied';
   createdAt: Date;
   updatedAt: Date;
+  
+  // Availability refresh tracking
+  lastAvailabilityRefresh?: Date; // When availability was last refreshed
+  availabilityRefreshNeeded?: boolean; // Computed field - true if 7+ days since last refresh
+  
   rooms?: Array<{
     type: 'bedroom' | 'bathroom' | 'kitchen' | 'storage' | 'living';
     area: number;
@@ -217,4 +222,20 @@ export interface Team {
   createdAt: Date;
   updatedAt: Date;
   active: boolean;
+}
+
+export interface AdminLog {
+  id: string;
+  action: 'property_refresh' | 'user_blocked' | 'user_unblocked' | 'property_approved' | 'property_rejected' | 'team_assigned' | 'photoshoot_completed' | 'other';
+  description: string;
+  performedBy?: string; // User ID of who performed the action (if applicable)
+  targetUserId?: string; // User ID that was affected by the action
+  targetPropertyId?: string; // Property ID that was affected by the action
+  targetTeamId?: string; // Team ID that was affected by the action
+  metadata?: {
+    [key: string]: any; // Additional data specific to the action
+  };
+  createdAt: Date;
+  ipAddress?: string;
+  userAgent?: string;
 } 

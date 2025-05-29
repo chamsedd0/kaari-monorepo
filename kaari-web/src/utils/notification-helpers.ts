@@ -1059,4 +1059,79 @@ export const adminNotifications = {
       { bookingId, propertyId, imageCount }
     );
   }
+};
+
+/**
+ * Creates a notification for property refresh reminder (7 days)
+ */
+export const createPropertyRefreshReminderNotification = async (
+  advertiserId: string,
+  propertyTitle: string,
+  propertyId: string,
+  daysSinceRefresh: number
+): Promise<string | undefined> => {
+  try {
+    return await NotificationService.createNotification(
+      advertiserId,
+      'advertiser',
+      'property_refresh_reminder',
+      'Property Refresh Reminder',
+      `Your property "${propertyTitle}" needs availability refresh. It's been ${daysSinceRefresh} days since last update.`,
+      `/dashboard/advertiser/properties`,
+      { propertyId, daysSinceRefresh }
+    );
+  } catch (error) {
+    console.error('Failed to create property refresh reminder notification:', error);
+  }
+};
+
+/**
+ * Creates a notification for property refresh warning (14 days)
+ */
+export const createPropertyRefreshWarningNotification = async (
+  advertiserId: string,
+  propertyTitle: string,
+  propertyId: string,
+  daysSinceRefresh: number
+): Promise<string | undefined> => {
+  try {
+    return await NotificationService.createNotification(
+      advertiserId,
+      'advertiser',
+      'property_refresh_warning',
+      'Property Refresh Warning',
+      `URGENT: Your property "${propertyTitle}" hasn't been refreshed for ${daysSinceRefresh} days. Please update availability immediately to keep your listing active.`,
+      `/dashboard/advertiser/properties`,
+      { propertyId, daysSinceRefresh, urgent: true }
+    );
+  } catch (error) {
+    console.error('Failed to create property refresh warning notification:', error);
+  }
+};
+
+/**
+ * Creates a notification for multiple properties needing refresh
+ */
+export const createMultiplePropertiesRefreshNotification = async (
+  advertiserId: string,
+  propertiesCount: number,
+  urgentCount: number = 0
+): Promise<string | undefined> => {
+  try {
+    const title = urgentCount > 0 ? 'Urgent: Properties Need Refresh' : 'Properties Need Refresh';
+    const urgentText = urgentCount > 0 ? ` (${urgentCount} urgent)` : '';
+    const message = `You have ${propertiesCount} properties that need availability refresh${urgentText}. Please update them to keep your listings active.`;
+    
+    return await NotificationService.createNotification(
+      advertiserId,
+      'advertiser',
+      urgentCount > 0 ? 'property_refresh_warning' : 'property_refresh_reminder',
+      title,
+      message,
+      `/dashboard/advertiser/properties`,
+      { propertiesCount, urgentCount }
+    );
+  } catch (error) {
+    console.error('Failed to create multiple properties refresh notification:', error);
+  }
 }; 

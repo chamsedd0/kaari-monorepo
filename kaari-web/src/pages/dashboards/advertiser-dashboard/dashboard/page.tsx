@@ -22,6 +22,7 @@ import { useStore } from '../../../../backend/store';
 import { Property, Request } from '../../../../backend/entities';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
+import { countPropertiesNeedingRefresh } from '../../../../utils/property-refresh-utils';
 
 
 const DashboardPage: React.FC = () => {
@@ -144,6 +145,10 @@ const DashboardPage: React.FC = () => {
     const hasMessages = requests.some(req => req.message && typeof req.message === 'string' && req.message.trim() !== '');
     const hasStats = propertyDataForChart.some(p => Number(p.views) > 0 || Number(p.clicks) > 0 || Number(p.requests) > 0);
     const hasProperties = properties.length > 0 && propertyDataForChart.some(p => Number(p.views) > 0);
+    
+    // Check if any properties need availability refresh
+    const propertiesNeedingRefresh = countPropertiesNeedingRefresh(properties);
+    const shouldShowRefreshReminder = propertiesNeedingRefresh > 0;
 
 
 
@@ -269,9 +274,15 @@ const DashboardPage: React.FC = () => {
                         navigate('/dashboard/advertiser/payments');
                     }}
                 />
-                <UpToDateCardComponent onClick={() => {
-                    navigate('/dashboard/advertiser/properties');
-                }} />
+                {/* Only show refresh reminder when properties need refreshing */}
+                {shouldShowRefreshReminder && (
+                    <UpToDateCardComponent 
+                        propertiesNeedingRefresh={propertiesNeedingRefresh}
+                        onClick={() => {
+                            navigate('/dashboard/advertiser/properties');
+                        }} 
+                    />
+                )}
                 
             </div>
         </DashboardPageStyle>
