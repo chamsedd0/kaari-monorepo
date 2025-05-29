@@ -59,6 +59,13 @@ export const PhotoshootBookingPageStyle = styled.div`
       color: ${Theme.colors.black};
       margin-bottom: 8px;
     }
+    
+    .field-description {
+      font: ${Theme.typography.fonts.smallM};
+      color: ${Theme.colors.gray2};
+      margin-top: 6px;
+      margin-bottom: 0;
+    }
 
   }
   
@@ -102,7 +109,7 @@ export const PhotoshootBookingPageStyle = styled.div`
   .map-search-input {
     width: 100%;
     padding: 14px 15px 14px 45px;
-    border: 1px solid ${Theme.colors.lightGray};
+    border: ${Theme.borders.primary};
     border-radius: 8px;
     font: ${Theme.typography.fonts.mediumM};
     transition: all 0.2s ease;
@@ -126,7 +133,7 @@ export const PhotoshootBookingPageStyle = styled.div`
     overflow: hidden;
     margin-bottom: 15px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border: 1px solid ${Theme.colors.lightGray};
+    border: ${Theme.borders.primary};
   }
 
   .map-hint {
@@ -149,9 +156,9 @@ export const PhotoshootBookingPageStyle = styled.div`
     align-items: center;
     justify-content: center;
     height: 350px;
-    border: 1px solid ${Theme.colors.lightGray};
+    border: ${Theme.borders.primary};
     border-radius: 12px;
-    background-color: ${Theme.colors.lightGray}30;
+    background-color: ${Theme.colors.gray}30;
 
     .spinner {
       animation: ${spin} 1s linear infinite;
@@ -254,7 +261,7 @@ export const PhotoshootBookingPageStyle = styled.div`
     }
 
     &:disabled {
-      background-color: ${Theme.colors.lightGray};
+      background-color: ${Theme.colors.gray}30;
       color: ${Theme.colors.gray};
       cursor: not-allowed;
     }

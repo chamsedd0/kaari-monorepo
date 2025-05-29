@@ -54,6 +54,7 @@ const PhotoshootBookingPage: React.FC = () => {
     stateRegion: '',
     country: '',
     propertyType: t('photoshoot_booking.property_types.apartment'),
+    phoneNumber: '',
     date: '',
     timeSlot: '',
     comments: '',
@@ -430,6 +431,11 @@ const PhotoshootBookingPage: React.FC = () => {
       return;
     }
     
+    if (!formData.phoneNumber) {
+      alert(t('photoshoot_booking.validation.phone', 'Please provide a phone number for contact purposes.'));
+      return;
+    }
+    
     // Create a copy of form data with location properly handled
     const submissionData = {
       ...formData,
@@ -489,6 +495,7 @@ const PhotoshootBookingPage: React.FC = () => {
       stateRegion: '',
       country: '',
       propertyType: t('photoshoot_booking.property_types.apartment'),
+      phoneNumber: '',
       date: '',
       timeSlot: '',
       comments: '',
@@ -639,6 +646,8 @@ const PhotoshootBookingPage: React.FC = () => {
                   options={propertyTypeOptions}
                 />
               </div>
+              
+              
             </div>
             
             {/* Google Maps Location Picker */}
@@ -780,6 +789,21 @@ const PhotoshootBookingPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+          
+          {/* Phone Number Section */}
+          <div className="phone-section">
+            <h2 className="section-title">{t('photoshoot_booking.contact_title', 'Contact Information')}</h2>
+            
+            <div className="form-group">
+              <label htmlFor="phoneNumber">{t('photoshoot_booking.phone_number', 'Phone Number')}</label>
+              <InputBaseModel
+                value={formData.phoneNumber}
+                onChange={(e) => handleCustomInputChange('phoneNumber', e.target.value)}
+                placeholder={t('photoshoot_booking.phone_number_placeholder', 'Enter your phone number')}
+              />
+              <p className="field-description">{t('photoshoot_booking.phone_description', 'We will use this number to contact you regarding the photoshoot.')}</p>
             </div>
           </div>
           

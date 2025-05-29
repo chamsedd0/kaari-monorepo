@@ -57,7 +57,7 @@ export const Option = styled.div<{ selected?: boolean }>`
 `;
 
 export const Label = styled.div`
-  margin-bottom: 16px;
+  margin-bottom: 30px;
   font: ${Theme.typography.fonts.largeB};
   color: ${Theme.colors.black};
 `;

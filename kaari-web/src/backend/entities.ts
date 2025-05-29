@@ -54,6 +54,7 @@ export interface Property {
   minstay?: string; // Minimum length of stay (e.g., "6 months")
   availableFrom?: Date; // Date from which the property is available
   images: string[]; // URLs to property images
+  videos?: string[]; // URLs to property videos (max 2)
   amenities: string[];
   features: string[];
   status: 'available' | 'occupied';
@@ -171,6 +172,7 @@ export interface PhotoshootBooking {
   id: string;
   advertiserId?: string; // Reference to the User ID (advertiser) who requested the photoshoot
   userId?: string; // Alternative to advertiserId for backward compatibility
+  phoneNumber?: string; // Contact phone number for the photoshoot
   propertyAddress?: {
     street: string;
     city: string;

@@ -61,6 +61,7 @@ interface PropertyFormData {
   minstay: string;
   availableFrom: string;
   images: string[];
+  videos: string[];
   amenities: string[];
   features: string[];
   status: 'available' | 'occupied';
@@ -393,6 +394,50 @@ const ImagePreviewContainer = styled.div`
   }
 `;
 
+const VideoPreviewContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+
+  .video-preview {
+    position: relative;
+    border-radius: ${Theme.borders.radius.sm};
+    overflow: hidden;
+    
+    video {
+      width: 100%;
+      border-radius: ${Theme.borders.radius.sm};
+    }
+    
+    button {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: ${Theme.colors.error}dd;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 2rem;
+      height: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      
+      &:hover {
+        background: ${Theme.colors.error};
+      }
+    }
+    
+    &:hover button {
+      opacity: 1;
+    }
+  }
+`;
+
 const ToggleSwitch = styled.label`
   display: inline-flex;
   align-items: center;
@@ -620,6 +665,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [videoFiles, setVideoFiles] = useState<File[]>([]);
   
   // Property form state
   const [propertyData, setPropertyData] = useState<PropertyFormData>({
@@ -647,6 +693,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     minstay: '',
     availableFrom: '',
     images: [],
+    videos: [],
     amenities: [],
     features: [], // Start with empty features array instead of COMMON_FEATURES
     status: 'available',
@@ -1015,6 +1062,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         minstay: '',
         availableFrom: new Date().toISOString().split('T')[0],
         images: bookingData.images || [],
+        videos: bookingData.videos || [],
         amenities: [],
         features: [], // Start with empty features array instead of COMMON_FEATURES
         status: 'available',
@@ -1242,13 +1290,36 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      setImageFiles(prev => [...prev, ...files].slice(0, 10)); // Limit to 10 files
+      setImageFiles(prev => [...prev, ...files]); // Remove 10 image limit
       
       // Create preview URLs
       const newImageUrls = files.map(file => URL.createObjectURL(file));
       setPropertyData(prev => ({
         ...prev,
-        images: [...prev.images, ...newImageUrls].slice(0, 10)
+        images: [...prev.images, ...newImageUrls]
+      }));
+    }
+  };
+
+  // Add video file handler
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      const currentVideoCount = videoFiles.length + propertyData.videos.length;
+      const availableSlots = Math.max(0, 2 - currentVideoCount);
+      const filesToAdd = files.slice(0, availableSlots);
+      
+      if (filesToAdd.length < files.length) {
+        alert(`You can only upload a maximum of 2 videos. ${files.length - filesToAdd.length} video(s) were not added.`);
+      }
+      
+      setVideoFiles(prev => [...prev, ...filesToAdd]);
+      
+      // Create preview URLs
+      const newVideoUrls = filesToAdd.map(file => URL.createObjectURL(file));
+      setPropertyData(prev => ({
+        ...prev,
+        videos: [...prev.videos, ...newVideoUrls]
       }));
     }
   };
@@ -1279,8 +1350,16 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         ...(images || [])  // Include any images from the local images state
       ].filter(Boolean); // Remove any null/undefined values
       
+      // Collect all videos from various sources
+      const allVideos = [
+        ...(booking.videos || []),
+        ...(propertyData.videos || [])
+      ].filter(Boolean); // Remove any null/undefined values
+      
       console.log(`Total images collected: ${allImages.length}`);
       console.log('Images:', allImages);
+      console.log(`Total videos collected: ${allVideos.length}`);
+      console.log('Videos:', allVideos);
       
       if (allImages.length === 0) {
         alert('Please add at least one image to the property');
@@ -1312,6 +1391,33 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
           console.error('Error uploading image files:', uploadError);
           alert(`Error uploading images: ${uploadError instanceof Error ? uploadError.message : String(uploadError)}`);
           // Continue with existing images
+        }
+      }
+      
+      // Upload any pending video files if needed
+      if (videoFiles.length > 0) {
+        console.log(`Uploading ${videoFiles.length} video files...`);
+        try {
+          const tempPropertyId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+          const basePath = `public/properties/${tempPropertyId}/videos`;
+          
+          const uploadedVideoUrls = await secureUploadMultipleFiles(
+            videoFiles,
+            basePath,
+            'property_video_'
+          );
+          
+          console.log(`Successfully uploaded ${uploadedVideoUrls.length} video files:`, uploadedVideoUrls);
+          
+          // Add the newly uploaded videos to our collection
+          allVideos.push(...uploadedVideoUrls);
+          
+          // Clear the video files
+          setVideoFiles([]);
+        } catch (uploadError) {
+          console.error('Error uploading video files:', uploadError);
+          alert(`Error uploading videos: ${uploadError instanceof Error ? uploadError.message : String(uploadError)}`);
+          // Continue with existing videos
         }
       }
       
@@ -1438,6 +1544,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         minstay: propertyData.minstay || '',
         availableFrom: availableFromDate,
         images: allImages,
+        videos: allVideos,
         amenities: propertyData.amenities || [],
         features: processedFeatures,
         status: 'available',
@@ -1497,7 +1604,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       console.log(`Booking ${bookingId} marked as completed with ${allImages.length} images`);
       
       // Show success message with image count
-      alert(`Property created with ${allImages.length} images and booking completed successfully!`);
+      alert(`Property created with ${allImages.length} images and ${allVideos.length} videos. Booking completed successfully!`);
       
       // Update UI
       loadData(bookingId);
@@ -1511,9 +1618,9 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
             'advertiser',
             'property_created',
             'Property Created Successfully',
-            `Your property "${propertyToSave.title}" has been created with ${allImages.length} images.`,
+            `Your property "${propertyToSave.title}" has been created with ${allImages.length} images and ${allVideos.length} videos.`,
             `/dashboard/advertiser/properties/${propertyId}`,
-            { propertyId, imageCount: allImages.length }
+            { propertyId, imageCount: allImages.length, videoCount: allVideos.length }
           );
           console.log(`Additional frontend notification sent to advertiser ${ownerId} about property creation`);
         }
@@ -1618,12 +1725,50 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
               <h3>Booking Information</h3>
               <p><strong>Date:</strong> {booking.date ? formatDate(booking.date) : 'N/A'}</p>
               <p><strong>Time Slot:</strong> {booking.timeSlot || 'N/A'}</p>
+              <p><strong>Property Type:</strong> {booking.propertyType || 'N/A'}</p>
               <p><strong>Status:</strong> <StatusBadge status={booking.status}>{booking.status}</StatusBadge></p>
-              <p><strong>Created:</strong> {booking.createdAt ? formatDate(booking.createdAt) : 'N/A'}</p>
-              <p><strong>Last Updated:</strong> {booking.updatedAt ? formatDate(booking.updatedAt) : 'N/A'}</p>
-              {booking.completedAt && <p><strong>Completed:</strong> {formatDate(booking.completedAt)}</p>}
-              {booking.comments && <p><strong>Comments:</strong> {booking.comments}</p>}
-              {booking.propertyId && <p><strong>Property ID:</strong> {booking.propertyId}</p>}
+              
+              {/* Address Information */}
+              <div style={{ marginTop: '1rem' }}>
+                <h4>Photoshoot Address</h4>
+                {booking.propertyAddress ? (
+                  <div>
+                    <p><strong>Street:</strong> {booking.propertyAddress.street} {booking.propertyAddress.streetNumber}</p>
+                    {booking.propertyAddress.floor && <p><strong>Floor:</strong> {booking.propertyAddress.floor}</p>}
+                    {booking.propertyAddress.flat && <p><strong>Flat:</strong> {booking.propertyAddress.flat}</p>}
+                    <p><strong>City:</strong> {booking.propertyAddress.city}</p>
+                    <p><strong>State:</strong> {booking.propertyAddress.state}</p>
+                    <p><strong>ZIP Code:</strong> {booking.propertyAddress.zipCode}</p>
+                    <p><strong>Country:</strong> {booking.propertyAddress.country}</p>
+                  </div>
+                ) : (
+                  <div>
+                    <p><strong>Street:</strong> {getBookingStreet(booking) || 'N/A'}</p>
+                    <p><strong>City:</strong> {getBookingCity(booking) || 'N/A'}</p>
+                    {booking.stateRegion && <p><strong>State:</strong> {booking.stateRegion}</p>}
+                    {booking.postalCode && <p><strong>ZIP Code:</strong> {booking.postalCode}</p>}
+                    {booking.country && <p><strong>Country:</strong> {booking.country}</p>}
+                    {booking.floor && <p><strong>Floor:</strong> {booking.floor}</p>}
+                    {booking.flat && <p><strong>Flat:</strong> {booking.flat}</p>}
+                  </div>
+                )}
+              </div>
+              
+              {/* Contact Information */}
+              {booking.phoneNumber && (
+                <div style={{ marginTop: '1rem' }}>
+                  <h4>Contact Information</h4>
+                  <p><strong>Phone Number:</strong> {booking.phoneNumber}</p>
+                </div>
+              )}
+              
+              <div style={{ marginTop: '1rem' }}>
+                <p><strong>Created:</strong> {booking.createdAt ? formatDate(booking.createdAt) : 'N/A'}</p>
+                <p><strong>Last Updated:</strong> {booking.updatedAt ? formatDate(booking.updatedAt) : 'N/A'}</p>
+                {booking.completedAt && <p><strong>Completed:</strong> {formatDate(booking.completedAt)}</p>}
+                {booking.comments && <p><strong>Comments:</strong> {booking.comments}</p>}
+                {booking.propertyId && <p><strong>Property ID:</strong> {booking.propertyId}</p>}
+              </div>
           </div>
           
           {booking.teamId && (
@@ -2474,7 +2619,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                         multiple
                         onChange={handleFileSelect}
                   />
-                  <p className="helper-text">Upload property images (max 10 images)</p>
+                  <p className="helper-text">Upload property images (no limit)</p>
                   {propertyData.images.length > 0 && (
                     <ImagePreviewContainer>
                       {propertyData.images.map((image, index) => (
@@ -2491,6 +2636,37 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                     </div>
                       ))}
                     </ImagePreviewContainer>
+                  )}
+                </StyledFormGroup>
+                
+                {/* Videos */}
+                <div className="section-title">Videos</div>
+                <StyledFormGroup>
+                    <Input 
+                        type="file"
+                        accept="video/*"
+                        multiple
+                        onChange={handleVideoSelect}
+                  />
+                  <p className="helper-text">Upload property videos (max 2 videos)</p>
+                  {propertyData.videos.length > 0 && (
+                    <VideoPreviewContainer>
+                      {propertyData.videos.map((video, index) => (
+                        <div key={index} className="video-preview">
+                          <video src={video} controls width="200" height="150" />
+                          <button onClick={() => {
+                            setPropertyData({
+                              ...propertyData,
+                              videos: propertyData.videos.filter((_, i) => i !== index)
+                            });
+                            // Also remove from videoFiles if it's a local file
+                            setVideoFiles(prev => prev.filter((_, i) => i !== index));
+                          }}>
+                            <FaTrash />
+                          </button>
+                    </div>
+                      ))}
+                    </VideoPreviewContainer>
                   )}
                 </StyledFormGroup>
                 

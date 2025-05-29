@@ -14,6 +14,7 @@ export interface PhotoshootBookingData {
   stateRegion: string;
   country: string;
   propertyType: string;
+  phoneNumber: string;
   date: string;
   timeSlot: string;
   comments: string;
