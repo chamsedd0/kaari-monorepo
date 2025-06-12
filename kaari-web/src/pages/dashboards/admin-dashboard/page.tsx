@@ -46,7 +46,7 @@ import PropertyPage from './properties/page';
 import PropertyEditPage from './properties/[id]/edit/page';
 import UsersPage from './users';
 import UserDetailPage from './user-detail';
-import AdminLogsPage from './logs/page';
+import AdminLogsPage from './logs';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
