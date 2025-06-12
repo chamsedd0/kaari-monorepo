@@ -1,19 +1,10 @@
 import React, { useState } from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { 
-  FaHome, 
-  FaCalendarAlt, 
-  FaUsers, 
-  FaCameraRetro, 
   FaBuilding, 
-  FaCog, 
   FaSignOutAlt, 
   FaEdit, 
-  FaTimesCircle, 
-  FaSearch,
   FaBan,
-  FaPhotoVideo,
-  FaListAlt,
   FaMoneyBillAlt,
   FaUserCog,
   FaClipboardList
@@ -23,10 +14,7 @@ import {
   MdSettings, 
   MdGroup, 
   MdList, 
-  MdMoneyOff,
-  MdCancel,
   MdPhotoCamera,
-  MdPerson
 } from 'react-icons/md';
 
 import {
@@ -58,7 +46,7 @@ import PropertyPage from './properties/page';
 import PropertyEditPage from './properties/[id]/edit/page';
 import UsersPage from './users';
 import UserDetailPage from './user-detail';
-import AdminLogsPage from './logs/page.tsx';
+import AdminLogsPage from './logs/page';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
