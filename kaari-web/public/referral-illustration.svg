@@ -1,0 +1,44 @@
+<svg width="200" height="150" viewBox="0 0 200 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Purple circle background -->
+  <circle cx="120" cy="75" r="60" fill="#E6D8FC" />
+  
+  <!-- Person 1 (left) - Orange/red hair -->
+  <g>
+    <!-- Head -->
+    <circle cx="70" cy="65" r="20" fill="#FFDFC4" />
+    <!-- Hair -->
+    <path d="M50 60C50 40 60 30 70 30C85 30 95 40 95 60C95 60 95 70 90 75C85 80 80 70 80 70C80 70 85 55 70 55C55 55 60 70 60 70C60 70 55 80 50 75C45 70 50 60 50 60Z" fill="#FF8D53" />
+    <!-- Face -->
+    <circle cx="63" cy="60" r="2" fill="#333333" /> <!-- Left eye -->
+    <circle cx="77" cy="60" r="2" fill="#333333" /> <!-- Right eye -->
+    <path d="M70 68C72 70 75 70 77 68" stroke="#333333" stroke-width="1.5" stroke-linecap="round" /> <!-- Smile -->
+    <!-- Body -->
+    <path d="M60 85C60 85 55 100 55 115C55 130 65 135 70 135C75 135 85 130 85 115C85 100 80 85 80 85" fill="#FF8D53" />
+    <rect x="60" y="85" width="20" height="30" fill="white" /> <!-- Shirt -->
+  </g>
+
+  <!-- Person 2 (right) - Brown hair -->
+  <g>
+    <!-- Head -->
+    <circle cx="150" cy="65" r="20" fill="#FFDFC4" />
+    <!-- Hair -->
+    <path d="M130 60C130 40 140 30 150 30C165 30 175 40 175 60C175 70 175 80 170 90C165 100 155 100 155 100C155 100 160 80 150 80C140 80 145 100 145 100C145 100 135 100 130 90C125 80 130 70 130 60Z" fill="#8B4513" />
+    <!-- Face -->
+    <circle cx="143" cy="60" r="2" fill="#333333" /> <!-- Left eye -->
+    <circle cx="157" cy="60" r="2" fill="#333333" /> <!-- Right eye -->
+    <path d="M150 68C152 70 155 70 157 68" stroke="#333333" stroke-width="1.5" stroke-linecap="round" /> <!-- Smile -->
+    <!-- Body -->
+    <path d="M140 85C140 85 135 100 135 115C135 130 145 135 150 135C155 135 165 130 165 115C165 100 160 85 160 85" fill="#8B4513" />
+    <rect x="140" y="85" width="20" height="30" fill="white" /> <!-- Shirt -->
+  </g>
+
+  <!-- 200 Badge -->
+  <g>
+    <rect x="90" y="95" width="40" height="25" rx="5" fill="#FFC107" />
+    <text x="100" y="113" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">200</text>
+  </g>
+
+  <!-- Hands exchanging -->
+  <path d="M85 110C85 110 90 105 95 108" stroke="#FFDFC4" stroke-width="5" stroke-linecap="round" />
+  <path d="M135 110C135 110 130 105 125 108" stroke="#FFDFC4" stroke-width="5" stroke-linecap="round" />
+</svg> 

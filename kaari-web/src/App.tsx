@@ -275,6 +275,37 @@ function App() {
             })()
         }
       />
+      {/* Add routes for referral program sub-pages */}
+      <Route 
+        path="/dashboard/advertiser/referral-program/performance" 
+        element={
+          isAuthenticated && userIsAdvertiser ? 
+            <AdvertiserDashboard /> : 
+            (() => {
+              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                path: '/dashboard/advertiser/referral-program/performance',
+                redirectTo: '/',
+                isAuthenticated: isAuthenticated
+              });
+              return <Navigate to="/" replace />;
+            })()
+        }
+      />
+      <Route 
+        path="/dashboard/advertiser/referral-program/simulator" 
+        element={
+          isAuthenticated && userIsAdvertiser ? 
+            <AdvertiserDashboard /> : 
+            (() => {
+              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                path: '/dashboard/advertiser/referral-program/simulator',
+                redirectTo: '/',
+                isAuthenticated: isAuthenticated
+              });
+              return <Navigate to="/" replace />;
+            })()
+        }
+      />
       <Route 
         path="/dashboard/advertiser/:section" 
         element={

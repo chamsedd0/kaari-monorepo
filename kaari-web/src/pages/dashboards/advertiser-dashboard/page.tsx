@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy } from 'react';
 import { NavigationPannelAdviser } from '../../../components/skeletons/constructed/dashboard-navigation-pannel/navigation-pannel-adviser';
 import { AdvertiserDashboardStyle } from './styles';
 import LoadingScreen from '../../../components/loading/LoadingScreen';
@@ -18,8 +18,9 @@ import PaymentsPage from './payments/page';
 import TenantsPage from './tenants/page';
 import PhotoshootsPage from './photoshoot/page';
 import SupportPage from './support/page';
+import ReferralProgramPage from './referral-program';
 
-type Section = 'Dashboard' | 'MyProfile' | 'Messages' | 'Properties' | 'Reservations' | 'Reviews' | 'Payments' | 'Tenants' | 'Photoshoot' | 'Support';
+type Section = 'Dashboard' | 'MyProfile' | 'Messages' | 'Properties' | 'Reservations' | 'Reviews' | 'Payments' | 'Tenants' | 'Photoshoot' | 'Support' | 'ReferralProgram';
 
 // Map URL segments to section names for better readability in the URL
 const URL_TO_SECTION: Record<string, Section> = {
@@ -33,7 +34,8 @@ const URL_TO_SECTION: Record<string, Section> = {
     'payments': 'Payments',
     'tenants': 'Tenants',
     'photoshoot': 'Photoshoot',
-    'support': 'Support'
+    'support': 'Support',
+    'referral-program': 'ReferralProgram'
 };
 
 // Map section names to URL segments for navigation
@@ -47,7 +49,8 @@ const SECTION_TO_URL: Record<Section, string> = {
     'Payments': 'payments',
     'Tenants': 'tenants',
     'Photoshoot': 'photoshoot',
-    'Support': 'support'
+    'Support': 'support',
+    'ReferralProgram': 'referral-program'
 };
 
 // Map section names to translation keys
@@ -61,7 +64,8 @@ const SECTION_TO_TRANSLATION: Record<Section, string> = {
     'Payments': 'advertiser_dashboard.sections.payments',
     'Tenants': 'advertiser_dashboard.sections.tenants',
     'Photoshoot': 'advertiser_dashboard.sections.photoshoot',
-    'Support': 'advertiser_dashboard.sections.support'
+    'Support': 'advertiser_dashboard.sections.support',
+    'ReferralProgram': 'advertiser_dashboard.sections.referral_program'
 };
 
 const AdvertiserDashboard: React.FC = () => {
@@ -139,6 +143,27 @@ const AdvertiserDashboard: React.FC = () => {
             return <PropertyEditRequestPage />;
         }
         
+        // Handle referral program sub-routes
+        if (location.pathname.includes('/referral-program/performance')) {
+            // Import using the index file
+            const PerformancePage = lazy(() => import('./referral-program/performance'));
+            return (
+                <React.Suspense fallback={<div>Loading...</div>}>
+                    <PerformancePage />
+                </React.Suspense>
+            );
+        }
+        
+        if (location.pathname.includes('/referral-program/simulator')) {
+            // Import using the index file
+            const SimulatorPage = lazy(() => import('./referral-program/simulator'));
+            return (
+                <React.Suspense fallback={<div>Loading...</div>}>
+                    <SimulatorPage />
+                </React.Suspense>
+            );
+        }
+        
         // Otherwise use the standard section rendering logic
         switch (activeSection) {
             case 'Dashboard':
@@ -161,6 +186,8 @@ const AdvertiserDashboard: React.FC = () => {
                 return <PhotoshootsPage />;
             case 'Support':
                 return <SupportPage />;
+            case 'ReferralProgram':
+                return <ReferralProgramPage />;
         }
     };
 

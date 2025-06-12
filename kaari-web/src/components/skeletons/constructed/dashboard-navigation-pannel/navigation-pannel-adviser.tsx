@@ -12,8 +12,9 @@ import PaymentsIcon from "../../icons/Icon-Payments.svg";
 import TenantsIcon from "../../icons/Icon-Tenants.svg";
 import PhotoshootIcon from "../../icons/Icon-Photoshoot.svg";
 import SupportIcon from "../../icons/Icon-Support.svg";
+import ReferralProgramIcon from "../../icons/Icon-ReferralProgram.svg";
 
-type Section = 'Dashboard' | 'MyProfile' | 'Messages' | 'Properties' | 'Reservations' | 'Reviews' | 'Payments' | 'Tenants' | 'Photoshoot' | 'Support';
+type Section = 'Dashboard' | 'MyProfile' | 'Messages' | 'Properties' | 'Reservations' | 'Reviews' | 'Payments' | 'Tenants' | 'Photoshoot' | 'Support' | 'ReferralProgram';
 
 interface NavigationPannelAdviserProps {
     activeSection: Section;
@@ -24,7 +25,7 @@ interface NavigationPannelAdviserProps {
 export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = ({ 
     activeSection, 
     onSectionChange,
-    getTranslatedSectionName = (section) => section === 'MyProfile' ? 'My Profile' : section
+    getTranslatedSectionName = (section) => section === 'MyProfile' ? 'My Profile' : section === 'ReferralProgram' ? 'Referral Program' : section
 }) => {
     return (
         <NavigationPannelDashboardStyle>
@@ -91,6 +92,14 @@ export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = (
             >
                 <img src={TenantsIcon} alt="Tenants" className="nav-link-icon" />
                 <span className="nav-link-text">{getTranslatedSectionName('Tenants')}</span>
+            </button>
+            <button 
+                onClick={() => onSectionChange('ReferralProgram')} 
+                className={`nav-link ${activeSection === 'ReferralProgram' ? 'active' : ''}`}
+                aria-current={activeSection === 'ReferralProgram' ? 'page' : undefined}
+            >
+                <img src={ReferralProgramIcon} alt="Referral Program" className="nav-link-icon" />
+                <span className="nav-link-text">{getTranslatedSectionName('ReferralProgram')}</span>
             </button>
             <button 
                 onClick={() => onSectionChange('Photoshoot')} 
