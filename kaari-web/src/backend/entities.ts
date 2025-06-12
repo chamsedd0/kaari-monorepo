@@ -30,6 +30,16 @@ export interface User {
   };
   properties?: string[]; // References to property IDs owned by this user
   requests?: string[]; // References to request IDs made by this user
+  
+  // Advertiser specific fields
+  isBusiness?: boolean; // Whether the advertiser is a business/agency
+  businessName?: string; // Name of the agency if isBusiness is true
+  businessSize?: string; // Size of the agency if isBusiness is true
+  city?: string; // City of operation for advertiser
+  propertyQuantity?: string; // How many properties the advertiser could list
+  propertyTypes?: string[]; // Types of properties the advertiser has
+  listings?: string[]; // References to listing IDs
+  additionalInfo?: string; // Additional information provided by the advertiser
 }
 
 export interface Property {

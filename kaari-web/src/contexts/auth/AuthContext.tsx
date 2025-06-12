@@ -239,6 +239,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         name: user?.name
       });
       
+      // If this is a new advertiser registration, redirect to the advertiser page
+      if (isNewAdvertiser && role === 'advertiser') {
+        // Use small timeout to ensure auth state is updated before redirect
+        setTimeout(() => {
+          window.location.href = '/become-advertiser?fromAuth=true';
+        }, 100);
+      }
+      
       return user;
     } catch (err: any) {
       console.error("Google sign-in error in context:", err);

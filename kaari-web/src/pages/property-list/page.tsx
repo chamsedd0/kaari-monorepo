@@ -17,6 +17,7 @@ import { Theme } from "../../theme/theme";
 import { AuthModal } from '../../components/skeletons/constructed/modals/auth-modal';
 import closeIcon from '../../components/skeletons/icons/Cross-Icon.svg';
 import { toggleFavoriteProperty, isPropertyFavorited } from "../../backend/server-actions/ClientServerActions.tsx";
+import { getGoogleMapsLoaderOptions } from '../../utils/googleMapsConfig';
 
 
 
@@ -98,7 +99,6 @@ interface PropertyType {
 type SortOptionType = string;
 
 // Add constants for the Google Maps integration
-const GOOGLE_MAPS_API_KEY = 'AIzaSyCqhbPAiPspwgshgE9lzbtkpFZwVMfJoww'; // Temporary hardcoded key - move to .env file for production
 const DEFAULT_MAP_CENTER = { lat: 34.020882, lng: -6.841650 }; // Rabat, Morocco as default center
 const DEFAULT_MAP_ZOOM = 12;
 
@@ -229,11 +229,7 @@ const PropertyMap = memo(({
   }, [properties]);
 
   // Load the Google Maps JavaScript API
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries: ['places', 'geometry']
-  });
+  const { isLoaded, loadError } = useJsApiLoader(getGoogleMapsLoaderOptions());
 
   // Create geocoder instance when maps are loaded
   useEffect(() => {
@@ -787,11 +783,7 @@ export default function PropertyListPage() {
   }, [location.search]);
 
   // Load Google Maps API
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries: ['places', 'geometry']
-  });
+  const { isLoaded } = useJsApiLoader(getGoogleMapsLoaderOptions());
 
   // Fetch properties and set up initial state
   useEffect(() => {

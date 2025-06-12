@@ -58,6 +58,13 @@ export const PhotoshootBookingPageStyle = styled.div`
       font: ${Theme.typography.fonts.mediumB};
       color: ${Theme.colors.black};
       margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      
+      .input-icon {
+        margin-right: 8px;
+        color: ${Theme.colors.primary};
+      }
     }
     
     .field-description {
@@ -66,7 +73,34 @@ export const PhotoshootBookingPageStyle = styled.div`
       margin-top: 6px;
       margin-bottom: 0;
     }
-
+    
+    .address-search-wrapper {
+      width: 100%;
+    }
+    
+    .address-search-input {
+      width: 100%;
+      
+      input {
+        width: 100%;
+        padding: 22px 24px;
+        border: ${Theme.borders.primary};
+        border-radius: ${Theme.borders.radius.extreme};
+        font: ${Theme.typography.fonts.largeM};
+        color: ${Theme.colors.primary};
+        background-color: ${Theme.colors.white};
+        transition: all 0.3s ease;
+        
+        &::placeholder {
+          color: ${Theme.colors.tertiary};
+        }
+        
+        &:focus {
+          outline: none;
+          border-color: ${Theme.colors.primary};
+        }
+      }
+    }
   }
   
   /* Map section styles */
@@ -108,32 +142,48 @@ export const PhotoshootBookingPageStyle = styled.div`
 
   .map-search-input {
     width: 100%;
-    padding: 14px 15px 14px 45px;
+    padding: 22px 24px;
     border: ${Theme.borders.primary};
-    border-radius: 8px;
-    font: ${Theme.typography.fonts.mediumM};
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: ${Theme.borders.radius.extreme};
+    font: ${Theme.typography.fonts.largeM};
+    color: ${Theme.colors.primary};
+    background-color: ${Theme.colors.white};
+    transition: all 0.3s ease;
+
+    &::placeholder {
+      color: ${Theme.colors.tertiary};
+    }
 
     &:focus {
       outline: none;
       border-color: ${Theme.colors.primary};
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    &::placeholder {
-      color: ${Theme.colors.gray};
     }
   }
 
   .map-container {
+    margin: 20px 0;
     width: 100%;
     height: 350px;
     border-radius: 12px;
     overflow: hidden;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border: ${Theme.borders.primary};
+    position: relative;
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    /* Improve visibility of Google marker */
+    .gm-style-iw + div {
+      border: 3px solid ${Theme.colors.primary};
+    }
+    
+    /* Make sure markers are visible */
+    .gmnoprint img, .gm-style img {
+      max-width: none !important;
+      z-index: 1000 !important;
+    }
   }
 
   .map-hint {
@@ -170,20 +220,6 @@ export const PhotoshootBookingPageStyle = styled.div`
     p {
       color: ${Theme.colors.gray2};
       font: ${Theme.typography.fonts.mediumM};
-    }
-  }
-  
-  .map-container {
-    margin: 20px 0;
-    width: 100%;
-    height: 350px;
-    border-radius: 12px;
-    overflow: hidden;
-    
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
     }
   }
   
@@ -413,6 +449,67 @@ export const PhotoshootBookingPageStyle = styled.div`
     &.selected {
       background-color: ${Theme.colors.primary};
       color: white;
+    }
+  }
+
+  .contact-section {
+    margin-bottom: 48px;
+    
+    .form-row {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 10px;
+      
+      @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .form-group {
+        flex: 1;
+      }
+    }
+    
+    .field-description {
+      font: ${Theme.typography.fonts.smallM};
+      color: ${Theme.colors.gray2};
+      margin-top: 6px;
+      margin-bottom: 0;
+    }
+  }
+
+  /* Custom fallback marker for maps */
+  .custom-map-marker {
+    position: absolute;
+    width: 30px;
+    height: 42px;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -100%);
+    z-index: 10000;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 30px;
+      height: 30px;
+      background-color: ${Theme.colors.primary};
+      border-radius: 50% 50% 0 50%;
+      transform: rotate(45deg);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 10px;
+      height: 10px;
+      background-color: white;
+      border-radius: 50%;
     }
   }
 `;

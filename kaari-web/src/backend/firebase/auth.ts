@@ -7,11 +7,105 @@ import {
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
-  User as FirebaseUser
+  User as FirebaseUser,
+  getAuth
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { auth, db } from './config';
 import { User } from '../entities';
+
+/**
+ * Interface for advertiser additional information
+ */
+export interface AdvertiserInfo {
+  userId: string;
+  isBusiness: boolean;
+  businessName?: string;
+  businessSize?: string;
+  city: string;
+  phoneNumber: string;
+  propertyQuantity: string;
+  propertyTypes: string[];
+  additionalInfo?: string;
+}
+
+/**
+ * Save additional information for an advertiser
+ */
+export const saveAdvertiserInfo = async (advertiserInfo: AdvertiserInfo): Promise<void> => {
+  try {
+    const { userId, ...infoWithoutId } = advertiserInfo;
+    const userDocRef = doc(db, 'users', userId);
+    
+    // Check if user document exists in Firestore
+    const userDoc = await getDoc(userDocRef);
+    
+    if (userDoc.exists()) {
+      // User exists, update with advertiser details
+      await updateDoc(userDocRef, {
+        // Ensure role is set to advertiser
+        role: 'advertiser',
+        // Add business flag to the main user document
+        isBusiness: advertiserInfo.isBusiness,
+        // Only include business details if it's a business
+        ...(advertiserInfo.isBusiness && {
+          businessName: advertiserInfo.businessName,
+          businessSize: advertiserInfo.businessSize
+        }),
+        // Add other advertiser details
+        city: advertiserInfo.city,
+        phoneNumber: advertiserInfo.phoneNumber,
+        propertyQuantity: advertiserInfo.propertyQuantity,
+        propertyTypes: advertiserInfo.propertyTypes,
+        additionalInfo: advertiserInfo.additionalInfo,
+        // Update timestamp
+        updatedAt: serverTimestamp()
+      });
+    } else {
+      // User document doesn't exist, create it
+      // This can happen if auth was created but Firestore document wasn't
+      const auth = getAuth();
+      const firebaseUser = auth.currentUser;
+      
+      if (!firebaseUser) {
+        throw new Error('No authenticated user found');
+      }
+      
+      // Create basic user info
+      const newUser: Omit<User, 'id'> = {
+        email: firebaseUser.email || '',
+        name: firebaseUser.displayName || '',
+        role: 'advertiser',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        // Add advertiser-specific fields
+        isBusiness: advertiserInfo.isBusiness,
+        ...(advertiserInfo.isBusiness && {
+          businessName: advertiserInfo.businessName,
+          businessSize: advertiserInfo.businessSize
+        }),
+        city: advertiserInfo.city,
+        phoneNumber: advertiserInfo.phoneNumber,
+        propertyQuantity: advertiserInfo.propertyQuantity,
+        propertyTypes: advertiserInfo.propertyTypes,
+        additionalInfo: advertiserInfo.additionalInfo,
+        // Initialize empty arrays for collections
+        properties: [],
+        requests: []
+      };
+      
+      // Create the user document
+      await setDoc(userDocRef, {
+        ...newUser,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    }
+  } catch (error) {
+    console.error('Error saving advertiser info:', error);
+    throw error;
+  }
+};
 
 /**
  * Sign up a new user with email and password
@@ -218,6 +312,56 @@ export const getCurrentUserProfile = async (): Promise<User | null> => {
     return null;
   } catch (error) {
     console.error('Error getting current user profile:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get or create Firestore document for the current authenticated user
+ * This is useful when a user has been authenticated but doesn't have a Firestore document yet
+ */
+export const getOrCreateUserDocument = async (): Promise<User | null> => {
+  try {
+    const firebaseUser = await getCurrentUser();
+    
+    if (!firebaseUser) {
+      return null;
+    }
+    
+    const userDocRef = doc(db, 'users', firebaseUser.uid);
+    const userDoc = await getDoc(userDocRef);
+    
+    if (userDoc.exists()) {
+      // User document exists, return it
+      return {
+        id: firebaseUser.uid,
+        ...userDoc.data()
+      } as User;
+    } else {
+      // User document doesn't exist, create it
+      const newUser: Omit<User, 'id'> = {
+        email: firebaseUser.email || '',
+        name: firebaseUser.displayName || '',
+        role: 'client', // Default role
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        properties: [],
+        requests: []
+      };
+      
+      await setDoc(userDocRef, {
+        ...newUser,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      
+      return {
+        id: firebaseUser.uid,
+        ...newUser
+      };
+    }
+  } catch (error) {
+    console.error('Error getting or creating user document:', error);
     throw error;
   }
 }; 

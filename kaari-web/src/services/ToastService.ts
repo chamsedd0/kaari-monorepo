@@ -136,28 +136,8 @@ export const useToastService = () => {
       showToast('error', 'Verification Rejected', reason || 'Your identity verification has been rejected. Please try again with valid documents.');
     },
     profileIncomplete: (message?: string, userRole?: string) => {
-      const baseMessage = message || 'Please complete your profile information for a better experience.';
-      const profilePath = userRole === 'advertiser' 
-        ? '/dashboard/advertiser/profile' 
-        : '/dashboard/user/profile';
-      
-      // Always use same title to help prevent duplicates
-      const title = 'Complete Your Profile';
-      
-      showToast(
-        'info',
-        title,
-        `${baseMessage} Visit your profile page to complete your information.`,
-        true,
-        8000
-      );
-      
-      // Also emit an event that profile navigation is suggested
-      eventBus.emit(EventType.PROFILE_NAVIGATION_SUGGESTED, {
-        path: profilePath,
-        reason: 'incomplete_profile',
-        timestamp: Date.now()
-      });
+      // This functionality has been removed as requested by the owner
+      return;
     }
   };
 

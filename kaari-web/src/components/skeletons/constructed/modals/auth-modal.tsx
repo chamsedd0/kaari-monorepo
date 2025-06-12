@@ -827,14 +827,44 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   aria-busy={isSubmitting || loading ? 'true' : 'false'}
                 />
 
-                <button 
-                  type="button"
-                  onClick={toggleAdvertiserMode}
-                  className="advertiser-toggle"
-                  disabled={isSubmitting || loading}
-                >
-                  {isAdvertiserMode ? "← Back to Regular Sign In" : "I am an Advertiser"}
-                </button>
+                {isAdvertiserMode ? (
+                  <button 
+                    type="button"
+                    onClick={toggleAdvertiserMode}
+                    className="advertiser-toggle"
+                    disabled={isSubmitting || loading}
+                  >
+                    ← Back to Regular Sign In
+                  </button>
+                ) : (
+                  <button 
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        // Set loading state
+                        setIsSubmitting(true);
+                        
+                        // Close the modal first to improve UX
+                        onClose();
+                        
+                        // Trigger Google sign-in with advertiser flag
+                        await signInWithGooglePopup('advertiser', true);
+                        
+                        // The redirect will happen via the auth context handler
+                        // We'll go to step 1 with prefilled data, not skipping steps
+                      } catch (error) {
+                        console.error("Error in become advertiser flow:", error);
+                        toast.auth.loginError("Failed to start advertiser registration. Please try again.");
+                      } finally {
+                        setIsSubmitting(false);
+                      }
+                    }}
+                    className="advertiser-toggle"
+                    disabled={isSubmitting || loading}
+                  >
+                    Become an Advertiser
+                  </button>
+                )}
               </>
             )}
           </form>

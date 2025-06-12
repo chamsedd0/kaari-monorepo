@@ -26,6 +26,7 @@ import { getUserById } from '../../backend/server-actions/UserServerActions';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { useStore } from "../../backend/store";
 import { IoEyeOutline, IoPersonCircleOutline, IoLogInOutline, IoHomeOutline } from 'react-icons/io5';
+import { getGoogleMapsLoaderOptions } from '../../utils/googleMapsConfig';
 
 
 
@@ -94,9 +95,6 @@ interface User {
   aboutMe?: string;
 }
 
-// Google Maps API key
-const GOOGLE_MAPS_API_KEY = 'AIzaSyCqhbPAiPspwgshgE9lzbtkpFZwVMfJoww'; // Should be moved to .env for production
-
 // Default map settings for Morocco
 const DEFAULT_MAP_CENTER = { lat: 34.020882, lng: -6.841650 }; // Rabat, Morocco
 const DEFAULT_MAP_ZOOM = 15;
@@ -137,11 +135,7 @@ const PropertyPageComponent = () => {
   const isClient = currentUser?.role === 'client';
   
   // Load Google Maps API
-  const { isLoaded: mapsLoaded, loadError: mapsError } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries: ['places', 'geometry']
-  });
+  const { isLoaded: mapsLoaded, loadError: mapsError } = useJsApiLoader(getGoogleMapsLoaderOptions());
   
   // Map configuration
   const [mapCenter, setMapCenter] = useState(DEFAULT_MAP_CENTER);

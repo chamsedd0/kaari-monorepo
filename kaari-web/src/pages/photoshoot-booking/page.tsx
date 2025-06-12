@@ -9,15 +9,14 @@ import TextAreaBaseModel from '../../components/skeletons/inputs/input-fields/te
 import { PurpleButtonLB60 } from '../../components/skeletons/buttons/purple_LB60';
 import { DEFAULT_TIME_SLOTS } from '../../config/constants';
 
-import { FaClock, FaChevronLeft, FaChevronRight, FaSpinner, FaMapMarkerAlt, FaSearch } from 'react-icons/fa';
+import { FaClock, FaChevronLeft, FaChevronRight, FaSpinner, FaMapMarkerAlt, FaSearch, FaPhoneAlt, FaUser } from 'react-icons/fa';
 import SelectFieldBaseModelVariant1 from '../../components/skeletons/inputs/select-fields/select-field-base-model-variant-1';
 import photoshootService from '../../services/photoshoot-service';
 import Modal from '../../components/skeletons/constructed/modal/modal';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { GoogleMap, useJsApiLoader, Marker, StandaloneSearchBox } from '@react-google-maps/api';
-
-// Google Maps API Key
-const GOOGLE_MAPS_API_KEY = 'AIzaSyCqhbPAiPspwgshgE9lzbtkpFZwVMfJoww';
+import { getGoogleMapsLoaderOptions } from '../../utils/googleMapsConfig';
+import { useStore } from '../../backend/store';
 
 // Default map center (Rabat, Morocco)
 const DEFAULT_MAP_CENTER = { lat: 34.020882, lng: -6.841650 };
@@ -28,9 +27,6 @@ const mapContainerStyle = {
   height: '350px',
   borderRadius: '12px',
 };
-
-// Libraries needed for Google Maps
-const libraries = ['places', 'geometry'];
 
 // Declare global google namespace
 declare global {
@@ -43,6 +39,9 @@ const PhotoshootBookingPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   
+  // Get current user information from the store
+  const currentUser = useStore(state => state.user);
+  
   // State for form values
   const [formData, setFormData] = useState({
     streetName: '',
@@ -54,11 +53,12 @@ const PhotoshootBookingPage: React.FC = () => {
     stateRegion: '',
     country: '',
     propertyType: t('photoshoot_booking.property_types.apartment'),
-    phoneNumber: '',
+    phoneNumber: currentUser?.phoneNumber || '', // Prefill phone number if available
+    name: currentUser?.name || '', // Prefill name if available
     date: '',
     timeSlot: '',
     comments: '',
-    location: null as { lat: number; lng: number } | null,
+    location: DEFAULT_MAP_CENTER, // Start with default location
   });
 
   // State for selected date
@@ -74,12 +74,15 @@ const PhotoshootBookingPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
-  const [disabledDates, setDisabledDates] = useState<Date[]>([]);
+  const [disabledDates] = useState<Date[]>([]);
 
-  // Google Maps-related state
-  const [mapCenter, setMapCenter] = useState(DEFAULT_MAP_CENTER);
-  const [markerPosition, setMarkerPosition] = useState<google.maps.LatLngLiteral | null>(null);
+  // Google Maps-related state - explicitly initialize marker position with default
+  const [mapCenter, setMapCenter] = useState<google.maps.LatLngLiteral>(DEFAULT_MAP_CENTER);
+  const [markerPosition, setMarkerPosition] = useState<google.maps.LatLngLiteral>(DEFAULT_MAP_CENTER);
   const [mapZoom, setMapZoom] = useState(12);
+  const [showFallbackMarker, setShowFallbackMarker] = useState(false);
+  
+  // Refs for maps
   const mapRef = useRef<google.maps.Map>();
   const searchBoxRef = useRef<google.maps.places.SearchBox>();
   const geocoderRef = useRef<google.maps.Geocoder>();
@@ -94,38 +97,161 @@ const PhotoshootBookingPage: React.FC = () => {
     t('photoshoot_booking.property_types.townhouse')
   ];
 
-  // Inside the PhotoshootBookingPage component, add the current user state
-  const [currentUser, setCurrentUser] = useState<any>(null);
-  const [authChecked, setAuthChecked] = useState(false);
-
-  // Load Google Maps JavaScript API
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
-    libraries: libraries as any[]
-  });
-
   // Add this useEffect to check for authentication state
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      setAuthChecked(true);
+    const unsubscribe = onAuthStateChanged(auth, () => {
+      // Authentication state change handler - implementation removed but keeping the hook
+      // for future use
     });
     
     return () => unsubscribe();
   }, []);
 
+  // Load Google Maps JavaScript API
+  const { isLoaded } = useJsApiLoader(getGoogleMapsLoaderOptions());
+
+  // Force marker to be visible when component mounts and any time isLoaded changes
+  useEffect(() => {
+    if (isLoaded) {
+      console.log("Maps API loaded, ensuring marker is visible");
+      // Always set a marker position when the map loads
+      setMarkerPosition(prevPosition => {
+        // Only update if not already set
+        if (!prevPosition || (prevPosition.lat === 0 && prevPosition.lng === 0)) {
+          console.log("Setting initial marker position to:", DEFAULT_MAP_CENTER);
+          return DEFAULT_MAP_CENTER;
+        }
+        console.log("Keeping existing marker position:", prevPosition);
+        return prevPosition;
+      });
+      
+      // Make sure map is centered
+      setMapCenter(DEFAULT_MAP_CENTER);
+    }
+  }, [isLoaded]);
+  
+  // Add direct timeout to ensure marker is set after the map is fully loaded
+  useEffect(() => {
+    if (isLoaded) {
+      const timer = setTimeout(() => {
+        if (!markerPosition || (markerPosition.lat === 0 && markerPosition.lng === 0)) {
+          console.log("Timeout: forcing marker position to be set");
+          setMarkerPosition(DEFAULT_MAP_CENTER);
+        }
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isLoaded, markerPosition]);
+
   // Create geocoder instance when maps are loaded
   useEffect(() => {
     if (isLoaded && window.google && window.google.maps) {
       geocoderRef.current = new window.google.maps.Geocoder();
+      console.log("Maps loaded, geocoder initialized");
     }
   }, [isLoaded]);
 
+  // Create a function to handle reverse geocoding and updating fields
+  const updateAddressFromLocation = useCallback((position: { lat: number, lng: number }) => {
+    if (!geocoderRef.current) {
+      console.log("Geocoder not available");
+      return;
+    }
+    
+    console.log("Reverse geocoding position:", position);
+    
+    geocoderRef.current.geocode({ location: position }, (results, status) => {
+      if (status === 'OK' && results && results[0]) {
+        console.log("Geocoding result:", results[0]);
+        const place = results[0];
+        
+        // Extract address components
+        if (place.address_components) {
+          let streetName = '';
+          let streetNumber = '';
+          let city = '';
+          let state = '';
+          let postalCode = '';
+          let country = '';
+          
+          place.address_components.forEach(component => {
+            const types = component.types;
+            
+            if (types.includes('street_number')) {
+              streetNumber = component.long_name;
+            }
+            
+            if (types.includes('route')) {
+              streetName = component.long_name;
+            }
+            
+            if (types.includes('locality')) {
+              city = component.long_name;
+            }
+            
+            if (types.includes('administrative_area_level_1')) {
+              state = component.long_name;
+            }
+            
+            if (types.includes('postal_code')) {
+              postalCode = component.long_name;
+            }
+            
+            if (types.includes('country')) {
+              country = component.long_name;
+            }
+          });
+          
+          console.log("Extracted address components:", {
+            streetName, streetNumber, city, state, postalCode, country
+          });
+          
+          // Update form data with address components
+          setFormData(prev => ({
+            ...prev,
+            streetName: streetName || prev.streetName,
+            streetNumber: streetNumber || prev.streetNumber,
+            city: city || prev.city,
+            stateRegion: state || prev.stateRegion,
+            postalCode: postalCode || prev.postalCode,
+            country: country || prev.country,
+            location: position
+          }));
+        }
+      } else {
+        console.log("Geocoding failed with status:", status);
+      }
+    });
+  }, []);
+
   // Handle map load
   const onMapLoad = useCallback((map: google.maps.Map) => {
+    console.log("Map loaded, setting ref");
     mapRef.current = map;
+    
+    // Make sure we have a marker visible by default
+    console.log("Current marker position on map load:", markerPosition);
+    
+    // Add click listener to map to allow placing marker by clicking
+    map.addListener('click', (e: google.maps.MapMouseEvent) => {
+      if (e.latLng) {
+        const clickPosition = {
+          lat: e.latLng.lat(),
+          lng: e.latLng.lng()
+        };
+        
+        console.log("Map clicked, setting new position:", clickPosition);
+        
+        // Update marker position and map center
+        setMarkerPosition(clickPosition);
+        setMapCenter(clickPosition);
+        
+        // Update address fields from the new location
+        updateAddressFromLocation(clickPosition);
+      }
+    });
   }, []);
 
   // Handle search box load
@@ -138,8 +264,11 @@ const PhotoshootBookingPage: React.FC = () => {
     if (searchBoxRef.current) {
       const places = searchBoxRef.current.getPlaces();
       
+      console.log("Places changed, received places:", places?.length);
+      
       if (places && places.length > 0) {
         const place = places[0];
+        console.log("Selected place:", place.formatted_address);
         
         if (place.geometry && place.geometry.location) {
           // Get location
@@ -148,65 +277,15 @@ const PhotoshootBookingPage: React.FC = () => {
             lng: place.geometry.location.lng()
           };
           
+          console.log("New location from search:", location);
+          
           // Update map
           setMapCenter(location);
           setMarkerPosition(location);
           setMapZoom(16);
           
-          // Update form data with location
-          setFormData(prev => ({
-            ...prev,
-            location
-          }));
-          
-          // Extract address components
-          if (place.address_components) {
-            let streetName = '';
-            let streetNumber = '';
-            let city = '';
-            let state = '';
-            let postalCode = '';
-            let country = '';
-            
-            place.address_components.forEach(component => {
-              const types = component.types;
-              
-              if (types.includes('street_number')) {
-                streetNumber = component.long_name;
-              }
-              
-              if (types.includes('route')) {
-                streetName = component.long_name;
-              }
-              
-              if (types.includes('locality')) {
-                city = component.long_name;
-              }
-              
-              if (types.includes('administrative_area_level_1')) {
-                state = component.long_name;
-              }
-              
-              if (types.includes('postal_code')) {
-                postalCode = component.long_name;
-              }
-              
-              if (types.includes('country')) {
-                country = component.long_name;
-              }
-            });
-            
-            // Update form data with address components
-            setFormData(prev => ({
-              ...prev,
-              streetName: streetName || prev.streetName,
-              streetNumber: streetNumber || prev.streetNumber,
-              city: city || prev.city,
-              stateRegion: state || prev.stateRegion,
-              postalCode: postalCode || prev.postalCode,
-              country: country || prev.country
-            }));
-          }
+          // Update address fields from the new location
+          updateAddressFromLocation(location);
         }
       }
     }
@@ -222,69 +301,8 @@ const PhotoshootBookingPage: React.FC = () => {
       
       setMarkerPosition(newPosition);
       
-      // Update form data with new position
-      setFormData(prev => ({
-        ...prev,
-        location: newPosition
-      }));
-      
-      // Reverse geocode the new position to get address
-      if (geocoderRef.current) {
-        geocoderRef.current.geocode({ location: newPosition }, (results, status) => {
-          if (status === 'OK' && results && results[0]) {
-            const place = results[0];
-            
-            // Extract address components
-            if (place.address_components) {
-              let streetName = '';
-              let streetNumber = '';
-              let city = '';
-              let state = '';
-              let postalCode = '';
-              let country = '';
-              
-              place.address_components.forEach(component => {
-                const types = component.types;
-                
-                if (types.includes('street_number')) {
-                  streetNumber = component.long_name;
-                }
-                
-                if (types.includes('route')) {
-                  streetName = component.long_name;
-                }
-                
-                if (types.includes('locality')) {
-                  city = component.long_name;
-                }
-                
-                if (types.includes('administrative_area_level_1')) {
-                  state = component.long_name;
-                }
-                
-                if (types.includes('postal_code')) {
-                  postalCode = component.long_name;
-                }
-                
-                if (types.includes('country')) {
-                  country = component.long_name;
-                }
-              });
-              
-              // Update form data with address components
-              setFormData(prev => ({
-                ...prev,
-                streetName: streetName || prev.streetName,
-                streetNumber: streetNumber || prev.streetNumber,
-                city: city || prev.city,
-                stateRegion: state || prev.stateRegion,
-                postalCode: postalCode || prev.postalCode,
-                country: country || prev.country
-              }));
-            }
-          }
-        });
-      }
+      // Update address fields from the new location
+      updateAddressFromLocation(newPosition);
     }
   }, []);
 
@@ -318,11 +336,8 @@ const PhotoshootBookingPage: React.FC = () => {
             setMarkerPosition(location);
             setMapZoom(16);
             
-            // Update form data with location
-            setFormData(prev => ({
-              ...prev,
-              location
-            }));
+            // Update address fields from the new location
+            updateAddressFromLocation(location);
           }
         }
       });
@@ -337,7 +352,8 @@ const PhotoshootBookingPage: React.FC = () => {
     markerPosition
   ]);
 
-  // Check date availability
+  // Check date availability - commented out but kept for future use
+  /*
   const checkDateAvailability = async (date: Date): Promise<boolean> => {
     try {
       const response = await photoshootService.checkAvailability(date);
@@ -347,6 +363,7 @@ const PhotoshootBookingPage: React.FC = () => {
       return false;
     }
   };
+  */
 
   // Handle input change for custom components
   const handleCustomInputChange = (field: string, value: string) => {
@@ -431,6 +448,11 @@ const PhotoshootBookingPage: React.FC = () => {
       return;
     }
     
+    if (!formData.name) {
+      alert(t('photoshoot_booking.validation.name', 'Please provide your name.'));
+      return;
+    }
+    
     if (!formData.phoneNumber) {
       alert(t('photoshoot_booking.validation.phone', 'Please provide a phone number for contact purposes.'));
       return;
@@ -483,7 +505,8 @@ const PhotoshootBookingPage: React.FC = () => {
     handleSubmit({});
   };
   
-  // Reset form to initial state
+  // Reset form to initial state - commented out but kept for future use
+  /*
   const resetForm = () => {
     setFormData({
       streetName: '',
@@ -496,17 +519,19 @@ const PhotoshootBookingPage: React.FC = () => {
       country: '',
       propertyType: t('photoshoot_booking.property_types.apartment'),
       phoneNumber: '',
+      name: '',
       date: '',
       timeSlot: '',
       comments: '',
-      location: null
+      location: DEFAULT_MAP_CENTER
     });
     setSelectedDate(null);
     setSelectedTimeSlot('');
-    setMarkerPosition(null);
+    setMarkerPosition(DEFAULT_MAP_CENTER);
     setMapCenter(DEFAULT_MAP_CENTER);
     setMapZoom(12);
   };
+  */
   
   // Navigate to previous day
   const navigatePrevDay = () => {
@@ -543,6 +568,192 @@ const PhotoshootBookingPage: React.FC = () => {
     );
   };
   
+  // Add a console log to debug marker position in the render method
+  console.log("Rendering component with marker position:", markerPosition);
+
+  // Add a useEffect to update the phone number and name if the user data loads after component mount
+  useEffect(() => {
+    if (currentUser) {
+      const updates: Partial<typeof formData> = {};
+      
+      if (currentUser.phoneNumber && !formData.phoneNumber) {
+        updates.phoneNumber = currentUser.phoneNumber;
+      }
+      
+      if (currentUser.name && !formData.name) {
+        updates.name = currentUser.name;
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          ...updates
+        }));
+        console.log("Prefilled user data:", updates);
+      }
+    }
+  }, [currentUser, formData.phoneNumber, formData.name]);
+
+  // Add these console logs to check marker position state
+  useEffect(() => {
+    console.log("Marker position changed:", markerPosition);
+  }, [markerPosition]);
+
+  // Component for a fallback DOM marker
+  const FallbackMarker = () => {
+    const mapContainerRef = useRef<HTMLDivElement>(null);
+    
+    useEffect(() => {
+      if (!mapContainerRef.current) return;
+      
+      // Create a marker element
+      const marker = document.createElement('div');
+      marker.className = 'custom-map-marker';
+      marker.style.position = 'absolute';
+      marker.style.top = '50%';
+      marker.style.left = '50%';
+      marker.style.zIndex = '10000';
+      
+      // Add to map container
+      mapContainerRef.current.appendChild(marker);
+      
+      // Cleanup
+      return () => {
+        if (mapContainerRef.current && marker.parentNode) {
+          marker.parentNode.removeChild(marker);
+        }
+      };
+    }, []);
+    
+    return <div ref={mapContainerRef} className="fallback-marker-container" />;
+  };
+
+  // Update the render map function to include a fallback DOM marker
+  const renderMap = () => {
+    if (!isLoaded) {
+      return (
+        <div className="map-loading">
+          <FaSpinner className="spinner" />
+          <p>{t('photoshoot_booking.loading_map', 'Loading map...')}</p>
+        </div>
+      );
+    }
+
+    console.log("Rendering map with marker at position:", markerPosition);
+    
+    return (
+      <>
+        <div className="map-container">
+          <GoogleMap
+            mapContainerClassName="map-container"
+            center={mapCenter}
+            zoom={mapZoom}
+            onLoad={onMapLoad}
+            mapContainerStyle={{
+              width: '100%',
+              height: '400px',
+              borderRadius: '10px',
+              border: '1px solid #ccc',
+            }}
+            options={{
+              mapTypeControl: false,
+              streetViewControl: false,
+              fullscreenControl: true,
+              zoomControl: true,
+            }}
+            onClick={(e) => {
+              if (e.latLng) {
+                const clickPosition = {
+                  lat: e.latLng.lat(),
+                  lng: e.latLng.lng()
+                };
+                console.log("Map clicked, new position:", clickPosition);
+                setMarkerPosition(clickPosition);
+                setMapCenter(clickPosition);
+                
+                // Update address fields from the new location
+                updateAddressFromLocation(clickPosition);
+              }
+            }}
+          >
+            {/* Primary marker implementation */}
+            {isLoaded && markerPosition && (
+              <Marker
+                position={markerPosition}
+                draggable
+                icon={{
+                  url: '/map-marker.svg',
+                  scaledSize: new window.google.maps.Size(40, 40),
+                }}
+                onClick={() => console.log("Marker clicked")}
+                onDragEnd={(e) => {
+                  if (e.latLng) {
+                    const newPosition = {
+                      lat: e.latLng.lat(),
+                      lng: e.latLng.lng()
+                    };
+                    console.log("Marker dragged to:", newPosition);
+                    setMarkerPosition(newPosition);
+                    
+                    // Update address fields from the new location
+                    updateAddressFromLocation(newPosition);
+                  }
+                }}
+              />
+            )}
+
+            {/* Fallback marker implementation */}
+            {markerPosition && isLoaded && showFallbackMarker && (
+              <Marker
+                position={markerPosition}
+                draggable
+                visible={true}
+                clickable={true}
+                opacity={1.0}
+                zIndex={1000}
+                animation={window.google.maps.Animation.DROP}
+                icon={{
+                  url: '/map-marker.svg',
+                  scaledSize: new window.google.maps.Size(40, 40),
+                }}
+                onDragEnd={(e) => {
+                  if (e.latLng) {
+                    const newPosition = {
+                      lat: e.latLng.lat(),
+                      lng: e.latLng.lng()
+                    };
+                    console.log("Fallback marker dragged to:", newPosition);
+                    setMarkerPosition(newPosition);
+                    
+                    // Update address fields from the new location
+                    updateAddressFromLocation(newPosition);
+                  }
+                }}
+              />
+            )}
+          </GoogleMap>
+          
+          {/* Fallback marker as direct DOM element */}
+          <div 
+            className="custom-map-marker" 
+            style={{ 
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              zIndex: 9999,
+              pointerEvents: 'none'
+            }}
+          />
+        </div>
+        
+        <p className="map-hint">
+          <FaMapMarkerAlt className="map-hint-icon" />
+          {t('photoshoot_booking.drag_marker_hint', 'Drag the marker or click on the map to set the exact location of your property')}
+        </p>
+      </>
+    );
+  };
+
   return (
     <>
       <UnifiedHeader />
@@ -556,13 +767,35 @@ const PhotoshootBookingPage: React.FC = () => {
             
             <div className="form-grid">
               <div className="form-group">
-                <label htmlFor="streetName">{t('photoshoot_booking.street_name', 'Street Name')}</label>
-                <InputBaseModel
-                  value={formData.streetName}
-                  onChange={(e) => handleCustomInputChange('streetName', e.target.value)}
-                  placeholder={t('photoshoot_booking.street_name_placeholder', 'Enter street name')}
-                  
-                />
+              <label htmlFor="streetName" style={{marginBottom: '24px'}}>{t('photoshoot_booking.street_name', 'Street Name')}</label>
+
+                
+                <div className="address-search-wrapper">
+                  {isLoaded ? (
+                    <StandaloneSearchBox
+                      onLoad={onSearchBoxLoad}
+                      onPlacesChanged={onPlacesChanged}
+                    >
+                      <div className="address-search-input">
+                        <input
+                          type="text"
+                          value={formData.streetName}
+                          onChange={(e) => handleCustomInputChange('streetName', e.target.value)}
+                          placeholder={t('photoshoot_booking.street_name_placeholder', 'Search for your address')}
+                          className="map-search-input"
+                        />
+                      </div>
+                    </StandaloneSearchBox>
+                  ) : (
+                    <InputBaseModel
+                      value={formData.streetName}
+                      title={t('photoshoot_booking.street_name', 'Street Name')}
+                      onChange={(e) => handleCustomInputChange('streetName', e.target.value)}
+                      placeholder={t('photoshoot_booking.street_name_placeholder', 'Enter street name')}
+                    />
+                  )}
+                </div>
+                <p className="field-description">{t('photoshoot_booking.address_search_help', 'Search for your address to automatically fill the fields, or enter manually')}</p>
               </div>
               
               <div className="form-row">
@@ -653,61 +886,9 @@ const PhotoshootBookingPage: React.FC = () => {
             {/* Google Maps Location Picker */}
             <div className="map-section">
               <h3 className="map-title">{t('photoshoot_booking.locate_on_map', 'Locate on Map')}</h3>
-              <p className="map-description">{t('photoshoot_booking.map_description', 'Select the exact location of your property by searching or moving the marker on the map.')}</p>
+              <p className="map-description">{t('photoshoot_booking.map_description', 'Drag the marker to set the exact location of your property. The address fields will update automatically.')}</p>
               
-              {isLoaded ? (
-                <>
-                  <div className="search-box-container">
-                    <StandaloneSearchBox
-                      onLoad={onSearchBoxLoad}
-                      onPlacesChanged={onPlacesChanged}
-                    >
-                      <div className="search-input-container">
-                        <FaSearch className="search-icon" />
-                        <input
-                          type="text"
-                          placeholder={t('photoshoot_booking.search_address', 'Search for an address')}
-                          className="map-search-input"
-                        />
-                      </div>
-                    </StandaloneSearchBox>
-                  </div>
-                  
-                  <div className="map-container">
-                    <GoogleMap
-                      mapContainerStyle={mapContainerStyle}
-                      center={mapCenter}
-                      zoom={mapZoom}
-                      onLoad={onMapLoad}
-                      options={{
-                        zoomControl: true,
-                        streetViewControl: false,
-                        mapTypeControl: false,
-                        fullscreenControl: true
-                      }}
-                    >
-                      {markerPosition && (
-                        <Marker
-                          position={markerPosition}
-                          draggable={true}
-                          onDragEnd={onMarkerDragEnd}
-                          animation={window.google.maps.Animation.DROP}
-                        />
-                      )}
-                    </GoogleMap>
-                  </div>
-                  
-                  <p className="map-hint">
-                    <FaMapMarkerAlt className="map-hint-icon" />
-                    {t('photoshoot_booking.drag_marker_hint', 'Drag the marker to set the exact location of your property')}
-                  </p>
-                </>
-              ) : (
-                <div className="map-loading">
-                  <FaSpinner className="spinner" />
-                  <p>{t('photoshoot_booking.loading_map', 'Loading map...')}</p>
-                </div>
-              )}
+              {renderMap()}
             </div>
           </div>
           
@@ -792,19 +973,37 @@ const PhotoshootBookingPage: React.FC = () => {
             </div>
           </div>
           
-          {/* Phone Number Section */}
-          <div className="phone-section">
+          {/* Contact Information Section */}
+          <div className="contact-section">
             <h2 className="section-title">{t('photoshoot_booking.contact_title', 'Contact Information')}</h2>
             
-            <div className="form-group">
-              <label htmlFor="phoneNumber">{t('photoshoot_booking.phone_number', 'Phone Number')}</label>
-              <InputBaseModel
-                value={formData.phoneNumber}
-                onChange={(e) => handleCustomInputChange('phoneNumber', e.target.value)}
-                placeholder={t('photoshoot_booking.phone_number_placeholder', 'Enter your phone number')}
-              />
-              <p className="field-description">{t('photoshoot_booking.phone_description', 'We will use this number to contact you regarding the photoshoot.')}</p>
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="name">
+                  <FaUser className="input-icon" />
+                  {t('photoshoot_booking.name', 'Your Name')}
+                </label>
+                <InputBaseModel
+                  value={formData.name}
+                  onChange={(e) => handleCustomInputChange('name', e.target.value)}
+                  placeholder={t('photoshoot_booking.name_placeholder', 'Enter your full name')}
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="phoneNumber">
+                  <FaPhoneAlt className="input-icon" />
+                  {t('photoshoot_booking.phone_number', 'Phone Number')}
+                </label>
+                <InputBaseModel
+                  value={formData.phoneNumber}
+                  onChange={(e) => handleCustomInputChange('phoneNumber', e.target.value)}
+                  placeholder={t('photoshoot_booking.phone_number_placeholder', 'Enter your phone number')}
+                />
+              </div>
             </div>
+            
+            <p className="field-description">{t('photoshoot_booking.contact_description', 'We will use this information to contact you regarding the photoshoot.')}</p>
           </div>
           
           {/* Comments Section */}
@@ -820,7 +1019,7 @@ const PhotoshootBookingPage: React.FC = () => {
             </div>
           </div>
           
-          <div className="submit-section">
+          <div className="submit-section" style={{maxWidth: '300px', margin: '0 auto'}}>
             <PurpleButtonLB60 
               text={t('photoshoot_booking.submit_button', 'Book a Photoshoot')}
               onClick={handleButtonSubmit}

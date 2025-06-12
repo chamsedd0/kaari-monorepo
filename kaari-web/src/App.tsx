@@ -11,6 +11,7 @@ import AdminDashboard from './pages/dashboards/admin-dashboard/page';
 import ProfileShowcasePage from './pages/profile-advertiser-showcase/page';
 import PhotoshootBookingPage from './pages/photoshoot-booking/page';
 import ThankYouPage from './pages/photoshoot-booking/thank-you';
+import BecomeAdvertiserPage from './pages/become-advertiser/page';
 import HelpPage from './pages/help/page';
 import ReservationStatusPage from './pages/dashboards/user-dashboard/reservation-status/page';
 import CancellationRequestPage from './pages/dashboards/user-dashboard/cancellation-request/page';
@@ -150,6 +151,7 @@ function App() {
       <Route path="/for-advertisers" element={<AdvertisersLanding key={renderKey} />} />
       <Route path="/photoshoot-booking" element={<PhotoshootBookingPage />} />
       <Route path="/photoshoot-booking/thank-you" element={<ThankYouPage />} />
+      <Route path="/become-advertiser" element={<BecomeAdvertiserPage />} />
 
       <Route path="/properties" element={<PropertyList />} />
       <Route path="/property/:id" element={<PropertyPageComponent />} />
@@ -522,15 +524,8 @@ function App() {
     </Routes>
   ), [isAuthenticated, userIsAdvertiser, userIsRegular, userIsAdmin, renderKey]);
 
-  // Create a ProfileReminderWrapper component to use the hook within the ToastProvider
-  // Memoize to prevent unnecessary remounting and duplicate notifications
-  const ProfileReminderWrapper = useMemo(() => {
-    const Wrapper = () => {
-      useProfileCompletionReminder();
-      return null;
-    };
-    return <Wrapper />;
-  }, [isAuthenticated, user?.id]); // Only re-create when auth state or user ID changes
+  // Profile reminder has been removed as requested by the owner
+  // This was previously used to remind users to complete their profile
   
   const Wrapper = () => {
     return (
@@ -538,7 +533,6 @@ function App() {
         <NotificationProvider>
           <MainLayout>
             <ScrollToTop />
-            {ProfileReminderWrapper}
             {routes}
           </MainLayout>
         </NotificationProvider>

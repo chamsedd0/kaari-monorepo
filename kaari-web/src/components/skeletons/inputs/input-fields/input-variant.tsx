@@ -1,13 +1,14 @@
 import React from 'react';
 import InputBaseModel1 from '../../../styles/inputs/input-fields/input-base-model-style-1';
 
-interface InputBaseProps {
+export interface InputBaseProps {
   type?: 'text' | 'number' | 'password';
   placeholder?: string;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   title?: string;
   error?: string;
+  className?: string;
 }
 
 const InputBaseModel: React.FC<InputBaseProps> = ({ 
@@ -16,10 +17,11 @@ const InputBaseModel: React.FC<InputBaseProps> = ({
   value, 
   onChange, 
   title,
-  error
+  error,
+  className
 }) => {
   return (
-    <InputBaseModel1>
+    <InputBaseModel1 className={className}>
       <span>{title}</span>
       <input 
         type={type} 
