@@ -1,83 +1,105 @@
 import styled from 'styled-components';
+import { Theme } from '../../../theme/theme';
 
 export const AdminDashboardContainer = styled.div`
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
+  background-color: #f5f5f5;
+  
+  > div:first-child {
+    display: flex;
+  }
 `;
 
-export const Sidebar = styled.aside`
-  width: 240px;
-  background-color: #1a1a1a;
-  color: #fff;
+export const Sidebar = styled.div`
+  width: 250px;
+  min-height: calc(100vh - 60px);
+  background-color: white;
   padding: 20px 0;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
 `;
 
 export const SidebarHeader = styled.div`
-  padding: 0 20px 20px;
-  border-bottom: 1px solid #333;
+  padding: 0 20px;
   margin-bottom: 20px;
 `;
 
-export const Logo = styled.h1`
-  font-size: 1.5rem;
-  margin: 0;
+export const Logo = styled.div`
+  font-size: 20px;
+  font-weight: bold;
+  color: ${Theme.colors.secondary};
 `;
 
 export const NavItem = styled.div<{ $active?: boolean }>`
-  padding: 12px 20px;
-  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  background-color: ${props => props.$active ? '#333' : 'transparent'};
+  padding: 12px 20px;
+  color: ${props => props.$active ? Theme.colors.secondary : Theme.colors.gray2};
+  font-weight: ${props => props.$active ? 'bold' : 'normal'};
+  background-color: ${props => props.$active ? '#f0ebfa' : 'transparent'};
+  cursor: pointer;
+  transition: all 0.2s ease;
   
   &:hover {
-    background-color: #333;
+    background-color: ${props => props.$active ? '#f0ebfa' : '#f5f5f5'};
+    color: ${Theme.colors.secondary};
+  }
+  
+  svg {
+    margin-right: 10px;
+    font-size: 18px;
   }
 `;
 
-export const MainContent = styled.main`
+export const MainContent = styled.div`
   flex: 1;
   padding: 20px;
-  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: column;
 `;
 
-export const Header = styled.header`
+export const Header = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid ${Theme.colors.gray}20;
 `;
 
 export const PageTitle = styled.h1`
-  font-size: 1.8rem;
+  font-size: 24px;
+  font-weight: bold;
+  color: ${Theme.colors.black};
   margin: 0;
 `;
 
 export const UserInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
 `;
 
 export const Avatar = styled.div`
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background-color: #333;
+  background-color: ${Theme.colors.secondary}20;
+  color: ${Theme.colors.secondary};
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
   font-weight: bold;
+  margin-right: 10px;
+  overflow: hidden;
 `;
 
-export const UserName = styled.span`
+export const UserName = styled.div`
+  font-size: 14px;
   font-weight: 500;
+  color: ${Theme.colors.black};
 `;
 
 export const DashboardCard = styled.div`

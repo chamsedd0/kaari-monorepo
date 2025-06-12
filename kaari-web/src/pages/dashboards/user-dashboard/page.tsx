@@ -3,6 +3,7 @@ import { NavigationPannel } from '../../../components/skeletons/constructed/dash
 import { UserDashboardStyle } from './styles';
 import LoadingScreen from '../../../components/loading/LoadingScreen';
 import { useNavigate, useLocation, Routes, Route } from 'react-router-dom';
+import DashboardFooter from '../../../components/skeletons/constructed/footer/dashboard-footer';
 
 // Import all section pages
 import ProfilePage from './profile/page';
@@ -170,6 +171,7 @@ const UserDashboard: React.FC = () => {
                     </div>
                 </UserDashboardStyle>
             </div>
+            <DashboardFooter />
         </>
     );
 };

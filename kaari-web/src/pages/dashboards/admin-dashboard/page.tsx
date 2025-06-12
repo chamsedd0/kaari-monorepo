@@ -16,6 +16,7 @@ import {
   MdList, 
   MdPhotoCamera,
 } from 'react-icons/md';
+import DashboardFooter from '../../../components/skeletons/constructed/footer/dashboard-footer';
 
 import {
   AdminDashboardContainer,
@@ -193,6 +194,8 @@ const AdminDashboard: React.FC = () => {
           <Route path="*" element={<div>404 Page Not Found</div>} />
         </Routes>
       </MainContent>
+
+      <DashboardFooter />
     </AdminDashboardContainer>
   );
 };

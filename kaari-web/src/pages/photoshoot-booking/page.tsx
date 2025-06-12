@@ -166,63 +166,63 @@ const PhotoshootBookingPage: React.FC = () => {
       if (status === 'OK' && results && results[0]) {
         console.log("Geocoding result:", results[0]);
         const place = results[0];
-        
-        // Extract address components
-        if (place.address_components) {
-          let streetName = '';
-          let streetNumber = '';
-          let city = '';
-          let state = '';
-          let postalCode = '';
-          let country = '';
           
-          place.address_components.forEach(component => {
-            const types = component.types;
+          // Extract address components
+          if (place.address_components) {
+            let streetName = '';
+            let streetNumber = '';
+            let city = '';
+            let state = '';
+            let postalCode = '';
+            let country = '';
             
-            if (types.includes('street_number')) {
-              streetNumber = component.long_name;
-            }
-            
-            if (types.includes('route')) {
-              streetName = component.long_name;
-            }
-            
-            if (types.includes('locality')) {
-              city = component.long_name;
-            }
-            
-            if (types.includes('administrative_area_level_1')) {
-              state = component.long_name;
-            }
-            
-            if (types.includes('postal_code')) {
-              postalCode = component.long_name;
-            }
-            
-            if (types.includes('country')) {
-              country = component.long_name;
-            }
-          });
+            place.address_components.forEach(component => {
+              const types = component.types;
+              
+              if (types.includes('street_number')) {
+                streetNumber = component.long_name;
+              }
+              
+              if (types.includes('route')) {
+                streetName = component.long_name;
+              }
+              
+              if (types.includes('locality')) {
+                city = component.long_name;
+              }
+              
+              if (types.includes('administrative_area_level_1')) {
+                state = component.long_name;
+              }
+              
+              if (types.includes('postal_code')) {
+                postalCode = component.long_name;
+              }
+              
+              if (types.includes('country')) {
+                country = component.long_name;
+              }
+            });
           
           console.log("Extracted address components:", {
             streetName, streetNumber, city, state, postalCode, country
-          });
-          
-          // Update form data with address components
-          setFormData(prev => ({
-            ...prev,
-            streetName: streetName || prev.streetName,
-            streetNumber: streetNumber || prev.streetNumber,
-            city: city || prev.city,
-            stateRegion: state || prev.stateRegion,
-            postalCode: postalCode || prev.postalCode,
+            });
+            
+            // Update form data with address components
+            setFormData(prev => ({
+              ...prev,
+              streetName: streetName || prev.streetName,
+              streetNumber: streetNumber || prev.streetNumber,
+              city: city || prev.city,
+              stateRegion: state || prev.stateRegion,
+              postalCode: postalCode || prev.postalCode,
             country: country || prev.country,
             location: position
-          }));
-        }
+            }));
+          }
       } else {
         console.log("Geocoding failed with status:", status);
-      }
+        }
     });
   }, []);
 
@@ -753,7 +753,7 @@ const PhotoshootBookingPage: React.FC = () => {
       </>
     );
   };
-
+  
   return (
     <>
       <UnifiedHeader />
@@ -787,12 +787,12 @@ const PhotoshootBookingPage: React.FC = () => {
                       </div>
                     </StandaloneSearchBox>
                   ) : (
-                    <InputBaseModel
-                      value={formData.streetName}
+                <InputBaseModel
+                  value={formData.streetName}
                       title={t('photoshoot_booking.street_name', 'Street Name')}
-                      onChange={(e) => handleCustomInputChange('streetName', e.target.value)}
-                      placeholder={t('photoshoot_booking.street_name_placeholder', 'Enter street name')}
-                    />
+                  onChange={(e) => handleCustomInputChange('streetName', e.target.value)}
+                  placeholder={t('photoshoot_booking.street_name_placeholder', 'Enter street name')}
+                />
                   )}
                 </div>
                 <p className="field-description">{t('photoshoot_booking.address_search_help', 'Search for your address to automatically fill the fields, or enter manually')}</p>
@@ -978,7 +978,7 @@ const PhotoshootBookingPage: React.FC = () => {
             <h2 className="section-title">{t('photoshoot_booking.contact_title', 'Contact Information')}</h2>
             
             <div className="form-row">
-              <div className="form-group">
+            <div className="form-group">
                 <label htmlFor="name">
                   <FaUser className="input-icon" />
                   {t('photoshoot_booking.name', 'Your Name')}
@@ -995,12 +995,12 @@ const PhotoshootBookingPage: React.FC = () => {
                   <FaPhoneAlt className="input-icon" />
                   {t('photoshoot_booking.phone_number', 'Phone Number')}
                 </label>
-                <InputBaseModel
-                  value={formData.phoneNumber}
-                  onChange={(e) => handleCustomInputChange('phoneNumber', e.target.value)}
-                  placeholder={t('photoshoot_booking.phone_number_placeholder', 'Enter your phone number')}
-                />
-              </div>
+              <InputBaseModel
+                value={formData.phoneNumber}
+                onChange={(e) => handleCustomInputChange('phoneNumber', e.target.value)}
+                placeholder={t('photoshoot_booking.phone_number_placeholder', 'Enter your phone number')}
+              />
+            </div>
             </div>
             
             <p className="field-description">{t('photoshoot_booking.contact_description', 'We will use this information to contact you regarding the photoshoot.')}</p>

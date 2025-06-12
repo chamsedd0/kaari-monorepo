@@ -4,9 +4,9 @@ import UpcomingPhotoshoot from '../../../../components/skeletons/cards/upcoming-
 import LatestRequestDashboardCard from '../../../../components/skeletons/cards/lateest-request-dashboard-card';
 import MessagesCard from '../../../../components/skeletons/cards/messages-card';
 import BookAPhotoshootComponent from '../../../../components/skeletons/cards/book-a-photoshoot-card';
-import PaymentCardComponent from '../../../../components/skeletons/cards/payment-card';
 import { PerformanceChart } from '../../../../components/skeletons/constructed/chart/performance-chart';
 import UpToDateCardComponent from '../../../../components/skeletons/cards/up-to-date-card';
+import ListingGuideCard from '../../../../components/skeletons/cards/listing-guide-card';
 import emptyBox from '../../../../assets/images/emptybox.svg';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -16,7 +16,6 @@ import {
     getAdvertiserReservationRequests,
     getAdvertiserPhotoshoots,
     Photoshoot,
-   
 } from '../../../../backend/server-actions/AdvertiserServerActions';
 import { useStore } from '../../../../backend/store';
 import { Property, Request } from '../../../../backend/entities';
@@ -149,19 +148,35 @@ const DashboardPage: React.FC = () => {
     // Check if any properties need availability refresh
     const propertiesNeedingRefresh = countPropertiesNeedingRefresh(properties);
     const shouldShowRefreshReminder = propertiesNeedingRefresh > 0;
-
-
+    
+    // Check if advertiser has ever booked a photoshoot before
+    const hasBookedPhotoshoot = photoshoots.length > 0;
+    
+    // Handler functions for photoshoot requests
+    const handleViewPhotoshootDetails = (requestId: string) => {
+        navigate(`/dashboard/advertiser/photoshoot/view/${requestId}`);
+    };
+    
+    const handleCancelPhotoshootRequest = (requestId: string) => {
+        // This would be implemented with a real API call
+        console.log('Cancel photoshoot request:', requestId);
+        // Show a confirmation dialog and then call the API
+        navigate(`/dashboard/advertiser/photoshoot`);
+    };
+    
+    const handleBookPhotoshoot = () => {
+        navigate('/photoshoot-booking');
+    };
 
     return (
         <DashboardPageStyle>
             <div className="left">
-                <PerformanceChart 
-                    title={t('advertiser_dashboard.dashboard.performance_overview')} 
-                    viewCount={statistics.viewsCount}
-                    inquiryCount={statistics.inquiriesCount}
-                    bookingCount={statistics.pendingReservations}
-                    loading={loading}
-                />
+                {/* Show listing guide card if advertiser has never booked a photoshoot */}
+                {!hasBookedPhotoshoot && (
+                    <ListingGuideCard onBookPhotoshoot={handleBookPhotoshoot} />
+                )}
+                
+                {/* 1. Latest Booking Requests (highest priority) */}
                 {latestReservationRequest ? (
                     <LatestRequestDashboardCard 
                         title={t('advertiser_dashboard.dashboard.latest_request')}
@@ -199,7 +214,27 @@ const DashboardPage: React.FC = () => {
                         onBrowseProperties={() => navigate('/properties')}
                     />
                 )}
-                {/* Messages Section with Empty State */}
+                
+                {/* 2. Latest Photoshoot (if available) */}
+                {upcomingPhotoshoot && photoshootProperty && (
+                    <div style={{ margin: '24px 0' }}>
+                        <UpcomingPhotoshoot 
+                            date={new Date(upcomingPhotoshoot.date).toLocaleDateString(locale, {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                            })}
+                            time={upcomingPhotoshoot.time}
+                            photographerName={upcomingPhotoshoot.photographerName || t('advertiser_dashboard.photoshoot.photographer_team')}
+                            photographerInfo={upcomingPhotoshoot.photographerInfo || t('advertiser_dashboard.photoshoot.professional_photographer')}
+                            photographerImage={upcomingPhotoshoot.photographerImage || ''}
+                            location={`${photoshootProperty.address.street}, ${photoshootProperty.address.city}`}
+                            number={statistics.photoshootsScheduled}
+                        />
+                    </div>
+                )}
+                
+                {/* 3. Messages Section with Empty State */}
                 <div style={{ margin: '24px 0' }}>
                     {hasMessages ? (
                         <MessagesCard 
@@ -217,13 +252,23 @@ const DashboardPage: React.FC = () => {
                             }}
                         />
                     ) : !loading && (
-                        <div style={{ background: '#fff', borderRadius: 12, padding: 32, textAlign: 'center' }}>
-                            <img src={emptyBox} alt="No messages" style={{ width: 80, marginBottom: 12 }} />
-                            <div style={{ color: '#888', fontSize: 16, marginTop: 8 }}>{t('advertiser_dashboard.dashboard.no_messages', 'You have no messages yet')}</div>
-                            <div style={{ color: '#aaa', fontSize: 14, marginTop: 4 }}>{t('advertiser_dashboard.dashboard.no_messages_hint', 'You will receive your messages once your tenants will start texting you')}</div>
+                        <div className="empty-state">
+                            <img src={emptyBox} alt="No messages" />
+                            <div className="title">{t('advertiser_dashboard.dashboard.no_messages', 'You have no messages yet')}</div>
+                            <div className="description">{t('advertiser_dashboard.dashboard.no_messages_hint', 'You will receive your messages once your tenants will start texting you')}</div>
                         </div>
                     )}
                 </div>
+
+                {/* 4. Listing Performance */}
+                <PerformanceChart 
+                    title={t('advertiser_dashboard.dashboard.performance_overview')} 
+                    viewCount={statistics.viewsCount}
+                    inquiryCount={statistics.inquiriesCount}
+                    bookingCount={statistics.pendingReservations}
+                    loading={loading}
+                />
+                
                 {/* Views of Properties Section with Empty State */}
                 <div style={{ margin: '24px 0' }}>
                     {hasProperties ? (
@@ -235,45 +280,20 @@ const DashboardPage: React.FC = () => {
                             loading={loading}
                         />
                     ) : !loading && (
-                        <div style={{ background: '#fff', borderRadius: 12, padding: 32, textAlign: 'center' }}>
-                            <img src={emptyBox} alt="No views" style={{ width: 80, marginBottom: 12 }} />
-                            <div style={{ color: '#888', fontSize: 16, marginTop: 8 }}>{t('advertiser_dashboard.dashboard.no_views', 'You have no views yet')}</div>
-                            <div style={{ color: '#aaa', fontSize: 14, marginTop: 4 }}>{t('advertiser_dashboard.dashboard.no_views_hint', 'List your property by booking a photoshoot and start getting views')}</div>
+                        <div className="empty-state">
+                            <img src={emptyBox} alt="No views" />
+                            <div className="title">{t('advertiser_dashboard.dashboard.no_views', 'You have no views yet')}</div>
+                            <div className="description">{t('advertiser_dashboard.dashboard.no_views_hint', 'List your property by booking a photoshoot and start getting views')}</div>
                         </div>
                     )}
                 </div>
             </div>
             <div className="right">
-
-                
-                {upcomingPhotoshoot && photoshootProperty ? (
-                    <UpcomingPhotoshoot 
-                        date={new Date(upcomingPhotoshoot.date).toLocaleDateString(locale, {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric'
-                        })}
-                        time={upcomingPhotoshoot.time}
-                        photographerName={upcomingPhotoshoot.photographerName || t('advertiser_dashboard.photoshoot.photographer_team')}
-                        photographerInfo={upcomingPhotoshoot.photographerInfo || t('advertiser_dashboard.photoshoot.professional_photographer')}
-                        photographerImage={upcomingPhotoshoot.photographerImage || ''}
-                        location={`${photoshootProperty.address.street}, ${photoshootProperty.address.city}`}
-                        number={statistics.photoshootsScheduled}
-                    />
-                ) : (
+                {/* Show Book a Photoshoot component if no upcoming photoshoot */}
+                {!upcomingPhotoshoot && (
                     <BookAPhotoshootComponent />
                 )}
                 
-                <PaymentCardComponent 
-                    incomeAmount={`${t('advertiser_dashboard.payments.currency', '$')}${properties.reduce((sum, property) => sum + property.price, 0).toLocaleString()}`}
-                    infoItems={[
-                        { title: t('advertiser_dashboard.dashboard.active_listings'), number: statistics.activeListings.toString() },
-                        { title: t('advertiser_dashboard.dashboard.properties'), number: statistics.totalProperties.toString() }
-                    ]}
-                    onViewMore={() => {
-                        navigate('/dashboard/advertiser/payments');
-                    }}
-                />
                 {/* Only show refresh reminder when properties need refreshing */}
                 {shouldShowRefreshReminder && (
                     <UpToDateCardComponent 

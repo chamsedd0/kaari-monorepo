@@ -4,6 +4,7 @@ import { AdvertiserDashboardStyle } from './styles';
 import LoadingScreen from '../../../components/loading/LoadingScreen';
 import { useNavigate, useLocation, Routes, Route } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import DashboardFooter from '../../../components/skeletons/constructed/footer/dashboard-footer';
 
 // Import all section pages
 import DashboardPage from './dashboard/page';
@@ -183,6 +184,7 @@ const AdvertiserDashboard: React.FC = () => {
                     </div>
                 </AdvertiserDashboardStyle>
             </div>
+            <DashboardFooter />
         </>
     );
 };
