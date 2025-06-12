@@ -167,7 +167,7 @@ const SimulatorPage: React.FC = () => {
               <label>Average Monthly Referrals</label>
               <div className="slider-container">
                 <span className="min-value">0</span>
-                <div className="slider-track">
+                <div className="slider-track" style={{ "--slider-percent": monthlyReferrals * 2 } as React.CSSProperties}>
                   <input 
                     type="range" 
                     min="0" 
@@ -187,7 +187,7 @@ const SimulatorPage: React.FC = () => {
               <label>Average Tenant Rent</label>
               <div className="slider-container">
                 <span className="min-value">0</span>
-                <div className="slider-track">
+                <div className="slider-track" style={{ "--slider-percent": tenantRent / 5 } as React.CSSProperties}>
                   <input 
                     type="range" 
                     min="0" 
