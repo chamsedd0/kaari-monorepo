@@ -7,6 +7,8 @@ import BookAPhotoshootComponent from '../../../../components/skeletons/cards/boo
 import { PerformanceChart } from '../../../../components/skeletons/constructed/chart/performance-chart';
 import UpToDateCardComponent from '../../../../components/skeletons/cards/up-to-date-card';
 import ListingGuideCard from '../../../../components/skeletons/cards/listing-guide-card';
+import GettingStartedChecklist from '../../../../components/skeletons/cards/getting-started-checklist';
+import { useGettingStartedChecklist } from '../../../../hooks/useGettingStartedChecklist';
 import emptyBox from '../../../../assets/images/emptybox.svg';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -46,6 +48,13 @@ const DashboardPage: React.FC = () => {
         property?: any;
         client?: any;
     }[]>([]);
+    const { 
+        items: checklistItems, 
+        completeItem, 
+        isItemClickable, 
+        getItemVisibility,
+        isItemCompleted
+    } = useGettingStartedChecklist();
     
     useEffect(() => {
         // Load data when component mounts
@@ -166,14 +175,69 @@ const DashboardPage: React.FC = () => {
     
     const handleBookPhotoshoot = () => {
         navigate('/photoshoot-booking');
+        // Remove automatic completion when just navigating
+        // completeItem('book_photoshoot');
     };
+
+    // Auto-complete checklist items based on data
+    useEffect(() => {
+        // Create a local copy of completion status to avoid multiple updates
+        const completionStatus = {
+            bookPhotoshoot: isItemCompleted('book_photoshoot'),
+            completeProfile: isItemCompleted('complete_profile'),
+            refreshAvailability: isItemCompleted('refresh_availability'),
+            addPayoutMethod: isItemCompleted('add_payout_method'),
+            acceptBooking: isItemCompleted('accept_booking'),
+            messageTenant: isItemCompleted('message_tenant')
+        };
+
+        // Check if photoshoot is booked
+        if (hasBookedPhotoshoot && !completionStatus.bookPhotoshoot) {
+            completeItem('book_photoshoot');
+        }
+        
+        // Check if profile is completed (simplified check - in real app would be more comprehensive)
+        if (user?.name && user?.email && user?.phone && !completionStatus.completeProfile) {
+            completeItem('complete_profile');
+        }
+        
+        // Check if availability has been refreshed recently (within last 30 days)
+        if (!shouldShowRefreshReminder && !completionStatus.refreshAvailability) {
+            completeItem('refresh_availability');
+        }
+        
+        // Check if user has a payment method added (simplified check)
+        if (user?.paymentMethods && user.paymentMethods.length > 0 && !completionStatus.addPayoutMethod) {
+            completeItem('add_payout_method');
+        }
+        
+        // Check if user has accepted a booking (simplified check)
+        const hasAcceptedBooking = reservationRequests.some(req => req.reservation.status === 'approved');
+        if (hasAcceptedBooking && !completionStatus.acceptBooking) {
+            completeItem('accept_booking');
+        }
+        
+        // Check if user has messaged a tenant (simplified check)
+        const hasSentMessage = requests.some(req => req.message && req.message.trim() !== '');
+        if (hasSentMessage && !completionStatus.messageTenant) {
+            completeItem('message_tenant');
+        }
+    }, [
+        hasBookedPhotoshoot, 
+        user, 
+        shouldShowRefreshReminder, 
+        reservationRequests, 
+        requests, 
+        completeItem,
+        isItemCompleted
+    ]);
 
     return (
         <DashboardPageStyle>
             <div className="left">
                 {/* Show listing guide card if advertiser has never booked a photoshoot */}
                 {!hasBookedPhotoshoot && (
-                    <ListingGuideCard onBookPhotoshoot={handleBookPhotoshoot} />
+                    <ListingGuideCard onBookPhotoshoot={() => navigate('/photoshoot-booking')} />
                 )}
                 
                 {/* 1. Latest Booking Requests (highest priority) */}
@@ -200,6 +264,8 @@ const DashboardPage: React.FC = () => {
                         onAccept={() => {
                             // Handle accepting the reservation request
                             navigate('/dashboard/advertiser/reservations');
+                            // Remove automatic completion when just navigating
+                            // completeItem('accept_booking');
                         }}
                         onReject={() => {
                             // Handle rejecting the reservation request
@@ -249,14 +315,21 @@ const DashboardPage: React.FC = () => {
                                 : t('advertiser_dashboard.dashboard.no_messages')}
                             onViewMore={() => {
                                 navigate('/dashboard/advertiser/messages');
+                                // Remove automatic completion when just navigating
+                                // completeItem('message_tenant');
+                            }}
+                            onReply={() => {
+                                navigate('/dashboard/advertiser/messages');
+                                // Remove automatic completion when just navigating
+                                // completeItem('message_tenant');
                             }}
                         />
-                    ) : !loading && (
-                        <div className="empty-state">
-                            <img src={emptyBox} alt="No messages" />
-                            <div className="title">{t('advertiser_dashboard.dashboard.no_messages', 'You have no messages yet')}</div>
-                            <div className="description">{t('advertiser_dashboard.dashboard.no_messages_hint', 'You will receive your messages once your tenants will start texting you')}</div>
-                        </div>
+                    ) : (
+                        <MessagesCard 
+                            title={t('advertiser_dashboard.dashboard.messages')}
+                            isEmpty={true}
+                            onViewMore={() => navigate('/dashboard/advertiser/messages')}
+                        />
                     )}
                 </div>
 
@@ -289,18 +362,26 @@ const DashboardPage: React.FC = () => {
                 </div>
             </div>
             <div className="right">
-                {/* Show Book a Photoshoot component if no upcoming photoshoot */}
-                {!upcomingPhotoshoot && (
-                    <BookAPhotoshootComponent />
+                {/* Getting Started Checklist - New Component */}
+                <GettingStartedChecklist 
+                    items={checklistItems}
+                    onCompleteItem={completeItem}
+                    isItemClickable={isItemClickable}
+                    getItemVisibility={getItemVisibility}
+                />
+                
+                {/* Book a Photoshoot Card - Only show if it's the next available step */}
+                {!hasBookedPhotoshoot && isItemClickable('book_photoshoot') && (
+                    <BookAPhotoshootComponent 
+                        onBookPhotoshoot={() => navigate('/photoshoot-booking')}
+                    />
                 )}
                 
-                {/* Only show refresh reminder when properties need refreshing */}
-                {shouldShowRefreshReminder && (
+                {/* Properties Refresh Reminder - Only show if it's the next available step */}
+                {shouldShowRefreshReminder && isItemClickable('refresh_availability') && (
                     <UpToDateCardComponent 
-                        propertiesNeedingRefresh={propertiesNeedingRefresh}
-                        onClick={() => {
-                            navigate('/dashboard/advertiser/properties');
-                        }} 
+                        count={propertiesNeedingRefresh} 
+                        onRefresh={() => navigate('/dashboard/advertiser/properties')}
                     />
                 )}
                 

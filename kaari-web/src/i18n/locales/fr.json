@@ -319,7 +319,19 @@
     "conversation_not_found": "Conversation non trouvée",
     "invalid_conversation": "Conversation invalide",
     "failed_to_start_conversation": "Échec du démarrage de la conversation",
-    "no_conversation_selected": "Aucune conversation sélectionnée"
+    "no_conversation_selected": "Aucune conversation sélectionnée",
+    "empty": "Vous n'avez pas encore de messages",
+    "view_all": "Voir tout",
+    "reply": "Répondre",
+    "sender_name": "John Price",
+    "sender_name_2": "Leonardo Vincent",
+    "sender_name_3": "Steve Johnson",
+    "greeting_message": "Bonjour ! Ravi de vous rencontrer ! Vous pouvez me demander n'importe quoi...",
+    "hello_message": "Bonjour !",
+    "date_format": "14.07.2024",
+    "question_message": "Bonjour ! Je voudrais poser quelques questions sur votre séjour",
+    "detailed_greeting": "Bonjour ! Ravi de vous rencontrer ! Vous pouvez me demander n'importe quoi à tout moment. J'essaierai de répondre dès que possible. Si je ne réponds pas, appelez-moi au 070 123 45 67",
+    "time_format": "10:45"
   },
   "advertiser_dashboard": {
     "sections": {
@@ -334,6 +346,27 @@
       "photoshoot": "Séance photo",
       "support": "Support",
       "referral_program": "Programme de Parrainage"
+      },
+      "messages": {
+        "title": "Messages",
+        "empty": "Vous n'avez pas encore de messages",
+        "no_messages": "Pas encore de messages",
+        "view_all": "Voir tout",
+        "reply": "Répondre",
+        "profile_picture_alt": "Profil de {{name}}"
+      },
+    "getting_started": {
+      "title": "Pour commencer",
+      "book_photoshoot": "Réserver une séance photo",
+      "complete_profile": "Compléter le profil",
+      "add_payout_method": "Ajouter une méthode de paiement",
+      "accept_booking": "Accepter la première réservation",
+      "message_tenant": "Envoyer un message au locataire",
+      "refresh_availability": "Actualiser la disponibilité",
+      "progress": "{{completed}} sur {{total}} terminés",
+      "all_completed": "Toutes les tâches terminées !",
+      "next_step": "Prochaine étape :",
+      "completed": "Toutes les tâches sont terminées ! Votre profil est entièrement configuré."
     },
     "dashboard": {
       "performance_overview": "Aperçu des performances",
@@ -355,7 +388,23 @@
       "requester_alt": "Demandeur",
       "request_count": "Demande {{count}}",
       "request_time": "Heure de la demande: {{time}}",
-      "received_on": "Reçu le: {{date}}"
+        "received_on": "Reçu le: {{date}}",
+        "property_request": "Demande de propriété",
+        "anonymous_user": "Utilisateur anonyme",
+        "occupants": "Occupants: {{count}}",
+        "no_views": "Vous n'avez pas encore de vues",
+        "no_views_hint": "Listez votre propriété en réservant une séance photo et commencez à obtenir des vues",
+        "no_stats": "Il n'y a pas encore de statistiques",
+        "no_stats_hint": "Après avoir listé votre première propriété, vos statistiques apparaîtront ici"
+      },
+      "listing_guide": {
+        "title": "Tout ce que vous devez savoir pour lister",
+        "step1": "Réserver une séance photo",
+        "step2": "Attendre l'arrivée de l'agent",
+        "step3": "Attendre la mise en ligne",
+        "step4": "Recevoir des demandes de locataires",
+        "book_button": "Réserver une séance photo",
+        "image_alt": "Illustration du processus de mise en ligne"
     },
     "profile": {
       "profile_section": "profil",
@@ -446,6 +495,12 @@
       }
     },
     "messages": {
+      "title": "Messages",
+      "empty": "Vous n'avez pas encore de messages",
+      "no_messages": "Pas encore de messages",
+      "view_all": "Voir tout",
+      "reply": "Répondre",
+      "profile_picture_alt": "Profil de {{name}}",
       "sender_name": "John Price",
       "sender_name_2": "Leonardo Vincent",
       "sender_name_3": "Steve Johnson",
@@ -763,6 +818,15 @@
       "bonus": "Bonus",
       "you_are_eligible": "Vous êtes éligible",
       "pending_payout": "Paiement en attente : {{amount}} MAD"
+    },
+    "listing_guide": {
+      "title": "Tout ce que vous devez savoir pour lister",
+      "step1": "Réserver une séance photo",
+      "step2": "Attendre l'arrivée de l'agent",
+      "step3": "Attendre la mise en ligne",
+      "step4": "Recevoir des demandes de locataires",
+      "book_button": "Réserver une séance photo",
+      "image_alt": "Illustration du processus de mise en ligne"
     }
   },
   "footer": {

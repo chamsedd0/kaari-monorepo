@@ -7,6 +7,7 @@ import { ReservationDetailsModal } from '../../../../components/reservations/Res
 import EmptyBox from '../../../../assets/images/emptybox.svg';
 import SelectFieldBaseModelVariant2 from '../../../../components/skeletons/inputs/select-fields/select-field-base-model-variant-2';
 import { Request } from '../../../../backend/entities';
+import { useChecklist } from '../../../../contexts/checklist/ChecklistContext';
 
 // Extended status type for reservations
 type ExtendedStatus = Request['status'] | 'completed';
@@ -363,6 +364,7 @@ const ReservationsPage: React.FC = () => {
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { completeItem } = useChecklist();
   
   useEffect(() => {
     loadReservations();
@@ -383,6 +385,19 @@ const ReservationsPage: React.FC = () => {
       }));
       
       setReservations(typedData);
+      
+      // Check if there are any accepted reservations and mark the checklist item as completed
+      const hasAcceptedBooking = typedData.some(res => 
+        res.reservation.status === 'accepted' || 
+        res.reservation.status === 'paid' || 
+        res.reservation.status === 'movedIn' || 
+        res.reservation.status === 'completed'
+      );
+      
+      if (hasAcceptedBooking) {
+        completeItem('accept_booking');
+      }
+      
       setError(null);
     } catch (err: any) {
       console.error('Error loading reservations:', err);
@@ -396,6 +411,10 @@ const ReservationsPage: React.FC = () => {
     try {
       setProcessingRequest(requestId);
       await approveReservationRequest(requestId);
+      
+      // Mark the checklist item as completed when a booking is approved
+      completeItem('accept_booking');
+      
       await loadReservations();
     } catch (err: any) {
       console.error('Error approving request:', err);

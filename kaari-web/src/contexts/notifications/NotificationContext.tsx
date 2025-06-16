@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import NotificationService from '../../services/NotificationService';
 import { Notification } from '../../types/Notification';
@@ -29,33 +29,46 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Define refreshNotifications as a useCallback to prevent infinite loops
+  const refreshNotifications = useCallback(async (): Promise<void> => {
+    if (!user || !user.id) return;
+    
+    try {
+      setLoading(true);
+      
+      // Ensure userType consistency
+      // @ts-ignore - Add userType if not present
+      const userType = user.userType || user.role || 'user';
+      
+      // Get the actual notifications
+      const refreshedNotifications = await NotificationService.getNotifications(user.id, userType);
+      
+      setNotifications(refreshedNotifications);
+      const unreadNotifications = refreshedNotifications.filter(n => !n.isRead);
+      setUnreadCount(unreadNotifications.length);
+    } catch (error) {
+      console.error('Error refreshing notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   // Fetch notifications when user changes
   useEffect(() => {
     let unsubscribe: (() => void) | null = null;
     let refreshInterval: NodeJS.Timeout | null = null;
 
     const initializeNotifications = async () => {
-      setLoading(true);
-      
       if (user && user.id) {
         try {
-          // Ensure user type is properly set 
-          // @ts-ignore - Add userType if not present
-          if (!user.userType && user.role) {
-            // @ts-ignore - Add userType property
-            user.userType = user.role;
-          }
-          
-          // Determine user type, defaulting to role if userType is not set
-          // @ts-ignore - TypeScript doesn't know about userType
-          const userType = user.userType || user.role || 'user';
-          
-          
           // Force an initial refresh of notifications
           await refreshNotifications();
           
           // Subscribe to notifications
           try {
+            // @ts-ignore - TypeScript doesn't know about userType
+            const userType = user.userType || user.role || 'user';
+            
             unsubscribe = NotificationService.subscribeToNotifications(
               user.id,
               userType,
@@ -75,6 +88,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             try {
               await refreshNotifications();
             } catch (pollingError) {
+              // Silent failure
             }
           }, 15000); // Poll every 15 seconds
           
@@ -100,7 +114,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         clearInterval(refreshInterval);
       }
     };
-  }, [user]);
+  }, [user, refreshNotifications]);
 
   const markAsRead = async (notificationId: string): Promise<void> => {
     try {
@@ -153,38 +167,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } catch (error) {
       console.error('Error deleting notification:', error);
       throw error;
-    }
-  };
-
-  const refreshNotifications = async (): Promise<void> => {
-    if (!user || !user.id) return;
-    
-    try {
-      // Ensure userType consistency
-      // @ts-ignore - Add userType if not present
-      if (!user.userType && user.role) {
-        // @ts-ignore - Add userType property
-        user.userType = user.role;
-      }
-      
-      // @ts-ignore - TypeScript doesn't know about userType
-      const userType = user.userType || user.role || 'user';
-      
-      
-      
-      // Get debug info first
-      const debugInfo = await NotificationService.getNotificationsDebugInfo(user.id, userType);
-      
-      // Then get the actual notifications
-      const refreshedNotifications = await NotificationService.getNotifications(user.id, userType);
-      
-      setNotifications(refreshedNotifications);
-      const unreadNotifications = refreshedNotifications.filter(n => !n.isRead);
-      setUnreadCount(unreadNotifications.length);
-    } catch (error) {
-        console.error('Error refreshing notifications:', error);
-    } finally {
-      setLoading(false);
     }
   };
 

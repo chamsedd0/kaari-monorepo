@@ -6,17 +6,21 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 interface BookAPhotoshootCardProps {
-  onClick?: () => void;
+  onBookPhotoshoot?: () => void;
+  onClick?: () => void; // For backward compatibility
 }
 
 const BookAPhotoshootComponent: React.FC<BookAPhotoshootCardProps> = ({
+  onBookPhotoshoot,
   onClick
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   
   const handleClick = () => {
-    if (onClick) {
+    if (onBookPhotoshoot) {
+      onBookPhotoshoot();
+    } else if (onClick) {
       onClick();
     } else {
       navigate('/photoshoot-booking');

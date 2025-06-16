@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { 
   FaBuilding, 
   FaSignOutAlt, 
@@ -16,7 +16,6 @@ import {
   MdList, 
   MdPhotoCamera,
 } from 'react-icons/md';
-import DashboardFooter from '../../../components/skeletons/constructed/footer/dashboard-footer';
 
 import {
   AdminDashboardContainer,
@@ -51,8 +50,24 @@ import AdminLogsPage from './logs';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useStore();
   const [activePage, setActivePage] = useState('overview');
+
+  // Update active page based on URL path
+  useEffect(() => {
+    const path = location.pathname.split('/');
+    const currentPage = path[path.length - 1];
+    
+    // Handle special cases like viewing a specific booking
+    if (path.includes('view')) {
+      setActivePage(path[path.length - 3]); // Get the parent section
+    } else if (currentPage === 'admin') {
+      setActivePage('overview'); // Default to overview
+    } else {
+      setActivePage(currentPage);
+    }
+  }, [location.pathname]);
 
   const handleNavigation = (page: string) => {
     setActivePage(page);
@@ -72,7 +87,7 @@ const AdminDashboard: React.FC = () => {
     <AdminDashboardContainer>
       <Sidebar>
         <SidebarHeader>
-          <Logo>Admin Panel</Logo>
+          <Logo>Kaari</Logo>
         </SidebarHeader>
 
         <NavItem 
@@ -194,8 +209,6 @@ const AdminDashboard: React.FC = () => {
           <Route path="*" element={<div>404 Page Not Found</div>} />
         </Routes>
       </MainContent>
-
-      <DashboardFooter />
     </AdminDashboardContainer>
   );
 };

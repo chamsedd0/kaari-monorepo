@@ -25,6 +25,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import ScrollToTop from './components/ScrollToTop';
 import { useProfileCompletionReminder } from './hooks/useProfileCompletionReminder';
 import { NotificationProvider } from './contexts/notifications/NotificationContext';
+import { ChecklistProvider } from './contexts/checklist/ChecklistContext';
 import NotificationsPage from './pages/notifications';
 import NotificationDebug from './components/skeletons/notifications/NotificationDebug';
 // Import static pages
@@ -562,10 +563,12 @@ function App() {
     return (
       <ToastProvider>
         <NotificationProvider>
-          <MainLayout>
-            <ScrollToTop />
-            {routes}
-          </MainLayout>
+          <ChecklistProvider>
+            <MainLayout>
+              <ScrollToTop />
+              {routes}
+            </MainLayout>
+          </ChecklistProvider>
         </NotificationProvider>
       </ToastProvider>
     );
