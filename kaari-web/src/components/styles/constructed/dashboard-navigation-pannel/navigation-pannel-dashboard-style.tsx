@@ -39,6 +39,7 @@ export const NavigationPannelDashboardStyle = styled.div`
             font: ${Theme.typography.fonts.mediumB};
             color: ${Theme.colors.black};
             transition: color 0.3s ease;
+            text-align: left;
         }
 
         &:hover .nav-link-text {

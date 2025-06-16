@@ -10,6 +10,9 @@ export const PurpleMB48 = styled(PurpleButtonWhiteText)`
     height: 48px;
     width: 100%;
     max-width: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     &:disabled {
         opacity: 0.5;

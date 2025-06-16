@@ -2,9 +2,7 @@ import styled from "styled-components";
 import { Theme } from "../../../../theme/theme";
 
 export const ReferralProgramPageStyle = styled.div`
-  padding: 24px;
-  max-width: 1200px;
-  margin: 0 auto;
+
   
   .page-header {
     display: flex;
@@ -13,10 +11,8 @@ export const ReferralProgramPageStyle = styled.div`
     margin-bottom: 24px;
     
     h1 {
-      font-size: 28px;
-      font-weight: 600;
-      color: #252525;
-      margin: 0;
+      font: ${Theme.typography.fonts.h3};
+      color: ${Theme.colors.black};
     }
     
     .header-buttons {
@@ -464,7 +460,7 @@ export const ReferralProgramPageStyle = styled.div`
       }
       
       .stat-label {
-        color: ${Theme.colors.grey};
+        color: ${Theme.colors.gray};
         font-size: 14px;
       }
       

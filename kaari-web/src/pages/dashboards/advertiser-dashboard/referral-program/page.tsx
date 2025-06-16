@@ -2,13 +2,11 @@ import React, { useState } from 'react';
 import { ReferralProgramPageStyle } from './styles';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
-import { Theme } from '../../../../theme/theme';
 import { PurpleButtonLB60 } from '../../../../components/skeletons/buttons/purple_LB60';
 import { BpurpleButtonLB60 } from '../../../../components/skeletons/buttons/border_purple_LB60';
 import { PurpleButtonSM32 } from '../../../../components/skeletons/buttons/purple_SM32';
-import { PurpleButtonLB40 } from '../../../../components/skeletons/buttons/purple_LB40';
-import { WhiteButtonLB60 } from '../../../../components/skeletons/buttons/white_LB60';
+import { PurpleButtonMB48 } from "../../../../components/skeletons/buttons/purple_MB48";
+import ArrowIcon from '../../../../components/skeletons/icons/Icon_Arrow_Right_W.svg';
 
 // Mock data for the referral program (replace with actual API calls later)
 const mockReferralData = {
@@ -215,14 +213,15 @@ const ReferralProgramPage: React.FC = () => {
   return (
     <ReferralProgramPageStyle>
       <div className="page-header">
-        <h1>Kaari's Referral Program</h1>
+        <h2>Kaari's Referral Program</h2>
         <div className="header-buttons">
-          <button className="my-performance-button" onClick={handleViewPerformance}>
-            My Performance
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6 4L10 8L6 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+          <PurpleButtonMB48 
+            text="My Performance"
+            onClick={handleViewPerformance}
+            type="button"
+            children={<img src={ArrowIcon} alt="Arrow" style={{ width: '20px', height: '20px' }}/>}
+          >
+          </PurpleButtonMB48>
         </div>
       </div>
 

@@ -93,6 +93,7 @@ export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = (
                 <img src={TenantsIcon} alt="Tenants" className="nav-link-icon" />
                 <span className="nav-link-text">{getTranslatedSectionName('Tenants')}</span>
             </button>
+            
             <button 
                 onClick={() => onSectionChange('ReferralProgram')} 
                 className={`nav-link ${activeSection === 'ReferralProgram' ? 'active' : ''}`}
@@ -101,6 +102,7 @@ export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = (
                 <img src={ReferralProgramIcon} alt="Referral Program" className="nav-link-icon" />
                 <span className="nav-link-text">{getTranslatedSectionName('ReferralProgram')}</span>
             </button>
+            
             <button 
                 onClick={() => onSectionChange('Photoshoot')} 
                 className={`nav-link ${activeSection === 'Photoshoot' ? 'active' : ''}`}
