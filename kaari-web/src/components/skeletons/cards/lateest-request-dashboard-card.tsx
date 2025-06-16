@@ -111,18 +111,10 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
   const navigate = useNavigate();
   
   // Use either traditional props or the newer dashboard props
-  const displayName = name || photographerName || 'Guest';
+  const displayName = name || photographerName || t('advertiser_dashboard.dashboard.anonymous_user', 'Guest');
   const displayImage = img || photographerImage || profilePlaceholder;
   const displayTitle = title || t('advertiser_dashboard.dashboard.latest_request', 'Latest Request');
   const isPending = requestStatus === 'pending';
-  
-  // Debug date values
-  console.log('Date values:', { 
-    moveInDate,
-    appliedOn, 
-    date,
-    time
-  });
   
   // Format dates properly with fallbacks
   const formatDate = (dateStr: string) => {
@@ -149,8 +141,11 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
     }
   };
   
-  const displayMoveInDate = formatDate(moveInDate);
-  const displayAppliedOn = formatDate(appliedOn || date);
+  // Use current date as fallback for empty dates
+  const today = new Date().toISOString();
+  const displayMoveInDate = formatDate(moveInDate || today);
+  const displayAppliedOn = formatDate(appliedOn || date || today);
+  const displayTime = time || new Date().toLocaleTimeString();
   
   const handleBrowseProperties = () => {
     if (onBrowseProperties) {
@@ -198,7 +193,9 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
         />
         
         <div className="latest-request-info-container">
-          <div className="latest-request-title">{requestTitle || name || 'Property Request'}</div>
+          <div className="latest-request-title">
+            {requestTitle || t('advertiser_dashboard.dashboard.property_request', 'Property Request')}
+          </div>
           
           <div className="latest-request-info">
             <div className="latest-request-picture-name-details">
@@ -216,7 +213,9 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
                 <div className="latest-request-name-container">
                   <div className="latest-request-name">{displayName}</div>
                   <div className="latest-request-info">
-                    {photographerInfo || (requestCount > 0 ? t('advertiser_dashboard.dashboard.request_count', 'Request {{count}}', { count: requestCount }) : 'Occupants: 1')}
+                    {photographerInfo || (requestCount > 0 
+                      ? t('advertiser_dashboard.dashboard.request_count', 'Request {{count}}', { count: requestCount }) 
+                      : t('advertiser_dashboard.dashboard.occupants', 'Occupants: {{count}}', { count: 1 }))}
                   </div>
                 </div>
               </div>
@@ -234,9 +233,7 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
             <div className="move-in-date">
               {moveInDate && moveInDate !== 'Invalid Date' ? 
                 t('advertiser_dashboard.reservations.move_in_date_label', 'Move-in date: {{date}}', { date: displayMoveInDate }) : 
-                time && time !== 'Invalid Date' ?
-                  t('advertiser_dashboard.dashboard.request_time', 'Request time: {{time}}', { time }) :
-                  t('advertiser_dashboard.dashboard.request_time', 'Request time: N/A')
+                t('advertiser_dashboard.dashboard.request_time', 'Request time: {{time}}', { time: displayTime })
               }
             </div>
             
@@ -244,9 +241,7 @@ const LatestRequestDashboardCard: React.FC<LatestRequestDashboardCardProps> = ({
               <div className="text-container-text">
                 {appliedOn && appliedOn !== 'Invalid Date' ? 
                   t('advertiser_dashboard.reservations.applied_on', 'Applied on: {{date}}', { date: displayAppliedOn }) : 
-                  date && date !== 'Invalid Date' ?
-                    t('advertiser_dashboard.dashboard.received_on', 'Received on: {{date}}', { date: displayAppliedOn }) :
-                    t('advertiser_dashboard.dashboard.received_on', 'Received on: N/A')
+                  t('advertiser_dashboard.dashboard.received_on', 'Received on: {{date}}', { date: displayAppliedOn })
                 }
               </div>
               <div className="text-remaining-time">{remainingTime || ''}</div>

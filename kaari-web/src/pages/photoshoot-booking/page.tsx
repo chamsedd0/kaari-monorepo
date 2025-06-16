@@ -8,6 +8,7 @@ import InputBaseModel from '../../components/skeletons/inputs/input-fields/input
 import TextAreaBaseModel from '../../components/skeletons/inputs/input-fields/textarea-variant';
 import { PurpleButtonLB60 } from '../../components/skeletons/buttons/purple_LB60';
 import { DEFAULT_TIME_SLOTS } from '../../config/constants';
+import { useChecklist } from '../../contexts/checklist/ChecklistContext';
 
 import { FaClock, FaChevronLeft, FaChevronRight, FaSpinner, FaMapMarkerAlt, FaSearch, FaPhoneAlt, FaUser } from 'react-icons/fa';
 import SelectFieldBaseModelVariant1 from '../../components/skeletons/inputs/select-fields/select-field-base-model-variant-1';
@@ -38,6 +39,7 @@ declare global {
 const PhotoshootBookingPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { completeItem } = useChecklist();
   
   // Get current user information from the store
   const currentUser = useStore(state => state.user);
@@ -96,6 +98,9 @@ const PhotoshootBookingPage: React.FC = () => {
     t('photoshoot_booking.property_types.studio'),
     t('photoshoot_booking.property_types.townhouse')
   ];
+
+  // Add a new state to track if form update is coming from map
+  const [updatingFromMap, setUpdatingFromMap] = useState(false);
 
   // Add this useEffect to check for authentication state
   useEffect(() => {
@@ -162,6 +167,9 @@ const PhotoshootBookingPage: React.FC = () => {
     
     console.log("Reverse geocoding position:", position);
     
+    // Set flag to indicate we're updating from map
+    setUpdatingFromMap(true);
+    
     geocoderRef.current.geocode({ location: position }, (results, status) => {
       if (status === 'OK' && results && results[0]) {
         console.log("Geocoding result:", results[0]);
@@ -216,13 +224,18 @@ const PhotoshootBookingPage: React.FC = () => {
               city: city || prev.city,
               stateRegion: state || prev.stateRegion,
               postalCode: postalCode || prev.postalCode,
-            country: country || prev.country,
-            location: position
+              country: country || prev.country,
+              location: position
             }));
           }
       } else {
         console.log("Geocoding failed with status:", status);
-        }
+      }
+      
+      // Reset flag after form update is complete
+      setTimeout(() => {
+        setUpdatingFromMap(false);
+      }, 100);
     });
   }, []);
 
@@ -247,6 +260,9 @@ const PhotoshootBookingPage: React.FC = () => {
         // Update marker position and map center
         setMarkerPosition(clickPosition);
         setMapCenter(clickPosition);
+        
+        // Center the map on the clicked position
+        map.panTo(clickPosition);
         
         // Update address fields from the new location
         updateAddressFromLocation(clickPosition);
@@ -284,6 +300,11 @@ const PhotoshootBookingPage: React.FC = () => {
           setMarkerPosition(location);
           setMapZoom(16);
           
+          // Center the map on the new location
+          if (mapRef.current) {
+            mapRef.current.panTo(location);
+          }
+          
           // Update address fields from the new location
           updateAddressFromLocation(location);
         }
@@ -299,7 +320,15 @@ const PhotoshootBookingPage: React.FC = () => {
         lng: event.latLng.lng()
       };
       
+      console.log("Marker dragged to new position:", newPosition);
+      
       setMarkerPosition(newPosition);
+      setMapCenter(newPosition);
+      
+      // Center the map on the new marker position
+      if (mapRef.current) {
+        mapRef.current.panTo(newPosition);
+      }
       
       // Update address fields from the new location
       updateAddressFromLocation(newPosition);
@@ -308,6 +337,12 @@ const PhotoshootBookingPage: React.FC = () => {
 
   // Update map when address fields change
   useEffect(() => {
+    // Skip if we're currently updating from map to avoid infinite loop
+    if (updatingFromMap) {
+      console.log("Skipping address-to-map update because we're updating from map");
+      return;
+    }
+    
     // Only run if all required fields are filled
     if (
       formData.streetName && 
@@ -316,6 +351,8 @@ const PhotoshootBookingPage: React.FC = () => {
       geocoderRef.current && 
       isLoaded
     ) {
+      console.log("Address fields changed, updating map");
+      
       // Build address string
       const addressString = `${formData.streetNumber} ${formData.streetName}, ${formData.city}, ${formData.stateRegion ? `${formData.stateRegion}, ` : ''}${formData.country}`;
       
@@ -328,16 +365,13 @@ const PhotoshootBookingPage: React.FC = () => {
           };
           
           // Update map only if the location is significantly different
-          // to avoid infinite loops
           if (!markerPosition || 
               Math.abs(location.lat - markerPosition.lat) > 0.0001 || 
               Math.abs(location.lng - markerPosition.lng) > 0.0001) {
+            console.log("Setting new map position from address fields:", location);
             setMapCenter(location);
             setMarkerPosition(location);
             setMapZoom(16);
-            
-            // Update address fields from the new location
-            updateAddressFromLocation(location);
           }
         }
       });
@@ -349,7 +383,8 @@ const PhotoshootBookingPage: React.FC = () => {
     formData.stateRegion, 
     formData.country, 
     isLoaded,
-    markerPosition
+    markerPosition,
+    updatingFromMap
   ]);
 
   // Check date availability - commented out but kept for future use
@@ -476,6 +511,9 @@ const PhotoshootBookingPage: React.FC = () => {
       if (response.success) {
         console.log('Booking successful, navigating to thank you page with ID:', response.bookingId);
         
+        // Mark the "Book photoshoot" checklist item as completed
+        completeItem('book_photoshoot');
+        
         // Try direct location change instead of navigate
         const thankYouUrl = `/photoshoot-booking/thank-you?bookingId=${response.bookingId}`;
         console.log('Navigating to URL:', thankYouUrl);
@@ -504,34 +542,7 @@ const PhotoshootBookingPage: React.FC = () => {
   const handleButtonSubmit = () => {
     handleSubmit({});
   };
-  
-  // Reset form to initial state - commented out but kept for future use
-  /*
-  const resetForm = () => {
-    setFormData({
-      streetName: '',
-      streetNumber: '',
-      floor: '',
-      flat: '',
-      postalCode: '',
-      city: '',
-      stateRegion: '',
-      country: '',
-      propertyType: t('photoshoot_booking.property_types.apartment'),
-      phoneNumber: '',
-      name: '',
-      date: '',
-      timeSlot: '',
-      comments: '',
-      location: DEFAULT_MAP_CENTER
-    });
-    setSelectedDate(null);
-    setSelectedTimeSlot('');
-    setMarkerPosition(DEFAULT_MAP_CENTER);
-    setMapCenter(DEFAULT_MAP_CENTER);
-    setMapZoom(12);
-  };
-  */
+
   
   // Navigate to previous day
   const navigatePrevDay = () => {
@@ -628,129 +639,67 @@ const PhotoshootBookingPage: React.FC = () => {
     return <div ref={mapContainerRef} className="fallback-marker-container" />;
   };
 
-  // Update the render map function to include a fallback DOM marker
+  // Modify the renderMap function to ensure the marker is always at the center
   const renderMap = () => {
     if (!isLoaded) {
-      return (
-        <div className="map-loading">
-          <FaSpinner className="spinner" />
-          <p>{t('photoshoot_booking.loading_map', 'Loading map...')}</p>
-        </div>
-      );
+      return <div className="loading-map">Loading Maps...</div>;
     }
 
-    console.log("Rendering map with marker at position:", markerPosition);
-    
     return (
-      <>
-        <div className="map-container">
-          <GoogleMap
-            mapContainerClassName="map-container"
-            center={mapCenter}
-            zoom={mapZoom}
-            onLoad={onMapLoad}
-            mapContainerStyle={{
-              width: '100%',
-              height: '400px',
-              borderRadius: '10px',
-              border: '1px solid #ccc',
-            }}
-            options={{
-              mapTypeControl: false,
-              streetViewControl: false,
-              fullscreenControl: true,
-              zoomControl: true,
-            }}
-            onClick={(e) => {
-              if (e.latLng) {
-                const clickPosition = {
-                  lat: e.latLng.lat(),
-                  lng: e.latLng.lng()
-                };
-                console.log("Map clicked, new position:", clickPosition);
-                setMarkerPosition(clickPosition);
-                setMapCenter(clickPosition);
-                
-                // Update address fields from the new location
-                updateAddressFromLocation(clickPosition);
-              }
-            }}
+      <div className="map-container">
+        <div className="search-box-container">
+          <StandaloneSearchBox
+            onLoad={onSearchBoxLoad}
+            onPlacesChanged={onPlacesChanged}
           >
-            {/* Primary marker implementation */}
-            {isLoaded && markerPosition && (
-              <Marker
-                position={markerPosition}
-                draggable
-                icon={{
-                  url: '/map-marker.svg',
-                  scaledSize: new window.google.maps.Size(40, 40),
-                }}
-                onClick={() => console.log("Marker clicked")}
-                onDragEnd={(e) => {
-                  if (e.latLng) {
-                    const newPosition = {
-                      lat: e.latLng.lat(),
-                      lng: e.latLng.lng()
-                    };
-                    console.log("Marker dragged to:", newPosition);
-                    setMarkerPosition(newPosition);
-                    
-                    // Update address fields from the new location
-                    updateAddressFromLocation(newPosition);
-                  }
-                }}
+            <div className="search-input-wrapper">
+              <FaSearch className="search-icon" />
+              <input
+                type="text"
+                placeholder={t('photoshoot_booking.search_placeholder', 'Search for your address')}
+                className="location-search-input"
               />
-            )}
-
-            {/* Fallback marker implementation */}
-            {markerPosition && isLoaded && showFallbackMarker && (
-              <Marker
-                position={markerPosition}
-                draggable
-                visible={true}
-                clickable={true}
-                opacity={1.0}
-                zIndex={1000}
-                animation={window.google.maps.Animation.DROP}
-                icon={{
-                  url: '/map-marker.svg',
-                  scaledSize: new window.google.maps.Size(40, 40),
-                }}
-                onDragEnd={(e) => {
-                  if (e.latLng) {
-                    const newPosition = {
-                      lat: e.latLng.lat(),
-                      lng: e.latLng.lng()
-                    };
-                    console.log("Fallback marker dragged to:", newPosition);
-                    setMarkerPosition(newPosition);
-                    
-                    // Update address fields from the new location
-                    updateAddressFromLocation(newPosition);
-                  }
-                }}
-              />
-            )}
-          </GoogleMap>
-          
-          {/* Fallback marker as direct DOM element */}
-          <div 
-            className="custom-map-marker" 
-            style={{ 
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              zIndex: 9999,
-              pointerEvents: 'none'
-            }}
-          />
+            </div>
+          </StandaloneSearchBox>
         </div>
         
-        <p className="map-hint">
-          <FaMapMarkerAlt className="map-hint-icon" />
-          {t('photoshoot_booking.drag_marker_hint', 'Drag the marker or click on the map to set the exact location of your property')}
-        </p>
-      </>
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          center={mapCenter}
+          zoom={mapZoom}
+          onLoad={onMapLoad}
+          options={{
+            fullscreenControl: false,
+            streetViewControl: false,
+            mapTypeControl: false,
+            zoomControlOptions: {
+              position: google.maps.ControlPosition.RIGHT_TOP
+            }
+          }}
+        >
+          {/* Always render the marker at the center */}
+          <Marker
+            position={markerPosition}
+            draggable={true}
+            onDragEnd={onMarkerDragEnd}
+            animation={google.maps.Animation.DROP}
+            icon={{
+              url: '/images/map-pin.png',
+              scaledSize: new google.maps.Size(40, 40),
+              origin: new google.maps.Point(0, 0),
+              anchor: new google.maps.Point(20, 40)
+            }}
+          />
+          
+          {/* Fallback marker for debugging */}
+          {showFallbackMarker && <FallbackMarker />}
+        </GoogleMap>
+        
+        <div className="map-instructions">
+          <FaMapMarkerAlt className="instruction-icon" />
+          <p>{t('photoshoot_booking.map_instructions', 'Click on the map or drag the marker to set the exact location')}</p>
+        </div>
+      </div>
     );
   };
   

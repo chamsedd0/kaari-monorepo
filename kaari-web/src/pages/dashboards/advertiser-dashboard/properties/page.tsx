@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../../contexts/ToastContext';
 import { countPropertiesNeedingRefresh } from '../../../../utils/property-refresh-utils';
+import { useChecklist } from '../../../../contexts/checklist/ChecklistContext';
 
 const PropertiesPage: React.FC = () => {
     const { t } = useTranslation();
@@ -28,6 +29,7 @@ const PropertiesPage: React.FC = () => {
     const [properties, setProperties] = useState<Property[]>([]);
     const [error, setError] = useState<string | null>(null);
     const { user } = useAuth();
+    const { completeItem } = useChecklist();
     
     // Modal states
     const [unlistModalOpen, setUnlistModalOpen] = useState(false);
@@ -51,6 +53,13 @@ const PropertiesPage: React.FC = () => {
                 const data = await getAdvertiserProperties();
                 setProperties(data);
                 setError(null);
+                
+                // Check if all properties have been refreshed recently
+                const needingRefresh = countPropertiesNeedingRefresh(data);
+                if (needingRefresh === 0 && data.length > 0) {
+                    // Mark the "Refresh availability" checklist item as completed
+                    completeItem('refresh_availability');
+                }
             } catch (err) {
                 console.error('Error loading properties:', err);
                 setError(t('advertiser_dashboard.properties.errors.load_failed'));
@@ -60,7 +69,7 @@ const PropertiesPage: React.FC = () => {
         };
         
         loadProperties();
-    }, [t]);
+    }, [t, completeItem]);
     
     // Filter properties by status
     const listedProperties = properties.filter(
@@ -121,17 +130,24 @@ const PropertiesPage: React.FC = () => {
             }
             
             // Update local state to reflect the refresh
-            setProperties(prevProperties => 
-                prevProperties.map(property => 
-                    property.id === propertyId 
-                        ? { 
-                            ...property, 
-                            lastAvailabilityRefresh: new Date(),
-                            updatedAt: new Date()
-                          } 
-                        : property
-                )
+            const updatedProperties = properties.map(property => 
+                property.id === propertyId 
+                    ? { 
+                        ...property, 
+                        lastAvailabilityRefresh: new Date(),
+                        updatedAt: new Date()
+                      } 
+                    : property
             );
+            
+            setProperties(updatedProperties);
+            
+            // Check if all properties have been refreshed after this update
+            const needingRefresh = countPropertiesNeedingRefresh(updatedProperties);
+            if (needingRefresh === 0) {
+                // Mark the "Refresh availability" checklist item as completed
+                completeItem('refresh_availability');
+            }
             
             // Show success toast
             addToast(

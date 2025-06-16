@@ -13,12 +13,14 @@ import { updateUserProfile, uploadGovernmentID } from '../../../../../../backend
 import { useToastService } from '../../../../../../services/ToastService';
 import { useTranslation } from 'react-i18next';
 import SpokenLanguagesModal from '../../../../../../components/skeletons/constructed/modals/spoken-languages-modal';
+import { useChecklist } from '../../../../../../contexts/checklist/ChecklistContext';
 
 const ProfileSection: React.FC = () => {
     const { t } = useTranslation();
     const user = useStore(state => state.user);
     const setUser = useStore(state => state.setUser);
     const toast = useToastService();
+    const { completeItem } = useChecklist();
     
     // Form state
     const [name, setName] = useState('');
@@ -164,6 +166,12 @@ const ProfileSection: React.FC = () => {
             setProfilePicturePreview(null);
             setIdFront(null);
             setIdBack(null);
+            
+            // Check if profile is complete enough to mark the checklist item
+            if (name && phoneNumber) {
+                // Mark the "Complete profile" checklist item as completed
+                completeItem('complete_profile');
+            }
             
             // Show success message briefly
             setTimeout(() => {

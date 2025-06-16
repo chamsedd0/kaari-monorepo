@@ -32,6 +32,7 @@ import { useAuth } from '../../../../contexts/auth/AuthContext'; // Corrected pa
 import { formatDistanceToNow } from 'date-fns';
 import { useToastService } from '../../../../services/ToastService'; // Corrected path for ToastService
 import { createNewMessageNotification } from '../../../../utils/notification-helpers';
+import { useChecklist } from '../../../../contexts/checklist/ChecklistContext';
 
 // Interfaces for Firestore data
 interface User {
@@ -154,12 +155,14 @@ interface MessageInputProps {
   activeConversationId: string | null;
   currentUser: User | null;
   setUserTyping: (isTyping: boolean) => void;
+  onMessageSent?: () => void;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({ 
   activeConversationId, 
   currentUser, 
-  setUserTyping 
+  setUserTyping,
+  onMessageSent
 }) => {
   const [message, setMessage] = useState<string>('');
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -339,6 +342,11 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
       setMessage(''); // Clear input field
       setAttachments([]); // Clear attachments
+      
+      // Notify parent that a message was sent
+      if (onMessageSent) {
+        onMessageSent();
+      }
     } catch (error) {
       console.error("Error sending message: ", error);
       toastService.showToast('error', t('messages.error'), t('messages.failed_to_send'));
@@ -459,6 +467,7 @@ const MessagesPage: React.FC = () => {
   const [otherUserTyping, setOtherUserTyping] = useState<boolean>(false);
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null); // Add error state
+  const { completeItem } = useChecklist(); // Add checklist context
   
   // Add refs to track subscriptions
   const conversationsSubscribed = useRef<boolean>(false);
@@ -868,6 +877,22 @@ const MessagesPage: React.FC = () => {
     }
   };
 
+  // Handle message sent - mark checklist item as completed
+  const handleMessageSent = () => {
+    // Mark the "Message tenant" checklist item as completed
+    completeItem('message_tenant');
+  };
+  
+  // Check if there are any sent messages and mark the checklist item as completed
+  useEffect(() => {
+    if (messages.length > 0 && currentUser) {
+      const hasSentMessages = messages.some(msg => msg.senderId === currentUser.id);
+      if (hasSentMessages) {
+        completeItem('message_tenant');
+      }
+    }
+  }, [messages, currentUser, completeItem]);
+
   // Override main return to show any errors
   if (error) {
     return (
@@ -968,6 +993,7 @@ const MessagesPage: React.FC = () => {
                 activeConversationId={activeConversation.id} 
                 currentUser={currentUser} 
                 setUserTyping={setIsUserTyping}
+                onMessageSent={handleMessageSent}
               />
             </>
           ) : (

@@ -3,23 +3,24 @@ import { Theme } from '../../../theme/theme';
 
 export const AdminDashboardContainer = styled.div`
   display: flex;
-  flex-direction: column;
   min-height: 100vh;
   background-color: #f5f5f5;
-  
-  > div:first-child {
-    display: flex;
-  }
 `;
 
 export const Sidebar = styled.div`
+  margin-top: 70px;
   width: 250px;
-  min-height: calc(100vh - 60px);
+  min-height: 100vh;
   background-color: white;
   padding: 20px 0;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 10;
 `;
 
 export const SidebarHeader = styled.div`
@@ -28,37 +29,43 @@ export const SidebarHeader = styled.div`
 `;
 
 export const Logo = styled.div`
-  font-size: 20px;
+  font-size: 24px;
   font-weight: bold;
   color: ${Theme.colors.secondary};
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
 `;
 
 export const NavItem = styled.div<{ $active?: boolean }>`
   display: flex;
   align-items: center;
   padding: 12px 20px;
-  color: ${props => props.$active ? Theme.colors.secondary : Theme.colors.gray2};
-  font-weight: ${props => props.$active ? 'bold' : 'normal'};
-  background-color: ${props => props.$active ? '#f0ebfa' : 'transparent'};
+  color: ${props => props.$active ? Theme.colors.secondary : '#666'};
+  font-weight: ${props => props.$active ? '600' : 'normal'};
+  background-color: ${props => props.$active ? '#f3eefb' : 'transparent'};
+  border-left: ${props => props.$active ? `4px solid ${Theme.colors.secondary}` : '4px solid transparent'};
   cursor: pointer;
   transition: all 0.2s ease;
+  margin-bottom: 2px;
   
   &:hover {
-    background-color: ${props => props.$active ? '#f0ebfa' : '#f5f5f5'};
+    background-color: ${props => props.$active ? '#f3eefb' : '#f5f5f5'};
     color: ${Theme.colors.secondary};
   }
   
   svg {
     margin-right: 10px;
     font-size: 18px;
+    color: ${props => props.$active ? Theme.colors.secondary : '#888'};
   }
 `;
 
 export const MainContent = styled.div`
   flex: 1;
   padding: 20px;
-  display: flex;
-  flex-direction: column;
+  margin-left: 250px; /* Match the sidebar width */
+  width: calc(100% - 250px);
 `;
 
 export const Header = styled.div`
@@ -141,10 +148,13 @@ export const StatValue = styled.div`
   font-size: 2rem;
   font-weight: bold;
   margin-bottom: 5px;
+  color: ${Theme.colors.secondary};
 `;
 
 export const StatLabel = styled.div`
   color: #666;
+  display: flex;
+  align-items: center;
 `;
 
 export const Table = styled.table`
@@ -175,7 +185,7 @@ export const TableCell = styled.td`
 `;
 
 export const Button = styled.button`
-  background-color: #4a90e2;
+  background-color: ${Theme.colors.secondary};
   color: white;
   border: none;
   border-radius: 4px;
@@ -184,7 +194,7 @@ export const Button = styled.button`
   font-weight: 500;
   
   &:hover {
-    background-color: #3a80d2;
+    background-color: ${Theme.colors.secondary};
   }
 `;
 
@@ -196,7 +206,7 @@ export const StatusBadge = styled.span<{ status: string }>`
   font-weight: 500;
   
   background-color: ${props => {
-    switch (props.status) {
+    switch (props.status.toLowerCase()) {
       case 'pending':
         return '#ffeeba';
       case 'assigned':
@@ -217,7 +227,7 @@ export const StatusBadge = styled.span<{ status: string }>`
   }};
   
   color: ${props => {
-    switch (props.status) {
+    switch (props.status.toLowerCase()) {
       case 'pending':
         return '#856404';
       case 'assigned':

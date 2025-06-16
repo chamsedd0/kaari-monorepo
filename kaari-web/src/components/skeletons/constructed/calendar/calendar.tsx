@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import CalendarComponentBaseModel from "../../../styles/constructed/calendar/calendar-base-model-style";
 import { FaChevronUp, FaChevronDown } from 'react-icons/fa';
 
@@ -19,31 +19,34 @@ const CalendarComponent: React.FC<CalendarProps> = ({
   minDate = new Date(),
   checkAvailability
 }) => {
+  // Simple state management
   const [currentMonth, setCurrentMonth] = useState<number>(propSelectedDate ? propSelectedDate.getMonth() : new Date().getMonth());
   const [currentYear, setCurrentYear] = useState<number>(propSelectedDate ? propSelectedDate.getFullYear() : new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState<Date | null>(propSelectedDate);
-  const [internalDisabledDates, setInternalDisabledDates] = useState<Date[]>(disabledDates);
-  const [days, setDays] = useState<Array<{ 
-    day: number; 
-    month: number; 
-    year: number; 
-    isCurrentMonth: boolean;
-    isDisabled: boolean;
-    isLoading?: boolean;
-  }>>([]);
   const [loadingDates, setLoadingDates] = useState<{[key: string]: boolean}>({});
+  const [disabledDatesList, setDisabledDatesList] = useState<Date[]>(disabledDates);
 
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
+  // Static values that don't change
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+                 'July', 'August', 'September', 'October', 'November', 'December'];
+  const DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
-  // Format to yyyy-mm-dd string for comparing dates
+  // Update selected date when prop changes
+  useEffect(() => {
+    setSelectedDate(propSelectedDate);
+  }, [propSelectedDate]);
+
+  // Update disabled dates when prop changes
+  useEffect(() => {
+    setDisabledDatesList(disabledDates);
+  }, [disabledDates]);
+
+  // Format date key for comparison
   const formatDateKey = (date: Date): string => {
     return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
   };
 
-  // Check if a date is in the disabledDates array
+  // Check if a date is disabled
   const isDateDisabled = (day: number, month: number, year: number): boolean => {
     // Check if date is before minDate
     const date = new Date(year, month, day);
@@ -55,110 +58,94 @@ const CalendarComponent: React.FC<CalendarProps> = ({
     }
     
     // Check if date is in disabledDates
-    return internalDisabledDates.some(disabledDate => {
-      return (
-        disabledDate.getDate() === day &&
-        disabledDate.getMonth() === month &&
-        disabledDate.getFullYear() === year
-      );
-    });
+    return disabledDatesList.some(disabledDate => 
+      disabledDate.getDate() === day &&
+      disabledDate.getMonth() === month &&
+      disabledDate.getFullYear() === year
+    );
   };
 
-  useEffect(() => {
-    generateDays();
-  }, [currentMonth, currentYear, internalDisabledDates, minDate]);
-
-  useEffect(() => {
-    setSelectedDate(propSelectedDate);
-  }, [propSelectedDate]);
-
-  // Update internal disabled dates when prop changes
-  useEffect(() => {
-    setInternalDisabledDates(disabledDates);
-  }, [disabledDates]);
-
-  const generateDays = () => {
+  // Generate calendar days
+  const calendarDays = useMemo(() => {
+    const days = [];
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
-    
-    const tempDays = [];
     
     // Previous month days
     for (let i = firstDayOfMonth - 1; i >= 0; i--) {
       const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
       const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+      const day = daysInPrevMonth - i;
       
-      const isDisabled = isDateDisabled(daysInPrevMonth - i, prevMonth, prevYear);
-      
-      tempDays.push({
-        day: daysInPrevMonth - i,
+      days.push({
+        day,
         month: prevMonth,
         year: prevYear,
         isCurrentMonth: false,
-        isDisabled
+        isDisabled: isDateDisabled(day, prevMonth, prevYear)
       });
     }
     
     // Current month days
     for (let i = 1; i <= daysInMonth; i++) {
-      const isDisabled = isDateDisabled(i, currentMonth, currentYear);
-      
-      tempDays.push({
+      days.push({
         day: i,
         month: currentMonth,
         year: currentYear,
         isCurrentMonth: true,
-        isDisabled
+        isDisabled: isDateDisabled(i, currentMonth, currentYear)
       });
     }
     
     // Next month days
-    const remainingCells = 42 - tempDays.length; // 6 rows of 7 days
+    const remainingCells = 42 - days.length; // 6 rows of 7 days
     for (let i = 1; i <= remainingCells; i++) {
       const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
       const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
       
-      const isDisabled = isDateDisabled(i, nextMonth, nextYear);
-      
-      tempDays.push({
+      days.push({
         day: i,
         month: nextMonth,
         year: nextYear,
         isCurrentMonth: false,
-        isDisabled
+        isDisabled: isDateDisabled(i, nextMonth, nextYear)
       });
     }
     
-    setDays(tempDays);
-  };
+    return days;
+  }, [currentMonth, currentYear, disabledDatesList, minDate]);
 
+  // Navigation handlers
   const incrementMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0);
-      setCurrentYear(currentYear + 1);
-    } else {
-      setCurrentMonth(currentMonth + 1);
-    }
+    setCurrentMonth(prev => {
+      if (prev === 11) {
+        setCurrentYear(y => y + 1);
+        return 0;
+      }
+      return prev + 1;
+    });
   };
 
   const decrementMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11);
-      setCurrentYear(currentYear - 1);
-    } else {
-      setCurrentMonth(currentMonth - 1);
-    }
+    setCurrentMonth(prev => {
+      if (prev === 0) {
+        setCurrentYear(y => y - 1);
+        return 11;
+      }
+      return prev - 1;
+    });
   };
 
   const incrementYear = () => {
-    setCurrentYear(currentYear + 1);
+    setCurrentYear(y => y + 1);
   };
 
   const decrementYear = () => {
-    setCurrentYear(currentYear - 1);
+    setCurrentYear(y => y - 1);
   };
 
+  // Date selection handler
   const handleDateClick = async (day: number, month: number, year: number, isDisabled: boolean) => {
     if (isDisabled) return;
     
@@ -178,7 +165,12 @@ const CalendarComponent: React.FC<CalendarProps> = ({
         // Update days to mark this date as available/unavailable
         if (!isAvailable) {
           // If not available, add to disabled dates
-          setInternalDisabledDates(prev => [...prev, newDate]);
+          setDisabledDatesList(prev => [...prev, newDate]);
+          setLoadingDates(prev => {
+            const updated = { ...prev };
+            delete updated[dateKey];
+            return updated;
+          });
           return;
         }
         
@@ -202,7 +194,8 @@ const CalendarComponent: React.FC<CalendarProps> = ({
     }
   };
 
-  const formatDate = (date: Date | null) => {
+  // Format date for display
+  const formatDate = (date: Date | null): string => {
     if (!date) return '';
     
     const day = date.getDate().toString().padStart(2, '0');
@@ -217,7 +210,8 @@ const CalendarComponent: React.FC<CalendarProps> = ({
     return formattedDate;
   };
 
-  const isDateSelected = (day: number, month: number, year: number) => {
+  // Check if a date is selected
+  const isDateSelected = (day: number, month: number, year: number): boolean => {
     if (!selectedDate) return false;
     
     return (
@@ -227,7 +221,8 @@ const CalendarComponent: React.FC<CalendarProps> = ({
     );
   };
 
-  const isToday = (day: number, month: number, year: number) => {
+  // Check if a date is today
+  const isToday = (day: number, month: number, year: number): boolean => {
     const today = new Date();
     return (
       today.getDate() === day &&
@@ -242,32 +237,32 @@ const CalendarComponent: React.FC<CalendarProps> = ({
 
       <div className="control-date">
         <div className="month-select">
-          <span>{months[currentMonth]}</span>
-            <div className="controls">
+          <span>{MONTHS[currentMonth]}</span>
+          <div className="controls">
             <button className="up" onClick={incrementMonth}>
               <FaChevronUp />
-                </button>
+            </button>
             <button className="down" onClick={decrementMonth}>
               <FaChevronDown />
-                </button>
-            </div>
+            </button>
+          </div>
         </div>
         <div className="year-select">
           <span>{currentYear}</span>
-            <div className="controls">
+          <div className="controls">
             <button className="up" onClick={incrementYear}>
               <FaChevronUp />
-                </button>
+            </button>
             <button className="down" onClick={decrementYear}>
               <FaChevronDown />
-                </button>
-            </div>
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="calendar">
         <div className="days-enum">
-          {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day) => (
+          {DAYS.map((day) => (
             <div key={day} className="day">
               {day}
             </div>
@@ -275,13 +270,13 @@ const CalendarComponent: React.FC<CalendarProps> = ({
         </div>
 
         <div className="day-numbers">
-          {days.map((dayInfo, index) => {
+          {calendarDays.map((dayInfo, index) => {
             const dateKey = formatDateKey(new Date(dayInfo.year, dayInfo.month, dayInfo.day));
             const isLoading = loadingDates[dateKey] || false;
             
             return (
               <div
-                key={index}
+                key={`${dayInfo.year}-${dayInfo.month}-${dayInfo.day}-${index}`}
                 className={`day-number-box 
                   ${isDateSelected(dayInfo.day, dayInfo.month, dayInfo.year) ? 'selected' : ''} 
                   ${isToday(dayInfo.day, dayInfo.month, dayInfo.year) ? 'today' : ''} 
@@ -292,7 +287,7 @@ const CalendarComponent: React.FC<CalendarProps> = ({
               >
                 {dayInfo.day}
                 {isLoading && <span className="loading-indicator">...</span>}
-            </div>
+              </div>
             );
           })}
         </div>

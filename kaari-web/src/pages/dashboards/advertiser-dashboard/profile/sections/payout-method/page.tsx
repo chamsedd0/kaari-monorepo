@@ -4,10 +4,28 @@ import Mastercard from '../../../../../../components/skeletons/cards/mastercard'
 import { PurpleButtonMB48 } from '../../../../../../components/skeletons/buttons/purple_MB48';
 import { CompletedPaymentCard } from '../../../../../../components/skeletons/cards/completed-payment-card';
 import { useTranslation } from 'react-i18next';
+import { useChecklist } from '../../../../../../contexts/checklist/ChecklistContext';
 
 const PayoutMethodPage: React.FC = () => {
   const { t } = useTranslation();
+  const { completeItem } = useChecklist();
   const [activeTab, setActiveTab] = useState<'payout' | 'complete'>('payout');
+  const [hasPaymentMethod, setHasPaymentMethod] = useState(true); // Assuming there's already a payment method
+
+  // Mark the checklist item as completed if a payment method exists
+  React.useEffect(() => {
+    if (hasPaymentMethod) {
+      completeItem('add_payout_method');
+    }
+  }, [hasPaymentMethod, completeItem]);
+
+  // Function to handle adding a new payment method
+  const handleAddPaymentMethod = () => {
+    // In a real implementation, this would open a modal or form to add payment details
+    // For now, we'll just simulate adding a payment method
+    setHasPaymentMethod(true);
+    completeItem('add_payout_method');
+  };
 
   return (
     <PayoutMethodStyle>
@@ -33,17 +51,23 @@ const PayoutMethodPage: React.FC = () => {
         {activeTab === 'payout' && (
           <div className="content-container">
              <h2 className="content-title">{t('advertiser_dashboard.profile.payout_method.payment_methods')}</h2>
-                <p className="content-description">
-                {t('advertiser_dashboard.profile.payout_method.no_payment_methods')}
-                </p>
-                <Mastercard
-                  cardNumber="1234"
-                  expirationDate=" 04/30"
-                  title={t('advertiser_dashboard.profile.payout_method.title')}
-                  onClick={() => {}}
-                />
+                {!hasPaymentMethod ? (
+                  <p className="content-description">
+                    {t('advertiser_dashboard.profile.payout_method.no_payment_methods')}
+                  </p>
+                ) : (
+                  <Mastercard
+                    cardNumber="1234"
+                    expirationDate=" 04/30"
+                    title={t('advertiser_dashboard.profile.payout_method.title')}
+                    onClick={() => {}}
+                  />
+                )}
                 <div className="add-payment-method-button">
-                  <PurpleButtonMB48 text={t('advertiser_dashboard.profile.payout_method.add_payment_method')} onClick={() => {}} />
+                  <PurpleButtonMB48 
+                    text={t('advertiser_dashboard.profile.payout_method.add_payment_method')} 
+                    onClick={handleAddPaymentMethod} 
+                  />
                 </div>
           </div>
         )}

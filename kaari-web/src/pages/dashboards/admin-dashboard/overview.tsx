@@ -17,7 +17,6 @@ import {
   StatusBadge,
 } from './styles';
 import { Link, useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
 
 import { PhotoshootBookingServerActions } from '../../../backend/server-actions/PhotoshootBookingServerActions';
 import { TeamServerActions } from '../../../backend/server-actions/TeamServerActions';
@@ -73,15 +72,6 @@ const OverviewPage: React.FC = () => {
     
     loadDashboardData();
   }, []);
-  
-  // Format date for display
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
   
   return (
     <div>
@@ -144,22 +134,20 @@ const OverviewPage: React.FC = () => {
                     </TableCell>
                     <TableCell>{booking.propertyType || 'N/A'}</TableCell>
                     <TableCell>
-                      <StatusBadge status={booking.status}>
-                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                      <StatusBadge status={booking.status || 'pending'}>
+                        {booking.status ? booking.status.charAt(0).toUpperCase() + booking.status.slice(1) : 'Pending'}
                       </StatusBadge>
                     </TableCell>
                     <TableCell>
-                      <button 
+                      <Button 
                         onClick={() => navigate(`/dashboard/admin/photoshoot-bookings/view/${booking.id}`)}
                         style={{ 
-                          background: 'none', 
-                          border: 'none', 
-                          color: '#4a90e2', 
-                          cursor: 'pointer' 
+                          padding: '6px 12px',
+                          fontSize: '0.85rem'
                         }}
                       >
                         View Details
-                      </button>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
