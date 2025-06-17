@@ -3,10 +3,14 @@ import { ReferralProgramPageStyle } from './styles';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { PurpleButtonLB60 } from '../../../../components/skeletons/buttons/purple_LB60';
-import { BpurpleButtonLB60 } from '../../../../components/skeletons/buttons/border_purple_LB60';
 import { PurpleButtonSM32 } from '../../../../components/skeletons/buttons/purple_SM32';
+import { BpurpleButtonMB48 } from '../../../../components/skeletons/buttons/border_purple_MB48'
 import { PurpleButtonMB48 } from "../../../../components/skeletons/buttons/purple_MB48";
 import ArrowIcon from '../../../../components/skeletons/icons/Icon_Arrow_Right_W.svg';
+import ReferralProgramImage from '../../../../components/skeletons/icons/Referral_Program_Image.svg';
+import iconinfo from '../../../../components/skeletons/icons/Icon_Info2.svg'
+import arowdown from '../../../../components/skeletons/icons/Icon_arrow_Down.svg'
+import arowup from '../../../../components/skeletons/icons/Icon_arrow_Up.svg'
 
 // Mock data for the referral program (replace with actual API calls later)
 const mockReferralData = {
@@ -100,15 +104,11 @@ const ArrowRightIcon = () => (
 
 // Up and Down arrow indicators
 const UpArrowIndicator = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M8 3L13 8L8 13" stroke="#25A348" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(45 8 8)" />
-  </svg>
+  <img src={arowup} alt="Down Arrow"  />
 );
 
 const DownArrowIndicator = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M8 3L13 8L8 13" stroke="#B51717" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(135 8 8)" />
-  </svg>
+  <img src={arowdown} alt="Down Arrow"  />
 );
 
 // Performance Button Component with arrow
@@ -227,7 +227,6 @@ const ReferralProgramPage: React.FC = () => {
 
       <div className="cards-layout">
         <div className="main-column">
-          {/* Referral Code Card */}
           <div className="card referral-code">
             <h2>Your Referral Code</h2>
             <div className="referral-code-content">
@@ -241,7 +240,7 @@ const ReferralProgramPage: React.FC = () => {
                 </p>
               </div>
               <div className="illustration">
-                <ReferralIllustration />
+                <img src={ReferralProgramImage} alt="Referral Illustration" />
               </div>
             </div>
           </div>
@@ -254,7 +253,7 @@ const ReferralProgramPage: React.FC = () => {
             </p>
 
             <div className="bonus-explainer">
-              <InfoIcon />
+              <img src={iconinfo} alt='Info Icon'/>
               <span>List 1 more property to get 8% bonus</span>
             </div>
 
@@ -277,13 +276,12 @@ const ReferralProgramPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="button-group">
               <div className="button-wrapper">
-                <PurpleButtonLB60 text="Book a Photoshoot" onClick={handleBookPhotoshoot} />
+                <PurpleButtonMB48 text="Book a Photoshoot" onClick={handleBookPhotoshoot} />
               </div>
               <div className="button-wrapper">
-                <BpurpleButtonLB60 text="Go to Simulator" onClick={handleGoToSimulator} />
+                <BpurpleButtonMB48 text="Go to Simulator" onClick={handleGoToSimulator} />
               </div>
             </div>
           </div>
@@ -295,7 +293,7 @@ const ReferralProgramPage: React.FC = () => {
             <div className="card-header">
               <h2>Your Progress</h2>
               <a href="#" className="details-link" onClick={(e) => { e.preventDefault(); handleViewPerformance(); }}>
-                Details <ArrowRightIcon />
+                Details <ArrowRightIcon  />
               </a>
             </div>
 

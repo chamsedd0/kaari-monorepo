@@ -2,56 +2,30 @@ import styled from "styled-components";
 import { Theme } from "../../../../theme/theme";
 
 export const ReferralProgramPageStyle = styled.div`
-
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
   
   .page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
     
     h1 {
       font: ${Theme.typography.fonts.h3};
       color: ${Theme.colors.black};
     }
-    
-    .header-buttons {
-      .my-performance-button {
-        background-color: #8F27CE;
-        color: white;
-        border: none;
-        border-radius: 100px;
-        padding: 12px 20px 12px 24px;
-        font-size: 16px;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-        
-        &:hover {
-          background-color: #6A2AF4;
-        }
-        
-        svg {
-          margin-left: 4px;
-          width: 16px;
-          height: 16px;
-          
-          path {
-            stroke: white;
-          }
-        }
-      }
+
+    .header-buttons{
+      max-width: 200px;
     }
   }
   
   .cards-layout {
     display: flex;
-    gap: 24px;
+    gap: 40px;
     
-    @media (max-width: 992px) {
+    @media (max-width: 300px) {
       flex-direction: column;
     }
     
@@ -59,7 +33,7 @@ export const ReferralProgramPageStyle = styled.div`
       flex: 2;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
     }
     
     .sidebar {
@@ -73,21 +47,18 @@ export const ReferralProgramPageStyle = styled.div`
   }
   
   .card {
-    background-color: white;
-    border-radius: 16px;
-    border: 1px solid #E0E0E0;
-    overflow: hidden;
-    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+    border: ${Theme.borders.primary};
+    border-radius: ${Theme.borders.radius.lg};
+    padding: 20px;
     
     h2 {
-      font-size: 20px;
-      font-weight: 600;
-      color: #252525;
-      margin: 0 0 16px 0;
+      font: ${Theme.typography.fonts.extraLargeB};
+      color: ${Theme.colors.black};
+      margin-bottom: 20px;
     }
     
     &.referral-code {
-      padding: 24px;
+      padding: 20px;
       
       .referral-code-content {
         display: flex;
@@ -98,11 +69,11 @@ export const ReferralProgramPageStyle = styled.div`
         
         .code-section {
           flex: 1;
-          margin-right: 20px;
+          margin-right: 23px;
+          width: 70%;
           
           @media (max-width: 768px) {
             margin-right: 0;
-            margin-bottom: 24px;
           }
         }
         
@@ -124,15 +95,17 @@ export const ReferralProgramPageStyle = styled.div`
       
       .code-container {
         display: flex;
-        margin-bottom: 16px;
+        margin-bottom: 20px;
+
         
         input {
           flex: 1;
           height: 48px;
-          padding: 12px 16px;
-          border: 1px solid #E0E0E0;
-          border-right: none;
-          border-radius: 8px 0 0 8px;
+          max-width: 400px;
+          padding: 17px 20px;
+          border-radius: ${Theme.borders.radius.extreme} 0 0 ${Theme.borders.radius.extreme};
+          border: ${Theme.borders.primary};
+
           font-size: 16px;
           color: #999999;
           outline: none;
@@ -143,9 +116,9 @@ export const ReferralProgramPageStyle = styled.div`
           .copy-button {
             width: 48px;
             height: 48px;
-            background-color: #8F27CE;
+            background-color: ${Theme.colors.secondary};
             border: none;
-            border-radius: 0 8px 8px 0;
+            border-radius: 0 ${Theme.borders.radius.extreme} ${Theme.borders.radius.extreme} 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -154,7 +127,7 @@ export const ReferralProgramPageStyle = styled.div`
             transition: background-color 0.2s ease;
             
             &:hover {
-              background-color: #6A2AF4;
+              background-color: ${Theme.colors.primary};
             }
             
             svg {
@@ -187,46 +160,39 @@ export const ReferralProgramPageStyle = styled.div`
       }
       
       .info-text {
-        color: #767676;
-        font-size: 14px;
-        line-height: 1.5;
-        margin: 0;
+        font: ${Theme.typography.fonts.text14};
+        color: ${Theme.colors.gray2};
       }
     }
     
     &.performance {
-      padding: 24px;
+      padding: 20px;
       
       .bonus-text {
-        font-size: 16px;
-        color: #252525;
-        margin-bottom: 8px;
+        font: ${Theme.typography.fonts.largeM};
+        color: ${Theme.colors.black};
+        margin-top: 24px;
+        margin-bottom: 12px;
       }
       
       .bonus-explainer {
         display: flex;
         align-items: center;
         gap: 8px;
-        color: #8F27CE;
-        font-size: 14px;
-        margin-bottom: 24px;
-        
-        svg {
-          width: 20px;
-          height: 20px;
-        }
+        color: ${Theme.colors.gray2};
+        font: ${Theme.typography.fonts.text14};
+        margin-bottom: 27px;
       }
       
       .progress-container {
-        margin: 0 0 32px;
+        margin: 0 0 24px;
         
         .percentage-labels {
           display: flex;
           justify-content: space-between;
           margin-bottom: 4px;
-          font-size: 14px;
-          font-weight: 600;
-          color: #252525;
+          font: ${Theme.typography.fonts.mediumB};
+          color: ${Theme.colors.black};
         }
         
         .progress-bar {
@@ -242,7 +208,7 @@ export const ReferralProgramPageStyle = styled.div`
             background-color: ${Theme.colors.tertiary};
             
             &.active {
-              background-color: #8F27CE;
+              background-color: ${Theme.colors.secondary};
             }
           }
         }
@@ -250,68 +216,37 @@ export const ReferralProgramPageStyle = styled.div`
         .range-labels {
           display: flex;
           justify-content: space-between;
-          font-size: 12px;
-          color: #767676;
+          font: ${Theme.typography.fonts.smallM};
+          color: ${Theme.colors.black};
           margin-top: 4px;
         }
       }
       
       .button-group {
         display: flex;
-        gap: 16px;
-        
-        @media (max-width: 768px) {
-          width: 100%;
-        }
-        
-        .button-wrapper {
-          flex: 1;
-          max-width: 180px;
-          
-          @media (max-width: 768px) {
-            max-width: none;
-          }
-          
-          button {
-            width: 100%;
-            height: 48px;
-            border-radius: 100px;
-            font-size: 14px;
-            padding: 0 !important;
-            
-            &:hover {
-              transform: none;
-            }
-          }
-          
-          &:last-child button {
-            border-width: 1px !important;
-          }
-        }
+        gap: 12px;
+        max-width: 390;
       }
     }
     
     &.progress-card {
-      padding: 0;
+      margin: 0;
       
       .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 20px 24px;
+        padding: 20px;
+
         
         h2 {
           margin: 0;
-          font-size: 20px;
-          font-weight: 600;
-          color: #252525;
         }
         
         .details-link {
-          color: #8F27CE;
+          color:${Theme.colors.secondary};
           text-decoration: none;
-          font-size: 16px;
-          font-weight: 500;
+          font: ${Theme.typography.fonts.mediumM};
           display: flex;
           align-items: center;
           gap: 4px;
@@ -324,33 +259,31 @@ export const ReferralProgramPageStyle = styled.div`
       
       .progress-divider {
         height: 1px;
-        background-color: #EAEAEA;
+        background-color: ${Theme.colors.sixth};
         width: 100%;
       }
       
       .progress-stats {
+        margin: 0;
         .stat-row {
-          padding: 16px 24px;
+          padding: 16px 0px;
           display: flex;
           justify-content: space-between;
           align-items: center;
+          margin: 0;
           
           .stat-label {
-            color: #767676;
-            font-size: 16px;
-            font-weight: 400;
+            color: ${Theme.colors.gray2};
+            font: ${Theme.typography.fonts.mediumM};
           }
           
           .stat-value {
-            font-size: 20px;
-            font-weight: 600;
-            color: #252525;
-            display: flex;
-            align-items: center;
+            font: ${Theme.typography.fonts.extraLargeB};
+            color: ${Theme.colors.black};
+
             
             .trend-indicator {
               display: flex;
-              margin-right: 6px;
               align-items: center;
               justify-content: center;
 
