@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { PerformancePageStyle } from './styles';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
-import { Theme } from '../../../../../theme/theme';
 import { PurpleButtonLB40 } from '../../../../../components/skeletons/buttons/purple_LB40';
-import { BackButton } from '../../../../../components/skeletons/buttons/back_button';
+import dwonarrow from '../../../../../components/skeletons/icons/Icon_arrow_Down.svg'
+import uparrow from '../../../../../components/skeletons/icons/Icon_arrow_Up.svg'
+import IconVerified from '../../../../../components/skeletons/icons/Icon_Verified.svg'
+import iconinfo from '../../../../../components/skeletons/icons/Icon_Info2.svg'
+import { PurpleButtonMB48 } from "../../../../../components/skeletons/buttons/purple_MB48";
 
 // Mock data for the referral program performance (replace with actual API calls later)
 const mockPerformanceData = {
@@ -62,31 +64,20 @@ const mockPerformanceData = {
 
 // Icons
 const CheckIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#25A348" />
-    <path d="M16 9L10.5 14.5L8 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
+  <img src={IconVerified}/>
 );
 
 const InfoIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="10" cy="10" r="9.5" stroke="#D1D1D1" />
-    <path d="M10 6V7" stroke="#D1D1D1" strokeWidth="2" strokeLinecap="round" />
-    <path d="M10 10V14" stroke="#D1D1D1" strokeWidth="2" strokeLinecap="round" />
-  </svg>
+  <img src= {iconinfo}/>
 );
 
 // Up and Down arrow indicators
 const UpArrowIndicator = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M8 3L13 8L8 13" stroke="#25A348" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(45 8 8)" />
-  </svg>
+  <img src={uparrow} />
 );
 
 const DownArrowIndicator = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M8 3L13 8L8 13" stroke="#B51717" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(135 8 8)" />
-  </svg>
+  <img src={dwonarrow}/>
 );
 
 const PerformancePage = () => {
@@ -109,9 +100,9 @@ const PerformancePage = () => {
     <PerformancePageStyle>
       <div className="page-header">
         <div>
-          <div className="back-button-wrapper" onClick={handleBackClick}>
-            <BackButton onClick={handleBackClick} />
-          </div>
+        <div className="back-link" onClick={handleBackClick}>
+          Back
+        </div>
           <h1>Your Referral Performance</h1>
         </div>
       </div>
@@ -191,7 +182,7 @@ const PerformancePage = () => {
           </p>
           
           <div className="request-payout">
-            <PurpleButtonLB40 
+            <PurpleButtonMB48 
               text="Request Payout" 
               onClick={handleRequestPayout}
             />

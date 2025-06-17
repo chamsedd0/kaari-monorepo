@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { ReferralProgramPageStyle } from './styles';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { PurpleButtonLB60 } from '../../../../components/skeletons/buttons/purple_LB60';
 import { PurpleButtonSM32 } from '../../../../components/skeletons/buttons/purple_SM32';
 import { BpurpleButtonMB48 } from '../../../../components/skeletons/buttons/border_purple_MB48'
 import { PurpleButtonMB48 } from "../../../../components/skeletons/buttons/purple_MB48";
