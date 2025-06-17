@@ -1,5 +1,13 @@
 // Define the core entity interfaces for the application
 
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  completed: boolean;
+  completedAt?: Date;
+  order: number;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -30,6 +38,10 @@ export interface User {
   };
   properties?: string[]; // References to property IDs owned by this user
   requests?: string[]; // References to request IDs made by this user
+  
+  // Getting started checklist for advertisers
+  checklist?: ChecklistItem[];
+  checklistLastUpdated?: Date;
   
   // Advertiser specific fields
   isBusiness?: boolean; // Whether the advertiser is a business/agency

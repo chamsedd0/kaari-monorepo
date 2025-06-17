@@ -2,7 +2,7 @@ import React, { useState, useEffect, lazy } from 'react';
 import { NavigationPannelAdviser } from '../../../components/skeletons/constructed/dashboard-navigation-pannel/navigation-pannel-adviser';
 import { AdvertiserDashboardStyle } from './styles';
 import LoadingScreen from '../../../components/loading/LoadingScreen';
-import { useNavigate, useLocation, Routes, Route } from 'react-router-dom';
+import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import DashboardFooter from '../../../components/skeletons/constructed/footer/dashboard-footer';
 
@@ -19,6 +19,9 @@ import TenantsPage from './tenants/page';
 import PhotoshootsPage from './photoshoot/page';
 import SupportPage from './support/page';
 import ReferralProgramPage from './referral-program';
+
+// Export the dashboard page directly for direct access
+export { default as AdvertiserDashboardPage } from './dashboard/page';
 
 type Section = 'Dashboard' | 'MyProfile' | 'Messages' | 'Properties' | 'Reservations' | 'Reviews' | 'Payments' | 'Tenants' | 'Photoshoot' | 'Support' | 'ReferralProgram';
 
@@ -72,6 +75,16 @@ const AdvertiserDashboard: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation();
+    
+    // Check if we're at the root path of advertiser dashboard
+    const isRootPath = location.pathname === '/dashboard/advertiser' || location.pathname === '/dashboard/advertiser/';
+    
+    // If we're at the root path, redirect to the dashboard page
+    useEffect(() => {
+        if (isRootPath) {
+            navigate('/dashboard/advertiser/dashboard');
+        }
+    }, [isRootPath, navigate]);
     
     // Get the current section from the URL
     const getInitialSection = (): Section => {
@@ -132,6 +145,11 @@ const AdvertiserDashboard: React.FC = () => {
             clearTimeout(loadingTimer);
         };
     }, [activeSection, isLoading]);
+
+    // If we're at the root path, show loading until redirect happens
+    if (isRootPath) {
+        return <LoadingScreen isLoading={true} />;
+    }
 
     // Check if the current path is the property edit request page
     const isPropertyEditRequest = location.pathname.includes('/properties/edit-request/');
