@@ -9,23 +9,31 @@ export const PerformancePageStyle = styled.div`
   .page-header {
     margin-bottom: 32px;
     
-    .back-button-wrapper {
-      display: inline-block;
-      margin-bottom: 16px;
-      cursor: pointer;
+    .back-link {
+      color:${Theme.colors.secondary};
+          text-decoration: none;
+          font: ${Theme.typography.fonts.mediumM};
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          cursor: pointer;
+          margin-bottom: 16px;
+          
+          &:hover {
+            text-decoration: underline;
+          }
     }
     
     h1 {
-      font-size: 28px;
-      font-weight: 600;
-      color: #252525;
-      margin: 0;
+      font: ${Theme.typography.fonts.h3};
+      color: ${Theme.colors.black};
+
     }
   }
   
   .cards-row {
     display: flex;
-    gap: 24px;
+    gap: 20px;
     
     @media (max-width: 992px) {
       flex-direction: column;
@@ -33,16 +41,13 @@ export const PerformancePageStyle = styled.div`
   }
   
   .card {
-    background-color: white;
-    border-radius: 16px;
-    padding: 24px;
-    border: 1px solid #E0E0E0;
-    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+    border-radius: ${Theme.borders.radius.lg};
+    padding: 20px;
+    border: ${Theme.borders.primary};
     
     h2 {
-      font-size: 20px;
-      font-weight: 600;
-      color: #252525;
+      font: ${Theme.typography.fonts.extraLargeB};
+      color: ${Theme.colors.black};
       margin: 0 0 24px 0;
     }
     
@@ -52,22 +57,22 @@ export const PerformancePageStyle = styled.div`
       .performance-metrics {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-        margin-bottom: 40px;
+        margin-bottom: 32px;
+        margin-top: 8px;
+
         
-        @media (max-width: 768px) {
+        @media (max-width: 757px) {
           grid-template-columns: repeat(2, 1fr);
         }
         
-        @media (max-width: 480px) {
+        @media (max-width: 321px) {
           grid-template-columns: 1fr;
         }
         
         .metric {
           .metric-name {
-            font-size: 16px;
-            color: #767676;
-            margin-bottom: 8px;
+            font: ${Theme.typography.fonts.mediumB};
+            color: ${Theme.colors.gray2};
           }
           
           .metric-value {
@@ -81,21 +86,16 @@ export const PerformancePageStyle = styled.div`
             }
             
             .number {
-              font-size: 40px;
-              font-weight: 600;
-              color: #58256D;
-              line-height: 1;
+              font: ${Theme.typography.fonts.h2};
+              color: ${Theme.colors.primary};
               
-              &.purple {
-                color: #8F27CE;
-              }
+
             }
             
             .currency {
-              font-size: 18px;
-              color: #8F27CE;
+              font: ${Theme.typography.fonts.h4B};
+              color: ${Theme.colors.primary};
               margin-left: 4px;
-              font-weight: 600;
             }
           }
         }
@@ -109,9 +109,8 @@ export const PerformancePageStyle = styled.div`
           display: flex;
           justify-content: space-between;
           margin-bottom: 8px;
-          font-size: 14px;
-          font-weight: 600;
-          color: #252525;
+          font: ${Theme.typography.fonts.mediumB};
+          color: ${Theme.colors.black};
         }
         
         .progress-bar {
@@ -124,10 +123,10 @@ export const PerformancePageStyle = styled.div`
             flex: 1;
             height: 100%;
             border-radius: 100px;
-            background-color: #E0E0E0;
+            background-color: ${Theme.colors.sixth};
             
             &.active {
-              background-color: #8F27CE;
+              background-color: ${Theme.colors.secondary};
             }
           }
         }
@@ -135,8 +134,8 @@ export const PerformancePageStyle = styled.div`
         .range-labels {
           display: flex;
           justify-content: space-between;
-          font-size: 12px;
-          color: #767676;
+          font: ${Theme.typography.fonts.smallM};
+          color: ${Theme.colors.black};
           margin-top: 4px;
         }
       }
@@ -144,7 +143,7 @@ export const PerformancePageStyle = styled.div`
     
     &.eligibility-card {
       flex: 1;
-      max-width: 360px;
+      max-width: 321px;
       display: flex;
       flex-direction: column;
       
@@ -153,7 +152,7 @@ export const PerformancePageStyle = styled.div`
       }
       
       h2 {
-        margin-bottom: 20px;
+
       }
       
       .eligibility-status {
@@ -168,47 +167,30 @@ export const PerformancePageStyle = styled.div`
         }
         
         .status-text {
-          font-size: 16px;
-          font-weight: 500;
-          color: #252525;
+          font: ${Theme.typography.fonts.largeB};
+          color: ${Theme.colors.black};
           flex: 1;
         }
         
         .info-icon-wrapper {
           svg {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             margin-right: 0;
           }
         }
       }
       
       .eligibility-note {
-        color: #767676;
-        font-size: 14px;
-        line-height: 1.5;
-        margin: 0 0 auto 0;
-        padding: 0 0 0 34px;
+        padding: 10px 30px 0 ;
+        margin-bottom: 15px;
+        font: ${Theme.typography.fonts.text12};
+        color: ${Theme.colors.gray2};
       }
       
       .request-payout {
-        margin-top: 24px;
-        
-        button {
-          width: 100%;
-          height: 48px;
-          border-radius: 100px;
-          font-size: 16px;
-          font-weight: 500;
-          background-color: #8F27CE;
-          color: white;
-          border: none;
-          transition: background-color 0.2s ease;
-          
-          &:hover {
-            background-color: #6A2AF4;
-          }
-        }
+        justify-items: center;
+        align-items: center;
       }
     }
   }

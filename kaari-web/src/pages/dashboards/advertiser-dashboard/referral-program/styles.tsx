@@ -259,7 +259,7 @@ export const ReferralProgramPageStyle = styled.div`
       
       .progress-divider {
         height: 1px;
-        background-color: ${Theme.colors.sixth};
+        border: ${Theme.borders.primary};
         width: 100%;
       }
       
@@ -300,17 +300,16 @@ export const ReferralProgramPageStyle = styled.div`
       }
       
       .eligibility-title {
-        padding: 20px 24px 0;
+        padding: 15px 0px;
         margin: 0;
-        font-size: 20px;
-        font-weight: 600;
-        color: #252525;
+        font: ${Theme.typography.fonts.extraLargeB};
+        color: ${Theme.colors.black};
       }
       
       .eligibility-status {
-        padding: 16px 24px 0;
         display: flex;
         align-items: center;
+        gap: 4px;
         
         svg {
           width: 24px;
@@ -319,47 +318,29 @@ export const ReferralProgramPageStyle = styled.div`
         }
         
         .status-text {
-          font-size: 16px;
-          font-weight: 500;
-          color: #252525;
+          font: ${Theme.typography.fonts.largeB};
+          color: ${Theme.colors.black};
           flex: 1;
         }
         
         .info-icon-wrapper {
           svg {
-            width: 20px;
-            height: 20px;
-            margin-right: 0;
+            width: 24px;
+            height: 24px;
           }
         }
       }
       
       .eligibility-note {
-        padding: 8px 24px 24px 60px;
-        margin: 0;
-        font-size: 14px;
-        color: #767676;
-        line-height: 1.5;
+        padding: 10px 30px 0 ;
+        margin-bottom: 15px;
+        font: ${Theme.typography.fonts.text12};
+        color: ${Theme.colors.gray2};
       }
       
       .request-payout {
-        padding: 0 24px 24px;
-        
-        button {
-          width: 100%;
-          height: 52px;
-          border-radius: 100px;
-          font-size: 16px;
-          font-weight: 500;
-          background-color: #8F27CE;
-          color: white;
-          border: none;
-          transition: background-color 0.2s ease;
-          
-          &:hover {
-            background-color: #6A2AF4;
-          }
-        }
+        justify-items: center;
+        align-items: center;
       }
     }
   }
