@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../backend/store';
+import { getAdvertiserChecklist, updateAdvertiserChecklistItem } from '../backend/server-actions/AdvertiserServerActions';
+import { ChecklistItem } from '../backend/entities';
 
 // Define the checklist item type
 export interface ChecklistItem {
@@ -20,8 +22,11 @@ export const useGettingStartedChecklist = () => {
   const { user } = useStore();
   const [items, setItems] = useState<ChecklistItem[]>([]);
   const [initialized, setInitialized] = useState(false);
+  const [loading, setLoading] = useState(true);
   // Use a ref to track active animation timeouts and prevent duplicate updates
   const animationTimeoutsRef = useRef<Record<string, NodeJS.Timeout>>({});
+  // Track ongoing updates to prevent duplicate API calls
+  const pendingUpdatesRef = useRef<Record<string, boolean>>({});
 
   // Define the default checklist items with order - memoize to prevent recreation on each render
   const defaultItems = useMemo(() => [
@@ -69,40 +74,43 @@ export const useGettingStartedChecklist = () => {
     }
   ], [t]); // Only recreate when translations change
 
-  // Initialize checklist from localStorage or defaults
+  // Initialize checklist from Firestore or defaults
   useEffect(() => {
     if (!user?.id || initialized) return;
 
-    const storageKey = `${STORAGE_KEY}_${user.id}`;
-    const savedItems = localStorage.getItem(storageKey);
-    
-    if (savedItems) {
+    const fetchChecklist = async () => {
+      setLoading(true);
       try {
-        const parsedItems = JSON.parse(savedItems);
-        // Check if any new default items need to be added
-        const mergedItems = defaultItems.map(defaultItem => {
-          const savedItem = parsedItems.find((item: ChecklistItem) => item.id === defaultItem.id);
-          return savedItem ? { ...defaultItem, ...savedItem } : defaultItem;
-        });
-        setItems(mergedItems);
+        // Get checklist from Firestore
+        const firestoreChecklist = await getAdvertiserChecklist();
+        
+        if (firestoreChecklist.length > 0) {
+          // Merge with default items to ensure all items are present and have current translations
+          const mergedItems = defaultItems.map(defaultItem => {
+            const savedItem = firestoreChecklist.find(item => item.id === defaultItem.id);
+            return savedItem ? { 
+              ...defaultItem,
+              completed: savedItem.completed,
+              completedAt: savedItem.completedAt
+            } : defaultItem;
+          });
+          setItems(mergedItems);
+        } else {
+          // No checklist in Firestore yet, use defaults
+          setItems(defaultItems);
+        }
       } catch (error) {
-        console.error('Error parsing saved checklist items:', error);
+        console.error('Error fetching checklist from Firestore:', error);
+        // Fallback to defaults if Firestore fails
         setItems(defaultItems);
+      } finally {
+        setLoading(false);
+        setInitialized(true);
       }
-    } else {
-      setItems(defaultItems);
-    }
+    };
     
-    setInitialized(true);
+    fetchChecklist();
   }, [user?.id, initialized, defaultItems]);
-
-  // Save to localStorage whenever items change
-  useEffect(() => {
-    if (!user?.id || !initialized) return;
-    
-    const storageKey = `${STORAGE_KEY}_${user.id}`;
-    localStorage.setItem(storageKey, JSON.stringify(items));
-  }, [items, user?.id, initialized]);
 
   // Clear all animation timeouts when component unmounts
   useEffect(() => {
@@ -115,45 +123,54 @@ export const useGettingStartedChecklist = () => {
   }, []);
 
   // Complete an item by ID
-  const completeItem = (id: string) => {
+  const completeItem = async (id: string) => {
     // Check if the item is already completed to prevent duplicate updates
     const isAlreadyCompleted = items.find(item => item.id === id)?.completed;
     if (isAlreadyCompleted) return;
+    
+    // Check if an update is already in progress for this item
+    if (pendingUpdatesRef.current[id]) return;
+    
+    // Mark update as in progress
+    pendingUpdatesRef.current[id] = true;
 
-    setItems(prevItems => {
-      // Find the item to complete
-      const itemToComplete = prevItems.find(item => item.id === id);
-      if (!itemToComplete) return prevItems;
+    try {
+      // Update in Firestore first
+      await updateAdvertiserChecklistItem(id, true);
       
-      // If item is already completed, don't update
-      if (itemToComplete.completed) return prevItems;
-      
-      return prevItems.map(item => {
-        // If this is the item to complete
-        if (item.id === id) {
-          return { ...item, completed: true, showAnimation: true };
-        }
-        return item;
+      // Then update local state for immediate UI feedback
+      setItems(prevItems => {
+        return prevItems.map(item => {
+          if (item.id === id) {
+            return { ...item, completed: true, showAnimation: true };
+          }
+          return item;
+        });
       });
-    });
-    
-    // Clear any existing timeout for this item
-    if (animationTimeoutsRef.current[id]) {
-      clearTimeout(animationTimeoutsRef.current[id]);
+      
+      // Clear any existing timeout for this item
+      if (animationTimeoutsRef.current[id]) {
+        clearTimeout(animationTimeoutsRef.current[id]);
+      }
+      
+      // Remove animation flag after animation completes
+      animationTimeoutsRef.current[id] = setTimeout(() => {
+        setItems(prevItems => 
+          prevItems.map(item => 
+            item.id === id 
+              ? { ...item, showAnimation: false } 
+              : item
+          )
+        );
+        // Clean up the reference after the timeout completes
+        delete animationTimeoutsRef.current[id];
+      }, 1000);
+    } catch (error) {
+      console.error('Error completing checklist item:', error);
+    } finally {
+      // Mark update as complete
+      delete pendingUpdatesRef.current[id];
     }
-    
-    // Remove animation flag after animation completes
-    animationTimeoutsRef.current[id] = setTimeout(() => {
-      setItems(prevItems => 
-        prevItems.map(item => 
-          item.id === id 
-            ? { ...item, showAnimation: false } 
-            : item
-        )
-      );
-      // Clean up the reference after the timeout completes
-      delete animationTimeoutsRef.current[id];
-    }, 1000);
   };
 
   // Get the next available item that should be clickable
@@ -208,6 +225,7 @@ export const useGettingStartedChecklist = () => {
     getItemVisibility,
     getNextAvailableItem,
     progress,
+    loading,
     allCompleted: items.length > 0 && items.every(item => item.completed)
   };
 }; 

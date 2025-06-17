@@ -3,83 +3,86 @@ import { Theme } from "../../../../theme/theme";
 
 export const DashboardPageStyle = styled.div`
     display: flex;
+    flex-direction: row;
+    gap: 24px;
     width: 100%;
-    gap: 32px;
-    padding: 0;
-    
-    @media (max-width: 1200px) {
+
+    .left {
+        flex: 1;
+        display: flex;
         flex-direction: column;
+        gap: 16px;
     }
 
     .right {
+        width: 300px;
         display: flex;
         flex-direction: column;
-        flex: 0.35;
         gap: 24px;
-        max-width: 320px;
-        
-        @media (max-width: 1200px) {
-            max-width: 100%;
-            flex: 1;
+    }
+
+    .empty-module {
+        border: ${Theme.borders.primary};
+        border-radius: ${Theme.borders.radius.lg};
+        padding: 24px;
+        width: 100%;
+
+        h3 {
+            font: ${Theme.typography.fonts.h3};
+            color: ${Theme.colors.black};
+            margin-top: 0;
+            margin-bottom: 16px;
         }
     }
 
-    .left {
+    .empty-state {
         display: flex;
         flex-direction: column;
-        flex: 1;
-        gap: 24px;
-        width: 100%;
-        
-        /* Add consistent styling to all card containers */
-        > div, > div > div {
-            border-radius: 12px;
-            transition: all 0.2s ease-in-out;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        text-align: center;
+
+        img {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
         }
-    }
-    
-    /* Style for section headers */
-    .title-viewmore-container {
+
         .title {
-            font-weight: 600;
+            font: ${Theme.typography.fonts.mediumB};
             color: ${Theme.colors.black};
+            margin-bottom: 8px;
         }
-        
-        .viewmore {
-            color: ${Theme.colors.secondary};
-            transition: color 0.2s ease;
-            
+
+        .description {
+            font: ${Theme.typography.fonts.mediumM};
+            color: ${Theme.colors.gray2};
+            margin-bottom: 16px;
+            max-width: 400px;
+        }
+
+        .action-button {
+            background-color: ${Theme.colors.primary};
+            color: white;
+            border: none;
+            border-radius: ${Theme.borders.radius.md};
+            padding: 12px 24px;
+            font: ${Theme.typography.fonts.mediumB};
+            cursor: pointer;
+            transition: background-color 0.2s;
+
             &:hover {
-                color: ${Theme.colors.primary};
-                text-decoration: underline;
+                background-color: ${Theme.colors.primary};
             }
         }
     }
-    
-    /* Consistent empty state styling */
-    .empty-state {
-        background: white;
-        border-radius: 12px;
-        border: ${Theme.borders.primary};
-        padding: 32px;
-        text-align: center;
-        
-        img {
-            width: 80px;
-            margin-bottom: 16px;
-        }
-        
-        .title {
-            color: #555;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .description {
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 16px;
+
+    @media (max-width: 1024px) {
+        flex-direction: column;
+
+        .right {
+            width: 100%;
         }
     }
 `;

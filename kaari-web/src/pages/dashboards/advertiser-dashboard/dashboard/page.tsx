@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { DashboardPageStyle } from './styles';
 import UpcomingPhotoshoot from '../../../../components/skeletons/cards/upcoming-photoshoot';
+import PhotoshootStatusCard from '../../../../components/skeletons/cards/photoshoot-status-card';
 import LatestRequestDashboardCard from '../../../../components/skeletons/cards/lateest-request-dashboard-card';
 import MessagesCard from '../../../../components/skeletons/cards/messages-card';
 import BookAPhotoshootComponent from '../../../../components/skeletons/cards/book-a-photoshoot-card';
@@ -10,6 +11,7 @@ import ListingGuideCard from '../../../../components/skeletons/cards/listing-gui
 import GettingStartedChecklist from '../../../../components/skeletons/cards/getting-started-checklist';
 import { useGettingStartedChecklist } from '../../../../hooks/useGettingStartedChecklist';
 import emptyBox from '../../../../assets/images/emptybox.svg';
+import profile from '../../../../assets/images/ProfilePicture.png'; // Default profile image for photographer
 import { useNavigate } from 'react-router-dom';
 import { 
     getAdvertiserStatistics, 
@@ -17,7 +19,6 @@ import {
     getAdvertiserRequests,
     getAdvertiserReservationRequests,
     getAdvertiserPhotoshoots,
-    Photoshoot,
 } from '../../../../backend/server-actions/AdvertiserServerActions';
 import { useStore } from '../../../../backend/store';
 import { Property, Request } from '../../../../backend/entities';
@@ -25,9 +26,67 @@ import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { countPropertiesNeedingRefresh } from '../../../../utils/property-refresh-utils';
 
+// Extend Property interface to include missing properties
+interface ExtendedProperty extends Property {
+    clickCount?: number;
+    viewCount?: number;
+}
+
+// Extend Request interface to include missing properties
+interface ExtendedRequest extends Omit<Request, 'numPeople'> {
+    moveInDate?: Date | string;
+    numPeople?: string;
+}
+
+// Extend User interface to include missing properties
+interface ExtendedUser {
+    id: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    profilePicture?: string;
+    paymentMethods?: any[];
+}
+
+// Real-time update interval (in milliseconds)
+const REAL_TIME_UPDATE_INTERVAL = 30000; // 30 seconds
+
+// Define module priority types
+interface DashboardModule {
+    id: string;
+    priority: number;
+    isActive: boolean;
+}
+
+// Define Photoshoot interface to match the PhotoshootBooking interface from entities.ts
+interface DashboardPhotoshoot {
+  id: string;
+  propertyId?: string;
+  date: Date;
+  time: string;
+  timeSlot?: string;
+  photographerId?: string;
+  photographerName?: string;
+  photographerInfo?: string;
+  photographerImage?: string;
+  phoneNumber?: string;
+  status: 'pending' | 'assigned' | 'completed' | 'cancelled' | 'scheduled';
+  createdAt: Date;
+  updatedAt: Date;
+  // Address fields from PhotoshootBooking
+  streetName?: string;
+  streetNumber?: string;
+  city?: string;
+  stateRegion?: string;
+  postalCode?: string;
+  country?: string;
+  floor?: string;
+  flat?: string;
+}
 
 const DashboardPage: React.FC = () => {
     const { user } = useStore();
+    const extendedUser = user as unknown as ExtendedUser;
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const [loading, setLoading] = useState(true);
@@ -39,11 +98,11 @@ const DashboardPage: React.FC = () => {
         photoshootsScheduled: 0,
         inquiriesCount: 0
     });
-    const [properties, setProperties] = useState<Property[]>([]);
-    const [requests, setRequests] = useState<Request[]>([]);
-    const [photoshoots, setPhotoshoots] = useState<Photoshoot[]>([]);
+    const [properties, setProperties] = useState<ExtendedProperty[]>([]);
+    const [requests, setRequests] = useState<ExtendedRequest[]>([]);
+    const [photoshoots, setPhotoshoots] = useState<DashboardPhotoshoot[]>([]);
     const [reservationRequests, setReservationRequests] = useState<{
-        reservation: Request;
+        reservation: ExtendedRequest;
         listing?: any;
         property?: any;
         client?: any;
@@ -53,35 +112,122 @@ const DashboardPage: React.FC = () => {
         completeItem, 
         isItemClickable, 
         getItemVisibility,
-        isItemCompleted
+        isItemCompleted,
+        loading: checklistLoading
     } = useGettingStartedChecklist();
     
-    useEffect(() => {
-        // Load data when component mounts
-        const loadData = async () => {
-            setLoading(true);
-            try {
-                // Fetch statistics, properties, listings, requests, and photoshoots in parallel
-                const [props, reqs, reservationReqs, shoots] = await Promise.all([
-                    getAdvertiserProperties(),
-                    getAdvertiserRequests(),
-                    getAdvertiserReservationRequests(),
-                    getAdvertiserPhotoshoots()
-                ]);
-                
-                setProperties(props);
-                setRequests(reqs);
-                setReservationRequests(reservationReqs);
-                setPhotoshoots(shoots);
-            } catch (error) {
-                console.error(t('advertiser_dashboard.dashboard.errors.loading_data', 'Error loading dashboard data:'), error);
-            } finally {
-                setLoading(false);
-            }
-        };
+    // Track last update time for real-time updates
+    const lastUpdateRef = useRef<Date>(new Date());
+    
+    // Track active dashboard modules and their priorities
+    const [dashboardModules, setDashboardModules] = useState<DashboardModule[]>([
+        { id: 'latestRequest', priority: 1, isActive: false }, // Reservation requests have highest priority when not empty
+        { id: 'upcomingPhotoshoot', priority: 2, isActive: false }, // Photoshoots have second highest priority when not empty
+        { id: 'messages', priority: 3, isActive: false }, // Messages have third highest priority when not empty
+        { id: 'performanceChart', priority: 4, isActive: false } // Performance chart has lowest priority when not empty
+    ]);
+    
+    // Load data function - extracted to be reusable for real-time updates
+    const loadData = useCallback(async (showLoading = true) => {
+        if (showLoading) setLoading(true);
+        try {
+            // Fetch statistics, properties, listings, requests, and photoshoots in parallel
+            const [stats, props, reqs, reservationReqs, shoots] = await Promise.all([
+                getAdvertiserStatistics(),
+                getAdvertiserProperties(),
+                getAdvertiserRequests(),
+                getAdvertiserReservationRequests(),
+                getAdvertiserPhotoshoots()
+            ]);
+            
+            // Ensure all required properties exist in stats
+            const updatedStats = {
+                totalProperties: stats.totalProperties || 0,
+                activeListings: stats.activeListings || 0,
+                pendingReservations: stats.pendingReservations || 0,
+                viewsCount: stats.viewsCount || 0,
+                photoshootsScheduled: stats.photoshootsScheduled || 0,
+                inquiriesCount: stats.inquiriesCount || 0
+            };
+            
+            setStatistics(updatedStats);
+            setProperties(props as ExtendedProperty[]);
+            setRequests(reqs as ExtendedRequest[]);
+            setReservationRequests(reservationReqs as {
+                reservation: ExtendedRequest;
+                listing?: any;
+                property?: any;
+                client?: any;
+            }[]);
+            setPhotoshoots(shoots as DashboardPhotoshoot[]);
+            
+            // Update last refresh time
+            lastUpdateRef.current = new Date();
+            
+            // Update active modules based on data
+            updateActiveModules(reservationReqs, reqs as ExtendedRequest[], shoots as DashboardPhotoshoot[], props as ExtendedProperty[], updatedStats);
+        } catch (error) {
+            console.error(t('advertiser_dashboard.dashboard.errors.loading_data', 'Error loading dashboard data:'), error);
+        } finally {
+            if (showLoading) setLoading(false);
+        }
+    }, [t]);
+    
+    // Update which modules are active based on data
+    const updateActiveModules = useCallback((
+        reservationReqs: any[],
+        reqs: ExtendedRequest[],
+        shoots: DashboardPhotoshoot[],
+        props: ExtendedProperty[],
+        stats: any
+    ) => {
+        const updatedModules = [...dashboardModules];
         
+        // Latest request module - check if it has actual content
+        const hasLatestRequest = reservationReqs.some(req => req.reservation.status === 'pending');
+        const latestRequestModule = updatedModules.find(m => m.id === 'latestRequest')!;
+        latestRequestModule.isActive = true; // Always show, even if empty
+        
+        // Messages module - only active if there are any messages
+        const hasMessages = reqs.some(req => req.message && typeof req.message === 'string' && req.message.trim() !== '');
+        const messagesModule = updatedModules.find(m => m.id === 'messages')!;
+        messagesModule.isActive = hasMessages; // Only show if there are messages
+        
+        // Upcoming photoshoot module - always active, even if empty
+        const hasUpcomingPhotoshoot = shoots.length > 0;
+        const photoshootModule = updatedModules.find(m => m.id === 'upcomingPhotoshoot')!;
+        photoshootModule.isActive = true; // Always show, even if empty
+        
+        // Performance chart module - always active, even if empty
+        const hasPerformanceData = props.length > 0 || stats.viewsCount > 0 || stats.inquiriesCount > 0;
+        const performanceModule = updatedModules.find(m => m.id === 'performanceChart')!;
+        performanceModule.isActive = true; // Always show, even if empty
+        
+        // Dynamic priority adjustment - modules with content get higher priority
+        // First, reset all modules to their base priority
+        latestRequestModule.priority = hasLatestRequest ? 1 : 10;
+        messagesModule.priority = hasMessages ? 3 : 13; // Only matters if there are messages
+        photoshootModule.priority = hasUpcomingPhotoshoot ? 2 : 11;
+        performanceModule.priority = hasPerformanceData ? 4 : 12;
+        
+        // Sort modules by priority - lower numbers come first
+        updatedModules.sort((a, b) => a.priority - b.priority);
+        
+        setDashboardModules(updatedModules);
+    }, [dashboardModules]);
+    
+    // Initial data load
+    useEffect(() => {
         loadData();
-    }, [user?.id, t]);
+        
+        // Set up real-time updates
+        const intervalId = setInterval(() => {
+            loadData(false); // Don't show loading indicator for background updates
+        }, REAL_TIME_UPDATE_INTERVAL);
+        
+        // Clean up interval on unmount
+        return () => clearInterval(intervalId);
+    }, [loadData]);
     
     // Get current locale for date formatting
     const locale = i18n.language === 'fr' ? 'fr-FR' : 'en-US';
@@ -119,14 +265,14 @@ const DashboardPage: React.FC = () => {
             trend: trend,
             thisMonth: thisMonthViews.toString(),
             lastMonth: lastMonthViews.toString(),
-            clicks: (0).toString(),
+            clicks: (property.clickCount || 0).toString(),
             requests: propertyRequests.length.toString(),
             listedOn: property ? new Date(property.createdAt).toLocaleDateString(locale, {
                 day: '2-digit',
                 month: 'short',
                 year: 'numeric'
             }) : t('advertiser_dashboard.dashboard.not_listed'),
-            views: (0).toString()
+            views: (property.viewCount || 0).toString()
         };
     });
     
@@ -137,11 +283,29 @@ const DashboardPage: React.FC = () => {
             .sort((a, b) => new Date(b.reservation.createdAt).getTime() - new Date(a.reservation.createdAt).getTime())[0] 
         : null;
     
-    // Get next upcoming photoshoot
+    // Get next upcoming photoshoot (don't filter by status, show any photoshoot)
     const upcomingPhotoshoot = photoshoots.length > 0 
         ? photoshoots
-            .filter(p => p.status === 'scheduled')
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0]
+            .filter(photoshoot => {
+                // Make sure we have a valid date
+                if (!photoshoot.date) return false;
+                
+                // Convert to Date object if it's not already
+                const photoshootDate = photoshoot.date instanceof Date 
+                    ? photoshoot.date 
+                    : new Date(photoshoot.date);
+                
+                // Check if date is valid
+                if (isNaN(photoshootDate.getTime())) return false;
+                
+                // Only include photoshoots that haven't been completed or cancelled
+                return photoshoot.status !== 'completed' && photoshoot.status !== 'cancelled';
+            })
+            .sort((a, b) => {
+                const dateA = a.date instanceof Date ? a.date : new Date(a.date);
+                const dateB = b.date instanceof Date ? b.date : new Date(b.date);
+                return dateA.getTime() - dateB.getTime();
+            })[0]
         : null;
     
     // Find the property associated with the upcoming photoshoot
@@ -153,6 +317,7 @@ const DashboardPage: React.FC = () => {
     const hasMessages = requests.some(req => req.message && typeof req.message === 'string' && req.message.trim() !== '');
     const hasStats = propertyDataForChart.some(p => Number(p.views) > 0 || Number(p.clicks) > 0 || Number(p.requests) > 0);
     const hasProperties = properties.length > 0 && propertyDataForChart.some(p => Number(p.views) > 0);
+    const hasPerformanceData = properties.length > 0 || statistics.viewsCount > 0 || statistics.inquiriesCount > 0;
     
     // Check if any properties need availability refresh
     const propertiesNeedingRefresh = countPropertiesNeedingRefresh(properties);
@@ -175,8 +340,6 @@ const DashboardPage: React.FC = () => {
     
     const handleBookPhotoshoot = () => {
         navigate('/photoshoot-booking');
-        // Remove automatic completion when just navigating
-        // completeItem('book_photoshoot');
     };
 
     // Auto-complete checklist items based on data
@@ -191,28 +354,30 @@ const DashboardPage: React.FC = () => {
             messageTenant: isItemCompleted('message_tenant')
         };
 
-        // Check if photoshoot is booked
-        if (hasBookedPhotoshoot && !completionStatus.bookPhotoshoot) {
+        // Check if photoshoot is booked - any photoshoots (not just scheduled ones) should mark this as completed
+        if (photoshoots.length > 0 && !completionStatus.bookPhotoshoot) {
+            console.log('Marking book_photoshoot as completed because photoshoots exist:', photoshoots);
             completeItem('book_photoshoot');
         }
         
         // Check if profile is completed (simplified check - in real app would be more comprehensive)
-        if (user?.name && user?.email && user?.phone && !completionStatus.completeProfile) {
+        if (extendedUser?.name && extendedUser?.email && extendedUser?.phone && !completionStatus.completeProfile) {
             completeItem('complete_profile');
         }
         
         // Check if availability has been refreshed recently (within last 30 days)
-        if (!shouldShowRefreshReminder && !completionStatus.refreshAvailability) {
+        // Only complete if user has properties and none need refreshing
+        if (properties.length > 0 && !shouldShowRefreshReminder && !completionStatus.refreshAvailability) {
             completeItem('refresh_availability');
         }
         
         // Check if user has a payment method added (simplified check)
-        if (user?.paymentMethods && user.paymentMethods.length > 0 && !completionStatus.addPayoutMethod) {
+        if (extendedUser?.paymentMethods && extendedUser.paymentMethods.length > 0 && !completionStatus.addPayoutMethod) {
             completeItem('add_payout_method');
         }
         
         // Check if user has accepted a booking (simplified check)
-        const hasAcceptedBooking = reservationRequests.some(req => req.reservation.status === 'approved');
+        const hasAcceptedBooking = reservationRequests.some(req => req.reservation.status === 'accepted');
         if (hasAcceptedBooking && !completionStatus.acceptBooking) {
             completeItem('accept_booking');
         }
@@ -224,23 +389,173 @@ const DashboardPage: React.FC = () => {
         }
     }, [
         hasBookedPhotoshoot, 
-        user, 
+        extendedUser, 
         shouldShowRefreshReminder, 
         reservationRequests, 
         requests, 
         completeItem,
-        isItemCompleted
+        isItemCompleted,
+        photoshoots,
+        properties
     ]);
 
-    return (
-        <DashboardPageStyle>
-            <div className="left">
-                {/* Show listing guide card if advertiser has never booked a photoshoot */}
-                {!hasBookedPhotoshoot && (
+    // Format the time since last update
+    const getLastUpdateText = () => {
+        const now = new Date();
+        const diff = Math.floor((now.getTime() - lastUpdateRef.current.getTime()) / 1000);
+        
+        if (diff < 60) {
+            return t('common.just_now', 'Just now');
+        } else if (diff < 3600) {
+            const minutes = Math.floor(diff / 60);
+            return t('common.minutes_ago', '{{count}} minutes ago', { count: minutes });
+        } else {
+            const hours = Math.floor(diff / 3600);
+            return t('common.hours_ago', '{{count}} hours ago', { count: hours });
+        }
+    };
+
+    // Render modules in priority order
+    const renderDashboardModules = () => {
+        // Always show the listing guide if advertiser has never booked a photoshoot
+        // AND it's the next available step in the checklist
+        if (!hasBookedPhotoshoot && isItemClickable('book_photoshoot')) {
+            return (
+                <>
                     <ListingGuideCard onBookPhotoshoot={() => navigate('/photoshoot-booking')} />
-                )}
-                
-                {/* 1. Latest Booking Requests (highest priority) */}
+                    {renderPrioritizedModules()}
+                </>
+            );
+        }
+        
+        return renderPrioritizedModules();
+    };
+    
+    // Render modules based on priority and active status
+    const renderPrioritizedModules = () => {
+        // Log the current module order for debugging
+        console.log('Rendering modules in order:', 
+            dashboardModules
+                .filter(module => module.isActive)
+                .map(m => ({ id: m.id, priority: m.priority }))
+        );
+        
+        return dashboardModules
+            .filter(module => module.isActive)
+            .map(module => {
+                switch(module.id) {
+                    case 'latestRequest':
+                        return renderLatestRequestModule();
+                    case 'messages':
+                        // Messages are only shown if they exist (controlled by isActive flag)
+                        return (
+                            <div key="messages" style={{ margin: '16px 0' }}>
+                                <MessagesCard 
+                                    title={t('advertiser_dashboard.dashboard.messages')}
+                                    name={latestReservationRequest?.client 
+                                        ? `${latestReservationRequest.client.name || ''} ${latestReservationRequest.client.surname || ''}`.trim() 
+                                        : extendedUser?.name || t('advertiser_dashboard.dashboard.user')}
+                                    img={latestReservationRequest?.client?.profilePicture || extendedUser?.profilePicture || ''}
+                                    messageCount={requests.length}
+                                    message={latestReservationRequest && typeof latestReservationRequest.reservation.message === 'string' 
+                                        ? latestReservationRequest.reservation.message 
+                                        : t('advertiser_dashboard.dashboard.no_messages')}
+                                    onViewMore={() => navigate('/dashboard/advertiser/messages')}
+                                />
+                            </div>
+                        );
+                    case 'upcomingPhotoshoot':
+                        return (
+                            <div key="photoshoot" style={{ margin: '16px 0' }}>
+                                {upcomingPhotoshoot ? (
+                                    <PhotoshootStatusCard 
+                                        photoshootId={upcomingPhotoshoot.id}
+                                        propertyLocation={photoshootProperty 
+                                            ? `${photoshootProperty.address.street}, ${photoshootProperty.address.city}`
+                                            : upcomingPhotoshoot.streetName 
+                                              ? `${upcomingPhotoshoot.streetName}, ${upcomingPhotoshoot.city || ''}`
+                                              : t('advertiser_dashboard.photoshoot.property_address')}
+                                        scheduledDate={upcomingPhotoshoot.date instanceof Date ? upcomingPhotoshoot.date : new Date(upcomingPhotoshoot.date)}
+                                        timeSlot={upcomingPhotoshoot.timeSlot || upcomingPhotoshoot.time || "10:00 AM - 12:00 PM"}
+                                        status={upcomingPhotoshoot.status === 'scheduled' ? 'assigned' : upcomingPhotoshoot.status}
+                                        photographerName={upcomingPhotoshoot.photographerName || t('advertiser_dashboard.photoshoot.photographer_team', 'Kaari Photography Team')}
+                                        photographerInfo={upcomingPhotoshoot.photographerInfo || t('advertiser_dashboard.photoshoot.professional_photographer', 'Professional Photographer')}
+                                        photographerImage={upcomingPhotoshoot.photographerImage || profile}
+                                        phoneNumber={upcomingPhotoshoot.phoneNumber || "+1234567890"}
+                                        number={statistics.photoshootsScheduled}
+                                        onReschedule={() => navigate('/dashboard/advertiser/photoshoot')}
+                                        onCancel={() => navigate('/dashboard/advertiser/photoshoot')}
+                                    />
+                                ) : (
+                                    // Empty state for photoshoots
+                                    <div className="empty-module">
+                                        <h3>{t('advertiser_dashboard.photoshoot.section_title', 'Book a photoshoot')}</h3>
+                                        <div className="empty-state">
+                                            <img src={emptyBox} alt="No photoshoots" />
+                                            <div className="title">{t('advertiser_dashboard.photoshoot.no_photoshoots', 'No upcoming photoshoots')}</div>
+                                            <div className="description">{t('advertiser_dashboard.photoshoot.no_photoshoots_hint', 'Book a free photoshoot to get professional photos of your property')}</div>
+                                            <button 
+                                                className="action-button"
+                                                onClick={() => navigate('/photoshoot-booking')}
+                                            >
+                                                {t('advertiser_dashboard.photoshoot.book_button', 'Book a free photoshoot')}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    case 'performanceChart':
+                        return (
+                            <div key="performance" style={{ margin: '16px 0' }}>
+                                {hasPerformanceData ? (
+                                    <PerformanceChart 
+                                        title={t('advertiser_dashboard.dashboard.performance_overview')} 
+                                        viewCount={statistics.viewsCount}
+                                        inquiryCount={statistics.inquiriesCount}
+                                        bookingCount={statistics.pendingReservations}
+                                        loading={loading}
+                                    />
+                                ) : !loading && (
+                                    <div className="empty-module">
+                                        <h3>{t('advertiser_dashboard.dashboard.performance_overview')}</h3>
+                                        <div className="empty-state">
+                                            <img src={emptyBox} alt="No performance data" />
+                                            <div className="title">{t('advertiser_dashboard.dashboard.no_performance_data', 'No performance data yet')}</div>
+                                            <div className="description">{t('advertiser_dashboard.dashboard.no_performance_data_hint', 'List your property to start seeing performance metrics')}</div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {hasProperties ? (
+                                    <div style={{ marginTop: '16px' }}>
+                                        <PerformanceChart 
+                                            title={t('advertiser_dashboard.dashboard.views_of_properties', 'Views of Properties')}
+                                            viewCount={statistics.viewsCount}
+                                            inquiryCount={statistics.inquiriesCount}
+                                            bookingCount={statistics.pendingReservations}
+                                            loading={loading}
+                                        />
+                                    </div>
+                                ) : !loading && (
+                                    <div className="empty-state" style={{ marginTop: '16px' }}>
+                                        <img src={emptyBox} alt="No views" />
+                                        <div className="title">{t('advertiser_dashboard.dashboard.no_views', 'You have no views yet')}</div>
+                                        <div className="description">{t('advertiser_dashboard.dashboard.no_views_hint', 'List your property by booking a photoshoot and start getting views')}</div>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    default:
+                        return null;
+                }
+            });
+    };
+    
+    // Render the latest request module (always show, but with empty state if needed)
+    const renderLatestRequestModule = () => {
+        return (
+            <div key="latestRequest" style={{ marginTop: '4px' }}>
                 {latestReservationRequest ? (
                     <LatestRequestDashboardCard 
                         title={t('advertiser_dashboard.dashboard.latest_request')}
@@ -250,10 +565,10 @@ const DashboardPage: React.FC = () => {
                             ? `${latestReservationRequest.client.name || ''} ${latestReservationRequest.client.surname || ''}`.trim() 
                             : t('advertiser_dashboard.dashboard.anonymous_user')}
                         img={latestReservationRequest.client?.profilePicture || ''}
-                        date={format(new Date(), 'MMM dd, yyyy')}
-                        time={'13:35'}
-                        moveInDate={format(new Date(new Date().setDate(new Date().getDate() + 15)), 'MMM dd, yyyy')}
-                        appliedOn={format(new Date(), 'MMM dd, yyyy')}
+                        date={latestReservationRequest.reservation.createdAt ? format(new Date(latestReservationRequest.reservation.createdAt), 'MMM dd, yyyy') : format(new Date(), 'MMM dd, yyyy')}
+                        time={latestReservationRequest.reservation.createdAt ? new Date(latestReservationRequest.reservation.createdAt).toLocaleTimeString() : '13:35'}
+                        moveInDate={latestReservationRequest.reservation.moveInDate ? format(new Date(latestReservationRequest.reservation.moveInDate), 'MMM dd, yyyy') : format(new Date(new Date().setDate(new Date().getDate() + 15)), 'MMM dd, yyyy')}
+                        appliedOn={latestReservationRequest.reservation.createdAt ? format(new Date(latestReservationRequest.reservation.createdAt), 'MMM dd, yyyy') : format(new Date(), 'MMM dd, yyyy')}
                         photographerInfo={latestReservationRequest.reservation.numPeople 
                             ? t('advertiser_dashboard.dashboard.occupants', 'Occupants: {{count}}', { count: Number(latestReservationRequest.reservation.numPeople) })
                             : undefined}
@@ -261,16 +576,8 @@ const DashboardPage: React.FC = () => {
                         requestStatus={latestReservationRequest.reservation.status}
                         onDetails={() => navigate('/dashboard/advertiser/reservations')}
                         onViewMore={() => navigate('/dashboard/advertiser/reservations')}
-                        onAccept={() => {
-                            // Handle accepting the reservation request
-                            navigate('/dashboard/advertiser/reservations');
-                            // Remove automatic completion when just navigating
-                            // completeItem('accept_booking');
-                        }}
-                        onReject={() => {
-                            // Handle rejecting the reservation request
-                            navigate('/dashboard/advertiser/reservations');
-                        }}
+                        onAccept={() => navigate('/dashboard/advertiser/reservations')}
+                        onReject={() => navigate('/dashboard/advertiser/reservations')}
                     />
                 ) : (
                     <LatestRequestDashboardCard 
@@ -280,86 +587,64 @@ const DashboardPage: React.FC = () => {
                         onBrowseProperties={() => navigate('/properties')}
                     />
                 )}
-                
-                {/* 2. Latest Photoshoot (if available) */}
-                {upcomingPhotoshoot && photoshootProperty && (
-                    <div style={{ margin: '24px 0' }}>
-                        <UpcomingPhotoshoot 
-                            date={new Date(upcomingPhotoshoot.date).toLocaleDateString(locale, {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric'
-                            })}
-                            time={upcomingPhotoshoot.time}
-                            photographerName={upcomingPhotoshoot.photographerName || t('advertiser_dashboard.photoshoot.photographer_team')}
-                            photographerInfo={upcomingPhotoshoot.photographerInfo || t('advertiser_dashboard.photoshoot.professional_photographer')}
-                            photographerImage={upcomingPhotoshoot.photographerImage || ''}
-                            location={`${photoshootProperty.address.street}, ${photoshootProperty.address.city}`}
-                            number={statistics.photoshootsScheduled}
-                        />
-                    </div>
-                )}
-                
-                {/* 3. Messages Section with Empty State */}
-                <div style={{ margin: '24px 0' }}>
-                    {hasMessages ? (
-                        <MessagesCard 
-                            title={t('advertiser_dashboard.dashboard.messages')}
-                            name={latestReservationRequest?.client 
-                                ? `${latestReservationRequest.client.name || ''} ${latestReservationRequest.client.surname || ''}`.trim() 
-                                : user?.name || t('advertiser_dashboard.dashboard.user')}
-                            img={latestReservationRequest?.client?.profilePicture || user?.profilePicture || ''}
-                            messageCount={requests.length}
-                            message={latestReservationRequest && typeof latestReservationRequest.reservation.message === 'string' 
-                                ? latestReservationRequest.reservation.message 
-                                : t('advertiser_dashboard.dashboard.no_messages')}
-                            onViewMore={() => {
-                                navigate('/dashboard/advertiser/messages');
-                                // Remove automatic completion when just navigating
-                                // completeItem('message_tenant');
-                            }}
-                            onReply={() => {
-                                navigate('/dashboard/advertiser/messages');
-                                // Remove automatic completion when just navigating
-                                // completeItem('message_tenant');
-                            }}
-                        />
-                    ) : (
-                        <MessagesCard 
-                            title={t('advertiser_dashboard.dashboard.messages')}
-                            isEmpty={true}
-                            onViewMore={() => navigate('/dashboard/advertiser/messages')}
-                        />
-                    )}
-                </div>
+            </div>
+        );
+    };
 
-                {/* 4. Listing Performance */}
-                <PerformanceChart 
-                    title={t('advertiser_dashboard.dashboard.performance_overview')} 
-                    viewCount={statistics.viewsCount}
-                    inquiryCount={statistics.inquiriesCount}
-                    bookingCount={statistics.pendingReservations}
-                    loading={loading}
-                />
-                
-                {/* Views of Properties Section with Empty State */}
-                <div style={{ margin: '24px 0' }}>
-                    {hasProperties ? (
-                        <PerformanceChart 
-                            title={t('advertiser_dashboard.dashboard.views_of_properties', 'Views of Properties')}
-                            viewCount={statistics.viewsCount}
-                            inquiryCount={statistics.inquiriesCount}
-                            bookingCount={statistics.pendingReservations}
-                            loading={loading}
-                        />
-                    ) : !loading && (
-                        <div className="empty-state">
-                            <img src={emptyBox} alt="No views" />
-                            <div className="title">{t('advertiser_dashboard.dashboard.no_views', 'You have no views yet')}</div>
-                            <div className="description">{t('advertiser_dashboard.dashboard.no_views_hint', 'List your property by booking a photoshoot and start getting views')}</div>
-                        </div>
-                    )}
+    // Last update indicator styles
+    const lastUpdateStyle = {
+        fontSize: '12px',
+        color: '#666',
+        textAlign: 'right' as const,
+        padding: '8px 16px',
+        marginBottom: '8px',
+        display: 'flex',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        gap: '4px'
+    };
+
+    // Refresh button styles
+    const refreshButtonStyle = {
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        color: '#8F27CE',
+        fontSize: '12px',
+        padding: '4px 8px',
+        borderRadius: '4px',
+        marginLeft: '8px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px'
+    };
+
+    return (
+        <DashboardPageStyle>
+            <div className="left">
+                {/* Last update indicator */}
+                <div style={lastUpdateStyle}>
+                    <span>{t('common.last_updated', 'Last updated')}: {getLastUpdateText()}</span>
+                    <button 
+                        style={refreshButtonStyle}
+                        onClick={() => loadData()}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <span>{t('common.refreshing', 'Refreshing...')}</span>
+                        ) : (
+                            <>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4.01 7.58 4.01 12C4.01 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.83 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z" fill="currentColor"/>
+                                </svg>
+                                <span>{t('common.refresh', 'Refresh')}</span>
+                            </>
+                        )}
+                    </button>
                 </div>
+                
+                {/* Dynamic dashboard modules */}
+                {renderDashboardModules()}
             </div>
             <div className="right">
                 {/* Getting Started Checklist - New Component */}
@@ -384,7 +669,6 @@ const DashboardPage: React.FC = () => {
                         onRefresh={() => navigate('/dashboard/advertiser/properties')}
                     />
                 )}
-                
             </div>
         </DashboardPageStyle>
     );
