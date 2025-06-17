@@ -11,6 +11,7 @@ import ReferralProgramImage from '../../../../components/skeletons/icons/Referra
 import iconinfo from '../../../../components/skeletons/icons/Icon_Info2.svg'
 import arowdown from '../../../../components/skeletons/icons/Icon_arrow_Down.svg'
 import arowup from '../../../../components/skeletons/icons/Icon_arrow_Up.svg'
+import IconVerified from '../../../../components/skeletons/icons/Icon_Verified.svg'
 
 // Mock data for the referral program (replace with actual API calls later)
 const mockReferralData = {
@@ -84,10 +85,7 @@ const InfoIcon = () => (
 );
 
 const CheckIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#25A348" />
-    <path d="M16 9L10.5 14.5L8 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
+  <img src={IconVerified} alt="Verified" />
 );
 
 const CopyIcon = () => (
@@ -345,7 +343,7 @@ const ReferralProgramPage: React.FC = () => {
               <CheckIcon />
               <span className="status-text">You are eligible</span>
               <div className="info-icon-wrapper">
-                <InfoIcon />
+                <img src={iconinfo} alt='Info Icon'/>
               </div>
             </div>
             
@@ -354,7 +352,7 @@ const ReferralProgramPage: React.FC = () => {
             </p>
 
             <div className="request-payout">
-              <PurpleButtonLB60 
+              <PurpleButtonMB48 
                 text="Request Payout" 
                 onClick={handleRequestPayout}
               />

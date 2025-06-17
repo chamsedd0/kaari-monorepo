@@ -2,29 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { SimulatorPageStyle } from './styles';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Theme } from '../../../../../theme/theme';
 import { PurpleButtonLB60 } from '../../../../../components/skeletons/buttons/purple_LB60';
-import { BackButton } from '../../../../../components/skeletons/buttons/back_button';
-import { PurpleButtonSM32 } from '../../../../../components/skeletons/buttons/purple_SM32';
-
-// Icons
-const InfoIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="10" cy="10" r="9.5" stroke="#D1D1D1" />
-    <path d="M10 6V7" stroke="#D1D1D1" strokeWidth="2" strokeLinecap="round" />
-    <path d="M10 10V14" stroke="#D1D1D1" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
+import {BpurpleButtonLB40} from '../../../../../components/skeletons/buttons/border_purple_LB40'
+import Iconinfo  from '../../../../../components/skeletons/icons/Icon_Info2.svg';
+import {PurpleButtonMB48} from '../../../../../components/skeletons/buttons/purple_MB48'
 
 const PlusIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="10" cy="10" r="10" fill="#8F27CE"/>
+  <svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="10" cy="10" r="10" fill="#8F27CE" />
     <path d="M14 11H11V14H9V11H6V9H9V6H11V9H14V11Z" fill="white"/>
   </svg>
 );
 
 const MinusIcon = ({ disabled = false }) => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" 
+  <svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" 
     style={{ opacity: disabled ? 0.5 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}>
     <circle cx="10" cy="10" r="10" fill="#8F27CE"/>
     <path d="M14 11H6V9H14V11Z" fill="white"/>
@@ -104,8 +95,8 @@ const SimulatorPage: React.FC = () => {
   return (
     <SimulatorPageStyle>
       <div className="page-header">
-        <div className="back-button-wrapper" onClick={handleBackClick}>
-          <BackButton onClick={handleBackClick} />
+        <div className="back-link" onClick={handleBackClick}>
+          Back
         </div>
         <h1>Boost Your Referral Bonus</h1>
       </div>
@@ -115,34 +106,38 @@ const SimulatorPage: React.FC = () => {
           <h2>Enter Listings</h2>
           
           <div className="listings-input">
-            <div className="control-button" onClick={numberOfListings > 1 ? decrementListings : undefined}>
-              <MinusIcon disabled={numberOfListings <= 1} />
-            </div>
-            <input 
-              type="text" 
-              value={numberOfListings} 
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                if (!isNaN(value) && value > 0) {
-                  setNumberOfListings(value);
-                }
-              }} 
-            />
-            <div className="control-button" onClick={incrementListings}>
-              <PlusIcon />
-            </div>
+           
+              <div className="listing-controls">
+                <div className="control-button" onClick={numberOfListings > 1 ? decrementListings : undefined}>
+                  <MinusIcon disabled={numberOfListings <= 1} />
+                </div>
+                <input 
+                  type="text" 
+                  value={numberOfListings} 
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (!isNaN(value) && value > 0) {
+                      setNumberOfListings(value);
+                    }
+                  }} 
+                />
+                <div className="control-button" onClick={incrementListings}>
+                  <PlusIcon />
+                </div>
+              </div>
+       
             
             <div className="photoshoot-button-wrapper">
-              <button className="book-photoshoot-button" onClick={handleBookPhotoshoot}>
-                Book a Photoshoot
-              </button>
+              <BpurpleButtonLB40 text="Book a Photoshoot" onClick={handleBookPhotoshoot}>
+              </BpurpleButtonLB40>
             </div>
-          </div>
-          
-          <div className="info-text">
-            <InfoIcon />
+            <div className="info-text">
+            <img src={Iconinfo} alt="Info" />
             <span>List 1 more property to get 8% bonus</span>
           </div>
+          </div>
+          
+          
           
           <div className="bonus-progress">
             <div className="percentage-labels">
@@ -164,7 +159,7 @@ const SimulatorPage: React.FC = () => {
           
           <div className="sliders">
             <div className="slider-section">
-              <label>Average Monthly Referrals</label>
+              <div className='label'>Average Monthly Referrals</div>
               <div className="slider-container">
                 <span className="min-value">0</span>
                 <div className="slider-track" style={{ "--slider-percent": monthlyReferrals * 2 } as React.CSSProperties}>
@@ -184,7 +179,7 @@ const SimulatorPage: React.FC = () => {
             </div>
             
             <div className="slider-section">
-              <label>Average Tenant Rent</label>
+              <div className='label'>Average Tenant Rent</div>
               <div className="slider-container">
                 <span className="min-value">0</span>
                 <div className="slider-track" style={{ "--slider-percent": tenantRent / 5 } as React.CSSProperties}>
@@ -233,14 +228,14 @@ const SimulatorPage: React.FC = () => {
           </div>
 
           <div className="book-photoshoot-container">
-            <PurpleButtonLB60 
+            <PurpleButtonMB48 
               text="Book a Photoshoot" 
               onClick={handleBookPhotoshoot}
             />
           </div>
 
           <div className="commission-info">
-            <CommissionInfoIcon />
+          <img src={Iconinfo} alt="Info" />
             <span>Kaari's Commission Model</span>
           </div>
         </div>

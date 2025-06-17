@@ -2,69 +2,79 @@ import styled from "styled-components";
 import { Theme } from "../../../../../theme/theme";
 
 export const SimulatorPageStyle = styled.div`
-  padding: 32px;
-  max-width: 1200px;
-  margin: 0 auto;
+
   
   .page-header {
-    margin-bottom: 32px;
+    margin-bottom: 20px;
     
-    .back-button-wrapper {
-      display: inline-block;
-      margin-bottom: 16px;
-      cursor: pointer;
+    .back-link {
+      color:${Theme.colors.secondary};
+          text-decoration: none;
+          font: ${Theme.typography.fonts.mediumM};
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          cursor: pointer;
+          margin-bottom: 13px;
+          
+          &:hover {
+            text-decoration: underline;
+          }
     }
     
     h1 {
-      font-size: 28px;
-      font-weight: 600;
-      color: #252525;
-      margin: 0;
+      font: ${Theme.typography.fonts.h3};
+      color: ${Theme.colors.black};
+
     }
   }
   
   .simulator-layout {
     display: flex;
-    gap: 24px;
+    gap: 20px;
     
-    @media (max-width: 1024px) {
+    @media (max-width: 777px) {
       flex-direction: column;
     }
     
     .input-panel, .results-panel {
-      background-color: white;
-      border-radius: 16px;
-      padding: 24px;
-      border: 1px solid #E0E0E0;
-      box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+      border: ${Theme.borders.primary};
+      border-radius: ${Theme.borders.radius.lg};
+      padding: 20px;
     }
     
     .input-panel {
       flex: 2;
       
       h2 {
-        font-size: 20px;
-        font-weight: 600;
-        color: #252525;
-        margin: 0 0 24px 0;
+        font: ${Theme.typography.fonts.extraLargeB};
+        color:${Theme.colors.black};
+        margin-bottom: 24px;
       }
       
       .listings-input {
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 8px;
+        margin-bottom: 16px;
         
-        input {
-          width: 40px;
-          height: 40px;
-          border: 1px solid #E0E0E0;
-          border-radius: 4px;
-          text-align: center;
-          font-size: 16px;
-          font-weight: 500;
-          margin: 0 8px;
-          color: #252525;
+        .listing-controls {
+          display: flex;
+          align-items: center;
+          border: ${Theme.borders.primary};
+          border-radius: ${Theme.borders.radius.extreme};
+          padding: 4px;
+          max-width: 100px;
+          height: 32px;
+
+          input {
+            border: none;
+            text-align: center;
+            font: ${Theme.typography.fonts.largeM};
+            color: ${Theme.colors.black};
+            width: 25px;
+            height: 30px;
+            outline: none;
+          }
         }
         
         .control-button {
@@ -73,49 +83,22 @@ export const SimulatorPageStyle = styled.div`
           justify-content: center;
           cursor: pointer;
         }
+      
         
         .photoshoot-button-wrapper {
           margin-left: 16px;
-          
-          .book-photoshoot-button {
-            background-color: #8F27CE;
-            color: white;
-            border: none;
-            border-radius: 100px;
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            
-            &:hover {
-              background-color: #6A2AF4;
-            }
-          }
+          max-width: 250px;
         }
-        
-        @media (max-width: 768px) {
-          flex-wrap: wrap;
-          
-          .photoshoot-button-wrapper {
-            margin-left: 0;
-            margin-top: 8px;
-            width: 100%;
-            
-            .book-photoshoot-button {
-              width: 100%;
-            }
-          }
-        }
+
       }
       
       .info-text {
         display: flex;
         align-items: center;
+        margin-left: 16px;
         gap: 8px;
-        margin-bottom: 24px;
-        color: #8F27CE;
-        font-size: 14px;
+        color:${Theme.colors.gray2};
+       font: ${Theme.typography.fonts.text14};
         
         svg {
           flex-shrink: 0;
@@ -123,15 +106,14 @@ export const SimulatorPageStyle = styled.div`
       }
       
       .bonus-progress {
-        margin-bottom: 32px;
+        margin-bottom: 24px;
         
         .percentage-labels {
           display: flex;
           justify-content: space-between;
           margin-bottom: 8px;
-          font-size: 14px;
-          font-weight: 600;
-          color: #252525;
+          font: ${Theme.typography.fonts.mediumB};
+          color: ${Theme.colors.black};
         }
         
         .progress-bar {
@@ -144,10 +126,10 @@ export const SimulatorPageStyle = styled.div`
             flex: 1;
             height: 100%;
             border-radius: 100px;
-            background-color: #E0E0E0;
+            background-color: ${Theme.colors.sixth};
             
             &.active {
-              background-color: #8F27CE;
+              background-color: ${Theme.colors.secondary};
             }
           }
         }
@@ -155,25 +137,19 @@ export const SimulatorPageStyle = styled.div`
         .range-labels {
           display: flex;
           justify-content: space-between;
-          font-size: 12px;
-          color: #767676;
+          font: ${Theme.typography.fonts.smallM};
+          color: ${Theme.colors.black};
           margin-top: 4px;
         }
       }
       
       .sliders {
         .slider-section {
-          margin-bottom: 32px;
+          margin-bottom: 20px;
           
-          &:last-child {
-            margin-bottom: 0;
-          }
-          
-          label {
-            display: block;
-            font-size: 16px;
-            font-weight: 500;
-            color: #252525;
+          .label {
+            font: ${Theme.typography.fonts.mediumB};
+            color: ${Theme.colors.black};
             margin-bottom: 16px;
           }
           
@@ -184,8 +160,8 @@ export const SimulatorPageStyle = styled.div`
             position: relative;
             
             .min-value, .max-value {
-              font-size: 14px;
-              color: #767676;
+              font: ${Theme.typography.fonts.mediumB};
+              color: ${Theme.colors.black};
               min-width: 20px;
             }
             
@@ -228,7 +204,7 @@ export const SimulatorPageStyle = styled.div`
                   cursor: pointer;
                   border: 2px solid white;
                   box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
-                  z-index: 2;
+                  z-index: 4;
                   position: relative;
                 }
               }
@@ -248,7 +224,7 @@ export const SimulatorPageStyle = styled.div`
               
               .slider-bubble {
                 position: absolute;
-                top: -5px;
+                top: -20px;
                 transform: translateX(-50%);
                 background-color: #FFFFFF;
                 border: 1px solid #E0E0E0;
@@ -271,7 +247,7 @@ export const SimulatorPageStyle = styled.div`
     
     .results-panel {
       flex: 1;
-      max-width: 360px;
+      max-width: 310px;
       display: flex;
       flex-direction: column;
       
@@ -280,77 +256,58 @@ export const SimulatorPageStyle = styled.div`
       }
       
       h2 {
-        font-size: 20px;
-        font-weight: 600;
-        color: #252525;
+        font: ${Theme.typography.fonts.extraLargeB};
+        color: ${Theme.colors.black};
         margin: 0 0 24px 0;
       }
       
       .annual-earnings {
-        margin-bottom: 32px;
+        margin-bottom: 24px;
         
         .earnings-label {
-          font-size: 16px;
-          color: #767676;
+          font: ${Theme.typography.fonts.mediumB};
+          color: ${Theme.colors.gray2};
           margin-bottom: 8px;
         }
         
         .earnings-value {
-          font-size: 40px;
-          font-weight: 600;
-          color: #252525;
+          font: ${Theme.typography.fonts.h3};
+          color: ${Theme.colors.black};
         }
       }
       
       .stats-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 24px 16px;
-        margin-bottom: 32px;
+        gap: 12px 40px;
+        margin-bottom: 24px;
         
         .stat-item {
           .stat-label {
-            font-size: 14px;
-            color: #767676;
+            font: ${Theme.typography.fonts.smallM};
+            color: ${Theme.colors.gray2};
             margin-bottom: 8px;
           }
           
           .stat-value {
-            font-size: 20px;
-            font-weight: 600;
-            color: #8F27CE;
+            font: ${Theme.typography.fonts.extraLargeB};
+            color: ${Theme.colors.black};
           }
         }
       }
       
       .book-photoshoot-container {
-        margin-top: auto;
-        margin-bottom: 24px;
-        
-        button {
-          width: 100%;
-          height: 48px;
-          border-radius: 100px;
-          background-color: #8F27CE;
-          color: white;
-          border: none;
-          font-size: 16px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background-color 0.2s ease;
-          
-          &:hover {
-            background-color: #6A2AF4;
-          }
-        }
+        margin-bottom: 12px;
+        align-items: center;
+        justify-content: center;
       }
       
       .commission-info {
         display: flex;
         align-items: center;
         gap: 8px;
-        color: #767676;
-        font-size: 14px;
+        color: ${Theme.colors.gray2};
+        font: ${Theme.typography.fonts.text14};
         
         svg {
           flex-shrink: 0;
