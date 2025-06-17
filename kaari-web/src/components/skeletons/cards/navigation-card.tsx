@@ -51,9 +51,7 @@ export const NavigationCard: React.FC<NavigationCardProps> = ({
     const sections = [
         { id: t('advertiser_dashboard.profile.profile_section'), label: t('advertiser_dashboard.profile.navigation.profile') },
         { id: t('advertiser_dashboard.profile.documents_section'), label: t('advertiser_dashboard.profile.navigation.documents') },
-        { id: t('advertiser_dashboard.profile.contact_section'), label: t('advertiser_dashboard.profile.navigation.contact') },
         { id: t('advertiser_dashboard.profile.payout_section'), label: t('advertiser_dashboard.profile.navigation.payout') },
-        { id: t('advertiser_dashboard.profile.recommend_section'), label: t('advertiser_dashboard.profile.navigation.recommend') },
         { id: t('advertiser_dashboard.profile.password_section'), label: t('advertiser_dashboard.profile.navigation.password') }
     ];
     

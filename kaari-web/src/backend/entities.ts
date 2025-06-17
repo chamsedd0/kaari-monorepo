@@ -36,6 +36,11 @@ export interface User {
     verified: boolean;
     uploadDate: Date;
   };
+  documents?: {
+    rules?: string;
+    other?: string;
+    [key: string]: string | undefined;
+  };
   properties?: string[]; // References to property IDs owned by this user
   requests?: string[]; // References to request IDs made by this user
   
@@ -44,7 +49,8 @@ export interface User {
   checklistLastUpdated?: Date;
   
   // Advertiser specific fields
-  isBusiness?: boolean; // Whether the advertiser is a business/agency
+  advertiserType?: 'broker' | 'landlord' | 'agency'; // Type of advertiser
+  isBusiness?: boolean; // Whether the advertiser is a business/agency (legacy field)
   businessName?: string; // Name of the agency if isBusiness is true
   businessSize?: string; // Size of the agency if isBusiness is true
   city?: string; // City of operation for advertiser
@@ -262,4 +268,16 @@ export interface AdminLog {
   createdAt: Date;
   ipAddress?: string;
   userAgent?: string;
+}
+
+export interface PayoutMethod {
+  id: string;
+  userId: string;
+  type: 'RIB' | 'IBAN';
+  accountNumber: string;
+  bankName: string;
+  accountHolderName: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isDefault: boolean;
 } 

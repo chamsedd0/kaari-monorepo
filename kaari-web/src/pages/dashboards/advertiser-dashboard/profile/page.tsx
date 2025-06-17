@@ -4,8 +4,6 @@ import { NavigationCard } from '../../../../components/skeletons/cards/navigatio
 import { GoogleCard } from '../../../../components/skeletons/cards/google-card';
 import ProfileSection from './sections/profile-section/page';
 import SupportingDocumentsPage from './sections/supporting-documents/page';
-import RecommendToFriendPage from './sections/recommend-to-friend/page';
-import ContactDetailsPage from './sections/contact-details/page';
 import ChangePasswordPage from './sections/change-password/page';
 import PayoutMethodPage from './sections/payout-method/page';
 import { useTranslation } from 'react-i18next';
@@ -20,10 +18,6 @@ const ProfilePage: React.FC = () => {
                 return <ProfileSection />;
             case t('advertiser_dashboard.profile.documents_section'):
                 return <SupportingDocumentsPage />;
-            case t('advertiser_dashboard.profile.recommend_section'):
-                return <RecommendToFriendPage />;
-            case t('advertiser_dashboard.profile.contact_section'):
-                return <ContactDetailsPage />;
             case t('advertiser_dashboard.profile.password_section'):
                 return <ChangePasswordPage />;
             case t('advertiser_dashboard.profile.payout_section'):

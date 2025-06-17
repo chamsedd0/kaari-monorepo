@@ -6,7 +6,7 @@ export const DashboardPageStyle = styled.div`
     flex-direction: row;
     gap: 24px;
     width: 100%;
-
+    
     .left {
         flex: 1;
         display: flex;
@@ -26,14 +26,14 @@ export const DashboardPageStyle = styled.div`
         border-radius: ${Theme.borders.radius.lg};
         padding: 24px;
         width: 100%;
-
+        
         h3 {
             font: ${Theme.typography.fonts.h3};
             color: ${Theme.colors.black};
             margin-top: 0;
             margin-bottom: 16px;
+            }
         }
-    }
 
     .empty-state {
         display: flex;
@@ -42,19 +42,19 @@ export const DashboardPageStyle = styled.div`
         justify-content: center;
         padding: 24px;
         text-align: center;
-
+        
         img {
             width: 64px;
             height: 64px;
             margin-bottom: 16px;
         }
-
+        
         .title {
             font: ${Theme.typography.fonts.mediumB};
             color: ${Theme.colors.black};
             margin-bottom: 8px;
         }
-
+        
         .description {
             font: ${Theme.typography.fonts.mediumM};
             color: ${Theme.colors.gray2};

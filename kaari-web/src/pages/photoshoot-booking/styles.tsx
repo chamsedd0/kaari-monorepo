@@ -11,6 +11,13 @@ export const PhotoshootBookingPageStyle = styled.div`
   margin: 60px auto;
   padding: 100px 20px 60px;
   
+  .back-button-container {
+    position: absolute;
+    top: 100px;
+    left: 20px;
+    z-index: 10;
+  }
+  
   .page-title {
     font: ${Theme.typography.fonts.h2};
     color: ${Theme.colors.black};

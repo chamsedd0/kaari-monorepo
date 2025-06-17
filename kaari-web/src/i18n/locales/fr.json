@@ -73,7 +73,12 @@
     "last_updated": "Dernière mise à jour",
     "just_now": "À l'instant",
     "minutes_ago": "il y a {{count}} minutes",
-    "hours_ago": "il y a {{count}} heures"
+    "hours_ago": "il y a {{count}} heures",
+    "cancel": "Annuler",
+    "add": "Ajouter",
+    "upload": "Télécharger",
+    "uploading": "Téléchargement...",
+    "replace": "Remplacer"
   },
   "header": {
     "profile_dropdown": {
@@ -461,37 +466,67 @@
         "other_documents_title": "Autres Documents",
         "other_documents_description": "Téléchargez d'autres documents liés à votre compte sur Kaari"
       },
+      "upload_front_id_first": "Veuillez d'abord télécharger le recto de votre pièce d'identité avant de télécharger le verso",
+      "document_upload_error": "Échec du téléchargement du document. Veuillez réessayer.",
       "contact_details": {
         "title": "Coordonnées",
-        "email": "Email",
-        "email_placeholder": "Entrez votre adresse email",
-        "phone": "Téléphone",
-        "phone_placeholder": "Entrez votre numéro de téléphone",
-        "alternate_phone": "Téléphone alternatif",
-        "alternate_phone_placeholder": "Entrez un numéro de téléphone alternatif",
         "additional_info": "Informations supplémentaires",
-        "additional_info_placeholder": "Ajoutez toute information supplémentaire ici",
+        "phone": "Numéro de téléphone",
+        "phone_placeholder": "Entrez votre numéro de téléphone",
+        "email": "Adresse email",
+        "email_placeholder": "Entrez votre adresse email",
+        "additional_info_placeholder": "Ajoutez des informations de contact supplémentaires",
         "save_changes": "Enregistrer les modifications"
       },
       "payout_method": {
-        "title": "Méthodes de paiement",
-        "payout_tab": "Paiement",
-        "completed_tab": "Terminé",
+        "title": "Méthode de paiement",
+        "payout_tab": "Méthode de paiement",
+        "completed_tab": "Transactions terminées",
         "payment_methods": "Méthodes de paiement",
+        "no_payment_methods": "Aucune méthode de paiement ajoutée. Ajoutez une méthode de paiement pour recevoir des paiements.",
         "add_payment_method": "Ajouter une méthode de paiement",
-        "no_payment_methods": "Vous n'avez pas encore ajouté de méthodes de paiement",
-        "add_bank_account": "Ajouter un compte bancaire",
-        "add_paypal": "Ajouter PayPal",
         "completed_transactions": "Transactions terminées",
-        "no_completed_transactions": "Vous n'avez pas encore de transactions terminées"
+        "account_type": "Type de compte",
+        "rib": "RIB",
+        "iban": "IBAN",
+        "rib_number": "Numéro RIB",
+        "iban_number": "Numéro IBAN",
+        "bank_name": "Nom de la banque",
+        "account_holder": "Nom du titulaire du compte",
+        "rib_placeholder": "Entrez votre numéro RIB à 23 chiffres",
+        "iban_placeholder": "Entrez votre IBAN (ex: FR1420041010050500013M02606)",
+        "bank_name_placeholder": "Entrez le nom de votre banque",
+        "account_holder_placeholder": "Entrez le nom du titulaire du compte",
+        "set_as_default": "Définir comme méthode de paiement par défaut",
+        "default": "Par défaut",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "edit_payout_method": "Modifier la méthode de paiement",
+        "add_payout_method": "Ajouter une méthode de paiement",
+        "delete_confirmation": "Êtes-vous sûr de vouloir supprimer cette méthode de paiement ?",
+        "delete_success": "Méthode de paiement supprimée avec succès",
+        "delete_error": "Échec de la suppression de la méthode de paiement",
+        "add_success": "Méthode de paiement ajoutée avec succès",
+        "add_error": "Échec de l'ajout de la méthode de paiement",
+        "update_success": "Méthode de paiement mise à jour avec succès",
+        "update_error": "Échec de la mise à jour de la méthode de paiement",
+        "default_success": "Méthode de paiement par défaut mise à jour avec succès",
+        "default_error": "Échec de la mise à jour de la méthode de paiement par défaut",
+        "error": {
+          "account_number_required": "Le numéro de compte est requis",
+          "invalid_rib": "Format RIB invalide. Il doit comporter 23 chiffres.",
+          "invalid_iban": "Format IBAN invalide. Il doit commencer par un code pays suivi de chiffres et de lettres.",
+          "bank_name_required": "Le nom de la banque est requis",
+          "account_holder_required": "Le nom du titulaire du compte est requis"
+        }
       },
       "recommend_friend": {
-        "title": "Recommander à un ami",
-        "description": "Recommandez Kaari à vos amis et gagnez {{amount}} pour chaque ami qui s'inscrit",
-        "email_placeholder": "Entrez l'adresse email de votre ami",
-        "save_button": "Enregistrer",
-        "banner_title": "Gagnez {{amount}} pour chaque ami qui s'inscrit !",
-        "banner_text": "Pour chaque ami qui s'inscrit et devient un hôte vérifié, vous recevrez {{amount}} après sa première réservation."
+        "title": "Recommander un ami",
+        "description": "Invitez vos amis à rejoindre Kaari et gagnez des récompenses lorsqu'ils s'inscrivent.",
+        "email_placeholder": "Entrez l'email de votre ami",
+        "save_button": "Envoyer l'invitation",
+        "banner_title": "Parrainez et gagnez",
+        "banner_text": "Obtenez des récompenses pour chaque ami qui rejoint Kaari grâce à votre parrainage."
       },
       "change_password": {
         "title": "Changer le mot de passe",
@@ -503,7 +538,9 @@
         "confirm_password_placeholder": "Confirmez votre nouveau mot de passe",
         "save_button": "Enregistrer",
         "password_requirements": "Le mot de passe doit contenir au moins 8 caractères, une lettre majuscule, une lettre minuscule et un chiffre"
-      }
+      },
+      "profile_image_alt": "Profil",
+      "date_of_birth": "Date de naissance"
     },
     "messages": {
       "title": "Messages",

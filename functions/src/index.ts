@@ -13,6 +13,8 @@ import * as logger from "firebase-functions/logger";
 import {initializeApp} from "firebase-admin/app";
 import {getFirestore} from "firebase-admin/firestore";
 import cors from "cors";
+import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
 
 // Import storage functions
 import * as storageModule from "./storage";
@@ -26,6 +28,129 @@ const corsMiddleware = cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
   maxAge: 86400, // 24 hours
+});
+
+// Export storage module
+
+// Simple test function (v2 API)
+export const helloWorldV2 = onRequest({
+  region: "us-central1",
+  cors: true,
+}, (request, response) => {
+  // Apply CORS middleware
+  corsMiddleware(request, response, () => {
+    logger.info("Hello logs!", {structuredData: true});
+    response.send("Hello from Firebase!");
+  });
+});
+
+// OTP Functions
+
+// Function to generate a random 6-digit OTP
+const generateOTP = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Function to send OTP
+export const sendOTP = functions.https.onCall(async (data: any, context) => {
+  const { phoneNumber } = data;
+  
+  if (!phoneNumber) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Phone number is required"
+    );
+  }
+
+  try {
+    // Generate OTP
+    const otp = generateOTP();
+    const expiryTime = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
+    
+    // Store OTP in Firestore with expiry time
+    await admin.firestore().collection("otps").doc(phoneNumber).set({
+      otp,
+      expiryTime,
+      attempts: 0,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // In production, you would integrate with an SMS service here
+    // For now, we'll just return success
+    return { success: true, message: "OTP sent successfully" };
+  } catch (error) {
+    console.error("Error sending OTP:", error);
+    throw new functions.https.HttpsError(
+      "internal",
+      "Failed to send OTP"
+    );
+  }
+});
+
+// Function to verify OTP
+export const verifyOTP = functions.https.onCall(async (data: any, context) => {
+  const { phoneNumber, otp } = data;
+  
+  if (!phoneNumber || !otp) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Phone number and OTP are required"
+    );
+  }
+
+  try {
+    // Get OTP document from Firestore
+    const otpDoc = await admin.firestore().collection("otps").doc(phoneNumber).get();
+    
+    if (!otpDoc.exists) {
+      throw new functions.https.HttpsError(
+        "not-found",
+        "No OTP found for this phone number"
+      );
+    }
+
+    const otpData = otpDoc.data();
+    
+    // Check if OTP has expired
+    if (otpData?.expiryTime < Date.now()) {
+      throw new functions.https.HttpsError(
+        "deadline-exceeded",
+        "OTP has expired"
+      );
+    }
+
+    // Check if max attempts exceeded (3 attempts)
+    if (otpData?.attempts >= 3) {
+      throw new functions.https.HttpsError(
+        "resource-exhausted",
+        "Maximum verification attempts exceeded"
+      );
+    }
+
+    // Update attempts
+    await admin.firestore().collection("otps").doc(phoneNumber).update({
+      attempts: admin.firestore.FieldValue.increment(1)
+    });
+
+    // Verify OTP
+    if (otpData?.otp !== otp) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "Invalid OTP"
+      );
+    }
+
+    // OTP verified, delete the document
+    await admin.firestore().collection("otps").doc(phoneNumber).delete();
+
+    return { success: true, message: "OTP verified successfully" };
+  } catch (error: any) {
+    console.error("Error verifying OTP:", error);
+    throw new functions.https.HttpsError(
+      error.code || "internal",
+      error.message || "Failed to verify OTP"
+    );
+  }
 });
 
 // Start writing functions

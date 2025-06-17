@@ -1,7 +1,7 @@
 import { Theme } from "../../../theme/theme";
 import styled from "styled-components";
 
-export const UploadCard = styled.div`
+export const UploadCardStyled = styled.div`
        background-color: ${Theme.colors.white};
     border-radius: ${Theme.borders.radius.md};
     padding: 20px;
@@ -27,6 +27,27 @@ export const UploadCard = styled.div`
             font: ${Theme.typography.fonts.text16};
             color: ${Theme.colors.gray2};
         }
+
+        .uploaded-file {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background-color: ${Theme.colors.lightPurple};
+            border-radius: ${Theme.borders.radius.sm};
+            max-width: fit-content;
+
+            .file-icon {
+                font-size: 16px;
+            }
+
+            .file-name {
+                font: ${Theme.typography.fonts.smallM};
+                color: ${Theme.colors.secondary};
+                word-break: break-word;
+            }
+        }
     }
 
     .upload-container{
@@ -47,6 +68,10 @@ export const UploadCard = styled.div`
                 color: ${Theme.colors.gray2};
             }
 
+            .error-text {
+                font: ${Theme.typography.fonts.smallM};
+                color: ${Theme.colors.error};
+            }
         }
 
         .upload-button{
@@ -60,3 +85,6 @@ export const UploadCard = styled.div`
     }
 
 `;
+
+// Export the old name as well for backward compatibility
+export { UploadCardStyled as UploadCard };

@@ -9,6 +9,7 @@ import TextAreaBaseModel from '../../components/skeletons/inputs/input-fields/te
 import { PurpleButtonLB60 } from '../../components/skeletons/buttons/purple_LB60';
 import { DEFAULT_TIME_SLOTS } from '../../config/constants';
 import { useChecklist } from '../../contexts/checklist/ChecklistContext';
+import { BackButton } from '../../components/skeletons/buttons/back_button';
 
 import { FaClock, FaChevronLeft, FaChevronRight, FaSpinner, FaMapMarkerAlt, FaSearch, FaPhoneAlt, FaUser } from 'react-icons/fa';
 import SelectFieldBaseModelVariant1 from '../../components/skeletons/inputs/select-fields/select-field-base-model-variant-1';
@@ -40,6 +41,11 @@ const PhotoshootBookingPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { completeItem } = useChecklist();
+  
+  // Function to navigate back to dashboard
+  const handleBackToDashboard = () => {
+    navigate('/dashboards/user-dashboard/overview');
+  };
   
   // Get current user information from the store
   const currentUser = useStore(state => state.user);
@@ -224,13 +230,13 @@ const PhotoshootBookingPage: React.FC = () => {
               city: city || prev.city,
               stateRegion: state || prev.stateRegion,
               postalCode: postalCode || prev.postalCode,
-              country: country || prev.country,
-              location: position
+            country: country || prev.country,
+            location: position
             }));
           }
       } else {
         console.log("Geocoding failed with status:", status);
-      }
+        }
       
       // Reset flag after form update is complete
       setTimeout(() => {
@@ -305,8 +311,62 @@ const PhotoshootBookingPage: React.FC = () => {
             mapRef.current.panTo(location);
           }
           
-          // Update address fields from the new location
+          // Extract address components directly from place
+          if (place.address_components) {
+            let streetName = '';
+            let streetNumber = '';
+            let city = '';
+            let state = '';
+            let postalCode = '';
+            let country = '';
+            
+            place.address_components.forEach(component => {
+              const types = component.types;
+              
+              if (types.includes('street_number')) {
+                streetNumber = component.long_name;
+              }
+              
+              if (types.includes('route')) {
+                streetName = component.long_name;
+              }
+              
+              if (types.includes('locality')) {
+                city = component.long_name;
+              }
+              
+              if (types.includes('administrative_area_level_1')) {
+                state = component.long_name;
+              }
+              
+              if (types.includes('postal_code')) {
+                postalCode = component.long_name;
+              }
+              
+              if (types.includes('country')) {
+                country = component.long_name;
+              }
+            });
+            
+            console.log("Extracted address components:", {
+              streetName, streetNumber, city, state, postalCode, country
+            });
+            
+            // Update form data with extracted address components
+            setFormData(prev => ({
+              ...prev,
+              streetName: streetName || prev.streetName,
+              streetNumber: streetNumber || prev.streetNumber,
+              city: city || prev.city,
+              stateRegion: state || prev.stateRegion,
+              postalCode: postalCode || prev.postalCode,
+              country: country || prev.country,
+              location: location
+            }));
+          } else {
+            // Fallback to reverse geocoding if address_components not available
           updateAddressFromLocation(location);
+          }
         }
       }
     }
@@ -542,7 +602,7 @@ const PhotoshootBookingPage: React.FC = () => {
   const handleButtonSubmit = () => {
     handleSubmit({});
   };
-
+  
   
   // Navigate to previous day
   const navigatePrevDay = () => {
@@ -644,33 +704,17 @@ const PhotoshootBookingPage: React.FC = () => {
     if (!isLoaded) {
       return <div className="loading-map">Loading Maps...</div>;
     }
-
+    
     return (
-      <div className="map-container">
-        <div className="search-box-container">
-          <StandaloneSearchBox
-            onLoad={onSearchBoxLoad}
-            onPlacesChanged={onPlacesChanged}
-          >
-            <div className="search-input-wrapper">
-              <FaSearch className="search-icon" />
-              <input
-                type="text"
-                placeholder={t('photoshoot_booking.search_placeholder', 'Search for your address')}
-                className="location-search-input"
-              />
-            </div>
-          </StandaloneSearchBox>
-        </div>
-        
-        <GoogleMap
+        <div className="map-container">
+          <GoogleMap
           mapContainerStyle={mapContainerStyle}
-          center={mapCenter}
-          zoom={mapZoom}
-          onLoad={onMapLoad}
-          options={{
+            center={mapCenter}
+            zoom={mapZoom}
+            onLoad={onMapLoad}
+            options={{
             fullscreenControl: false,
-            streetViewControl: false,
+              streetViewControl: false,
             mapTypeControl: false,
             zoomControlOptions: {
               position: google.maps.ControlPosition.RIGHT_TOP
@@ -678,23 +722,23 @@ const PhotoshootBookingPage: React.FC = () => {
           }}
         >
           {/* Always render the marker at the center */}
-          <Marker
-            position={markerPosition}
+              <Marker
+                position={markerPosition}
             draggable={true}
             onDragEnd={onMarkerDragEnd}
             animation={google.maps.Animation.DROP}
-            icon={{
+                icon={{
               url: '/images/map-pin.png',
               scaledSize: new google.maps.Size(40, 40),
               origin: new google.maps.Point(0, 0),
               anchor: new google.maps.Point(20, 40)
-            }}
-          />
-          
+                }}
+              />
+
           {/* Fallback marker for debugging */}
           {showFallbackMarker && <FallbackMarker />}
-        </GoogleMap>
-        
+          </GoogleMap>
+          
         <div className="map-instructions">
           <FaMapMarkerAlt className="instruction-icon" />
           <p>{t('photoshoot_booking.map_instructions', 'Click on the map or drag the marker to set the exact location')}</p>
@@ -708,6 +752,9 @@ const PhotoshootBookingPage: React.FC = () => {
       <UnifiedHeader />
       
       <PhotoshootBookingPageStyle>
+        <div className="back-button-container">
+          <BackButton onClick={handleBackToDashboard} />
+        </div>
         <h1 className="page-title">{t('photoshoot_booking.title', 'Book Your Free Photoshoot')}</h1>
         
         <form onSubmit={handleSubmit}>

@@ -9,7 +9,7 @@ import UploadFieldModel from '../../../../../../components/skeletons/inputs/uplo
 import TextareaVariant from '../../../../../../components/skeletons/inputs/input-fields/textarea-variant';
 import GenderCheckBox from '../../../../../../components/skeletons/inputs/check-box/gander-check-box';
 import SelectFieldBaseModel from '../../../../../../components/skeletons/inputs/select-fields/select-field-base-model';
-import { updateUserProfile, uploadGovernmentID } from '../../../../../../backend/server-actions/UserServerActions';
+import { updateUserProfile } from '../../../../../../backend/server-actions/UserServerActions';
 import { useToastService } from '../../../../../../services/ToastService';
 import { useTranslation } from 'react-i18next';
 import SpokenLanguagesModal from '../../../../../../components/skeletons/constructed/modals/spoken-languages-modal';
@@ -33,8 +33,6 @@ const ProfileSection: React.FC = () => {
     const [aboutMe, setAboutMe] = useState('');
     const [profilePicture, setProfilePicture] = useState<File | null>(null);
     const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
-    const [idFront, setIdFront] = useState<File | null>(null);
-    const [idBack, setIdBack] = useState<File | null>(null);
     const [languages, setLanguages] = useState<string[]>([]);
     const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
     
@@ -136,24 +134,6 @@ const ProfileSection: React.FC = () => {
                 profilePicture
             });
             
-            // Upload ID documents if provided
-            if (idFront) {
-                try {
-                    // Only pass idBack if it exists
-                    if (idBack) {
-                        await uploadGovernmentID(user.id, idFront, idBack);
-                    } else {
-                        await uploadGovernmentID(user.id, idFront);
-                    }
-                    // Show document upload success toast
-                    toast.profile.uploadDocumentSuccess();
-                } catch (idError) {
-                    console.error('Error uploading government ID:', idError);
-                    toast.profile.documentUploadError(t('advertiser_dashboard.profile.document_upload_error'));
-                    // Continue with the profile update even if ID upload fails
-                }
-            }
-            
             // Update user in global store
             setUser(updatedUser);
             setSuccess(true);
@@ -164,8 +144,6 @@ const ProfileSection: React.FC = () => {
             // Reset file inputs after successful upload
             setProfilePicture(null);
             setProfilePicturePreview(null);
-            setIdFront(null);
-            setIdBack(null);
             
             // Check if profile is complete enough to mark the checklist item
             if (name && phoneNumber) {
@@ -245,17 +223,6 @@ const ProfileSection: React.FC = () => {
                         }
                     }}
                 /> 
-                <UploadFieldModel 
-                    label={t('advertiser_dashboard.profile.passport_front_id')}
-                    hlabel={t('advertiser_dashboard.profile.government_id')}
-                    onFileSelect={(file) => setIdFront(file)}
-                    fileName={idFront?.name || (user?.identificationDocuments?.frontId ? t('advertiser_dashboard.profile.id_front_uploaded') : "")}
-                />
-                <UploadFieldModel 
-                    label={t('advertiser_dashboard.profile.back_of_id')}
-                    onFileSelect={(file) => setIdBack(file)}
-                    fileName={idBack?.name || (user?.identificationDocuments?.backId ? t('advertiser_dashboard.profile.id_back_uploaded') : "")}
-                />
                
                 <div className="profile-inbut-label">{t('advertiser_dashboard.profile.gender')}</div>
                 <div className="profile-inbut-label">{t('advertiser_dashboard.profile.languages')}</div>

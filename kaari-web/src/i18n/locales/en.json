@@ -77,7 +77,12 @@
     "last_updated": "Last updated",
     "just_now": "Just now",
     "minutes_ago": "{{count}} minutes ago",
-    "hours_ago": "{{count}} hours ago"
+    "hours_ago": "{{count}} hours ago",
+    "cancel": "Cancel",
+    "add": "Add",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "replace": "Replace"
   },
   "header": {
     "profile_dropdown": {
@@ -451,6 +456,81 @@
         "rules_description": "Upload the documents that inform your future tenants about the booking requirements and house rules",
         "other_documents_title": "Other Documents",
         "other_documents_description": "Upload other documents that relate to your account on Kaari"
+      },
+      "upload_front_id_first": "Please upload the front of your ID first before uploading the back",
+      "document_upload_error": "Failed to upload document. Please try again.",
+      "payout_method": {
+        "title": "Payout Method",
+        "payout_tab": "Payout Method",
+        "completed_tab": "Completed Transactions",
+        "payment_methods": "Payment Methods",
+        "no_payment_methods": "No payment methods added yet. Add a payment method to receive payouts.",
+        "add_payment_method": "Add Payment Method",
+        "completed_transactions": "Completed Transactions",
+        "account_type": "Account Type",
+        "rib": "RIB",
+        "iban": "IBAN",
+        "rib_number": "RIB Number",
+        "iban_number": "IBAN Number",
+        "bank_name": "Bank Name",
+        "account_holder": "Account Holder Name",
+        "rib_placeholder": "Enter your 23-digit RIB number",
+        "iban_placeholder": "Enter your IBAN (e.g., FR1420041010050500013M02606)",
+        "bank_name_placeholder": "Enter your bank name",
+        "account_holder_placeholder": "Enter the account holder's name",
+        "set_as_default": "Set as default payment method",
+        "default": "Default",
+        "edit": "Edit",
+        "delete": "Delete",
+        "edit_payout_method": "Edit Payout Method",
+        "add_payout_method": "Add Payout Method",
+        "delete_confirmation": "Are you sure you want to delete this payment method?",
+        "delete_success": "Payment method deleted successfully",
+        "delete_error": "Failed to delete payment method",
+        "add_success": "Payment method added successfully",
+        "add_error": "Failed to add payment method",
+        "update_success": "Payment method updated successfully",
+        "update_error": "Failed to update payment method",
+        "default_success": "Default payment method updated successfully",
+        "default_error": "Failed to update default payment method",
+        "error": {
+          "account_number_required": "Account number is required",
+          "invalid_rib": "Invalid RIB format. It should be 23 digits.",
+          "invalid_iban": "Invalid IBAN format. It should start with a country code followed by digits and letters.",
+          "bank_name_required": "Bank name is required",
+          "account_holder_required": "Account holder name is required"
+        }
+      },
+      "profile_image_alt": "Profile",
+      "date_of_birth": "Date of Birth",
+      "recommend_friend": {
+        "title": "Recommend a Friend",
+        "description": "Invite your friends to join Kaari and earn rewards when they sign up.",
+        "email_placeholder": "Enter your friend's email",
+        "save_button": "Send Invitation",
+        "banner_title": "Refer and Earn",
+        "banner_text": "Get rewards for each friend who joins Kaari through your referral."
+      },
+      "contact_details": {
+        "title": "Contact Details",
+        "additional_info": "Additional Information",
+        "phone": "Phone Number",
+        "phone_placeholder": "Enter your phone number",
+        "email": "Email Address",
+        "email_placeholder": "Enter your email address",
+        "additional_info_placeholder": "Add any additional contact information",
+        "save_changes": "Save Changes"
+      },
+      "change_password": {
+        "title": "Change Password",
+        "current_password": "Current Password",
+        "current_password_placeholder": "Enter your current password",
+        "new_password": "New Password",
+        "new_password_placeholder": "Enter your new password",
+        "confirm_password": "Confirm Password",
+        "confirm_password_placeholder": "Confirm your new password",
+        "save_button": "Save Changes",
+        "password_requirements": "Password must be at least 8 characters long and include uppercase, lowercase, and numbers."
       }
     },
     "messages": {

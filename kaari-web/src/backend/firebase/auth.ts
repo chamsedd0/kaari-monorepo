@@ -19,6 +19,7 @@ import { User } from '../entities';
  */
 export interface AdvertiserInfo {
   userId: string;
+  advertiserType: 'broker' | 'landlord' | 'agency';
   isBusiness: boolean;
   businessName?: string;
   businessSize?: string;
@@ -45,7 +46,9 @@ export const saveAdvertiserInfo = async (advertiserInfo: AdvertiserInfo): Promis
       await updateDoc(userDocRef, {
         // Ensure role is set to advertiser
         role: 'advertiser',
-        // Add business flag to the main user document
+        // Add advertiser type
+        advertiserType: advertiserInfo.advertiserType,
+        // Add business flag to the main user document (for backward compatibility)
         isBusiness: advertiserInfo.isBusiness,
         // Only include business details if it's a business
         ...(advertiserInfo.isBusiness && {
@@ -79,6 +82,7 @@ export const saveAdvertiserInfo = async (advertiserInfo: AdvertiserInfo): Promis
         createdAt: new Date(),
         updatedAt: new Date(),
         // Add advertiser-specific fields
+        advertiserType: advertiserInfo.advertiserType,
         isBusiness: advertiserInfo.isBusiness,
         ...(advertiserInfo.isBusiness && {
           businessName: advertiserInfo.businessName,

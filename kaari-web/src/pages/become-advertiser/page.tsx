@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AdvertiserRegistrationPageStyle } from './styles';
@@ -16,6 +16,10 @@ import { useToastService } from '../../services/ToastService';
 import { Theme } from '../../theme/theme';
 import { saveAdvertiserInfo, getOrCreateUserDocument } from '../../backend/firebase/auth';
 import { getGoogleMapsLoaderOptions } from '../../utils/googleMapsConfig';
+import otpService from '../../services/OtpService';
+import OtpInput from '../../components/checkout/input-fields/OtpInput';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 // Property type options as chips
 const PROPERTY_TYPES = [
@@ -42,7 +46,7 @@ const PROPERTY_QUANTITIES = [
 ];
 
 interface FormData {
-  accountType: 'individual' | 'agency' | '';
+  accountType: 'broker' | 'landlord' | 'agency' | '';
   agencyName: string;
   agencySize: string;
   firstName: string;
@@ -99,6 +103,166 @@ const BecomeAdvertiserPage: React.FC = () => {
   
   const searchBoxRef = React.useRef<google.maps.places.SearchBox>();
   
+  // Generate a 6-digit OTP code (for fallback only)
+  const generateOTP = useCallback(() => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }, []);
+  
+  // Start OTP resend timer
+  const startOtpTimer = useCallback(() => {
+    // 60 second countdown
+    setOtpResendTimer(60);
+    
+    if (otpTimerRef.current) {
+      clearInterval(otpTimerRef.current);
+    }
+    
+    otpTimerRef.current = setInterval(() => {
+      setOtpResendTimer(prev => {
+        if (prev <= 1) {
+          if (otpTimerRef.current) clearInterval(otpTimerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+  
+  // Send OTP code
+  const sendOtp = useCallback(async () => {
+    if (!formData.mobileNumber) {
+      setErrors(prev => ({
+        ...prev,
+        mobileNumber: 'Please enter your mobile number'
+      }));
+      return;
+    }
+    
+    // No need to check format as the PhoneInput component handles formatting
+    // Just ensure it's not empty, which we already checked
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Use the OTP service to send the OTP
+      const response = await otpService.sendOtp(formData.mobileNumber);
+      
+      if (response.success) {
+        setOtpSent(true);
+        startOtpTimer(); // Start the countdown timer
+        toast.showToast('success', 'Success', 'OTP code sent to your mobile number');
+        
+        // For development purposes only - in production, this would be removed
+        if (process.env.NODE_ENV === 'development') {
+          // Generate a fallback OTP for local testing
+          const fallbackOtp = generateOTP();
+          console.log(`Fallback OTP for development: ${fallbackOtp}`);
+          localStorage.setItem('demo_otp', fallbackOtp);
+        }
+      } else {
+        toast.showToast('error', 'Error', response.message || 'Failed to send OTP. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      toast.showToast('error', 'Error', 'Failed to send OTP. Please try again.');
+      
+      // Fallback for development
+      if (process.env.NODE_ENV === 'development') {
+        // Generate a fallback OTP for local testing
+        const fallbackOtp = generateOTP();
+        console.log(`Fallback OTP for development: ${fallbackOtp}`);
+        localStorage.setItem('demo_otp', fallbackOtp);
+        
+        setOtpSent(true);
+        startOtpTimer();
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [formData.mobileNumber, generateOTP, startOtpTimer, toast]);
+  
+  // Verify OTP code
+  const verifyOtp = useCallback(async () => {
+    if (!formData.otpCode) {
+      setErrors(prev => ({
+        ...prev,
+        otpCode: 'Please enter the OTP code'
+      }));
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Use the OTP service to verify the OTP
+      const response = await otpService.verifyOtp(formData.mobileNumber, formData.otpCode);
+      
+      if (response.success) {
+        setOtpVerified(true);
+        
+        // Clear the timer when successfully verified
+        if (otpTimerRef.current) {
+          clearInterval(otpTimerRef.current);
+          setOtpResendTimer(0);
+        }
+        
+        toast.showToast('success', 'Success', 'Mobile number verified successfully');
+        
+        // Clear error if any
+        if (errors.otpCode) {
+          setErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors.otpCode;
+            return newErrors;
+          });
+        }
+      } else {
+        setErrors(prev => ({
+          ...prev,
+          otpCode: 'Invalid OTP code. Please try again.'
+        }));
+      }
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      
+      // Fallback for development
+      if (process.env.NODE_ENV === 'development') {
+        // For development, check against the stored OTP in localStorage
+        const storedOtp = localStorage.getItem('demo_otp') || '123456';
+        
+        if (formData.otpCode === storedOtp) {
+          setOtpVerified(true);
+          
+          // Clear the timer when successfully verified
+          if (otpTimerRef.current) {
+            clearInterval(otpTimerRef.current);
+            setOtpResendTimer(0);
+          }
+          
+          toast.showToast('success', 'Success', 'Mobile number verified successfully');
+          
+          // Clear error if any
+          if (errors.otpCode) {
+            setErrors(prev => {
+              const newErrors = { ...prev };
+              delete newErrors.otpCode;
+              return newErrors;
+            });
+          }
+        } else {
+          setErrors(prev => ({
+            ...prev,
+            otpCode: 'Invalid OTP code. Please try again.'
+          }));
+        }
+      } else {
+        toast.showToast('error', 'Error', 'Failed to verify OTP. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [formData.otpCode, formData.mobileNumber, errors.otpCode, toast, otpTimerRef]);
+  
   // Check for existing logged-in user
   useEffect(() => {
     const auth = getAuth();
@@ -131,6 +295,9 @@ const BecomeAdvertiserPage: React.FC = () => {
     return () => unsubscribe();
   }, []);
   
+  // We now send OTP automatically in the nextStep function
+  // No need for a separate useEffect
+  
   // Ensure page is scrolled to top on initial load
   useEffect(() => {
     // Scroll to top when component mounts
@@ -141,6 +308,15 @@ const BecomeAdvertiserPage: React.FC = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentStep]);
+  
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (otpTimerRef.current) {
+        clearInterval(otpTimerRef.current);
+      }
+    };
+  }, []);
   
   // Handle input change
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -161,10 +337,10 @@ const BecomeAdvertiserPage: React.FC = () => {
   };
   
   // Handle radio selection with improved animation
-  const handleAccountTypeSelect = (type: 'individual' | 'agency') => {
+  const handleAccountTypeSelect = (type: 'broker' | 'landlord' | 'agency') => {
     // Add a slight delay before changing account type for better animation
-    if (type !== formData.accountType && type === 'individual' && formData.accountType === 'agency') {
-      // If switching from agency to individual, animate the fields out first
+    if (type !== formData.accountType && type !== 'agency' && formData.accountType === 'agency') {
+      // If switching from agency to broker/landlord, animate the fields out first
       const conditionalFields = document.querySelector('.conditional-fields');
       if (conditionalFields) {
         conditionalFields.classList.add('animating-out');
@@ -256,164 +432,8 @@ const BecomeAdvertiserPage: React.FC = () => {
     }
   };
   
-  // Format phone number as user types
-  const formatPhoneNumber = (value: string) => {
-    // Remove all non-digit characters
-    const cleaned = value.replace(/\D/g, '');
-    
-    // Format as (XXX) XXX-XXXX for US numbers
-    if (cleaned.length <= 3) {
-      return cleaned;
-    } else if (cleaned.length <= 6) {
-      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
-    } else {
-      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
-    }
-  };
-  
-  // Handle phone number input change with formatting
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (otpVerified) return; // Don't allow changes if already verified
-    
-    const formattedValue = formatPhoneNumber(e.target.value);
-    handleInputChange('mobileNumber', formattedValue);
-  };
-  
-  // Custom handler for OTP input to limit to 6 digits
-  const handleOtpInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only keep the first 6 digits
-    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-    handleInputChange('otpCode', value);
-  };
-  
-  // Start OTP resend timer
-  const startOtpTimer = () => {
-    // 60 second countdown
-    setOtpResendTimer(60);
-    
-    if (otpTimerRef.current) {
-      clearInterval(otpTimerRef.current);
-    }
-    
-    otpTimerRef.current = setInterval(() => {
-      setOtpResendTimer(prev => {
-        if (prev <= 1) {
-          if (otpTimerRef.current) clearInterval(otpTimerRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-  
-  // Clean up timer on unmount
-  useEffect(() => {
-    return () => {
-      if (otpTimerRef.current) {
-        clearInterval(otpTimerRef.current);
-      }
-    };
-  }, []);
-  
-  // Generate a 6-digit OTP code
-  const generateOTP = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  };
-  
-  // Send OTP code
-  const sendOtp = async () => {
-    if (!formData.mobileNumber) {
-      setErrors(prev => ({
-        ...prev,
-        mobileNumber: 'Please enter your mobile number'
-      }));
-      return;
-    }
-    
-    // Check if phone number has correct format
-    const phoneRegex = /^\(\d{3}\) \d{3}-\d{4}$/;
-    if (!phoneRegex.test(formData.mobileNumber)) {
-      setErrors(prev => ({
-        ...prev,
-        mobileNumber: 'Please enter a valid phone number in format (XXX) XXX-XXXX'
-      }));
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      // In a real app, you would call your backend to send the OTP
-      // For demo purposes, we'll simulate sending an OTP and store it in localStorage
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Generate and "store" the OTP (in a real app, this would be handled securely on the backend)
-      const otp = generateOTP();
-      localStorage.setItem('demo_otp', otp);
-      
-      console.log(`Demo OTP code: ${otp}`); // For testing purposes only
-      
-      setOtpSent(true);
-      startOtpTimer(); // Start the countdown timer
-      toast.showToast('success', 'Success', 'OTP code sent to your mobile number');
-    } catch {
-      toast.showToast('error', 'Error', 'Failed to send OTP. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  // Verify OTP code
-  const verifyOtp = async () => {
-    if (!formData.otpCode) {
-      setErrors(prev => ({
-        ...prev,
-        otpCode: 'Please enter the OTP code'
-      }));
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      // In a real app, you would verify the OTP with your backend
-      // For demo purposes, we'll simulate verification using localStorage
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Get the stored demo OTP
-      const storedOtp = localStorage.getItem('demo_otp') || '123456';
-      
-      if (formData.otpCode === storedOtp) {
-        setOtpVerified(true);
-        
-        // Clear the timer when successfully verified
-        if (otpTimerRef.current) {
-          clearInterval(otpTimerRef.current);
-          setOtpResendTimer(0);
-        }
-        
-        toast.showToast('success', 'Success', 'Mobile number verified successfully');
-        
-        // Clear error if any
-        if (errors.otpCode) {
-          setErrors(prev => {
-            const newErrors = { ...prev };
-            delete newErrors.otpCode;
-            return newErrors;
-          });
-        }
-      } else {
-        setErrors(prev => ({
-          ...prev,
-          otpCode: 'Invalid OTP code. Please try again.'
-        }));
-      }
-    } catch {
-      toast.showToast('error', 'Error', 'Failed to verify OTP. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // We no longer need these functions as we're using the PhoneInput and OtpInput components
+  // which handle formatting internally
   
   // Validate current step
   const validateStep = (step: number): boolean => {
@@ -446,6 +466,13 @@ const BecomeAdvertiserPage: React.FC = () => {
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
         newErrors.email = 'Please enter a valid email address';
       }
+      if (!formData.mobileNumber) {
+        newErrors.mobileNumber = 'Please enter your mobile number';
+      } else {
+        // For react-phone-input-2, the value includes the country code
+        // No need for additional validation as the component handles formatting
+        // Just ensure it's not empty, which we already checked
+      }
     }
     
     if (step === 3) {
@@ -456,13 +483,13 @@ const BecomeAdvertiserPage: React.FC = () => {
       if (!otpVerified) {
         newErrors.otpCode = 'Please verify your mobile number';
       }
-      
-      if (!formData.city) {
-        newErrors.city = 'Please enter your city of operation';
-      }
     }
     
     if (step === 4) {
+      if (!formData.city) {
+        newErrors.city = 'Please enter your city of operation';
+      }
+      
       if (!formData.propertyQuantity) {
         newErrors.propertyQuantity = 'Please select how many properties you could list';
       }
@@ -481,6 +508,14 @@ const BecomeAdvertiserPage: React.FC = () => {
     if (validateStep(currentStep)) {
       // Always scroll to top when changing steps
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // If moving from step 2 to step 3, automatically send OTP
+      if (currentStep === 2 && formData.mobileNumber) {
+        // Set a small timeout to ensure the state is updated before sending OTP
+        setTimeout(() => {
+          sendOtp();
+        }, 300);
+      }
       
       // Animate step change
       setCurrentStep(current => current + 1);
@@ -557,6 +592,7 @@ const BecomeAdvertiserPage: React.FC = () => {
       try {
         await saveAdvertiserInfo({
           userId: userId,
+          advertiserType: formData.accountType,
           isBusiness: formData.accountType === 'agency',
           businessName: formData.accountType === 'agency' ? formData.agencyName : undefined,
           businessSize: formData.accountType === 'agency' ? formData.agencySize : undefined,
@@ -564,7 +600,7 @@ const BecomeAdvertiserPage: React.FC = () => {
           phoneNumber: formData.mobileNumber,
           propertyQuantity: formData.propertyQuantity,
           propertyTypes: formData.propertyTypes,
-          additionalInfo: formData.additionalInfo
+          additionalInfo: ''
         });
         
         // Display success message
@@ -572,8 +608,8 @@ const BecomeAdvertiserPage: React.FC = () => {
         
         // Redirect to the photoshoot booking page
         navigate('/photoshoot-booking');
-      } catch (saveError: any) {
-        console.error('Error saving advertiser info:', saveError);
+      } catch (error: any) {
+        console.error('Error saving advertiser info:', error);
         toast.showToast('error', 'Registration Incomplete', 'Your account was created but we couldn\'t save your advertiser details. Please try again or contact support.');
       }
     } catch (error: any) {
@@ -642,20 +678,41 @@ const BecomeAdvertiserPage: React.FC = () => {
           <label>I am a</label>
           <div className="radio-group">
             <div 
-              className={`radio-option ${formData.accountType === 'individual' ? 'selected' : ''}`}
-              onClick={() => handleAccountTypeSelect('individual')}
+              className={`radio-option ${formData.accountType === 'broker' ? 'selected' : ''}`}
+              onClick={() => handleAccountTypeSelect('broker')}
             >
               <div className="radio-title">
                 <input 
                   type="radio" 
                   name="accountType" 
-                  checked={formData.accountType === 'individual'} 
-                  onChange={() => handleAccountTypeSelect('individual')}
+                  checked={formData.accountType === 'broker'} 
+                  onChange={() => handleAccountTypeSelect('broker')}
                 />
-                <span>Landlord - Broker</span>
+                <span>Broker</span>
               </div>
               <div className="radio-description">
-                I'm an individual property owner or broker
+                I'm a real estate broker or agent
+              </div>
+              <div className="option-icon">
+                <FaUserAlt />
+              </div>
+            </div>
+            
+            <div 
+              className={`radio-option ${formData.accountType === 'landlord' ? 'selected' : ''}`}
+              onClick={() => handleAccountTypeSelect('landlord')}
+            >
+              <div className="radio-title">
+                <input 
+                  type="radio" 
+                  name="accountType" 
+                  checked={formData.accountType === 'landlord'} 
+                  onChange={() => handleAccountTypeSelect('landlord')}
+                />
+                <span>Landlord</span>
+              </div>
+              <div className="radio-description">
+                I'm a property owner
               </div>
               <div className="option-icon">
                 <FaUserAlt />
@@ -769,6 +826,31 @@ const BecomeAdvertiserPage: React.FC = () => {
           />
         </div>
         
+        <div className="form-group required">
+          <label htmlFor="mobileNumber">
+            <FaPhoneAlt className="label-icon" /> Mobile Number
+          </label>
+          <PhoneInput
+            country={'ma'} // Morocco as default
+            value={formData.mobileNumber}
+            onChange={(phone) => handleInputChange('mobileNumber', phone)}
+            inputProps={{
+              name: 'mobileNumber',
+              required: true,
+              autoFocus: true
+            }}
+            containerClass="phone-input-container"
+            inputClass="phone-input"
+            buttonClass="phone-dropdown-button"
+            preferredCountries={['ma']}
+            enableSearch={false}
+            disableSearchIcon={true}
+            masks={{ma: '.. .. .. .. ..'}} // Format for Morocco: 06 XX XX XX XX
+            placeholder="06 XX XX XX XX"
+            specialLabel=""
+          />
+          {errors.mobileNumber && <div className="error-message">{errors.mobileNumber}</div>}
+        </div>
         
         <div className="buttons-container">
           <WhiteButtonLB60
@@ -786,104 +868,52 @@ const BecomeAdvertiserPage: React.FC = () => {
     );
   };
   
-  // Render step 3: Contact and Location
+  // Render step 3: OTP Verification
   const renderStep3 = () => {
     return (
       <>
-        <h2 className="form-title">Contact Information & Location</h2>
+        <h2 className="form-title">Verify Your Phone Number</h2>
         
         <div className="form-step-content">
-          <div className="form-group required">
-            <label htmlFor="mobileNumber">
-              <FaPhoneAlt className="label-icon" /> Mobile Number
-            </label>
-            <div className="input-group mobile-input-group">
-              <InputBaseModel
-                value={formData.mobileNumber}
-                onChange={otpVerified ? undefined : handlePhoneChange}
-                placeholder="(XXX) XXX-XXXX"
-                error={errors.mobileNumber}
+          <div className="form-group required otp-group">
+            <div className="otp-verification-container">
+              <h3 className="otp-title">Verify</h3>
+              <p className="otp-subtitle">A verification code was sent to {formData.mobileNumber}</p>
+              
+              <OtpInput
+                length={6}
+                value={formData.otpCode}
+                onChange={(value) => handleInputChange('otpCode', value)}
+                autoFocus={true}
+                isNumberInput={true}
+                disabled={isSubmitting}
               />
+              
               <button 
-                className="send-otp-button"
-                onClick={sendOtp}
-                disabled={isSubmitting || otpVerified || !formData.mobileNumber || otpResendTimer > 0}
+                className="verify-button"
+                onClick={verifyOtp}
+                disabled={isSubmitting || !formData.otpCode || formData.otpCode.length < 6}
               >
-                {otpSent && otpResendTimer > 0 
-                  ? `Resend (${otpResendTimer}s)` 
-                  : otpSent 
-                    ? "Resend OTP" 
-                    : "Send OTP"}
+                Verify
               </button>
-            </div>
-            {otpVerified && (
-              <div className="verified-badge">
-                <FaCheckCircle /> Mobile number verified successfully
-              </div>
-            )}
-          </div>
-          
-          {otpSent && !otpVerified && (
-            <div className="form-group required otp-group">
-              <label htmlFor="otpCode">
-                <FaShieldAlt className="label-icon" /> Verification Code
-              </label>
-              <div className="input-group otp-input-group">
-                <InputBaseModel
-                  value={formData.otpCode}
-                  onChange={handleOtpInput}
-                  placeholder="Enter 6-digit code"
-                  error={errors.otpCode}
-                />
-                <button 
-                  className="verify-button"
-                  onClick={verifyOtp}
-                  disabled={isSubmitting || !formData.otpCode || formData.otpCode.length < 6}
+              
+              <div className="otp-resend">
+                Didn't receive code? <button 
+                  className="resend-link" 
+                  onClick={sendOtp}
+                  disabled={isSubmitting || otpResendTimer > 0}
                 >
-                  Verify
+                  {otpResendTimer > 0 ? `Request again (${otpResendTimer}s)` : 'Request again'}
                 </button>
               </div>
-              <div className="otp-help-text">
-                Enter the 6-digit code sent to your mobile number.
-                <div className="demo-note">
-                  <strong>Demo mode:</strong> The OTP is shown in the browser console for testing.
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div className="form-group required location-group">
-            <label htmlFor="city">
-              <FaMapMarkerAlt className="label-icon" /> City of Operation
-            </label>
-            <div className="city-input-container">
-              {isLoaded ? (
-                <StandaloneSearchBox
-                  onLoad={(ref) => (searchBoxRef.current = ref)}
-                  onPlacesChanged={onPlacesChanged}
-                >
-                  <div className="location-input-wrapper">
-                    <InputBaseModel
-                      value={formData.city}
-                      onChange={(e) => handleInputChange('city', e.target.value)}
-                      placeholder="Search for your city"
-                      error={errors.city}
-                    />
-                    <FaMapMarkerAlt className="city-icon" />
-                  </div>
-                </StandaloneSearchBox>
-              ) : (
-                <div className="location-input-wrapper">
-                  <InputBaseModel
-                    value={formData.city}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
-                    placeholder="Enter your city"
-                    error={errors.city}
-                  />
-                  <FaMapMarkerAlt className="city-icon" />
+              
+              {otpVerified && (
+                <div className="verified-badge">
+                  <FaCheckCircle /> Mobile number verified successfully
                 </div>
               )}
             </div>
+            {errors.otpCode && <div className="error-message">{errors.otpCode}</div>}
           </div>
         </div>
         
@@ -896,7 +926,7 @@ const BecomeAdvertiserPage: React.FC = () => {
           <PurpleButtonLB60
             text="Continue"
             onClick={nextStep}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !otpVerified}
           />
         </div>
       </>
@@ -908,6 +938,40 @@ const BecomeAdvertiserPage: React.FC = () => {
     return (
       <>
         <h2 className="form-title">Listing Information</h2>
+        
+        <div className="form-group required location-group">
+          <label htmlFor="city">
+            <FaMapMarkerAlt className="label-icon" /> City of Operation
+          </label>
+          <div className="city-input-container">
+            {isLoaded ? (
+              <StandaloneSearchBox
+                onLoad={(ref) => (searchBoxRef.current = ref)}
+                onPlacesChanged={onPlacesChanged}
+              >
+                <div className="location-input-wrapper">
+                  <InputBaseModel
+                    value={formData.city}
+                    onChange={(e) => handleInputChange('city', e.target.value)}
+                    placeholder="Search for your city"
+                    error={errors.city}
+                  />
+                  <FaMapMarkerAlt className="city-icon" />
+                </div>
+              </StandaloneSearchBox>
+            ) : (
+              <div className="location-input-wrapper">
+                <InputBaseModel
+                  value={formData.city}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  placeholder="Enter your city"
+                  error={errors.city}
+                />
+                <FaMapMarkerAlt className="city-icon" />
+              </div>
+            )}
+          </div>
+        </div>
         
         <div className="form-group required">
           <label htmlFor="propertyQuantity">How many properties could you list?</label>
@@ -938,16 +1002,6 @@ const BecomeAdvertiserPage: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
-        
-        <div className="form-group">
-          <label htmlFor="additionalInfo">Additional Information (Optional)</label>
-          <TextAreaBaseModel
-            value={formData.additionalInfo}
-            onChange={(e) => handleInputChange('additionalInfo', e.target.value)}
-            placeholder="Tell us more about your properties or any special requirements"
-            rows={4}
-          />
         </div>
         
         <div className="form-group required">
@@ -1029,7 +1083,7 @@ const BecomeAdvertiserPage: React.FC = () => {
               {currentStep > 3 ? <FaCheck /> : 3}
             </div>
             <div className={`step-label ${currentStep === 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
-              Contact & Location
+              Verify Phone
             </div>
           </div>
           
