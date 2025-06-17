@@ -68,6 +68,7 @@ const ChecklistContainer = styled.div`
   border: ${Theme.borders.primary};
   padding: 24px;
   width: 100%;
+  margin-top: 16px;
   animation: ${fadeIn} 0.5s ease-out;
 `;
 

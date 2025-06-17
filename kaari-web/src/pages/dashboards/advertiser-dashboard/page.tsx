@@ -5,6 +5,7 @@ import LoadingScreen from '../../../components/loading/LoadingScreen';
 import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import DashboardFooter from '../../../components/skeletons/constructed/footer/dashboard-footer';
+import PhotoshootBanner from '../../../components/skeletons/banners/photoshoot-banner';
 
 // Import all section pages
 import DashboardPage from './dashboard/page';
@@ -18,7 +19,7 @@ import PaymentsPage from './payments/page';
 import TenantsPage from './tenants/page';
 import PhotoshootsPage from './photoshoot/page';
 import SupportPage from './support/page';
-import ReferralProgramPage from './referral-program';
+import ReferralProgramPage from './referral-program/page';
 
 // Export the dashboard page directly for direct access
 export { default as AdvertiserDashboardPage } from './dashboard/page';
@@ -75,6 +76,20 @@ const AdvertiserDashboard: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation();
+    
+    // State for showing/hiding the photoshoot banner
+    const [showPhotoshootBanner, setShowPhotoshootBanner] = useState(() => {
+        // Check localStorage for banner visibility state
+        const savedState = localStorage.getItem('showPhotoshootBanner');
+        // If it's not set yet or set to "true", show the banner
+        return savedState === null || savedState === "true";
+    });
+    
+    // Handle banner close
+    const handleBannerClose = () => {
+        setShowPhotoshootBanner(false);
+        localStorage.setItem('showPhotoshootBanner', 'false');
+    };
     
     // Check if we're at the root path of advertiser dashboard
     const isRootPath = location.pathname === '/dashboard/advertiser' || location.pathname === '/dashboard/advertiser/';
@@ -224,6 +239,9 @@ const AdvertiserDashboard: React.FC = () => {
                     getTranslatedSectionName={getTranslatedSectionName}
                 />
                 <AdvertiserDashboardStyle>
+                    {showPhotoshootBanner && activeSection === 'Dashboard' && (
+                        <PhotoshootBanner onClose={handleBannerClose} />
+                    )}
                     <div className={`section-container ${isAnimating ? 'animating' : ''}`}>
                         {renderSection()}
                     </div>

@@ -7,7 +7,7 @@ export const AdvertiserDashboardStyle = styled.div`
     flex-direction: column;
     align-items: start;
     justify-content: start;
-    gap: 32px;
+    gap: 24px;
     flex: 1;
     margin-top: 80px;
     padding: 32px 40px;

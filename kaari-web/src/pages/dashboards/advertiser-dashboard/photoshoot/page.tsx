@@ -13,6 +13,29 @@ import { PhotoshootBooking, Team } from '../../../../backend/entities';
 import { useStore } from '../../../../backend/store';
 import { TeamServerActions } from '../../../../backend/server-actions/TeamServerActions';
 import { useTranslation } from 'react-i18next';
+import styled from 'styled-components';
+
+// Styled components for the banner reset button
+const BannerResetContainer = styled.div`
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+`;
+
+const BannerResetButton = styled.button`
+  background-color: transparent;
+  color: #8F27CE;
+  border: 1px solid #8F27CE;
+  border-radius: 24px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(143, 39, 206, 0.05);
+  }
+`;
 
 // Interface for booking with team data
 interface BookingWithTeam extends PhotoshootBooking {
@@ -123,6 +146,12 @@ const PhotoshootPage: React.FC = () => {
   
   const handleBookPhotoshoot = () => {
     navigate('/photoshoot-booking');
+  };
+  
+  // Function to reset the banner visibility
+  const handleResetBanner = () => {
+    localStorage.setItem('showPhotoshootBanner', 'true');
+    alert(t('advertiser_dashboard.photoshoot.banner_reset', 'Banner will be shown again when you visit the dashboard'));
   };
   
   const handleOpenRescheduleModal = (booking: BookingWithTeamInfo) => {
@@ -376,6 +405,13 @@ const PhotoshootPage: React.FC = () => {
           />
         </>
       )}
+      
+      {/* Banner reset button at the bottom */}
+      <BannerResetContainer>
+        <BannerResetButton onClick={handleResetBanner}>
+          {t('advertiser_dashboard.photoshoot.show_banner_again', 'Show photoshoot banner again')}
+        </BannerResetButton>
+      </BannerResetContainer>
     </PhotoshootsPageStyle>
   );
 };

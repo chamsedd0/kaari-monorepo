@@ -730,7 +730,9 @@
       "assigning_message": "Un agent est en train d'être assigné à votre séance photo. Veuillez patienter un moment.",
       "no_photoshoots": "Pas de séances photo à venir",
       "no_photoshoots_hint": "Réservez une séance photo gratuite pour obtenir des photos professionnelles de votre propriété",
-      "invalid_date": "Date invalide"
+      "invalid_date": "Date invalide",
+      "banner_reset": "La bannière sera affichée à nouveau lorsque vous visiterez le tableau de bord",
+      "show_banner_again": "Afficher à nouveau la bannière de séance photo"
     },
     "properties": {
       "title": "Propriétés",
@@ -842,6 +844,12 @@
       "step4": "Recevoir des demandes de locataires",
       "book_button": "Réserver une séance photo",
       "image_alt": "Illustration du processus de mise en ligne"
+    },
+    "photoshoot_banner": {
+      "title": "Réservez une séance photo professionnelle",
+      "description": "Les photos professionnelles peuvent aider à mettre en valeur votre propriété auprès des locataires potentiels. Réservez une séance photo avec nos photographes.",
+      "book_button": "Réserver maintenant",
+      "learn_more": "En savoir plus"
     }
   },
   "footer": {

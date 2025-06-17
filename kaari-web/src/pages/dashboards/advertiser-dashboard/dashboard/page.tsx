@@ -130,16 +130,16 @@ const DashboardPage: React.FC = () => {
     // Load data function - extracted to be reusable for real-time updates
     const loadData = useCallback(async (showLoading = true) => {
         if (showLoading) setLoading(true);
-        try {
-            // Fetch statistics, properties, listings, requests, and photoshoots in parallel
+            try {
+                // Fetch statistics, properties, listings, requests, and photoshoots in parallel
             const [stats, props, reqs, reservationReqs, shoots] = await Promise.all([
                 getAdvertiserStatistics(),
-                getAdvertiserProperties(),
-                getAdvertiserRequests(),
-                getAdvertiserReservationRequests(),
-                getAdvertiserPhotoshoots()
-            ]);
-            
+                    getAdvertiserProperties(),
+                    getAdvertiserRequests(),
+                    getAdvertiserReservationRequests(),
+                    getAdvertiserPhotoshoots()
+                ]);
+                
             // Ensure all required properties exist in stats
             const updatedStats = {
                 totalProperties: stats.totalProperties || 0,
@@ -166,9 +166,9 @@ const DashboardPage: React.FC = () => {
             
             // Update active modules based on data
             updateActiveModules(reservationReqs, reqs as ExtendedRequest[], shoots as DashboardPhotoshoot[], props as ExtendedProperty[], updatedStats);
-        } catch (error) {
-            console.error(t('advertiser_dashboard.dashboard.errors.loading_data', 'Error loading dashboard data:'), error);
-        } finally {
+            } catch (error) {
+                console.error(t('advertiser_dashboard.dashboard.errors.loading_data', 'Error loading dashboard data:'), error);
+            } finally {
             if (showLoading) setLoading(false);
         }
     }, [t]);
@@ -399,21 +399,7 @@ const DashboardPage: React.FC = () => {
         properties
     ]);
 
-    // Format the time since last update
-    const getLastUpdateText = () => {
-        const now = new Date();
-        const diff = Math.floor((now.getTime() - lastUpdateRef.current.getTime()) / 1000);
-        
-        if (diff < 60) {
-            return t('common.just_now', 'Just now');
-        } else if (diff < 3600) {
-            const minutes = Math.floor(diff / 60);
-            return t('common.minutes_ago', '{{count}} minutes ago', { count: minutes });
-        } else {
-            const hours = Math.floor(diff / 3600);
-            return t('common.hours_ago', '{{count}} hours ago', { count: hours });
-        }
-    };
+  
 
     // Render modules in priority order
     const renderDashboardModules = () => {
@@ -506,7 +492,7 @@ const DashboardPage: React.FC = () => {
                             </div>
                         );
                     case 'performanceChart':
-                        return (
+    return (
                             <div key="performance" style={{ margin: '16px 0' }}>
                                 {hasPerformanceData ? (
                                     <PerformanceChart 
@@ -622,26 +608,7 @@ const DashboardPage: React.FC = () => {
     return (
         <DashboardPageStyle>
             <div className="left">
-                {/* Last update indicator */}
-                <div style={lastUpdateStyle}>
-                    <span>{t('common.last_updated', 'Last updated')}: {getLastUpdateText()}</span>
-                    <button 
-                        style={refreshButtonStyle}
-                        onClick={() => loadData()}
-                        disabled={loading}
-                    >
-                        {loading ? (
-                            <span>{t('common.refreshing', 'Refreshing...')}</span>
-                        ) : (
-                            <>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4.01 7.58 4.01 12C4.01 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.83 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z" fill="currentColor"/>
-                                </svg>
-                                <span>{t('common.refresh', 'Refresh')}</span>
-                            </>
-                        )}
-                    </button>
-                </div>
+               
                 
                 {/* Dynamic dashboard modules */}
                 {renderDashboardModules()}

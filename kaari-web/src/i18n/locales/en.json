@@ -658,7 +658,9 @@
       "camera_alt": "Camera",
       "no_photoshoots": "No upcoming photoshoots",
       "no_photoshoots_hint": "Book a free photoshoot to get professional photos of your property",
-      "invalid_date": "Invalid date"
+      "invalid_date": "Invalid date",
+      "banner_reset": "Banner will be shown again when you visit the dashboard",
+      "show_banner_again": "Show photoshoot banner again"
     },
     "properties": {
       "title": "Properties",
@@ -731,6 +733,12 @@
       "step4": "Get requests from tenants",
       "book_button": "Book a Photoshoot",
       "image_alt": "Listing process illustration"
+    },
+    "photoshoot_banner": {
+      "title": "Book a Professional Photoshoot",
+      "description": "Professional photos can help showcase your property to potential tenants. Book a photoshoot session with our photographers.",
+      "book_button": "Book Now",
+      "learn_more": "Learn More"
     }
   },
   "property_features": {
