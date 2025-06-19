@@ -86,7 +86,8 @@
     "skip": "Skip",
     "next": "Next",
     "get_started": "Get Started",
-    "return_home": "Return Home"
+    "return_home": "Return Home",
+    "go_back": "Go Back"
   },
   "header": {
     "profile_dropdown": {
@@ -922,6 +923,44 @@
       "verify_phone": "Verify Phone",
       "listing_info": "Listing Info"
     },
+    "onboarding": {
+      "slide1": {
+        "title": "Be One of Our First 100 Founding Partners",
+        "subtitle": "Secure Your Spot as a Founding Partner – Enjoy Exclusive Perks for 3 Months",
+        "benefit1": {
+          "title": "0% advertiser commission for 3 months",
+          "description": "Keep 100% of your rental income for the first three months."
+        },
+        "benefit2": {
+          "title": "Access to the referral program",
+          "description": "Invite tenants or landlords to earn substantial rewards"
+        }
+      },
+      "slide2": {
+        "title": "Default Perks",
+        "subtitle": "Apply on all advertisers",
+        "benefit1": {
+          "title": "Free professional photoshoots",
+          "description": "Our team visits your property to take professional photos."
+        },
+        "benefit2": {
+          "title": "No-hassle qualified tenants",
+          "description": "We bring ready, paying tenants to your door—no effort required from you"
+        }
+      },
+      "slide3": {
+        "title": "More Benefits",
+        "subtitle": "Join Kaari today",
+        "benefit1": {
+          "title": "Guaranteed full rent",
+          "description": "No need to worry about closing the deal or rental arrears"
+        },
+        "benefit2": {
+          "title": "Join our community",
+          "description": "Become part of Morocco's fastest growing rental platform"
+        }
+      }
+    },
     "step1": {
       "title": "Select Account Type",
       "label": "I am a",
@@ -1008,5 +1047,12 @@
       "registration_success": "Registration completed successfully",
       "registration_incomplete": "Your account was created but we couldn't save your advertiser details. Please try again or contact support."
     }
+  },
+  "coming_soon": {
+    "title": "Coming Soon!",
+    "subtitle": "This feature will be available starting August 1st",
+    "message_title": "We're Getting Ready",
+    "message_text": "Thank you for your interest! We're currently preparing to launch our full platform on August 1st. At that time, you'll be able to access all features including photoshoot booking and the advertiser dashboard.",
+    "launch_date": "Official Launch Date: August 1st, 2023"
   }
 } 

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Theme } from '../../theme/theme';
 import { FaCalendarAlt, FaHome, FaArrowLeft } from 'react-icons/fa';
 import LogoWhite from '../../components/skeletons/icons/LogoWhite.svg';
+import LanguageSwitcher from '../../components/skeletons/language-switcher/language-switcher';
 
 const ComingSoonPage: React.FC = () => {
   const navigate = useNavigate();
@@ -24,6 +25,9 @@ const ComingSoonPage: React.FC = () => {
         <LogoContainer>
           <img src={LogoWhite} alt="Kaari Logo" height="40" />
         </LogoContainer>
+        <LanguageSwitcherContainer>
+          <LanguageSwitcher />
+        </LanguageSwitcherContainer>
       </TopSection>
       
       <ContentContainer>
@@ -31,19 +35,18 @@ const ComingSoonPage: React.FC = () => {
           <FaCalendarAlt />
         </CalendarIcon>
         
-        <Title>Coming Soon!</Title>
+        <Title>{t('coming_soon.title')}</Title>
         <Subtitle>
-          This feature will be available starting August 1st
+          {t('coming_soon.subtitle')}
         </Subtitle>
         
         <MessageContainer>
-          <MessageTitle>We're Getting Ready</MessageTitle>
+          <MessageTitle>{t('coming_soon.message_title')}</MessageTitle>
           <MessageText>
-            Thank you for your interest! We're currently preparing to launch our full platform on August 1st.
-            At that time, you'll be able to access all features including photoshoot booking and the advertiser dashboard.
+            {t('coming_soon.message_text')}
           </MessageText>
           <LaunchInfo>
-            <strong>Official Launch Date: August 1st, 2023</strong>
+            <strong>{t('coming_soon.launch_date')}</strong>
           </LaunchInfo>
         </MessageContainer>
       </ContentContainer>
@@ -51,11 +54,11 @@ const ComingSoonPage: React.FC = () => {
       <ButtonsContainer>
         <BackButton onClick={handleGoBack}>
           <FaArrowLeft style={{ marginRight: '8px' }} />
-          Go Back
+          {t('common.go_back')}
         </BackButton>
         <HomeButton onClick={handleReturnHome}>
           <FaHome style={{ marginRight: '8px' }} />
-          Return Home
+          {t('common.return_home')}
         </HomeButton>
       </ButtonsContainer>
     </ComingSoonContainer>
@@ -98,7 +101,7 @@ const TopSection = styled.div`
   top: 0;
   left: 0;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
   width: 100%;
   padding: 20px;
@@ -106,6 +109,10 @@ const TopSection = styled.div`
 
 const LogoContainer = styled.div`
   padding: 10px 0;
+`;
+
+const LanguageSwitcherContainer = styled.div`
+  margin-right: 20px;
 `;
 
 const ContentContainer = styled.div`
@@ -121,11 +128,15 @@ const ContentContainer = styled.div`
 `;
 
 const CalendarIcon = styled.div`
-  font-size: 100px;
+  font-size: 70px;
   color: white;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
   filter: drop-shadow(0 5px 15px rgba(255, 255, 255, 0.3));
   animation: ${float} 3s ease-in-out infinite;
+  
+  @media (max-width: 768px) {
+    font-size: 60px;
+  }
 `;
 
 const Title = styled.h1`

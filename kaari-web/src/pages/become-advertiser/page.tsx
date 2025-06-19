@@ -9,7 +9,7 @@ import TextAreaBaseModel from '../../components/skeletons/inputs/input-fields/te
 import SelectFieldBaseModelVariant1 from '../../components/skeletons/inputs/select-fields/select-field-base-model-variant-1';
 import { PurpleButtonLB60 } from '../../components/skeletons/buttons/purple_LB60';
 import { WhiteButtonLB60 } from '../../components/skeletons/buttons/white_LB60';
-import { FaCheck, FaChevronRight, FaChevronLeft, FaMapMarkerAlt, FaCheckCircle, FaUserAlt, FaBuilding, FaGoogle, FaPhoneAlt, FaShieldAlt, FaArrowRight } from 'react-icons/fa';
+import { FaCheck, FaChevronRight, FaChevronLeft, FaMapMarkerAlt, FaCheckCircle, FaUserAlt, FaBuilding, FaGoogle, FaPhoneAlt, FaShieldAlt, FaArrowRight, FaAngleLeft } from 'react-icons/fa';
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useStore } from '../../backend/store';
 import { useToastService } from '../../services/ToastService';
@@ -97,12 +97,8 @@ interface FormData {
 
 // Onboarding slide interface
 interface Slide {
-  title: string;
-  subtitle: string;
-  benefits: {
-    title: string;
-    description: string;
-  }[];
+  key: string;
+  benefits: string[];
 }
 
 const BecomeAdvertiserPage: React.FC = () => {
@@ -153,46 +149,16 @@ const BecomeAdvertiserPage: React.FC = () => {
   // Onboarding slides
   const slides: Slide[] = [
     {
-      title: "Be One of Our First 100 Founding Partners",
-      subtitle: "Secure Your Spot as a Founding Partner – Enjoy Exclusive Perks for 3 Months",
-      benefits: [
-        {
-          title: "0% advertiser commission for 3 months",
-          description: "Keep 100% of your rental income for the first three months."
-        },
-        {
-          title: "Access to the referral program",
-          description: "Invite tenants or landlords to earn substantial rewards"
-        }
-      ]
+      key: "slide1",
+      benefits: ["benefit1", "benefit2"]
     },
     {
-      title: "Default Perks",
-      subtitle: "Apply on all advertisers",
-      benefits: [
-        {
-          title: "Free professional photoshoots",
-          description: "Our team visits your property to take professional photos."
-        },
-        {
-          title: "No-hassle qualified tenants",
-          description: "We bring ready, paying tenants to your door—no effort required from you"
-        }
-      ]
+      key: "slide2",
+      benefits: ["benefit1", "benefit2"]
     },
     {
-      title: "More Benefits",
-      subtitle: "Join Kaari today",
-      benefits: [
-        {
-          title: "Guaranteed full rent",
-          description: "No need to worry about closing the deal or rental arrears"
-        },
-        {
-          title: "Join our community",
-          description: "Become part of Morocco's fastest growing rental platform"
-        }
-      ]
+      key: "slide3",
+      benefits: ["benefit1", "benefit2"]
     }
   ];
   
@@ -772,7 +738,7 @@ const BecomeAdvertiserPage: React.FC = () => {
   
   // Render onboarding
   const renderOnboarding = () => {
-    const currentSlideContent = slides[currentSlide];
+    const currentSlideKey = slides[currentSlide].key;
     
     return (
       <OnboardingContainer className={exiting ? 'exiting' : ''}>
@@ -799,18 +765,22 @@ const BecomeAdvertiserPage: React.FC = () => {
         </ProgressContainer>
         
         <ContentContainer className={exiting ? 'exiting' : ''}>
-          <SlideTitle>{currentSlideContent.title}</SlideTitle>
-          <SlideSubtitle>{currentSlideContent.subtitle}</SlideSubtitle>
+          <SlideTitle>{t(`become_advertiser.onboarding.${currentSlideKey}.title`)}</SlideTitle>
+          <SlideSubtitle>{t(`become_advertiser.onboarding.${currentSlideKey}.subtitle`)}</SlideSubtitle>
           
           <BenefitsList>
-            {currentSlideContent.benefits.map((benefit, index) => (
+            {slides[currentSlide].benefits.map((benefitKey, index) => (
               <BenefitItem key={index}>
                 <CheckIcon>
                   <FaCheck />
                 </CheckIcon>
                 <BenefitContent>
-                  <BenefitTitle>{benefit.title}</BenefitTitle>
-                  <BenefitDescription>{benefit.description}</BenefitDescription>
+                  <BenefitTitle>
+                    {t(`become_advertiser.onboarding.${currentSlideKey}.${benefitKey}.title`)}
+                  </BenefitTitle>
+                  <BenefitDescription>
+                    {t(`become_advertiser.onboarding.${currentSlideKey}.${benefitKey}.description`)}
+                  </BenefitDescription>
                 </BenefitContent>
               </BenefitItem>
             ))}

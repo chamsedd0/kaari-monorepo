@@ -85,7 +85,8 @@
     "skip": "Passer",
     "next": "Suivant",
     "get_started": "Commencer",
-    "return_home": "Retour à l'accueil"
+    "return_home": "Retour à l'accueil",
+    "go_back": "Retour"
   },
   "header": {
     "profile_dropdown": {
@@ -928,10 +929,48 @@
   },
   "become_advertiser": {
     "steps": {
-      "account_type": "Type de compte",
-      "user_info": "Infos utilisateur",
-      "verify_phone": "Vérifier le téléphone",
-      "listing_info": "Infos d'annonce"
+      "account_type": "Type de Compte",
+      "user_info": "Informations Utilisateur",
+      "verify_phone": "Vérifier Téléphone",
+      "listing_info": "Informations d'Annonce"
+    },
+    "onboarding": {
+      "slide1": {
+        "title": "Soyez l'un de nos 100 premiers partenaires fondateurs",
+        "subtitle": "Assurez votre place en tant que partenaire fondateur – Profitez d'avantages exclusifs pendant 3 mois",
+        "benefit1": {
+          "title": "0% de commission pour 3 mois",
+          "description": "Conservez 100% de vos revenus locatifs pendant les trois premiers mois."
+        },
+        "benefit2": {
+          "title": "Accès au programme de parrainage",
+          "description": "Invitez des locataires ou des propriétaires pour gagner des récompenses substantielles"
+        }
+      },
+      "slide2": {
+        "title": "Avantages par défaut",
+        "subtitle": "S'applique à tous les annonceurs",
+        "benefit1": {
+          "title": "Séances photo professionnelles gratuites",
+          "description": "Notre équipe visite votre propriété pour prendre des photos professionnelles."
+        },
+        "benefit2": {
+          "title": "Locataires qualifiés sans tracas",
+          "description": "Nous amenons des locataires prêts à payer à votre porte—aucun effort requis de votre part"
+        }
+      },
+      "slide3": {
+        "title": "Plus d'avantages",
+        "subtitle": "Rejoignez Kaari aujourd'hui",
+        "benefit1": {
+          "title": "Loyer complet garanti",
+          "description": "Pas besoin de vous inquiéter de conclure l'affaire ou des arriérés de loyer"
+        },
+        "benefit2": {
+          "title": "Rejoignez notre communauté",
+          "description": "Faites partie de la plateforme de location à la croissance la plus rapide du Maroc"
+        }
+      }
     },
     "step1": {
       "title": "Sélectionner le type de compte",
@@ -1019,5 +1058,12 @@
       "registration_success": "Inscription réussie",
       "registration_incomplete": "Votre compte a été créé mais nous n'avons pas pu enregistrer vos détails d'annonceur. Veuillez réessayer ou contacter le support."
     }
+  },
+  "coming_soon": {
+    "title": "Bientôt Disponible !",
+    "subtitle": "Cette fonctionnalité sera disponible à partir du 1er août",
+    "message_title": "Nous Nous Préparons",
+    "message_text": "Merci pour votre intérêt ! Nous préparons actuellement le lancement de notre plateforme complète le 1er août. À ce moment-là, vous pourrez accéder à toutes les fonctionnalités, y compris la réservation de séances photo et le tableau de bord des annonceurs.",
+    "launch_date": "Date de lancement officielle : 1er août 2023"
   }
 } 
