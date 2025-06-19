@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { Theme } from '../../theme/theme';
 import { FaGoogle } from 'react-icons/fa';
 import Logo from '../../assets/images/purpleLogo.svg';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth';
 import { useStore } from '../../backend/store';
 import { useToastService } from '../../services/ToastService';
 import LanguageSwitcher from '../../components/skeletons/language-switcher/language-switcher';
@@ -60,7 +60,14 @@ const AdvertiserSignupPage: React.FC = () => {
     
     try {
       // Create user with email and password
-      await signUp(email, password, name, 'advertiser');
+      const user = await signUp(email, password, name, 'advertiser');
+      
+      // Send email verification
+      const auth = getAuth();
+      if (auth.currentUser) {
+        await sendEmailVerification(auth.currentUser);
+        toast.auth.verificationEmailSent();
+      }
       
       // Start the signup process
       startSignup();
@@ -100,6 +107,13 @@ const AdvertiserSignupPage: React.FC = () => {
       const result = await signInWithPopup(auth, provider);
       
       if (result.user) {
+        // Check if email is verified (should be for Google accounts)
+        if (!result.user.emailVerified) {
+          // Send verification email if not verified
+          await sendEmailVerification(result.user);
+          toast.auth.verificationEmailSent();
+        }
+        
         // Start the signup process
         startSignup();
         
@@ -221,7 +235,7 @@ const TopSection = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  margin-top: 50px;
+  margin-top: 20px;
   padding: 0px 50px;
 `;
 
@@ -245,7 +259,7 @@ const ContentContainer = styled.div`
   width: 100%;
   max-width: 500px;
   margin: 0 auto;
-  margin-top: 20px;
+  margin-top: 50px;
 
 `;
 
@@ -384,7 +398,7 @@ const CompactPurpleButton = styled.button`
   cursor: pointer;
   transition: all 0.3s ease;
   width: 100%;
-  padding: 12px 16px;
+  padding: 14px 20px;
   font: ${Theme.typography.fonts.mediumB};
   display: flex;
   align-items: center;

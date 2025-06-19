@@ -1073,6 +1073,7 @@
     "create_account": "Create Account",
     "continue_with_google": "Continue with Google",
     "privacy_note": "By signing up, you agree to our Terms of Service and Privacy Policy.",
+    "verification_email_sent": "A verification email has been sent to your email address. Please check your inbox and verify your email.",
     "errors": {
       "all_fields_required": "Please fill in all fields",
       "passwords_dont_match": "Passwords don't match",

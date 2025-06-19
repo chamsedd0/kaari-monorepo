@@ -1084,6 +1084,7 @@
     "create_account": "Créer un compte",
     "continue_with_google": "Continuer avec Google",
     "privacy_note": "En vous inscrivant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité.",
+    "verification_email_sent": "Un e-mail de vérification a été envoyé à votre adresse e-mail. Veuillez vérifier votre boîte de réception et confirmer votre e-mail.",
     "errors": {
       "all_fields_required": "Veuillez remplir tous les champs",
       "passwords_dont_match": "Les mots de passe ne correspondent pas",
