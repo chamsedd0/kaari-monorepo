@@ -930,6 +930,8 @@
     "preview_dashboard": "Voir l'aperçu du tableau de bord"
   },
   "become_advertiser": {
+    "title": "Devenir Annonceur",
+    "subtitle": "Rejoignez notre plateforme et commencez à louer vos propriétés",
     "steps": {
       "account_type": "Type de Compte",
       "user_info": "Informations Utilisateur",
@@ -975,8 +977,8 @@
       }
     },
     "step1": {
+      "label": "Type de Compte",
       "title": "Sélectionner le type de compte",
-      "label": "Je suis un",
       "broker": "Agent immobilier",
       "broker_description": "Je suis un agent ou courtier immobilier",
       "landlord": "Propriétaire",
@@ -992,6 +994,7 @@
       "large_agency": "Grande (21+ agents)"
     },
     "step2": {
+      "label": "Informations Utilisateur",
       "title": "Vos informations",
       "first_name": "Prénom",
       "first_name_placeholder": "Entrez votre prénom",
@@ -1003,6 +1006,7 @@
       "mobile_placeholder": "06 XX XX XX XX"
     },
     "step3": {
+      "label": "Vérifier Téléphone",
       "title": "Vérifiez votre numéro de téléphone",
       "verify": "Vérifier",
       "code_sent": "Un code de vérification a été envoyé à",
@@ -1013,6 +1017,7 @@
       "verification_success": "Numéro de téléphone vérifié avec succès"
     },
     "step4": {
+      "label": "Informations d'Annonce",
       "title": "Informations sur les annonces",
       "city": "Ville d'opération",
       "city_search": "Rechercher votre ville",
@@ -1093,5 +1098,15 @@
       "generic_error": "Une erreur s'est produite. Veuillez réessayer.",
       "google_error": "La connexion Google a échoué. Veuillez réessayer."
     }
+  },
+  "email_verification": {
+    "success_title": "E-mail vérifié avec succès !",
+    "success_message": "Merci d'avoir vérifié votre e-mail. Votre compte est maintenant entièrement activé et vous pouvez continuer avec le processus d'intégration des annonceurs.",
+    "continue_button": "Continuer vers l'intégration",
+    "go_home_button": "Aller à la page d'accueil",
+    "error_title": "Échec de la vérification",
+    "error_message": "Nous n'avons pas pu vérifier votre e-mail. Le lien de vérification a peut-être expiré ou est invalide.",
+    "try_again_button": "Réessayer",
+    "resend_error": "Échec de l'envoi de l'e-mail de vérification. Veuillez réessayer plus tard."
   }
 } 

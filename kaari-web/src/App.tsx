@@ -13,7 +13,9 @@ import PhotoshootBookingPage from './pages/photoshoot-booking/page';
 import ThankYouPage from './pages/photoshoot-booking/thank-you';
 import BecomeAdvertiserPage from './pages/become-advertiser/page';
 import AdvertiserThankYouPage from './pages/become-advertiser/thank-you';
-import AdvertiserSignupPage from './pages/advertiser-signup/page';
+import EmailVerificationHandler from './pages/email-verification/handler';
+import EmailVerificationSuccessPage from './pages/email-verification/success';
+import EmailVerificationErrorPage from './pages/email-verification/error';
 import HelpPage from './pages/help/page';
 import ReservationStatusPage from './pages/dashboards/user-dashboard/reservation-status/page';
 import CancellationRequestPage from './pages/dashboards/user-dashboard/cancellation-request/page';
@@ -51,6 +53,7 @@ import {
   ComingSoonPage
 } from './pages/static';
 import ExpirationService from './services/ExpirationService';
+import { AdvertiserOnboardingPage, AdvertiserSignupForm } from './pages/advertiser-signup';
 
 function App() {
   // Use the global store for authentication
@@ -192,9 +195,15 @@ function App() {
       <Route path="/for-advertisers" element={<AdvertisersLanding key={renderKey} />} />
       
       {/* Isolated Advertiser Signup Flow - No MainLayout */}
-      <Route path="/advertiser-signup" element={<AdvertiserSignupPage />} />
+      <Route path="/advertiser-signup" element={<AdvertiserOnboardingPage />} />
+      <Route path="/advertiser-signup/form" element={<AdvertiserSignupForm />} />
       <Route path="/become-advertiser" element={<BecomeAdvertiserPage />} />
       <Route path="/become-advertiser/thank-you" element={<AdvertiserThankYouPage />} />
+      
+      {/* Email Verification Routes */}
+      <Route path="/email-verification" element={<EmailVerificationHandler />} />
+      <Route path="/email-verification/success" element={<EmailVerificationSuccessPage />} />
+      <Route path="/email-verification/error" element={<EmailVerificationErrorPage />} />
       
       {/* Protected Routes with Coming Soon page */}
       <Route path="/photoshoot-booking" element={

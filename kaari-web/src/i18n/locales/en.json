@@ -1082,5 +1082,15 @@
       "generic_error": "Something went wrong. Please try again.",
       "google_error": "Google sign-in failed. Please try again."
     }
+  },
+  "email_verification": {
+    "success_title": "Email Verified Successfully!",
+    "success_message": "Thank you for verifying your email. Your account is now fully activated and you can continue with the advertiser onboarding process.",
+    "continue_button": "Continue to Onboarding",
+    "go_home_button": "Go to Homepage",
+    "error_title": "Verification Failed",
+    "error_message": "We couldn't verify your email. The verification link may have expired or is invalid.",
+    "try_again_button": "Try Again",
+    "resend_error": "Failed to send verification email. Please try again later."
   }
 } 

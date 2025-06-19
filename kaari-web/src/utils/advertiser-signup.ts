@@ -11,7 +11,6 @@ const SIGNUP_EXPIRY_TIME = 24 * 60 * 60 * 1000;
 // Interface for the signup data
 export interface AdvertiserSignupData {
   step: number;
-  showOnboarding: boolean;
   formData: any;
   timestamp: number;
   userId?: string; // Store the user ID if they were logged in
@@ -127,6 +126,7 @@ export const checkIncompleteSignup = (): boolean => {
   const currentPath = window.location.pathname;
   if (
     currentPath === '/advertiser-signup' || 
+    currentPath === '/advertiser-signup/form' ||
     currentPath === '/become-advertiser' || 
     currentPath === '/become-advertiser/thank-you'
   ) {
@@ -180,6 +180,7 @@ export const registerSignupListener = (): () => void => {
     // Skip checking if we're on the signup or thank you page
     if (
       window.location.pathname === '/advertiser-signup' ||
+      window.location.pathname === '/advertiser-signup/form' ||
       window.location.pathname === '/become-advertiser' || 
       window.location.pathname === '/become-advertiser/thank-you'
     ) {
