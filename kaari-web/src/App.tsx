@@ -20,6 +20,8 @@ import HelpPage from './pages/help/page';
 import ReservationStatusPage from './pages/dashboards/user-dashboard/reservation-status/page';
 import CancellationRequestPage from './pages/dashboards/user-dashboard/cancellation-request/page';
 import RefundRequestPage from './pages/dashboards/user-dashboard/refund-request/page';
+import UsersManagementPage from './pages/dashboards/admin-dashboard/users-management';
+import UserManagementDetailPage from './pages/dashboards/admin-dashboard/user-management-detail';
 import { useStore } from './backend/store';
 import { useMemo, useEffect, useState } from 'react';
 import MainLayout from './layouts/MainLayout';

@@ -340,4 +340,33 @@ const getDefaultItemOrder = (itemId: string): number => {
   };
   
   return orderMap[itemId] || 99; // Default to end of list if unknown
+};
+
+/**
+ * Get advertiser signup data for a specific user
+ * @param userId The ID of the user to get signup data for
+ * @returns Promise that resolves with the advertiser signup data
+ */
+export const getAdvertiserSignupData = async (userId: string): Promise<any> => {
+  try {
+    // For now, return a mock data object
+    console.log(`Fetching advertiser signup data for user ${userId}`);
+    
+    return {
+      companyName: "Example Company",
+      businessRegistrationNumber: "BRN123456789",
+      taxIdentificationNumber: "TIN987654321",
+      licenseNumber: "LIC-ABC-123",
+      yearsInBusiness: "5",
+      numberOfProperties: "10",
+      referralSource: "Website",
+      idVerified: true,
+      additionalInfo: "This is mock data for testing purposes.",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+  } catch (error) {
+    console.error('Error fetching advertiser signup data:', error);
+    return null;
+  }
 }; 

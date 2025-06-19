@@ -7,7 +7,8 @@ import {
   FaBan,
   FaMoneyBillAlt,
   FaUserCog,
-  FaClipboardList
+  FaClipboardList,
+  FaUsers
 } from 'react-icons/fa';
 import { 
   MdDashboard, 
@@ -47,6 +48,8 @@ import PropertyEditPage from './properties/[id]/edit/page';
 import UsersPage from './users';
 import UserDetailPage from './user-detail';
 import AdminLogsPage from './logs';
+import UsersManagementPage from './users-management';
+import UserManagementDetailPage from './user-management-detail';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -101,7 +104,14 @@ const AdminDashboard: React.FC = () => {
           $active={activePage === 'users'} 
           onClick={() => handleNavigation('users')}
         >
-          <FaUserCog /> Users Management
+          <FaUserCog /> Users
+        </NavItem>
+        
+        <NavItem 
+          $active={activePage === 'users-management'} 
+          onClick={() => handleNavigation('users-management')}
+        >
+          <FaUsers /> Users Management
         </NavItem>
         
         <NavItem 
@@ -206,6 +216,8 @@ const AdminDashboard: React.FC = () => {
           <Route path="cancellation-requests/*" element={<CancellationRequests />} />
           <Route path="test-data-generator" element={<TestDataGenerator />} />
           <Route path="logs" element={<AdminLogsPage />} />
+          <Route path="users-management" element={<UsersManagementPage />} />
+          <Route path="user-management-detail/:userId" element={<UserManagementDetailPage />} />
           <Route path="*" element={<div>404 Page Not Found</div>} />
         </Routes>
       </MainContent>
