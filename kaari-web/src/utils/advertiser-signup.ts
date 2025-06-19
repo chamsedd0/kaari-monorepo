@@ -1,4 +1,5 @@
 import eventBus, { EventType } from './event-bus';
+import { getAuth } from 'firebase/auth';
 
 // Constants for localStorage keys
 const ADVERTISER_SIGNUP_KEY = 'kaari-advertiser-signup';
@@ -13,6 +14,7 @@ export interface AdvertiserSignupData {
   showOnboarding: boolean;
   formData: any;
   timestamp: number;
+  userId?: string; // Store the user ID if they were logged in
 }
 
 /**
@@ -23,6 +25,17 @@ export const saveSignupProgress = (data: AdvertiserSignupData): void => {
   try {
     // Set expiry time to 24 hours from now
     const expiryTime = Date.now() + SIGNUP_EXPIRY_TIME;
+    
+    // Check if user is logged in and add userId to data
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      data.userId = currentUser.uid;
+    } else {
+      // If no user is logged in, don't save progress
+      console.warn('Attempted to save signup progress without authentication');
+      return;
+    }
     
     // Save the data and expiry time to localStorage
     localStorage.setItem(ADVERTISER_SIGNUP_KEY, JSON.stringify(data));
@@ -110,24 +123,42 @@ export const completeSignup = (): void => {
 export const checkIncompleteSignup = (): boolean => {
   const signupData = getSignupProgress();
   
-  if (signupData) {
-    // If we're already on the signup page, don't redirect
-    if (window.location.pathname === '/become-advertiser') {
-      return true;
-    }
-    
-    // If we're on the thank you page, clear the progress
-    if (window.location.pathname === '/become-advertiser/thank-you') {
-      clearSignupProgress();
-      return false;
-    }
-    
-    // Otherwise, redirect to the signup page
-    window.location.href = '/become-advertiser';
+  if (!signupData) {
+    return false;
+  }
+  
+  // Get current auth state
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
+  
+  // Only proceed if user is authenticated
+  if (!currentUser) {
+    // User is not authenticated, clear the progress
+    clearSignupProgress();
+    return false;
+  }
+  
+  // If the signup data has a userId, make sure the same user is still logged in
+  if (signupData.userId && signupData.userId !== currentUser.uid) {
+    // Different user, clear the progress
+    clearSignupProgress();
+    return false;
+  }
+  
+  // If we're already on the signup page, don't redirect
+  if (window.location.pathname === '/become-advertiser') {
     return true;
   }
   
-  return false;
+  // If we're on the thank you page, clear the progress
+  if (window.location.pathname === '/become-advertiser/thank-you') {
+    clearSignupProgress();
+    return false;
+  }
+  
+  // Otherwise, redirect to the signup page
+  window.location.href = '/become-advertiser';
+  return true;
 };
 
 /**
@@ -145,5 +176,15 @@ export const registerSignupListener = (): () => void => {
     
     // Check for incomplete signup
     checkIncompleteSignup();
+  });
+};
+
+/**
+ * Register a listener to clear signup progress on sign out
+ */
+export const registerAuthListener = (): () => void => {
+  return eventBus.on(EventType.AUTH_SIGNED_OUT, () => {
+    // Clear signup progress when user signs out
+    clearSignupProgress();
   });
 }; 

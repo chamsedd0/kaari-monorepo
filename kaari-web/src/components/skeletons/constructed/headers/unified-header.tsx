@@ -10,7 +10,7 @@ import { Notifications } from "../../icons/NotificationsIcon";
 import { MessageBubble } from "../../icons/messageBubbleIcon";
 import { House } from "../../icons/HouseIcon";
 import { FaSearch, FaCamera } from 'react-icons/fa';
-import ProfilePic from '../../../../assets/images/ProfilePicture.png';
+import UserAvatar from '../../../../components/UserAvatar';
 import { useStore } from '../../../../backend/store';
 import { AuthModal } from '../modals/auth-modal';
 import { SignOutConfirmationModal } from '../modals/signout-confirmation-modal';
@@ -514,21 +514,22 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     if (isUserAuthenticated) {
       return (
         <div className="profilePic" onClick={handleSignIn} style={{ position: 'relative' }}>
-          <img 
-            src={userProfilePic || ProfilePic} 
-            alt={userName}
+          <UserAvatar
+            size={40}
+            name={userName}
+            profileImage={userProfilePic}
           />
           {showProfileDropdown && (
             <ProfileDropdown
-              isOpen={showProfileDropdown}
-              onClose={() => setShowProfileDropdown(false)}
               userName={userName}
               userEmail={userEmail || "user@example.com"}
-              userImage={userProfilePic || ProfilePic}
+              userImage={userProfilePic}
               onLogout={() => {
                 setShowProfileDropdown(false);
                 setShowSignOutModal(true);
               }}
+              onClose={() => setShowProfileDropdown(false)}
+              userType={userType}
             />
           )}
         </div>

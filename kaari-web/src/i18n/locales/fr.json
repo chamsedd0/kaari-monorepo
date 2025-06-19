@@ -21,6 +21,7 @@
     "advanced_filtering": "Filtrage avancé",
     "apply_filters": "Appliquer les filtres",
     "login": "Connexion",
+    "login_required": "Connexion Requise",
     "signup": "S'inscrire",
     "logout": "Déconnexion",
     "language": "Langue",
@@ -1047,16 +1048,18 @@
       "verify_mobile": "Veuillez vérifier votre numéro de téléphone",
       "enter_city": "Veuillez entrer votre ville d'opération",
       "select_property_quantity": "Veuillez sélectionner combien de propriétés vous pourriez lister",
-      "agree_terms": "Vous devez accepter les Conditions et la Politique de confidentialité"
+      "agree_terms": "Vous devez accepter les Conditions et la Politique de confidentialité",
+      "login_required": "Vous devez être connecté pour devenir un annonceur. Veuillez vous connecter ou créer un compte d'abord."
     },
     "toast": {
-      "otp_sent": "Code OTP envoyé à votre numéro de téléphone",
-      "otp_failed": "Échec de l'envoi d'OTP. Veuillez réessayer.",
-      "email_in_use": "Cet e-mail est déjà enregistré. Veuillez vous connecter avec ce compte à la place.",
+      "otp_sent": "Code OTP envoyé à votre numéro de mobile",
+      "otp_failed": "Échec de l'envoi de l'OTP. Veuillez réessayer.",
+      "email_in_use": "Cet email est déjà enregistré. Veuillez vous connecter avec ce compte.",
       "registration_failed": "Échec de l'inscription",
       "success": "Succès",
-      "registration_success": "Inscription réussie",
-      "registration_incomplete": "Votre compte a été créé mais nous n'avons pas pu enregistrer vos détails d'annonceur. Veuillez réessayer ou contacter le support."
+      "registration_success": "Inscription terminée avec succès",
+      "registration_incomplete": "Votre compte a été créé mais nous n'avons pas pu enregistrer vos détails d'annonceur. Veuillez réessayer ou contacter le support.",
+      "login_required": "Vous devez être connecté pour devenir un annonceur. Veuillez vous connecter ou créer un compte d'abord."
     }
   },
   "coming_soon": {

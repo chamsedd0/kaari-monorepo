@@ -114,6 +114,22 @@ const BecomeAdvertiserPage: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToastService();
   const signUp = useStore(state => state.signUp);
+  const isAuthenticated = useStore(state => state.isAuthenticated);
+  const user = useStore(state => state.user);
+  
+  // Redirect unauthenticated users
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      // Clear any existing signup progress
+      clearSignupProgress();
+      
+      // Show a message explaining why they're being redirected
+      toast.showToast('info', t('common.login_required'), t('become_advertiser.toast.login_required'));
+      
+      // Redirect to home page
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate, toast, t]);
   
   // Show onboarding first
   const [showOnboarding, setShowOnboarding] = useState(true);
@@ -174,6 +190,13 @@ const BecomeAdvertiserPage: React.FC = () => {
   useEffect(() => {
     const savedProgress = getSignupProgress();
     if (savedProgress) {
+      // Check if the saved progress has a userId and if it matches the current user
+      if (savedProgress.userId && (!user || savedProgress.userId !== user.id)) {
+        // Different user or logged out, clear the progress
+        clearSignupProgress();
+        return;
+      }
+      
       // Restore saved state
       setShowOnboarding(savedProgress.showOnboarding);
       setCurrentStep(savedProgress.step);
@@ -187,7 +210,18 @@ const BecomeAdvertiserPage: React.FC = () => {
       // Start new signup process
       startSignup();
     }
-  }, []);
+  }, [user]);
+  
+  // Monitor auth state changes
+  useEffect(() => {
+    // If user logs out during the signup process, clear the progress
+    if (!isAuthenticated) {
+      const savedProgress = getSignupProgress();
+      if (savedProgress && savedProgress.userId) {
+        clearSignupProgress();
+      }
+    }
+  }, [isAuthenticated]);
   
   // Save progress whenever form data or step changes
   useEffect(() => {
@@ -201,9 +235,10 @@ const BecomeAdvertiserPage: React.FC = () => {
       step: currentStep,
       showOnboarding: showOnboarding,
       formData: formData,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      userId: user?.id // Include user ID if available
     });
-  }, [currentStep, formData, showOnboarding]);
+  }, [currentStep, formData, showOnboarding, user?.id]);
   
   // Reset progress when slide changes
   useEffect(() => {

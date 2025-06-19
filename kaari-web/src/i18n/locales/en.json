@@ -21,6 +21,7 @@
     "advanced_filtering": "Advanced filtering",
     "apply_filters": "Apply Filters",
     "login": "Login",
+    "login_required": "Login Required",
     "signup": "Sign Up",
     "logout": "Logout",
     "language": "Language",
@@ -50,7 +51,6 @@
     "water": "Water",
     "electricity": "Electricity",
     "gas": "Gas",
-    "women_only": "Women Only",
     "families_only": "Families Only",
     "pets_allowed": "Pets Allowed",
     "smoking_allowed": "Smoking Allowed",
@@ -1045,7 +1045,8 @@
       "registration_failed": "Registration Failed",
       "success": "Success",
       "registration_success": "Registration completed successfully",
-      "registration_incomplete": "Your account was created but we couldn't save your advertiser details. Please try again or contact support."
+      "registration_incomplete": "Your account was created but we couldn't save your advertiser details. Please try again or contact support.",
+      "login_required": "You need to be logged in to become an advertiser. Please log in or create an account first."
     }
   },
   "coming_soon": {

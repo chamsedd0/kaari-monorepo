@@ -9,14 +9,15 @@ import { FaUser, FaSignOutAlt, FaTachometerAlt, FaHome, FaWallet, FaQuestionCirc
 import { isAdmin, isAdvertiser, isRegularUser } from '../../../../utils/user-roles';
 import eventBus, { EventType } from '../../../../utils/event-bus';
 import { useTranslation } from 'react-i18next';
+import UserAvatar from '../../../../components/UserAvatar';
 
 export interface ProfileDropdownProps {
-  isOpen: boolean;
   onClose: () => void;
   userName: string;
   userEmail: string;
-  userImage: string;
+  userImage?: string | null;
   onLogout?: () => void;
+  userType?: 'user' | 'advertiser' | 'admin' | 'none';
 }
 
 const DropdownContainer = styled.div`
@@ -52,11 +53,7 @@ const UserInfoSection = styled.div`
   border-bottom: 1px solid #f0f0f0;
 `;
 
-const UserAvatar = styled.img`
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  object-fit: cover;
+const AvatarWrapper = styled.div`
   margin-right: 12px;
 `;
 
@@ -120,12 +117,12 @@ const LogoutButton = styled(MenuItem)`
 `;
 
 export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
-  isOpen,
   onClose,
   userName,
   userEmail,
   userImage,
-  onLogout
+  onLogout,
+  userType
 }) => {
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -169,20 +166,20 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
       }
     };
 
-    if (isOpen) {
+    if (userType === 'user' || userType === 'advertiser' || userType === 'admin') {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, onClose]);
+  }, [onClose, userType]);
 
   const handleDashboardClick = () => {
     onClose();
-    if (userIsAdmin) {
+    if (userType === 'admin') {
       navigate('/dashboard/admin');
-    } else if (userIsAdvertiser) {
+    } else if (userType === 'advertiser') {
       navigate('/dashboard/advertiser/dashboard');
     } else {
       navigate('/dashboard/user/profile');
@@ -196,7 +193,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   const handleAccountSettingsClick = () => {
     onClose();
-    if (userIsAdvertiser) {
+    if (userType === 'advertiser') {
       navigate('/dashboard/advertiser/profile');
     } else {
       navigate('/dashboard/user/profile');
@@ -205,7 +202,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   const handlePaymentsClick = () => {
     onClose();
-    if (userIsAdvertiser) {
+    if (userType === 'advertiser') {
       navigate('/dashboard/advertiser/payments');
     } else {
       navigate('/dashboard/user/payments');
@@ -214,7 +211,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   const handleHelpClick = () => {
     onClose();
-    if (userIsAdvertiser) {
+    if (userType === 'advertiser') {
       navigate('/dashboard/advertiser/support');
     } else {
       navigate('/dashboard/user/faq');
@@ -238,13 +235,19 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  if (!userType) return null;
 
   return (
     <>
       <DropdownContainer ref={dropdownRef}>
         <UserInfoSection>
-          <UserAvatar src={userImage} alt={userName} />
+          <AvatarWrapper>
+            <UserAvatar 
+              name={userName}
+              profileImage={userImage}
+              size={44}
+            />
+          </AvatarWrapper>
           <UserDetails>
             <UserName>{userName}</UserName>
             <UserEmail>{userEmail}</UserEmail>
@@ -253,7 +256,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
         
         <MenuItems>
           {/* Admin menu items */}
-          {userIsAdmin && (
+          {userType === 'admin' && (
             <>
               <MenuItem onClick={handleDashboardClick}>
                 <FaTachometerAlt /> {t('header.profile_dropdown.dashboard')}
@@ -265,7 +268,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           )}
           
           {/* Advertiser menu items */}
-          {userIsAdvertiser && (
+          {userType === 'advertiser' && (
             <>
               <MenuItem onClick={handleDashboardClick}>
                 <FaTachometerAlt /> {t('header.profile_dropdown.dashboard')}
@@ -283,7 +286,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           )}
           
           {/* Regular user menu items */}
-          {userIsRegular && (
+          {userType === 'user' && (
             <>
               <MenuItem onClick={handleReservationsClick}>
                 <FaHome /> {t('header.profile_dropdown.reservation')}

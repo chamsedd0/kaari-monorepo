@@ -22,7 +22,7 @@ import { useMemo, useEffect, useState } from 'react';
 import MainLayout from './layouts/MainLayout';
 import { isAdmin, isAdvertiser, isRegularUser } from './utils/user-roles';
 import eventBus, { EventType } from './utils/event-bus';
-import { registerSignupListener, checkIncompleteSignup } from './utils/advertiser-signup';
+import { registerSignupListener, checkIncompleteSignup, registerAuthListener } from './utils/advertiser-signup';
 import { ToastProvider } from './contexts/ToastContext';
 import ScrollToTop from './components/ScrollToTop';
 import { useProfileCompletionReminder } from './hooks/useProfileCompletionReminder';
@@ -90,11 +90,21 @@ function App() {
     // Register the listener to check for incomplete signups
     const unsubscribeSignup = registerSignupListener();
     
-    // Check for incomplete signup on initial load
-    checkIncompleteSignup();
+    // Register the listener to clear signup progress on sign out
+    const unsubscribeAuth = registerAuthListener();
+    
+    // Only check for incomplete signup on initial load if we're not on the signup or thank you page
+    const currentPath = window.location.pathname;
+    if (
+      currentPath !== '/become-advertiser' && 
+      currentPath !== '/become-advertiser/thank-you'
+    ) {
+      checkIncompleteSignup();
+    }
     
     return () => {
       unsubscribeSignup();
+      unsubscribeAuth();
     };
   }, []);
   
@@ -102,6 +112,18 @@ function App() {
   useEffect(() => {
     // This effect will run when isAuthenticated or user changes
     setRenderKey(prev => prev + 1);
+    
+    // If the user just logged in, check for incomplete signup
+    if (isAuthenticated && user) {
+      // Skip checking if we're already on the signup or thank you page
+      const currentPath = window.location.pathname;
+      if (
+        currentPath !== '/become-advertiser' && 
+        currentPath !== '/become-advertiser/thank-you'
+      ) {
+        checkIncompleteSignup();
+      }
+    }
     
     // Emit route change event
     if (window.location) {
@@ -180,8 +202,24 @@ function App() {
         </ProtectedRoute>
       } />
       
-      <Route path="/become-advertiser" element={<BecomeAdvertiserPage />} />
-      <Route path="/become-advertiser/thank-you" element={<AdvertiserThankYouPage />} />
+      {/* Become Advertiser Route - Protected for authenticated users only */}
+      <Route path="/become-advertiser" element={
+        isAuthenticated ? 
+          <BecomeAdvertiserPage /> : 
+          (() => {
+            eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+              path: '/become-advertiser',
+              redirectTo: '/',
+              isAuthenticated: false
+            });
+            return <Navigate to="/" replace />;
+          })()
+      } />
+      <Route path="/become-advertiser/thank-you" element={
+        isAuthenticated ? 
+          <AdvertiserThankYouPage /> : 
+          <Navigate to="/" replace />
+      } />
       <Route path="/static/coming-soon" element={<ComingSoonPage />} />
 
       <Route path="/properties" element={<PropertyList />} />

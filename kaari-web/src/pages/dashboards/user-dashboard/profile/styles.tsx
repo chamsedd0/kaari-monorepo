@@ -27,11 +27,15 @@ export const ProfilePageStyle = styled.div`
         .profile-image-container {
             display: flex;
             gap: 18px;
+            align-items: center;
         
         .profile-image {
             position: relative;
-            width: 150px;
-            height: 150px;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
             img {
                 width: 100%;

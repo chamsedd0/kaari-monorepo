@@ -24,6 +24,9 @@ export const ProfileSectionStyle = styled.div`
             height: 120px;
             border-radius: ${Theme.borders.radius.round};
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
             img {
                 width: 100%;

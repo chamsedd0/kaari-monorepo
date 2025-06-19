@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ProfileSectionStyle } from './styles';
 import { useStore } from '../../../../../../backend/store';
-import Picture from "../../../../../../assets/images/ProfilePicture.png";
+import UserAvatar from "../../../../../../components/UserAvatar";
 import { PurpleButtonMB48 } from '../../../../../../components/skeletons/buttons/purple_MB48';
 import InputVariant from '../../../../../../components/skeletons/inputs/input-fields/input-variant';
 import SelectFieldDatePicker from '../../../../../../components/skeletons/inputs/select-fields/select-field-date-picker';
@@ -186,9 +186,10 @@ const ProfileSection: React.FC = () => {
             <h1 className="section-title">{t('advertiser_dashboard.profile.section_title')}</h1>
             <div className="profile-image-container">
                 <div className="profile-image">
-                    <img 
-                        src={profilePicturePreview || user?.profilePicture || Picture} 
-                        alt={t('advertiser_dashboard.profile.profile_image_alt', 'Profile')} 
+                    <UserAvatar
+                        name={name || user?.name || "User"}
+                        profileImage={profilePicturePreview || user?.profilePicture}
+                        size={120}
                     />
                 </div>
                 <UploadFieldModel

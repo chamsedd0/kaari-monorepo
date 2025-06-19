@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ProfilePageStyle } from './styles';
 import { useStore } from '../../../../backend/store';
-import Picture from "../../../../assets/images/ProfilePicture.png";
+import UserAvatar from "../../../../components/UserAvatar";
 import VerifyEmailCardComponent from '../../../../components/skeletons/cards/verify-email-card';
 import { GoogleCard } from '../../../../components/skeletons/cards/google-card';
 import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-help-card';
@@ -160,9 +160,10 @@ const ProfilePage: React.FC = () => {
                 <h1 className="section-title">Your Profile</h1>
                 <div className="profile-image-container">
                     <div className="profile-image">
-                        <img 
-                            src={profilePicturePreview || user?.profilePicture || Picture} 
-                            alt="Profile" 
+                        <UserAvatar 
+                            name={name || user?.name || "User"}
+                            profileImage={profilePicturePreview || user?.profilePicture}
+                            size={120}
                         />
                     </div>
                     <UploadFieldModel 
