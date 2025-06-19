@@ -4,15 +4,19 @@ import { useStore } from '../backend/store';
 
 // IMPORTANT: Add your email here to get access to restricted features
 const ADMIN_EMAILS = [
-  'intag@gmail.com',
-  'admin@kaari.com',
-  'developer@kaari.com',
+  'lhouijcham@gmail.com',
   // Add any other emails that should have access
+];
+
+// User IDs that should have admin access
+const ADMIN_IDS = [
+  '0fZ0G9wBbGPwPap1X0DKCbx739u1',
+  // Add any other user IDs that should have access
 ];
 
 /**
  * A simple component that protects routes before the August 1st launch
- * Only users with emails in the ADMIN_EMAILS list can access protected routes
+ * Only users with emails in the ADMIN_EMAILS list or IDs in the ADMIN_IDS list can access protected routes
  */
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -25,31 +29,35 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     console.log('Path:', location.pathname);
     console.log('User authenticated:', isAuthenticated ? 'Yes' : 'No');
     console.log('User email:', user?.email || 'No email');
+    console.log('User ID:', user?.id || 'No ID');
     console.log('User object:', user);
     
-    // Check if user is in the admin list
-    const hasAccess = user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
-    console.log('Has access:', hasAccess ? 'Yes' : 'No');
+    // Check if user is in the admin list (by email or ID)
+    const hasEmailAccess = user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
+    const hasIdAccess = user?.id && ADMIN_IDS.includes(user.id);
+    console.log('Has access by email:', hasEmailAccess ? 'Yes' : 'No');
+    console.log('Has access by ID:', hasIdAccess ? 'Yes' : 'No');
     console.log('==========================');
   }, [location.pathname, user, isAuthenticated]);
   
-  // If no user or email, redirect to coming soon page
-  if (!user || !user.email) {
-    console.log('ACCESS DENIED: No user or email');
+  // If no user, redirect to coming soon page
+  if (!user) {
+    console.log('ACCESS DENIED: No user');
     return <Navigate to="/static/coming-soon" replace state={{ from: location }} />;
   }
   
-  // Check if user is in the admin list
-  const hasAccess = ADMIN_EMAILS.includes(user.email.toLowerCase());
+  // Check if user is in the admin list by email or ID
+  const hasEmailAccess = user.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
+  const hasIdAccess = user.id && ADMIN_IDS.includes(user.id);
   
   // If not in admin list, redirect to coming soon page
-  if (!hasAccess) {
-    console.log(`ACCESS DENIED for ${user.email}: Not in admin list`);
+  if (!hasEmailAccess && !hasIdAccess) {
+    console.log(`ACCESS DENIED for ${user.email || user.id}: Not in admin list`);
     return <Navigate to="/static/coming-soon" replace state={{ from: location }} />;
   }
   
   // If user has access, render the children
-  console.log(`ACCESS GRANTED for ${user.email}`);
+  console.log(`ACCESS GRANTED for ${user.email || user.id}`);
   return <>{children}</>;
 };
 
