@@ -20,6 +20,14 @@ import OtpInput from '../../components/checkout/input-fields/OtpInput';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import LanguageSwitcher from '../../components/skeletons/language-switcher/language-switcher';
+import { 
+  saveSignupProgress, 
+  getSignupProgress, 
+  clearSignupProgress, 
+  startSignup, 
+  completeSignup,
+  AdvertiserSignupData 
+} from '../../utils/advertiser-signup';
 
 // Property type options as chips
 const PROPERTY_TYPES = [
@@ -161,6 +169,41 @@ const BecomeAdvertiserPage: React.FC = () => {
       benefits: ["benefit1", "benefit2"]
     }
   ];
+  
+  // Check for saved progress on initial load
+  useEffect(() => {
+    const savedProgress = getSignupProgress();
+    if (savedProgress) {
+      // Restore saved state
+      setShowOnboarding(savedProgress.showOnboarding);
+      setCurrentStep(savedProgress.step);
+      setFormData(savedProgress.formData);
+      
+      // If onboarding is already completed, skip it
+      if (!savedProgress.showOnboarding) {
+        setShowOnboarding(false);
+      }
+    } else {
+      // Start new signup process
+      startSignup();
+    }
+  }, []);
+  
+  // Save progress whenever form data or step changes
+  useEffect(() => {
+    // Skip saving during initial load
+    if (document.readyState !== 'complete') {
+      return;
+    }
+    
+    // Save current progress
+    saveSignupProgress({
+      step: currentStep,
+      showOnboarding: showOnboarding,
+      formData: formData,
+      timestamp: Date.now()
+    });
+  }, [currentStep, formData, showOnboarding]);
   
   // Reset progress when slide changes
   useEffect(() => {
@@ -670,6 +713,9 @@ const BecomeAdvertiserPage: React.FC = () => {
           propertyTypes: formData.propertyTypes,
           additionalInfo: ''
         });
+        
+        // Mark signup as completed
+        completeSignup();
         
         // Display success message
         toast.showToast('success', t('become_advertiser.toast.success'), t('become_advertiser.toast.registration_success'));

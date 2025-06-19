@@ -22,6 +22,7 @@ import { useMemo, useEffect, useState } from 'react';
 import MainLayout from './layouts/MainLayout';
 import { isAdmin, isAdvertiser, isRegularUser } from './utils/user-roles';
 import eventBus, { EventType } from './utils/event-bus';
+import { registerSignupListener, checkIncompleteSignup } from './utils/advertiser-signup';
 import { ToastProvider } from './contexts/ToastContext';
 import ScrollToTop from './components/ScrollToTop';
 import { useProfileCompletionReminder } from './hooks/useProfileCompletionReminder';
@@ -83,6 +84,19 @@ function App() {
       signOutUnsubscribe();
     };
   }, [initAuth]);
+  
+  // Register advertiser signup listener
+  useEffect(() => {
+    // Register the listener to check for incomplete signups
+    const unsubscribeSignup = registerSignupListener();
+    
+    // Check for incomplete signup on initial load
+    checkIncompleteSignup();
+    
+    return () => {
+      unsubscribeSignup();
+    };
+  }, []);
   
   // Also listen for auth state changes directly from store
   useEffect(() => {

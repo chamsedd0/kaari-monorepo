@@ -31,7 +31,13 @@ export enum EventType {
   PROFILE_COMPLETION_REMINDER = 'profile:completionReminder',
   
   // Checkout related events
-  CHECKOUT_STEP_CHANGED = 'checkout:stepChanged'
+  CHECKOUT_STEP_CHANGED = 'checkout:stepChanged',
+  
+  // Advertiser signup events
+  ADVERTISER_SIGNUP_STARTED = 'advertiser:signupStarted',
+  ADVERTISER_SIGNUP_PROGRESS = 'advertiser:signupProgress',
+  ADVERTISER_SIGNUP_COMPLETED = 'advertiser:signupCompleted',
+  ADVERTISER_SIGNUP_ABANDONED = 'advertiser:signupAbandoned'
 }
 
 // Define event payload types for type checking
@@ -60,6 +66,12 @@ export interface EventPayloads {
   // Profile events
   [EventType.PROFILE_NAVIGATION_SUGGESTED]: { path: string; reason: string; timestamp: number };
   [EventType.PROFILE_COMPLETION_REMINDER]: { message: string; role?: string };
+  
+  // Advertiser signup events
+  [EventType.ADVERTISER_SIGNUP_STARTED]: { timestamp: number };
+  [EventType.ADVERTISER_SIGNUP_PROGRESS]: { step: number; formData: any; timestamp: number };
+  [EventType.ADVERTISER_SIGNUP_COMPLETED]: { timestamp: number };
+  [EventType.ADVERTISER_SIGNUP_ABANDONED]: { lastStep: number; timestamp: number };
   
   // Allow for custom events with any payload
   [key: string]: any;

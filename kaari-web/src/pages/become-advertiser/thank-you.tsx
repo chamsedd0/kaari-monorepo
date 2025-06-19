@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { Theme } from '../../theme/theme';
 import { FaArrowRight, FaHome, FaCalendarAlt } from 'react-icons/fa';
 import LogoWhite from '../../components/skeletons/icons/LogoWhite.svg';
+import { clearSignupProgress, completeSignup } from '../../utils/advertiser-signup';
 
 const AdvertiserThankYouPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  
+  // Clear signup progress on page load
+  useEffect(() => {
+    // Mark the signup as completed and clear progress
+    completeSignup();
+  }, []);
   
   const handleGoToDashboard = () => {
     navigate('/dashboards/advertiser-dashboard/overview');
