@@ -21,7 +21,7 @@ const AdvertisersLanding: React.FC = () => {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    navigate('/signup');
+    navigate('/advertiser-signup');
   };
 
   // How it works data

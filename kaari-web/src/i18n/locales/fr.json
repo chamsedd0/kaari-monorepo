@@ -62,6 +62,7 @@
     "default_country": "Maroc",
     "housing_preferences": "Préférences de logement",
     "allowed": "Autorisé",
+    "kaari_logo": "Logo Kaari",
     "date_picker": {
       "day": "JJ",
       "month": "MM",
@@ -1068,5 +1069,28 @@
     "message_title": "Nous Nous Préparons",
     "message_text": "Merci pour votre intérêt ! Nous préparons actuellement le lancement de notre plateforme complète le 1er août. À ce moment-là, vous pourrez accéder à toutes les fonctionnalités, y compris la réservation de séances photo et le tableau de bord des annonceurs.",
     "launch_date": "Date de lancement officielle : 1er août 2023"
+  },
+  "advertiser_signup": {
+    "title": "Rejoignez Kaari en tant qu'Annonceur",
+    "subtitle": "Créez votre compte pour commencer à lister vos propriétés",
+    "full_name": "Nom complet",
+    "name_placeholder": "Entrez votre nom complet",
+    "email": "Adresse e-mail",
+    "email_placeholder": "Entrez votre adresse e-mail",
+    "password": "Mot de passe",
+    "password_placeholder": "Créez un mot de passe (min. 6 caractères)",
+    "confirm_password": "Confirmer le mot de passe",
+    "confirm_password_placeholder": "Confirmez votre mot de passe",
+    "create_account": "Créer un compte",
+    "continue_with_google": "Continuer avec Google",
+    "privacy_note": "En vous inscrivant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité.",
+    "errors": {
+      "all_fields_required": "Veuillez remplir tous les champs",
+      "passwords_dont_match": "Les mots de passe ne correspondent pas",
+      "password_too_short": "Le mot de passe doit comporter au moins 6 caractères",
+      "email_in_use": "Cet e-mail est déjà utilisé",
+      "generic_error": "Une erreur s'est produite. Veuillez réessayer.",
+      "google_error": "La connexion Google a échoué. Veuillez réessayer."
+    }
   }
 } 

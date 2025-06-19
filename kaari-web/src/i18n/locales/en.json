@@ -62,6 +62,7 @@
     "default_country": "Morocco",
     "housing_preferences": "Housing Preferences",
     "allowed": "Allowed",
+    "kaari_logo": "Kaari Logo",
     "date_picker": {
       "day": "DD",
       "month": "MM",
@@ -87,7 +88,9 @@
     "next": "Next",
     "get_started": "Get Started",
     "return_home": "Return Home",
-    "go_back": "Go Back"
+    "go_back": "Go Back",
+    "loading": "Loading...",
+    "or": "or"
   },
   "header": {
     "profile_dropdown": {
@@ -1055,5 +1058,28 @@
     "message_title": "We're Getting Ready",
     "message_text": "Thank you for your interest! We're currently preparing to launch our full platform on August 1st. At that time, you'll be able to access all features including photoshoot booking and the advertiser dashboard.",
     "launch_date": "Official Launch Date: August 1st, 2023"
+  },
+  "advertiser_signup": {
+    "title": "Join Kaari as an Advertiser",
+    "subtitle": "Create your account to start listing your properties",
+    "full_name": "Full Name",
+    "name_placeholder": "Enter your full name",
+    "email": "Email Address",
+    "email_placeholder": "Enter your email address",
+    "password": "Password",
+    "password_placeholder": "Create a password (min. 6 characters)",
+    "confirm_password": "Confirm Password",
+    "confirm_password_placeholder": "Confirm your password",
+    "create_account": "Create Account",
+    "continue_with_google": "Continue with Google",
+    "privacy_note": "By signing up, you agree to our Terms of Service and Privacy Policy.",
+    "errors": {
+      "all_fields_required": "Please fill in all fields",
+      "passwords_dont_match": "Passwords don't match",
+      "password_too_short": "Password must be at least 6 characters",
+      "email_in_use": "This email is already in use",
+      "generic_error": "Something went wrong. Please try again.",
+      "google_error": "Google sign-in failed. Please try again."
+    }
   }
 } 

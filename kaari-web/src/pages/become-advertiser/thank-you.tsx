@@ -1,14 +1,12 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { Theme } from '../../theme/theme';
-import { FaArrowRight, FaHome, FaCalendarAlt } from 'react-icons/fa';
+import { FaCalendarAlt, FaPhone } from 'react-icons/fa';
 import LogoWhite from '../../components/skeletons/icons/LogoWhite.svg';
 import { clearSignupProgress, completeSignup } from '../../utils/advertiser-signup';
 
 const AdvertiserThankYouPage: React.FC = () => {
-  const navigate = useNavigate();
   const { t } = useTranslation();
   
   // Clear signup progress on page load
@@ -16,14 +14,6 @@ const AdvertiserThankYouPage: React.FC = () => {
     // Mark the signup as completed and clear progress
     completeSignup();
   }, []);
-  
-  const handleGoToDashboard = () => {
-    navigate('/dashboards/advertiser-dashboard/overview');
-  };
-  
-  const handleReturnHome = () => {
-    navigate('/');
-  };
   
   return (
     <ThankYouContainer>
@@ -48,18 +38,20 @@ const AdvertiserThankYouPage: React.FC = () => {
             We'll notify you when you're live!
           </LaunchDateDescription>
         </LaunchDateContainer>
+        
+        <ContactContainer>
+          <ContactIcon>
+            <FaPhone />
+          </ContactIcon>
+          <ContactInfo>
+            <ContactTitle>Need help?</ContactTitle>
+            <ContactNumber>+212 555-1234</ContactNumber>
+            <ContactDescription>
+              Our team is available Monday to Friday, 9am - 6pm.
+            </ContactDescription>
+          </ContactInfo>
+        </ContactContainer>
       </ContentContainer>
-      
-      <ButtonsContainer>
-        <HomeButton onClick={handleReturnHome}>
-          <FaHome style={{ marginRight: '8px' }} />
-          {t('common.return_home')}
-        </HomeButton>
-        <DashboardButton onClick={handleGoToDashboard}>
-          {t('advertiser_thank_you.preview_dashboard')}
-          <FaArrowRight style={{ marginLeft: '8px' }} />
-        </DashboardButton>
-      </ButtonsContainer>
     </ThankYouContainer>
   );
 };
@@ -149,6 +141,7 @@ const LaunchDateContainer = styled.div`
   backdrop-filter: blur(5px);
   animation: ${fadeIn} 0.8s ease-in-out;
   transition: transform 0.3s ease, background-color 0.3s ease;
+  margin-bottom: 30px;
   
   &:hover {
     transform: translateY(-5px);
@@ -170,65 +163,50 @@ const LaunchDateDescription = styled.p`
   text-align: center;
 `;
 
-const ButtonsContainer = styled.div`
+const ContactContainer = styled.div`
   display: flex;
-  justify-content: center;
-  gap: 15px;
-  padding: 40px 0;
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-  }
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: ${Theme.borders.radius.md};
+  padding: 20px;
+  max-width: 400px;
+  width: 100%;
+  margin-top: 20px;
+  animation: ${fadeIn} 1s ease-in-out;
 `;
 
-const HomeButton = styled.button`
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
+const ContactIcon = styled.div`
+  font-size: 24px;
   color: white;
-  border-radius: ${Theme.borders.radius.extreme};
-  padding: 10px 20px;
-  font: ${Theme.typography.fonts.largeB};
-  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
-  }
-  
-  @media (max-width: 768px) {
-    width: 100%;
-    max-width: 300px;
-  }
+  margin-right: 15px;
 `;
 
-const DashboardButton = styled.button`
-  background-color: white;
-  color: ${Theme.colors.secondary};
-  border: none;
-  border-radius: ${Theme.borders.radius.extreme};
-  padding: 10px 20px;
+const ContactInfo = styled.div`
+  flex: 1;
+`;
+
+const ContactTitle = styled.h3`
   font: ${Theme.typography.fonts.largeB};
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  }
-  
-  @media (max-width: 768px) {
-    width: 100%;
-    max-width: 300px;
-  }
+  color: white;
+  margin-bottom: 5px;
+`;
+
+const ContactNumber = styled.p`
+  font: ${Theme.typography.fonts.h4};
+  color: white;
+  margin-bottom: 5px;
+`;
+
+const ContactDescription = styled.p`
+  font: ${Theme.typography.fonts.text14};
+  color: rgba(255, 255, 255, 0.8);
 `;
 
 export default AdvertiserThankYouPage;

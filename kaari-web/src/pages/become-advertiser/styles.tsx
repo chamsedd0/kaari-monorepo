@@ -26,6 +26,12 @@ export const AdvertiserRegistrationPageStyle = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: 40px 20px 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  
   
   .page-title {
     font: ${Theme.typography.fonts.h3};
@@ -51,7 +57,7 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     justify-content: space-between;
     margin-bottom: 40px;
     position: relative;
-    max-width: 800px;
+    width: 800px;
     margin-left: auto;
     margin-right: auto;
     
@@ -129,7 +135,7 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     background-color: ${Theme.colors.white};
     border-radius: ${Theme.borders.radius.md};
     padding: 0px;
-    max-width: 800px;
+    width: 800px;
     margin: 0 auto;
     transition: all 0.3s ease;
     animation: ${scaleIn} 0.5s ease-out;

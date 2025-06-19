@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import styled, { keyframes } from 'styled-components';
 import { AdvertiserRegistrationPageStyle } from './styles';
-import UnifiedHeader from '../../components/skeletons/constructed/headers/unified-header';
 import InputBaseModel from '../../components/skeletons/inputs/input-fields/input-variant';
 import TextAreaBaseModel from '../../components/skeletons/inputs/input-fields/textarea-variant';
 import SelectFieldBaseModelVariant1 from '../../components/skeletons/inputs/select-fields/select-field-base-model-variant-1';
@@ -116,20 +115,6 @@ const BecomeAdvertiserPage: React.FC = () => {
   const signUp = useStore(state => state.signUp);
   const isAuthenticated = useStore(state => state.isAuthenticated);
   const user = useStore(state => state.user);
-  
-  // Redirect unauthenticated users
-  useEffect(() => {
-    if (!isAuthenticated || !user) {
-      // Clear any existing signup progress
-      clearSignupProgress();
-      
-      // Show a message explaining why they're being redirected
-      toast.showToast('info', t('common.login_required'), t('become_advertiser.toast.login_required'));
-      
-      // Redirect to home page
-      navigate('/', { replace: true });
-    }
-  }, [isAuthenticated, user, navigate, toast, t]);
   
   // Show onboarding first
   const [showOnboarding, setShowOnboarding] = useState(true);
@@ -1255,56 +1240,49 @@ const BecomeAdvertiserPage: React.FC = () => {
   };
   
   return (
-    <>
-      <UnifiedHeader />
+    <AdvertiserRegistrationPageStyle>
+      <div className="steps-container">
+        <div className="step">
+          <div className={`step-number ${currentStep === 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
+            {currentStep > 1 ? <FaCheck /> : 1}
+          </div>
+          <div className={`step-label ${currentStep === 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
+            {t('become_advertiser.steps.account_type')}
+          </div>
+        </div>
+        
+        <div className="step">
+          <div className={`step-number ${currentStep === 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
+            {currentStep > 2 ? <FaCheck /> : 2}
+          </div>
+          <div className={`step-label ${currentStep === 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
+            {t('become_advertiser.steps.user_info')}
+          </div>
+        </div>
+        
+        <div className="step">
+          <div className={`step-number ${currentStep === 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
+            {currentStep > 3 ? <FaCheck /> : 3}
+          </div>
+          <div className={`step-label ${currentStep === 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
+            {t('become_advertiser.steps.verify_phone')}
+          </div>
+        </div>
+        
+        <div className="step">
+          <div className={`step-number ${currentStep === 4 ? 'active' : ''} ${currentStep > 4 ? 'completed' : ''}`}>
+            {currentStep > 4 ? <FaCheck /> : 4}
+          </div>
+          <div className={`step-label ${currentStep === 4 ? 'active' : ''} ${currentStep > 4 ? 'completed' : ''}`}>
+            {t('become_advertiser.steps.listing_info')}
+          </div>
+        </div>
+      </div>
       
-      <AdvertiserRegistrationPageStyle>
-        <h1 className="page-title" style={{ marginBottom: '70px' }}></h1>
-        
-        
-        <div className="steps-container">
-          <div className="step">
-            <div className={`step-number ${currentStep === 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
-              {currentStep > 1 ? <FaCheck /> : 1}
-            </div>
-            <div className={`step-label ${currentStep === 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
-              {t('become_advertiser.steps.account_type')}
-            </div>
-          </div>
-          
-          <div className="step">
-            <div className={`step-number ${currentStep === 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
-              {currentStep > 2 ? <FaCheck /> : 2}
-            </div>
-            <div className={`step-label ${currentStep === 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
-              {t('become_advertiser.steps.user_info')}
-            </div>
-          </div>
-          
-          <div className="step">
-            <div className={`step-number ${currentStep === 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
-              {currentStep > 3 ? <FaCheck /> : 3}
-            </div>
-            <div className={`step-label ${currentStep === 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
-              {t('become_advertiser.steps.verify_phone')}
-            </div>
-          </div>
-          
-          <div className="step">
-            <div className={`step-number ${currentStep === 4 ? 'active' : ''} ${currentStep > 4 ? 'completed' : ''}`}>
-              {currentStep > 4 ? <FaCheck /> : 4}
-            </div>
-            <div className={`step-label ${currentStep === 4 ? 'active' : ''} ${currentStep > 4 ? 'completed' : ''}`}>
-              {t('become_advertiser.steps.listing_info')}
-            </div>
-          </div>
-        </div>
-        
-        <div className="form-container">
-          {renderStepContent()}
-        </div>
-      </AdvertiserRegistrationPageStyle>
-    </>
+      <div className="form-container">
+        {renderStepContent()}
+      </div>
+    </AdvertiserRegistrationPageStyle>
   );
 };
 

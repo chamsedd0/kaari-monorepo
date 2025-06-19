@@ -123,13 +123,29 @@ export const completeSignup = (): void => {
 export const checkIncompleteSignup = (): boolean => {
   const signupData = getSignupProgress();
   
-  if (!signupData) {
+  // If we're already on the signup pages, don't redirect
+  const currentPath = window.location.pathname;
+  if (
+    currentPath === '/advertiser-signup' || 
+    currentPath === '/become-advertiser' || 
+    currentPath === '/become-advertiser/thank-you'
+  ) {
     return false;
   }
   
   // Get current auth state
   const auth = getAuth();
   const currentUser = auth.currentUser;
+  
+  // If there's no saved progress, redirect to the initial signup page
+  if (!signupData) {
+    // Only redirect if this is a marketing link
+    if (currentPath === '/for-advertisers') {
+      window.location.href = '/advertiser-signup';
+      return true;
+    }
+    return false;
+  }
   
   // Only proceed if user is authenticated
   if (!currentUser) {
@@ -145,13 +161,8 @@ export const checkIncompleteSignup = (): boolean => {
     return false;
   }
   
-  // If we're already on the signup page, don't redirect
-  if (window.location.pathname === '/become-advertiser') {
-    return true;
-  }
-  
   // If we're on the thank you page, clear the progress
-  if (window.location.pathname === '/become-advertiser/thank-you') {
+  if (currentPath === '/become-advertiser/thank-you') {
     clearSignupProgress();
     return false;
   }
@@ -168,6 +179,7 @@ export const registerSignupListener = (): () => void => {
   return eventBus.on(EventType.NAV_ROUTE_CHANGED, () => {
     // Skip checking if we're on the signup or thank you page
     if (
+      window.location.pathname === '/advertiser-signup' ||
       window.location.pathname === '/become-advertiser' || 
       window.location.pathname === '/become-advertiser/thank-you'
     ) {

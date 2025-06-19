@@ -13,6 +13,7 @@ import PhotoshootBookingPage from './pages/photoshoot-booking/page';
 import ThankYouPage from './pages/photoshoot-booking/thank-you';
 import BecomeAdvertiserPage from './pages/become-advertiser/page';
 import AdvertiserThankYouPage from './pages/become-advertiser/thank-you';
+import AdvertiserSignupPage from './pages/advertiser-signup/page';
 import HelpPage from './pages/help/page';
 import ReservationStatusPage from './pages/dashboards/user-dashboard/reservation-status/page';
 import CancellationRequestPage from './pages/dashboards/user-dashboard/cancellation-request/page';
@@ -190,6 +191,11 @@ function App() {
       <Route path="/" element={<UsersLanding key={renderKey} />} />
       <Route path="/for-advertisers" element={<AdvertisersLanding key={renderKey} />} />
       
+      {/* Isolated Advertiser Signup Flow - No MainLayout */}
+      <Route path="/advertiser-signup" element={<AdvertiserSignupPage />} />
+      <Route path="/become-advertiser" element={<BecomeAdvertiserPage />} />
+      <Route path="/become-advertiser/thank-you" element={<AdvertiserThankYouPage />} />
+      
       {/* Protected Routes with Coming Soon page */}
       <Route path="/photoshoot-booking" element={
         <ProtectedRoute>
@@ -202,24 +208,6 @@ function App() {
         </ProtectedRoute>
       } />
       
-      {/* Become Advertiser Route - Protected for authenticated users only */}
-      <Route path="/become-advertiser" element={
-        isAuthenticated ? 
-          <BecomeAdvertiserPage /> : 
-          (() => {
-            eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
-              path: '/become-advertiser',
-              redirectTo: '/',
-              isAuthenticated: false
-            });
-            return <Navigate to="/" replace />;
-          })()
-      } />
-      <Route path="/become-advertiser/thank-you" element={
-        isAuthenticated ? 
-          <AdvertiserThankYouPage /> : 
-          <Navigate to="/" replace />
-      } />
       <Route path="/static/coming-soon" element={<ComingSoonPage />} />
 
       <Route path="/properties" element={<PropertyList />} />
@@ -640,6 +628,28 @@ function App() {
   // This was previously used to remind users to complete their profile
   
   const Wrapper = () => {
+    // Check if the current path is part of the isolated advertiser signup flow
+    const currentPath = window.location.pathname;
+    const isAdvertiserSignupFlow = 
+      currentPath === '/advertiser-signup' || 
+      currentPath === '/become-advertiser' || 
+      currentPath === '/become-advertiser/thank-you';
+    
+    // If it's part of the isolated flow, don't use MainLayout
+    if (isAdvertiserSignupFlow) {
+      return (
+        <ToastProvider>
+          <NotificationProvider>
+            <ChecklistProvider>
+              <ScrollToTop />
+              {routes}
+            </ChecklistProvider>
+          </NotificationProvider>
+        </ToastProvider>
+      );
+    }
+    
+    // Otherwise use MainLayout
     return (
       <ToastProvider>
         <NotificationProvider>
