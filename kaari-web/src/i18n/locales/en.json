@@ -920,6 +920,8 @@
     "preview_dashboard": "See Preview of Dashboard"
   },
   "become_advertiser": {
+    "title": "Become an Advertiser",
+    "subtitle": "Join our platform and start renting your properties",
     "steps": {
       "account_type": "Account Type",
       "user_info": "User Info",
@@ -965,8 +967,8 @@
       }
     },
     "step1": {
+      "label": "Account Type",
       "title": "Select Account Type",
-      "label": "I am a",
       "broker": "Broker",
       "broker_description": "I'm a real estate broker or agent",
       "landlord": "Landlord",
@@ -982,6 +984,7 @@
       "large_agency": "Large (21+ agents)"
     },
     "step2": {
+      "label": "User Info",
       "title": "Your Information",
       "first_name": "First Name",
       "first_name_placeholder": "Enter your first name",
@@ -993,6 +996,7 @@
       "mobile_placeholder": "06 XX XX XX XX"
     },
     "step3": {
+      "label": "Verify Phone",
       "title": "Verify Your Phone Number",
       "verify": "Verify",
       "code_sent": "A verification code was sent to",
@@ -1003,6 +1007,7 @@
       "verification_success": "Mobile number verified successfully"
     },
     "step4": {
+      "label": "Listing Info",
       "title": "Listing Information",
       "city": "City of Operation",
       "city_search": "Search for your city",
