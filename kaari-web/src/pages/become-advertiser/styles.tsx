@@ -802,6 +802,7 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
+    
   }
   
   .terms-checkbox {
