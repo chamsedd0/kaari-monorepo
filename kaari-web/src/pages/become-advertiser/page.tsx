@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import styled, { keyframes } from 'styled-components';
 import { AdvertiserRegistrationPageStyle } from './styles';
 import UnifiedHeader from '../../components/skeletons/constructed/headers/unified-header';
 import InputBaseModel from '../../components/skeletons/inputs/input-fields/input-variant';
@@ -8,41 +9,74 @@ import TextAreaBaseModel from '../../components/skeletons/inputs/input-fields/te
 import SelectFieldBaseModelVariant1 from '../../components/skeletons/inputs/select-fields/select-field-base-model-variant-1';
 import { PurpleButtonLB60 } from '../../components/skeletons/buttons/purple_LB60';
 import { WhiteButtonLB60 } from '../../components/skeletons/buttons/white_LB60';
-import { FaCheck, FaChevronRight, FaChevronLeft, FaMapMarkerAlt, FaCheckCircle, FaUserAlt, FaBuilding, FaGoogle, FaPhoneAlt, FaShieldAlt } from 'react-icons/fa';
-import { useJsApiLoader, StandaloneSearchBox } from '@react-google-maps/api';
+import { FaCheck, FaChevronRight, FaChevronLeft, FaMapMarkerAlt, FaCheckCircle, FaUserAlt, FaBuilding, FaGoogle, FaPhoneAlt, FaShieldAlt, FaArrowRight } from 'react-icons/fa';
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useStore } from '../../backend/store';
 import { useToastService } from '../../services/ToastService';
 import { Theme } from '../../theme/theme';
 import { saveAdvertiserInfo, getOrCreateUserDocument } from '../../backend/firebase/auth';
-import { getGoogleMapsLoaderOptions } from '../../utils/googleMapsConfig';
 import otpService from '../../services/OtpService';
 import OtpInput from '../../components/checkout/input-fields/OtpInput';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
+import LanguageSwitcher from '../../components/skeletons/language-switcher/language-switcher';
 
 // Property type options as chips
 const PROPERTY_TYPES = [
-  { id: 'apartment', label: 'Apartment' },
-  { id: 'house', label: 'House' },
-  { id: 'villa', label: 'Villa' },
-  { id: 'condo', label: 'Condo' },
-  { id: 'penthouse', label: 'Penthouse' },
-  { id: 'studio', label: 'Studio' }
+  { id: 'apartment', label: 'apartment' },
+  { id: 'house', label: 'house' },
+  { id: 'villa', label: 'villa' },
+  { id: 'condo', label: 'condo' },
+  { id: 'penthouse', label: 'penthouse' },
+  { id: 'studio', label: 'studio' }
 ];
 
 // Agency size options
 const AGENCY_SIZES = [
-  { value: 'small', label: 'Small (1-5 agents)' },
-  { value: 'medium', label: 'Medium (6-20 agents)' },
-  { value: 'large', label: 'Large (21+ agents)' }
+  { value: 'small', label: 'small_agency' },
+  { value: 'medium', label: 'medium_agency' },
+  { value: 'large', label: 'large_agency' }
 ];
 
 // Property quantity options
 const PROPERTY_QUANTITIES = [
-  { value: '1-2', label: '1-2 properties' },
-  { value: '3-10', label: '3-10 properties' },
-  { value: '11+', label: '11+ properties' }
+  { value: '1-2', label: 'property_1_2' },
+  { value: '3-10', label: 'property_3_10' },
+  { value: '11+', label: 'property_11plus' }
+];
+
+// List of major Moroccan cities
+const MOROCCAN_CITIES = [
+  'Agadir',
+  'Casablanca',
+  'Fès',
+  'Marrakech',
+  'Meknès',
+  'Mohammedia',
+  'Oujda',
+  'Rabat',
+  'Salé',
+  'Tanger',
+  'Tétouan',
+  'El Jadida',
+  'Kenitra',
+  'Nador',
+  'Essaouira',
+  'Chefchaouen',
+  'Ouarzazate',
+  'Ifrane',
+  'Laâyoune',
+  'Dakhla',
+  'Errachidia',
+  'Taza',
+  'Safi',
+  'Beni Mellal',
+  'Khouribga',
+  'Settat',
+  'Berkane',
+  'Al Hoceima',
+  'Larache',
+  'Taourirt'
 ];
 
 interface FormData {
@@ -61,12 +95,30 @@ interface FormData {
   additionalInfo: string;
 }
 
+// Onboarding slide interface
+interface Slide {
+  title: string;
+  subtitle: string;
+  benefits: {
+    title: string;
+    description: string;
+  }[];
+}
+
 const BecomeAdvertiserPage: React.FC = () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { t } = useTranslation();
   const navigate = useNavigate();
   const toast = useToastService();
   const signUp = useStore(state => state.signUp);
+  
+  // Show onboarding first
+  const [showOnboarding, setShowOnboarding] = useState(true);
+  
+  // Onboarding state
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [exiting, setExiting] = useState(false);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [progress, setProgress] = useState(0);
   
   // Current step (1-4)
   const [currentStep, setCurrentStep] = useState(1);
@@ -98,10 +150,101 @@ const BecomeAdvertiserPage: React.FC = () => {
   const [otpResendTimer, setOtpResendTimer] = useState(0);
   const otpTimerRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Places autocomplete
-  const { isLoaded } = useJsApiLoader(getGoogleMapsLoaderOptions());
+  // Onboarding slides
+  const slides: Slide[] = [
+    {
+      title: "Be One of Our First 100 Founding Partners",
+      subtitle: "Secure Your Spot as a Founding Partner – Enjoy Exclusive Perks for 3 Months",
+      benefits: [
+        {
+          title: "0% advertiser commission for 3 months",
+          description: "Keep 100% of your rental income for the first three months."
+        },
+        {
+          title: "Access to the referral program",
+          description: "Invite tenants or landlords to earn substantial rewards"
+        }
+      ]
+    },
+    {
+      title: "Default Perks",
+      subtitle: "Apply on all advertisers",
+      benefits: [
+        {
+          title: "Free professional photoshoots",
+          description: "Our team visits your property to take professional photos."
+        },
+        {
+          title: "No-hassle qualified tenants",
+          description: "We bring ready, paying tenants to your door—no effort required from you"
+        }
+      ]
+    },
+    {
+      title: "More Benefits",
+      subtitle: "Join Kaari today",
+      benefits: [
+        {
+          title: "Guaranteed full rent",
+          description: "No need to worry about closing the deal or rental arrears"
+        },
+        {
+          title: "Join our community",
+          description: "Become part of Morocco's fastest growing rental platform"
+        }
+      ]
+    }
+  ];
   
-  const searchBoxRef = React.useRef<google.maps.places.SearchBox>();
+  // Reset progress when slide changes
+  useEffect(() => {
+    if (!showOnboarding) return;
+    
+    setProgress(0);
+    
+    // Clear any existing interval
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+    }
+    
+    // Start new progress interval
+    progressIntervalRef.current = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          handleNextSlide();
+          return 0;
+        }
+        return prev + 0.5; // Increase by 0.5% every 50ms (10s total)
+      });
+    }, 50);
+    
+    // Cleanup interval on unmount or slide change
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
+  }, [currentSlide, showOnboarding]);
+  
+  const handleNextSlide = () => {
+    if (currentSlide === slides.length - 1) {
+      // Last slide, trigger exit animation
+      setExiting(true);
+      setTimeout(() => {
+        setShowOnboarding(false);
+      }, 500); // Match the exit animation duration
+    } else {
+      // Move to next slide
+      setCurrentSlide(prev => prev + 1);
+    }
+  };
+  
+  const handleSkipOnboarding = () => {
+    setExiting(true);
+    setTimeout(() => {
+      setShowOnboarding(false);
+    }, 500);
+  };
   
   // Generate a 6-digit OTP code (for fallback only)
   const generateOTP = useCallback(() => {
@@ -133,7 +276,7 @@ const BecomeAdvertiserPage: React.FC = () => {
     if (!formData.mobileNumber) {
       setErrors(prev => ({
         ...prev,
-        mobileNumber: 'Please enter your mobile number'
+        mobileNumber: t('become_advertiser.validation.enter_mobile')
       }));
       return;
     }
@@ -150,7 +293,7 @@ const BecomeAdvertiserPage: React.FC = () => {
       if (response.success) {
         setOtpSent(true);
         startOtpTimer(); // Start the countdown timer
-        toast.showToast('success', 'Success', 'OTP code sent to your mobile number');
+        toast.showToast('success', t('become_advertiser.toast.success'), t('become_advertiser.toast.otp_sent'));
         
         // For development purposes only - in production, this would be removed
         if (process.env.NODE_ENV === 'development') {
@@ -160,11 +303,11 @@ const BecomeAdvertiserPage: React.FC = () => {
           localStorage.setItem('demo_otp', fallbackOtp);
         }
       } else {
-        toast.showToast('error', 'Error', response.message || 'Failed to send OTP. Please try again.');
+        toast.showToast('error', 'Error', response.message || t('become_advertiser.toast.otp_failed'));
       }
     } catch (error) {
       console.error('Error sending OTP:', error);
-      toast.showToast('error', 'Error', 'Failed to send OTP. Please try again.');
+      toast.showToast('error', 'Error', t('become_advertiser.toast.otp_failed'));
       
       // Fallback for development
       if (process.env.NODE_ENV === 'development') {
@@ -179,7 +322,7 @@ const BecomeAdvertiserPage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData.mobileNumber, generateOTP, startOtpTimer, toast]);
+  }, [formData.mobileNumber, generateOTP, startOtpTimer, toast, t]);
   
   // Verify OTP code
   const verifyOtp = useCallback(async () => {
@@ -395,107 +538,63 @@ const BecomeAdvertiserPage: React.FC = () => {
     });
   };
   
-  // Handle places autocomplete
-  const onPlacesChanged = () => {
-    if (searchBoxRef.current) {
-      const places = searchBoxRef.current.getPlaces();
-      if (places && places.length > 0) {
-        const place = places[0];
-        
-        // Extract city from address components
-        let city = '';
-        if (place.address_components) {
-          for (const component of place.address_components) {
-            if (component.types.includes('locality')) {
-              city = component.long_name;
-              break;
-            }
-          }
-        }
-        
-        if (city) {
-          setFormData(prev => ({
-            ...prev,
-            city
-          }));
-          
-          // Clear error
-          if (errors.city) {
-            setErrors(prev => {
-              const newErrors = { ...prev };
-              delete newErrors.city;
-              return newErrors;
-            });
-          }
-        }
-      }
-    }
-  };
-  
-  // We no longer need these functions as we're using the PhoneInput and OtpInput components
-  // which handle formatting internally
-  
   // Validate current step
   const validateStep = (step: number): boolean => {
     const newErrors: Partial<Record<keyof FormData, string>> = {};
     
     if (step === 1) {
       if (!formData.accountType) {
-        newErrors.accountType = 'Please select account type';
+        newErrors.accountType = t('become_advertiser.validation.select_account_type');
       }
       
       if (formData.accountType === 'agency') {
         if (!formData.agencyName) {
-          newErrors.agencyName = 'Please enter agency name';
+          newErrors.agencyName = t('become_advertiser.validation.enter_agency_name');
         }
         if (!formData.agencySize) {
-          newErrors.agencySize = 'Please select agency size';
+          newErrors.agencySize = t('become_advertiser.validation.select_agency_size');
         }
       }
     }
     
     if (step === 2) {
       if (!formData.firstName) {
-        newErrors.firstName = 'Please enter your first name';
+        newErrors.firstName = t('become_advertiser.validation.enter_first_name');
       }
       if (!formData.lastName) {
-        newErrors.lastName = 'Please enter your last name';
+        newErrors.lastName = t('become_advertiser.validation.enter_last_name');
       }
       if (!formData.email) {
-        newErrors.email = 'Please enter your email';
+        newErrors.email = t('become_advertiser.validation.enter_email');
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = 'Please enter a valid email address';
+        newErrors.email = t('become_advertiser.validation.valid_email');
       }
       if (!formData.mobileNumber) {
-        newErrors.mobileNumber = 'Please enter your mobile number';
-      } else {
-        // For react-phone-input-2, the value includes the country code
-        // No need for additional validation as the component handles formatting
-        // Just ensure it's not empty, which we already checked
+        newErrors.mobileNumber = t('become_advertiser.validation.enter_mobile');
       }
     }
     
     if (step === 3) {
       if (!formData.mobileNumber) {
-        newErrors.mobileNumber = 'Please enter your mobile number';
+        newErrors.mobileNumber = t('become_advertiser.validation.enter_mobile');
       }
       
       if (!otpVerified) {
-        newErrors.otpCode = 'Please verify your mobile number';
+        newErrors.otpCode = t('become_advertiser.validation.verify_mobile');
       }
     }
     
     if (step === 4) {
       if (!formData.city) {
-        newErrors.city = 'Please enter your city of operation';
+        newErrors.city = t('become_advertiser.validation.enter_city');
       }
       
       if (!formData.propertyQuantity) {
-        newErrors.propertyQuantity = 'Please select how many properties you could list';
+        newErrors.propertyQuantity = t('become_advertiser.validation.select_property_quantity');
       }
       
       if (!formData.termsAgreed) {
-        newErrors.termsAgreed = 'You must agree to the Terms and Privacy Policy';
+        newErrors.termsAgreed = t('become_advertiser.validation.agree_terms');
       }
     }
     
@@ -578,9 +677,9 @@ const BecomeAdvertiserPage: React.FC = () => {
           
           // Handle specific signup errors
           if (signUpError?.code === 'auth/email-already-in-use') {
-            toast.showToast('error', 'Email In Use', 'This email is already registered. Please sign in with that account instead.');
+            toast.showToast('error', t('become_advertiser.toast.registration_failed'), t('become_advertiser.toast.email_in_use'));
           } else {
-            toast.showToast('error', 'Registration Failed', signUpError?.message || 'Failed to create account');
+            toast.showToast('error', t('become_advertiser.toast.registration_failed'), signUpError?.message || t('become_advertiser.toast.registration_failed'));
           }
           
           setIsSubmitting(false);
@@ -590,12 +689,15 @@ const BecomeAdvertiserPage: React.FC = () => {
       
       // Save additional advertiser information regardless of whether user is new or existing
       try {
+        // Ensure accountType is not empty (to satisfy TypeScript)
+        const advertiserType = formData.accountType || 'broker';
+        
         await saveAdvertiserInfo({
           userId: userId,
-          advertiserType: formData.accountType,
-          isBusiness: formData.accountType === 'agency',
-          businessName: formData.accountType === 'agency' ? formData.agencyName : undefined,
-          businessSize: formData.accountType === 'agency' ? formData.agencySize : undefined,
+          advertiserType: advertiserType as 'broker' | 'landlord' | 'agency',
+          isBusiness: advertiserType === 'agency',
+          businessName: advertiserType === 'agency' ? formData.agencyName : undefined,
+          businessSize: advertiserType === 'agency' ? formData.agencySize : undefined,
           city: formData.city,
           phoneNumber: formData.mobileNumber,
           propertyQuantity: formData.propertyQuantity,
@@ -604,13 +706,13 @@ const BecomeAdvertiserPage: React.FC = () => {
         });
         
         // Display success message
-        toast.showToast('success', 'Success', 'Registration completed successfully');
+        toast.showToast('success', t('become_advertiser.toast.success'), t('become_advertiser.toast.registration_success'));
         
-        // Redirect to the photoshoot booking page
-        navigate('/photoshoot-booking');
+        // Redirect to the thank you page
+        navigate('/become-advertiser/thank-you');
       } catch (error: any) {
         console.error('Error saving advertiser info:', error);
-        toast.showToast('error', 'Registration Incomplete', 'Your account was created but we couldn\'t save your advertiser details. Please try again or contact support.');
+        toast.showToast('error', t('become_advertiser.toast.registration_failed'), t('become_advertiser.toast.registration_incomplete'));
       }
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -621,7 +723,7 @@ const BecomeAdvertiserPage: React.FC = () => {
         errorMessage = error.message;
       }
       
-      toast.showToast('error', 'Registration Failed', errorMessage);
+      toast.showToast('error', t('become_advertiser.toast.registration_failed'), errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -668,14 +770,79 @@ const BecomeAdvertiserPage: React.FC = () => {
     }
   };
   
+  // Render onboarding
+  const renderOnboarding = () => {
+    const currentSlideContent = slides[currentSlide];
+    
+    return (
+      <OnboardingContainer className={exiting ? 'exiting' : ''}>
+        <TopSection>
+          <LogoContainer>
+            <LogoText>Kaari</LogoText>
+          </LogoContainer>
+          <LanguageSwitcherContainer>
+            <LanguageSwitcher />
+          </LanguageSwitcherContainer>
+        </TopSection>
+        
+        <ProgressContainer>
+          {slides.map((_, index) => (
+            <ProgressBar 
+              key={index} 
+              active={index === currentSlide}
+              completed={index < currentSlide}
+              onClick={() => setCurrentSlide(index)}
+            >
+              {index === currentSlide && <ProgressFill style={{ width: `${progress}%` }} />}
+            </ProgressBar>
+          ))}
+        </ProgressContainer>
+        
+        <ContentContainer className={exiting ? 'exiting' : ''}>
+          <SlideTitle>{currentSlideContent.title}</SlideTitle>
+          <SlideSubtitle>{currentSlideContent.subtitle}</SlideSubtitle>
+          
+          <BenefitsList>
+            {currentSlideContent.benefits.map((benefit, index) => (
+              <BenefitItem key={index}>
+                <CheckIcon>
+                  <FaCheck />
+                </CheckIcon>
+                <BenefitContent>
+                  <BenefitTitle>{benefit.title}</BenefitTitle>
+                  <BenefitDescription>{benefit.description}</BenefitDescription>
+                </BenefitContent>
+              </BenefitItem>
+            ))}
+          </BenefitsList>
+        </ContentContainer>
+        
+        <ButtonsContainer>
+          <SkipButton onClick={handleSkipOnboarding}>
+            {t('common.skip')}
+          </SkipButton>
+          <NextButton onClick={handleNextSlide}>
+            {currentSlide === slides.length - 1 ? t('common.get_started') : t('common.next')}
+            <FaArrowRight style={{ marginLeft: '8px' }} />
+          </NextButton>
+        </ButtonsContainer>
+      </OnboardingContainer>
+    );
+  };
+  
+  // If onboarding is showing, render only that
+  if (showOnboarding) {
+    return renderOnboarding();
+  }
+  
   // Render step 1: Account Type
   const renderStep1 = () => {
     return (
       <>
-        <h2 className="form-title">Select Account Type</h2>
+        <h2 className="form-title">{t('become_advertiser.step1.title')}</h2>
         
         <div className="form-group required">
-          <label>I am a</label>
+          <label>{t('become_advertiser.step1.label')}</label>
           <div className="radio-group">
             <div 
               className={`radio-option ${formData.accountType === 'broker' ? 'selected' : ''}`}
@@ -688,10 +855,10 @@ const BecomeAdvertiserPage: React.FC = () => {
                   checked={formData.accountType === 'broker'} 
                   onChange={() => handleAccountTypeSelect('broker')}
                 />
-                <span>Broker</span>
+                <span>{t('become_advertiser.step1.broker')}</span>
               </div>
               <div className="radio-description">
-                I'm a real estate broker or agent
+                {t('become_advertiser.step1.broker_description')}
               </div>
               <div className="option-icon">
                 <FaUserAlt />
@@ -709,10 +876,10 @@ const BecomeAdvertiserPage: React.FC = () => {
                   checked={formData.accountType === 'landlord'} 
                   onChange={() => handleAccountTypeSelect('landlord')}
                 />
-                <span>Landlord</span>
+                <span>{t('become_advertiser.step1.landlord')}</span>
               </div>
               <div className="radio-description">
-                I'm a property owner
+                {t('become_advertiser.step1.landlord_description')}
               </div>
               <div className="option-icon">
                 <FaUserAlt />
@@ -730,10 +897,10 @@ const BecomeAdvertiserPage: React.FC = () => {
                   checked={formData.accountType === 'agency'} 
                   onChange={() => handleAccountTypeSelect('agency')}
                 />
-                <span>Real-Estate Agency</span>
+                <span>{t('become_advertiser.step1.agency')}</span>
               </div>
               <div className="radio-description">
-                I represent a real estate company or agency
+                {t('become_advertiser.step1.agency_description')}
               </div>
               <div className="option-icon">
                 <FaBuilding />
@@ -746,28 +913,28 @@ const BecomeAdvertiserPage: React.FC = () => {
         {formData.accountType === 'agency' && (
           <div className="conditional-fields">
             <div className="form-group required" style={{ marginBottom: '16px' }}>
-              <label htmlFor="agencyName">Agency Name</label>
+              <label htmlFor="agencyName">{t('become_advertiser.step1.agency_name')}</label>
               <InputBaseModel
                 value={formData.agencyName}
                 onChange={(e) => handleInputChange('agencyName', e.target.value)}
-                placeholder="Enter your agency name"
+                placeholder={t('become_advertiser.step1.agency_name_placeholder')}
                 error={errors.agencyName}
               />
             </div>
             
             <div className="form-group required">
-              <label htmlFor="agencySize">Agency Size</label>
+              <label htmlFor="agencySize">{t('become_advertiser.step1.agency_size')}</label>
               <div style={{ marginBottom: '24px' }}> </div>
               <SelectFieldBaseModelVariant1
-                options={AGENCY_SIZES.map(size => size.label)}
-                value={AGENCY_SIZES.find(size => size.value === formData.agencySize)?.label || ''}
+                options={AGENCY_SIZES.map(size => t(`become_advertiser.step1.${size.label}`))}
+                value={formData.agencySize ? t(`become_advertiser.step1.${AGENCY_SIZES.find(size => size.value === formData.agencySize)?.label}`) : ''}
                 onChange={(value) => {
-                  const selectedSize = AGENCY_SIZES.find(size => size.label === value);
+                  const selectedSize = AGENCY_SIZES.find(size => t(`become_advertiser.step1.${size.label}`) === value);
                   if (selectedSize) {
                     handleInputChange('agencySize', selectedSize.value);
                   }
                 }}
-                placeholder="Select agency size"
+                placeholder={t('become_advertiser.step1.agency_size_placeholder')}
               />
               {errors.agencySize && <div className="error-message">{errors.agencySize}</div>}
             </div>
@@ -777,7 +944,7 @@ const BecomeAdvertiserPage: React.FC = () => {
         <div className="buttons-container">
           <div></div> {/* Empty div for space-between alignment */}
           <PurpleButtonLB60
-            text="Continue"
+            text={t('become_advertiser.buttons.continue')}
             onClick={nextStep}
             disabled={isSubmitting}
           />
@@ -790,36 +957,36 @@ const BecomeAdvertiserPage: React.FC = () => {
   const renderStep2 = () => {
     return (
       <>
-        <h2 className="form-title">Your Information</h2>
+        <h2 className="form-title">{t('become_advertiser.step2.title')}</h2>
         
         <div className="form-row">
           <div className="form-group required">
-            <label htmlFor="firstName">First Name</label>
+            <label htmlFor="firstName">{t('become_advertiser.step2.first_name')}</label>
             <InputBaseModel
               value={formData.firstName}
               onChange={(e) => handleInputChange('firstName', e.target.value)}
-              placeholder="Enter your first name"
+              placeholder={t('become_advertiser.step2.first_name_placeholder')}
               error={errors.firstName}
             />
           </div>
           
           <div className="form-group required">
-            <label htmlFor="lastName">Last Name</label>
+            <label htmlFor="lastName">{t('become_advertiser.step2.last_name')}</label>
             <InputBaseModel
               value={formData.lastName}
               onChange={(e) => handleInputChange('lastName', e.target.value)}
-              placeholder="Enter your last name"
+              placeholder={t('become_advertiser.step2.last_name_placeholder')}
               error={errors.lastName}
             />
           </div>
         </div>
         
         <div className="form-group required">
-          <label htmlFor="email">Email Address</label>
+          <label htmlFor="email">{t('become_advertiser.step2.email')}</label>
           <InputBaseModel
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            placeholder="Enter your email address"
+            placeholder={t('become_advertiser.step2.email_placeholder')}
             // Using text type as email is not supported
             type="text"
             error={errors.email}
@@ -828,7 +995,7 @@ const BecomeAdvertiserPage: React.FC = () => {
         
         <div className="form-group required">
           <label htmlFor="mobileNumber">
-            <FaPhoneAlt className="label-icon" /> Mobile Number
+            <FaPhoneAlt className="label-icon" /> {t('become_advertiser.step2.mobile_number')}
           </label>
           <PhoneInput
             country={'ma'} // Morocco as default
@@ -846,7 +1013,7 @@ const BecomeAdvertiserPage: React.FC = () => {
             enableSearch={false}
             disableSearchIcon={true}
             masks={{ma: '.. .. .. .. ..'}} // Format for Morocco: 06 XX XX XX XX
-            placeholder="06 XX XX XX XX"
+            placeholder={t('become_advertiser.step2.mobile_placeholder')}
             specialLabel=""
           />
           {errors.mobileNumber && <div className="error-message">{errors.mobileNumber}</div>}
@@ -854,12 +1021,12 @@ const BecomeAdvertiserPage: React.FC = () => {
         
         <div className="buttons-container">
           <WhiteButtonLB60
-            text="Back"
+            text={t('become_advertiser.buttons.back')}
             onClick={prevStep}
             disabled={isSubmitting}
           />
           <PurpleButtonLB60
-            text="Continue"
+            text={t('become_advertiser.buttons.continue')}
             onClick={nextStep}
             disabled={isSubmitting}
           />
@@ -872,13 +1039,13 @@ const BecomeAdvertiserPage: React.FC = () => {
   const renderStep3 = () => {
     return (
       <>
-        <h2 className="form-title">Verify Your Phone Number</h2>
+        <h2 className="form-title">{t('become_advertiser.step3.title')}</h2>
         
         <div className="form-step-content">
           <div className="form-group required otp-group">
             <div className="otp-verification-container">
-              <h3 className="otp-title">Verify</h3>
-              <p className="otp-subtitle">A verification code was sent to {formData.mobileNumber}</p>
+              <h3 className="otp-title">{t('become_advertiser.step3.verify')}</h3>
+              <p className="otp-subtitle">{t('become_advertiser.step3.code_sent')} {formData.mobileNumber}</p>
               
               <OtpInput
                 length={6}
@@ -894,22 +1061,22 @@ const BecomeAdvertiserPage: React.FC = () => {
                 onClick={verifyOtp}
                 disabled={isSubmitting || !formData.otpCode || formData.otpCode.length < 6}
               >
-                Verify
+                {t('become_advertiser.step3.verify_button')}
               </button>
               
               <div className="otp-resend">
-                Didn't receive code? <button 
+                {t('become_advertiser.step3.no_code')} <button 
                   className="resend-link" 
                   onClick={sendOtp}
                   disabled={isSubmitting || otpResendTimer > 0}
                 >
-                  {otpResendTimer > 0 ? `Request again (${otpResendTimer}s)` : 'Request again'}
+                  {otpResendTimer > 0 ? t('become_advertiser.step3.request_timer', { seconds: otpResendTimer }) : t('become_advertiser.step3.request_again')}
                 </button>
               </div>
               
               {otpVerified && (
                 <div className="verified-badge">
-                  <FaCheckCircle /> Mobile number verified successfully
+                  <FaCheckCircle /> {t('become_advertiser.step3.verification_success')}
                 </div>
               )}
             </div>
@@ -919,12 +1086,12 @@ const BecomeAdvertiserPage: React.FC = () => {
         
         <div className="buttons-container">
           <WhiteButtonLB60
-            text="Back"
+            text={t('become_advertiser.buttons.back')}
             onClick={prevStep}
             disabled={isSubmitting}
           />
           <PurpleButtonLB60
-            text="Continue"
+            text={t('become_advertiser.buttons.continue')}
             onClick={nextStep}
             disabled={isSubmitting || !otpVerified}
           />
@@ -937,60 +1104,41 @@ const BecomeAdvertiserPage: React.FC = () => {
   const renderStep4 = () => {
     return (
       <>
-        <h2 className="form-title">Listing Information</h2>
+        <h2 className="form-title">{t('become_advertiser.step4.title')}</h2>
         
         <div className="form-group required location-group">
           <label htmlFor="city">
-            <FaMapMarkerAlt className="label-icon" /> City of Operation
+            <FaMapMarkerAlt className="label-icon" /> {t('become_advertiser.step4.city')}
           </label>
           <div className="city-input-container">
-            {isLoaded ? (
-              <StandaloneSearchBox
-                onLoad={(ref) => (searchBoxRef.current = ref)}
-                onPlacesChanged={onPlacesChanged}
-              >
-                <div className="location-input-wrapper">
-                  <InputBaseModel
-                    value={formData.city}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
-                    placeholder="Search for your city"
-                    error={errors.city}
-                  />
-                  <FaMapMarkerAlt className="city-icon" />
-                </div>
-              </StandaloneSearchBox>
-            ) : (
-              <div className="location-input-wrapper">
-                <InputBaseModel
-                  value={formData.city}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
-                  placeholder="Enter your city"
-                  error={errors.city}
-                />
-                <FaMapMarkerAlt className="city-icon" />
-              </div>
-            )}
+            <SelectFieldBaseModelVariant1
+              options={MOROCCAN_CITIES}
+              value={formData.city}
+              onChange={(value) => handleInputChange('city', value)}
+              placeholder={t('become_advertiser.step4.city_search')}
+            />
+            {errors.city && <div className="error-message">{errors.city}</div>}
           </div>
         </div>
         
         <div className="form-group required">
-          <label htmlFor="propertyQuantity">How many properties could you list?</label>
+          <label htmlFor="propertyQuantity">{t('become_advertiser.step4.property_quantity')}</label>
           <SelectFieldBaseModelVariant1
-            options={PROPERTY_QUANTITIES.map(q => q.label)}
-            value={PROPERTY_QUANTITIES.find(q => q.value === formData.propertyQuantity)?.label || ''}
+            options={PROPERTY_QUANTITIES.map(q => t(`become_advertiser.step4.${q.label}`))}
+            value={formData.propertyQuantity ? t(`become_advertiser.step4.${PROPERTY_QUANTITIES.find(q => q.value === formData.propertyQuantity)?.label}`) : ''}
             onChange={(value) => {
-              const selectedQuantity = PROPERTY_QUANTITIES.find(q => q.label === value);
+              const selectedQuantity = PROPERTY_QUANTITIES.find(q => t(`become_advertiser.step4.${q.label}`) === value);
               if (selectedQuantity) {
                 handleInputChange('propertyQuantity', selectedQuantity.value);
               }
             }}
-            placeholder="Select number of properties"
+            placeholder={t('become_advertiser.step4.property_quantity_placeholder')}
           />
           {errors.propertyQuantity && <div className="error-message">{errors.propertyQuantity}</div>}
         </div>
         
         <div className="form-group">
-          <label htmlFor="propertyTypes">Primary property types</label>
+          <label htmlFor="propertyTypes">{t('become_advertiser.step4.property_types')}</label>
           <div className="chips-container">
             {PROPERTY_TYPES.map(type => (
               <div 
@@ -998,7 +1146,7 @@ const BecomeAdvertiserPage: React.FC = () => {
                 className={`chip ${formData.propertyTypes.includes(type.id) ? 'selected' : ''}`}
                 onClick={() => togglePropertyType(type.id)}
               >
-                {type.label}
+                {t(`become_advertiser.step4.${type.label}`)}
               </div>
             ))}
           </div>
@@ -1012,8 +1160,12 @@ const BecomeAdvertiserPage: React.FC = () => {
               checked={formData.termsAgreed}
               onChange={(e) => handleInputChange('termsAgreed', e.target.checked)}
             />
-            <label htmlFor="termsAgreed">
-              I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>
+            <label htmlFor="termsAgreed" dangerouslySetInnerHTML={{
+              __html: t('become_advertiser.step4.terms_agreement')
+                .replace('<a>', '<a href="/terms" style="margin: 0 5px" target="_blank">')
+                .replace('</a>', '</a>')
+                .replace('<a>', '<a href="/privacy" style="margin: 0 5px" target="_blank">')
+            }}>
             </label>
           </div>
           {errors.termsAgreed && <div className="error-message">{errors.termsAgreed}</div>}
@@ -1021,12 +1173,12 @@ const BecomeAdvertiserPage: React.FC = () => {
         
         <div className="buttons-container">
           <WhiteButtonLB60
-            text="Back"
+            text={t('become_advertiser.buttons.back')}
             onClick={prevStep}
             disabled={isSubmitting}
           />
           <PurpleButtonLB60
-            text={isSubmitting ? "Creating Account..." : "Create my account"}
+            text={isSubmitting ? t('become_advertiser.buttons.creating_account') : t('become_advertiser.buttons.create_account')}
             onClick={handleSubmit}
             disabled={isSubmitting}
           />
@@ -1065,7 +1217,7 @@ const BecomeAdvertiserPage: React.FC = () => {
               {currentStep > 1 ? <FaCheck /> : 1}
             </div>
             <div className={`step-label ${currentStep === 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
-              Account Type
+              {t('become_advertiser.steps.account_type')}
             </div>
           </div>
           
@@ -1074,7 +1226,7 @@ const BecomeAdvertiserPage: React.FC = () => {
               {currentStep > 2 ? <FaCheck /> : 2}
             </div>
             <div className={`step-label ${currentStep === 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
-              User Info
+              {t('become_advertiser.steps.user_info')}
             </div>
           </div>
           
@@ -1083,7 +1235,7 @@ const BecomeAdvertiserPage: React.FC = () => {
               {currentStep > 3 ? <FaCheck /> : 3}
             </div>
             <div className={`step-label ${currentStep === 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
-              Verify Phone
+              {t('become_advertiser.steps.verify_phone')}
             </div>
           </div>
           
@@ -1092,7 +1244,7 @@ const BecomeAdvertiserPage: React.FC = () => {
               {currentStep > 4 ? <FaCheck /> : 4}
             </div>
             <div className={`step-label ${currentStep === 4 ? 'active' : ''} ${currentStep > 4 ? 'completed' : ''}`}>
-              Listing Info
+              {t('become_advertiser.steps.listing_info')}
             </div>
           </div>
         </div>
@@ -1104,5 +1256,199 @@ const BecomeAdvertiserPage: React.FC = () => {
     </>
   );
 };
+
+// Animations for onboarding
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const fadeOut = keyframes`
+  from { opacity: 1; }
+  to { opacity: 0; }
+`;
+
+// Styled components for onboarding
+const OnboardingContainer = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(135deg, ${Theme.colors.primary} 0%, ${Theme.colors.secondary} 100%);
+  color: white;
+  padding: 40px 20px;
+  box-sizing: border-box;
+  z-index: 1000;
+  animation: ${fadeIn} 0.5s ease-in-out;
+  
+  &.exiting {
+    animation: ${fadeOut} 0.5s ease-in-out forwards;
+  }
+`;
+
+const LogoContainer = styled.div`
+  padding: 20px;
+`;
+
+const LogoText = styled.h1`
+  font: ${Theme.typography.fonts.h3};
+  color: white;
+  margin: 0;
+  letter-spacing: 1px;
+`;
+
+const ProgressContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+`;
+
+const ProgressBar = styled.div<{ active: boolean; completed: boolean }>`
+  height: 4px;
+  flex: 1;
+  max-width: 100px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  ${props => props.completed && `
+    background-color: rgba(255, 255, 255, 0.9);
+  `}
+`;
+
+const ProgressFill = styled.div`
+  height: 100%;
+  background-color: white;
+  transition: width 0.05s linear;
+`;
+
+const ContentContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 20px;
+  max-width: 700px;
+  margin: 0 auto;
+  width: 100%;
+  animation: ${fadeIn} 0.5s ease-in-out;
+  
+  &.exiting {
+    animation: ${fadeOut} 0.5s ease-in-out forwards;
+  }
+`;
+
+const SlideTitle = styled.h1`
+  font: ${Theme.typography.fonts.h2};
+  margin-bottom: 16px;
+  color: white;
+`;
+
+const SlideSubtitle = styled.h2`
+  font: ${Theme.typography.fonts.text16};
+  margin-bottom: 40px;
+  color: rgba(255, 255, 255, 0.9);
+`;
+
+const BenefitsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+`;
+
+const BenefitItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+`;
+
+const CheckIcon = styled.div`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: white;
+  color: ${Theme.colors.secondary};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+`;
+
+const BenefitContent = styled.div`
+  flex: 1;
+`;
+
+const BenefitTitle = styled.h3`
+  font: ${Theme.typography.fonts.largeB};
+  margin-bottom: 8px;
+  color: white;
+`;
+
+const BenefitDescription = styled.p`
+  font: ${Theme.typography.fonts.text14};
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+`;
+
+const ButtonsContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+`;
+
+const SkipButton = styled.button`
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font: ${Theme.typography.fonts.largeM};
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    color: white;
+  }
+`;
+
+const NextButton = styled.button`
+  background-color: white;
+  color: ${Theme.colors.secondary};
+  border: none;
+  border-radius: ${Theme.borders.radius.extreme};
+  padding: 12px 24px;
+  font: ${Theme.typography.fonts.largeB};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const TopSection = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 20px;
+`;
+
+const LanguageSwitcherContainer = styled.div`
+  z-index: 10;
+`;
 
 export default BecomeAdvertiserPage;

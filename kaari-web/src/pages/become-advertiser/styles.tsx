@@ -197,6 +197,11 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     &.otp-input-group {
       max-width: 450px;
     }
+
+    @media (max-width: 576px) {
+      flex-direction: column;
+      align-items: stretch;
+    }
   }
   
   /* Custom styles for react-phone-input-2 */
@@ -291,39 +296,6 @@ export const AdvertiserRegistrationPageStyle = styled.div`
       background-color: #f0f0f0 !important;
     }
   }
-  
-  /* Phone input custom classes */
-  .phone-input-container {
-    width: 100% !important;
-  }
-  
-  .phone-input {
-    width: 100% !important;
-    height: 65px !important;
-    font-size: 16px !important;
-    border-radius: ${Theme.borders.radius.extreme} !important;
-    border: 1px solid #ccc !important;
-    background-color: ${Theme.colors.white} !important;
-    padding-left: 60px !important;
-    font: ${Theme.typography.fonts.text16} !important;
-    color: ${Theme.colors.black} !important;
-    
-    &:focus {
-      border-color: ${Theme.colors.secondary} !important;
-      box-shadow: 0 0 0 2px rgba(143, 39, 206, 0.1) !important;
-    }
-  }
-  
-  .phone-dropdown-button {
-    background-color: #f8f8f8 !important;
-    border-radius: ${Theme.borders.radius.extreme} 0 0 ${Theme.borders.radius.extreme} !important;
-    border: 1px solid #ccc !important;
-    border-right: none !important;
-    
-    &:hover, &:focus {
-      background-color: #f0f0f0 !important;
-    }
-  }
 
   .send-otp-button {
     padding: 0 20px;
@@ -352,6 +324,11 @@ export const AdvertiserRegistrationPageStyle = styled.div`
       cursor: not-allowed;
       transform: none;
       box-shadow: none;
+    }
+
+    @media (max-width: 576px) {
+      width: 100%;
+      min-width: unset;
     }
   }
   
@@ -392,6 +369,11 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     border-radius: ${Theme.borders.radius.md};
     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(143, 39, 206, 0.1);
+
+    @media (max-width: 576px) {
+      padding: 30px 15px;
+      max-width: 100%;
+    }
   }
   
   .otp-title {
@@ -502,6 +484,10 @@ export const AdvertiserRegistrationPageStyle = styled.div`
         margin-right: 10px;
         font-size: 18px;
       }
+    }
+
+    @media (max-width: 576px) {
+      padding: 20px 15px;
     }
   }
   
@@ -631,26 +617,26 @@ export const AdvertiserRegistrationPageStyle = styled.div`
         opacity: 0.5;
       }
       
-              &:hover {
-          border-color: ${Theme.colors.secondary};
-          background: linear-gradient(to bottom, rgba(143, 39, 206, 0.03), rgba(143, 39, 206, 0.06));
-          transform: translateY(-5px);
-          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-          
-          &:before {
-            width: 100%;
-          }
-          
-          .radio-title span {
-            color: ${Theme.colors.secondary};
-          }
-          
-          .option-icon {
-            transform: translateY(-50%) scale(1.2) rotate(5deg);
-            opacity: 0.7;
-            color: ${Theme.colors.secondary};
-          }
+      &:hover {
+        border-color: ${Theme.colors.secondary};
+        background: linear-gradient(to bottom, rgba(143, 39, 206, 0.03), rgba(143, 39, 206, 0.06));
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        
+        &:before {
+          width: 100%;
         }
+        
+        .radio-title span {
+          color: ${Theme.colors.secondary};
+        }
+        
+        .option-icon {
+          transform: translateY(-50%) scale(1.2) rotate(5deg);
+          opacity: 0.7;
+          color: ${Theme.colors.secondary};
+        }
+      }
       
       &.selected {
         border-color: ${Theme.colors.secondary};
@@ -691,6 +677,18 @@ export const AdvertiserRegistrationPageStyle = styled.div`
           }
         }
       }
+
+      @media (max-width: 768px) {
+        min-width: 100%;
+        padding: 20px 60px 20px 20px;
+      }
+
+      @media (max-width: 576px) {
+        .option-icon {
+          right: 15px;
+          font-size: 24px;
+        }
+      }
     }
   }
   
@@ -718,6 +716,11 @@ export const AdvertiserRegistrationPageStyle = styled.div`
         color: ${Theme.colors.white};
         transform: translateY(-2px);
         box-shadow: 0 3px 10px rgba(143, 39, 206, 0.2);
+      }
+
+      @media (max-width: 576px) {
+        padding: 6px 12px;
+        font-size: 14px;
       }
     }
   }
@@ -775,6 +778,17 @@ export const AdvertiserRegistrationPageStyle = styled.div`
         max-width: 200px;
       }
     }
+
+    @media (max-width: 576px) {
+      flex-direction: column;
+      gap: 15px;
+      
+      button {
+        width: 100%;
+        margin: 0 !important;
+        max-width: 100% !important;
+      }
+    }
   }
   
   /* Override for PurpleButtonLB60 and WhiteButtonLB60 to ensure consistent height */
@@ -788,26 +802,96 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     display: flex;
     align-items: flex-start;
     margin-top: 30px;
+    position: relative;
     
-    input {
-      margin-right: 10px;
-      margin-top: 3px;
+    input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
       cursor: pointer;
+      height: 0;
+      width: 0;
     }
     
     label {
       font: ${Theme.typography.fonts.text14};
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding-left: 28px;
+      line-height: 1.4;
+      
+      &:before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 18px;
+        height: 18px;
+        border: 1px solid ${Theme.colors.gray};
+        background-color: white;
+        border-radius: 2px;
+        transition: all 0.2s ease;
+      }
+      
+      &:after {
+        content: '';
+        position: absolute;
+        left: 6px;
+        top: 2px;
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+        opacity: 0;
+        transition: all 0.2s ease;
+      }
       
       a {
         color: ${Theme.colors.secondary};
-        text-decoration: underline;
-        transition: color 0.2s ease;
+        text-decoration: none;
+        font-weight: 600;
+        margin: 0 1px;
+        position: relative;
+        transition: all 0.2s ease;
         
         &:hover {
           color: ${Theme.colors.primary};
         }
+        
+        &:after {
+          content: '';
+          position: absolute;
+          bottom: -1px;
+          left: 0;
+          width: 100%;
+          height: 1px;
+          background-color: ${Theme.colors.secondary};
+          transition: all 0.2s ease;
+        }
+        
+        &:hover:after {
+          background-color: ${Theme.colors.primary};
+        }
       }
+    }
+    
+    input:checked + label:before {
+      background-color: ${Theme.colors.secondary};
+      border-color: ${Theme.colors.secondary};
+    }
+    
+    input:checked + label:after {
+      opacity: 1;
+    }
+    
+    input:focus + label:before {
+      box-shadow: 0 0 0 3px rgba(143, 39, 206, 0.2);
+    }
+    
+    &:hover label:before {
+      border-color: ${Theme.colors.secondary};
     }
   }
   
@@ -849,8 +933,6 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     }
   }
   
-  
-  
   .form-control {
     width: 100%;
     padding: 12px 16px;
@@ -866,12 +948,19 @@ export const AdvertiserRegistrationPageStyle = styled.div`
   }
   
   @media (max-width: 768px) {
+    padding: 30px 15px 60px;
+    
     .form-container {
-      padding: 20px;
+      padding: 0;
     }
     
     .steps-container {
       margin-bottom: 30px;
+      
+      &:after {
+        left: 15%;
+        right: 15%;
+      }
     }
     
     .step .step-number {
@@ -882,6 +971,39 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     
     .step .step-label {
       font-size: 12px;
+    }
+  }
+
+  @media (max-width: 576px) {
+    padding: 20px 10px 40px;
+    
+    .steps-container {
+      &:after {
+        top: 20px;
+      }
+    }
+    
+    .step .step-number {
+      width: 36px;
+      height: 36px;
+      font-size: 12px;
+    }
+    
+    .step .step-label {
+      font-size: 10px;
+    }
+    
+    .form-title {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .steps-container {
+      &:after {
+        display: none;
+      }
     }
   }
 `; 

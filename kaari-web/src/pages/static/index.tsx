@@ -12,6 +12,7 @@ import AdvertiserGuidePage from './advertiser-guide';
 import StayProtectionAdvertisersPage from './stay-protection-advertisers';
 import TermsPage from './terms';
 import PrivacyPage from './privacy';
+import ComingSoonPage from './coming-soon';
 
 export {
   AboutUsPage,
@@ -27,5 +28,6 @@ export {
   AdvertiserGuidePage,
   StayProtectionAdvertisersPage,
   TermsPage,
-  PrivacyPage
+  PrivacyPage,
+  ComingSoonPage
 }; 

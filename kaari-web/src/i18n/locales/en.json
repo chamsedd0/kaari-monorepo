@@ -82,7 +82,11 @@
     "add": "Add",
     "upload": "Upload",
     "uploading": "Uploading...",
-    "replace": "Replace"
+    "replace": "Replace",
+    "skip": "Skip",
+    "next": "Next",
+    "get_started": "Get Started",
+    "return_home": "Return Home"
   },
   "header": {
     "profile_dropdown": {
@@ -897,5 +901,112 @@
     "all_rights_reserved": "All rights reserved.",
     "sitemap": "Sitemap",
     "accessibility": "Accessibility"
+  },
+  "advertiser_thank_you": {
+    "title": "Your Account Has Been Created Successfully!",
+    "main_message": "Thank you for joining us as an advertiser. We're excited to have you on board! Your account has been created and you can now start setting up your properties. Here's what you need to know:",
+    "next_steps_title": "Next Steps",
+    "next_steps_message": "Complete your profile and add your first property listing in your dashboard. Our team will review your submission.",
+    "get_ready_title": "Get Ready",
+    "get_ready_message": "Prepare high-quality photos and detailed descriptions of your properties to attract more potential clients.",
+    "launch_date_title": "Launch Date",
+    "launch_date_message": "Once approved, your properties will be visible to all users searching in your area. We'll notify you when you're live!",
+    "learn_more_button": "Learn More",
+    "dashboard_button": "Go to Dashboard",
+    "preview_dashboard": "See Preview of Dashboard"
+  },
+  "become_advertiser": {
+    "steps": {
+      "account_type": "Account Type",
+      "user_info": "User Info",
+      "verify_phone": "Verify Phone",
+      "listing_info": "Listing Info"
+    },
+    "step1": {
+      "title": "Select Account Type",
+      "label": "I am a",
+      "broker": "Broker",
+      "broker_description": "I'm a real estate broker or agent",
+      "landlord": "Landlord",
+      "landlord_description": "I'm a property owner",
+      "agency": "Real-Estate Agency",
+      "agency_description": "I represent a real estate company or agency",
+      "agency_name": "Agency Name",
+      "agency_name_placeholder": "Enter your agency name",
+      "agency_size": "Agency Size",
+      "agency_size_placeholder": "Select agency size",
+      "small_agency": "Small (1-5 agents)",
+      "medium_agency": "Medium (6-20 agents)",
+      "large_agency": "Large (21+ agents)"
+    },
+    "step2": {
+      "title": "Your Information",
+      "first_name": "First Name",
+      "first_name_placeholder": "Enter your first name",
+      "last_name": "Last Name",
+      "last_name_placeholder": "Enter your last name",
+      "email": "Email Address",
+      "email_placeholder": "Enter your email address",
+      "mobile_number": "Mobile Number",
+      "mobile_placeholder": "06 XX XX XX XX"
+    },
+    "step3": {
+      "title": "Verify Your Phone Number",
+      "verify": "Verify",
+      "code_sent": "A verification code was sent to",
+      "verify_button": "Verify",
+      "no_code": "Didn't receive code?",
+      "request_again": "Request again",
+      "request_timer": "Request again ({{seconds}}s)",
+      "verification_success": "Mobile number verified successfully"
+    },
+    "step4": {
+      "title": "Listing Information",
+      "city": "City of Operation",
+      "city_search": "Search for your city",
+      "city_enter": "Enter your city",
+      "property_quantity": "How many properties could you list?",
+      "property_quantity_placeholder": "Select number of properties",
+      "property_1_2": "1-2 properties",
+      "property_3_10": "3-10 properties",
+      "property_11plus": "11+ properties",
+      "property_types": "Primary property types",
+      "apartment": "Apartment",
+      "house": "House",
+      "villa": "Villa",
+      "condo": "Condo",
+      "penthouse": "Penthouse",
+      "studio": "Studio",
+      "terms_agreement": "I agree to the <a>Terms of Service</a> and <a>Privacy Policy</a>*"
+    },
+    "buttons": {
+      "continue": "Continue",
+      "back": "Back",
+      "creating_account": "Creating Account...",
+      "create_account": "Create my account"
+    },
+    "validation": {
+      "select_account_type": "Please select account type",
+      "enter_agency_name": "Please enter agency name",
+      "select_agency_size": "Please select agency size",
+      "enter_first_name": "Please enter your first name",
+      "enter_last_name": "Please enter your last name",
+      "enter_email": "Please enter your email",
+      "valid_email": "Please enter a valid email address",
+      "enter_mobile": "Please enter your mobile number",
+      "verify_mobile": "Please verify your mobile number",
+      "enter_city": "Please enter your city of operation",
+      "select_property_quantity": "Please select how many properties you could list",
+      "agree_terms": "You must agree to the Terms and Privacy Policy"
+    },
+    "toast": {
+      "otp_sent": "OTP code sent to your mobile number",
+      "otp_failed": "Failed to send OTP. Please try again.",
+      "email_in_use": "This email is already registered. Please sign in with that account instead.",
+      "registration_failed": "Registration Failed",
+      "success": "Success",
+      "registration_success": "Registration completed successfully",
+      "registration_incomplete": "Your account was created but we couldn't save your advertiser details. Please try again or contact support."
+    }
   }
 } 

@@ -12,6 +12,7 @@ import ProfileShowcasePage from './pages/profile-advertiser-showcase/page';
 import PhotoshootBookingPage from './pages/photoshoot-booking/page';
 import ThankYouPage from './pages/photoshoot-booking/thank-you';
 import BecomeAdvertiserPage from './pages/become-advertiser/page';
+import AdvertiserThankYouPage from './pages/become-advertiser/thank-you';
 import HelpPage from './pages/help/page';
 import ReservationStatusPage from './pages/dashboards/user-dashboard/reservation-status/page';
 import CancellationRequestPage from './pages/dashboards/user-dashboard/cancellation-request/page';
@@ -28,6 +29,7 @@ import { NotificationProvider } from './contexts/notifications/NotificationConte
 import { ChecklistProvider } from './contexts/checklist/ChecklistContext';
 import NotificationsPage from './pages/notifications';
 import NotificationDebug from './components/skeletons/notifications/NotificationDebug';
+import ProtectedRoute from './components/ProtectedRoute';
 // Import static pages
 import {
   AboutUsPage,
@@ -43,7 +45,8 @@ import {
   AdvertiserGuidePage,
   StayProtectionAdvertisersPage,
   TermsPage,
-  PrivacyPage
+  PrivacyPage,
+  ComingSoonPage
 } from './pages/static';
 import ExpirationService from './services/ExpirationService';
 
@@ -150,9 +153,22 @@ function App() {
       {/* Public Routes */}
       <Route path="/" element={<UsersLanding key={renderKey} />} />
       <Route path="/for-advertisers" element={<AdvertisersLanding key={renderKey} />} />
-      <Route path="/photoshoot-booking" element={<PhotoshootBookingPage />} />
-      <Route path="/photoshoot-booking/thank-you" element={<ThankYouPage />} />
+      
+      {/* Protected Routes with Coming Soon page */}
+      <Route path="/photoshoot-booking" element={
+        <ProtectedRoute>
+          <PhotoshootBookingPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/photoshoot-booking/thank-you" element={
+        <ProtectedRoute>
+          <ThankYouPage />
+        </ProtectedRoute>
+      } />
+      
       <Route path="/become-advertiser" element={<BecomeAdvertiserPage />} />
+      <Route path="/become-advertiser/thank-you" element={<AdvertiserThankYouPage />} />
+      <Route path="/static/coming-soon" element={<ComingSoonPage />} />
 
       <Route path="/properties" element={<PropertyList />} />
       <Route path="/property/:id" element={<PropertyPageComponent />} />
@@ -244,52 +260,61 @@ function App() {
         } 
       />
       
-      {/* Advertiser Dashboard Routes */}
+      {/* Advertiser Dashboard Routes - Protected with Coming Soon */}
       <Route 
         path="/dashboard/advertiser" 
         element={
-          isAuthenticated && userIsAdvertiser ? 
-            <Navigate to="/dashboard/advertiser/dashboard" replace /> : 
-            (() => {
-              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
-                path: '/dashboard/advertiser',
-                redirectTo: '/',
-                isAuthenticated: isAuthenticated
-              });
-              return <Navigate to="/" replace />;
-            })()
+          <ProtectedRoute>
+            {isAuthenticated && userIsAdvertiser ? 
+              <Navigate to="/dashboard/advertiser/dashboard" replace /> : 
+              (() => {
+                eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                  path: '/dashboard/advertiser',
+                  redirectTo: '/',
+                  isAuthenticated: isAuthenticated
+                });
+                return <Navigate to="/" replace />;
+              })()
+            }
+          </ProtectedRoute>
         }
       />
       {/* Add route for property edit requests - must be before the generic route */}
       <Route 
         path="/dashboard/advertiser/properties/edit-request/:propertyId" 
         element={
-          isAuthenticated && userIsAdvertiser ? 
-            <AdvertiserDashboard /> : 
-            (() => {
-              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
-                path: '/dashboard/advertiser/properties/edit-request',
-                redirectTo: '/',
-                isAuthenticated: isAuthenticated
-              });
-              return <Navigate to="/" replace />;
-            })()
+          <ProtectedRoute>
+            {isAuthenticated && userIsAdvertiser ? 
+              <AdvertiserDashboard /> : 
+              (() => {
+                eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                  path: '/dashboard/advertiser/properties/edit-request',
+                  redirectTo: '/',
+                  isAuthenticated: isAuthenticated
+                });
+                return <Navigate to="/" replace />;
+              })()
+            }
+          </ProtectedRoute>
         }
       />
       {/* Add routes for referral program sub-pages */}
       <Route 
         path="/dashboard/advertiser/referral-program/performance" 
         element={
-          isAuthenticated && userIsAdvertiser ? 
-            <AdvertiserDashboard /> : 
-            (() => {
-              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
-                path: '/dashboard/advertiser/referral-program/performance',
-                redirectTo: '/',
-                isAuthenticated: isAuthenticated
-              });
-              return <Navigate to="/" replace />;
-            })()
+          <ProtectedRoute>
+            {isAuthenticated && userIsAdvertiser ? 
+              <AdvertiserDashboard /> : 
+              (() => {
+                eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                  path: '/dashboard/advertiser/referral-program/performance',
+                  redirectTo: '/',
+                  isAuthenticated: isAuthenticated
+                });
+                return <Navigate to="/" replace />;
+              })()
+            }
+          </ProtectedRoute>
         }
       />
       <Route 
@@ -310,16 +335,19 @@ function App() {
       <Route 
         path="/dashboard/advertiser/:section" 
         element={
-          isAuthenticated && userIsAdvertiser ? 
-            <AdvertiserDashboard /> : 
-            (() => {
-              eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
-                path: '/dashboard/advertiser',
-                redirectTo: '/',
-                isAuthenticated: isAuthenticated
-              });
-              return <Navigate to="/" replace />;
-            })()
+          <ProtectedRoute>
+            {isAuthenticated && userIsAdvertiser ? 
+              <AdvertiserDashboard /> : 
+              (() => {
+                eventBus.emit(EventType.NAV_PRIVATE_ROUTE_ACCESS, {
+                  path: '/dashboard/advertiser',
+                  redirectTo: '/',
+                  isAuthenticated: isAuthenticated
+                });
+                return <Navigate to="/" replace />;
+              })()
+            }
+          </ProtectedRoute>
         }
       />
       
