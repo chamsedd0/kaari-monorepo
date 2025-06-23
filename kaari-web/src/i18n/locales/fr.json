@@ -1000,28 +1000,33 @@
     },
     "onboarding": {
       "slide1": {
-        "title": "Soyez l'un de nos 100 premiers partenaires fondateurs",
-        "subtitle": "Assurez votre place en tant que partenaire fondateur – Profitez d'avantages exclusifs pendant 3 mois",
-        "benefit1": {
-          "title": "0% de commission pour 3 mois",
-          "description": "Conservez 100% de vos revenus locatifs pendant les trois premiers mois."
-        },
-        "benefit2": {
-          "title": "Accès au programme de parrainage",
-          "description": "Invitez des locataires ou des propriétaires pour gagner des récompenses substantielles"
-        }
+        "title": "Bienvenue chez Kaari",
+        "subtitle": "La façon la plus simple au Maroc de louer votre propriété—sans lever le petit doigt.",
+        "benefits_header": "Ce que nous faisons pour vous",
+        "benefit1_title": "Photos professionnelles gratuites + création d'annonce",
+        "benefit1_description": "Nous photographions votre propriété, rédigeons votre annonce et la publions nous-mêmes. Vous ne faites rien—nous nous occupons de toute la mise en place.",
+        "benefit2_title": "Locataires vérifiés, pas de visites de propriété",
+        "benefit2_description": "Nous sélectionnons les locataires pour que vous ne receviez que des demandes de réservation sérieuses. Plus de visites, plus de temps perdu.",
+        "benefit3_title": "Vous approuvez simplement — Nous gérons le reste",
+        "benefit3_description": "Vous examinez la demande de réservation. Nous gérons tout le reste : paiement, assistance aux locataires et coordination.",
+        "benefit4_title": "Loyer garanti après l'emménagement",
+        "benefit4_description": "Dès que le locataire emménage, votre loyer est garanti à 100%. Rapide, fiable et sans souci.",
+        "closing_text1": "Vous n'avez qu'à remettre les clés.",
+        "closing_text2": "Kaari s'occupe du reste."
       },
       "slide2": {
-        "title": "Avantages par défaut",
-        "subtitle": "S'applique à tous les annonceurs",
-        "benefit1": {
-          "title": "Séances photo professionnelles gratuites",
-          "description": "Notre équipe visite votre propriété pour prendre des photos professionnelles."
-        },
-        "benefit2": {
-          "title": "Locataires qualifiés sans tracas",
-          "description": "Nous amenons des locataires prêts à payer à votre porte—aucun effort requis de votre part"
-        }
+        "title": "Rejoignez nos 100 partenaires fondateurs",
+        "subtitle": "Avantages exclusifs pour les 100 premiers annonceurs",
+        "benefits_header": "Avantages partenaires (3 premiers mois) :",
+        "benefit1_title": "0% de commission",
+        "benefit1_description": "Gardez 100% du loyer—Kaari ne prélève aucune commission pendant 3 mois.",
+        "benefit2_title": "Programme de parrainage – Gains illimités",
+        "benefit2_description": "Gagnez 10% du premier loyer pour chaque locataire parrainé—votre locataire reçoit 200 MAD de réduction.",
+        "benefit3_title": "Support VIP personnalisé",
+        "benefit3_description": "Bénéficiez d'un accompagnement proactif pour les réservations, parrainages et utilisation du tableau de bord.",
+        "closing_text1": "Seulement 100 places disponibles",
+        "closing_text2": "Soyez parmi les premiers à façonner l'avenir de Kaari.",
+        "closing_text3": "Plus de revenus. Moins d'effort. Paiement rapide."
       },
       "slide3": {
         "title": "Plus d'avantages",
@@ -1108,5 +1113,37 @@
     "error_message": "Nous n'avons pas pu vérifier votre e-mail. Le lien de vérification a peut-être expiré ou est invalide.",
     "try_again_button": "Réessayer",
     "resend_error": "Échec de l'envoi de l'e-mail de vérification. Veuillez réessayer plus tard."
+  },
+  "advertiser_onboarding": {
+    "slide1": {
+      "title": "Bienvenue chez Kaari",
+      "subtitle": "La façon la plus simple au Maroc de louer votre propriété—sans lever le petit doigt.",
+      "benefits_header": "Ce que nous faisons pour vous",
+      "benefit1_title": "Photos professionnelles gratuites + création d'annonce",
+      "benefit1_description": "Nous photographions votre propriété, rédigeons votre annonce et la publions nous-mêmes. Vous ne faites rien—nous nous occupons de toute la mise en place.",
+      "benefit2_title": "Locataires vérifiés, pas de visites de propriété",
+      "benefit2_description": "Nous sélectionnons les locataires pour que vous ne receviez que des demandes de réservation sérieuses. Plus de visites, plus de temps perdu.",
+      "benefit3_title": "Vous approuvez simplement — Nous gérons le reste",
+      "benefit3_description": "Vous examinez la demande de réservation. Nous gérons tout le reste : paiement, assistance aux locataires et coordination.",
+      "benefit4_title": "Loyer garanti après l'emménagement",
+      "benefit4_description": "Dès que le locataire emménage, votre loyer est garanti à 100%. Rapide, fiable et sans souci.",
+      "closing_text1": "Vous n'avez qu'à remettre les clés.",
+      "closing_text2": "Kaari s'occupe du reste."
+    },
+    "slide2": {
+      "title": "Rejoignez nos 100 partenaires fondateurs",
+      "subtitle": "Avantages exclusifs pour les 100 premiers annonceurs",
+      "benefits_header": "Avantages partenaires (3 premiers mois) :",
+      "benefit1_title": "0% de commission",
+      "benefit1_description": "Gardez 100% du loyer—Kaari ne prélève aucune commission pendant 3 mois.",
+      "benefit2_title": "Programme de parrainage – Gains illimités",
+      "benefit2_description": "Gagnez 10% du premier loyer pour chaque locataire parrainé—votre locataire reçoit 200 MAD de réduction.",
+      "benefit3_title": "Support VIP personnalisé",
+      "benefit3_description": "Bénéficiez d'un accompagnement proactif pour les réservations, parrainages et utilisation du tableau de bord.",
+      "closing_text1": "Seulement 100 places disponibles",
+      "closing_text2": "Soyez parmi les premiers à façonner l'avenir de Kaari.",
+      "closing_text3": "Plus de revenus. Moins d'effort. Paiement rapide."
+    },
+    "sign_up_now": "S'inscrire maintenant"
   }
 } 

@@ -5,6 +5,7 @@ import styled, { keyframes, css } from 'styled-components';
 import { Theme } from '../../theme/theme';
 import { FaArrowRight, FaCamera, FaShieldAlt, FaCheckCircle, FaMoneyBillWave, FaPercentage, FaGift, FaStar, FaHandshake } from 'react-icons/fa';
 import LanguageSwitcher from '../../components/skeletons/language-switcher/language-switcher';
+import { useTranslation } from 'react-i18next';
 
 // Onboarding slide interface
 interface Slide {
@@ -15,6 +16,7 @@ interface Slide {
 
 const AdvertiserOnboardingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   // Onboarding state
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -44,23 +46,23 @@ const AdvertiserOnboardingPage: React.FC = () => {
       isWhite: true,
       benefits: [
         {
-          title: "Free Professional Photos + Listing Creation",
-          description: "We photograph your property, write your listing, and publish it ourselves. You do nothing—we take care of the entire setup.",
+          title: t('advertiser_onboarding.slide1.benefit1_title'),
+          description: t('advertiser_onboarding.slide1.benefit1_description'),
           icon: <FaCamera />
         },
         {
-          title: "Verified Tenants, No Property Visits",
-          description: "We screen tenants, so you only receive serious booking requests. No more visits, no more wasted time.",
+          title: t('advertiser_onboarding.slide1.benefit2_title'),
+          description: t('advertiser_onboarding.slide1.benefit2_description'),
           icon: <FaShieldAlt />
         },
         {
-          title: "You Just Approve — We Handle the Rest",
-          description: "You review the booking request. We handle everything else: payment, tenant support, and coordination.",
+          title: t('advertiser_onboarding.slide1.benefit3_title'),
+          description: t('advertiser_onboarding.slide1.benefit3_description'),
           icon: <FaCheckCircle />
         },
         {
-          title: "Guaranteed Rent After Move-In",
-          description: "As soon as the tenant moves in, your rent is 100% secured. Fast, reliable, and worry-free.",
+          title: t('advertiser_onboarding.slide1.benefit4_title'),
+          description: t('advertiser_onboarding.slide1.benefit4_description'),
           icon: <FaMoneyBillWave />
         }
       ]
@@ -69,18 +71,18 @@ const AdvertiserOnboardingPage: React.FC = () => {
       key: "slide2",
       benefits: [
         {
-          title: "0% Advertiser Commission",
-          description: "Keep 100% of the rent—Kaari charges no commission during your first 3 months.",
+          title: t('advertiser_onboarding.slide2.benefit1_title'),
+          description: t('advertiser_onboarding.slide2.benefit1_description'),
           icon: <FaPercentage />
         },
         {
-          title: "Referral Program Access – Unlimited Earning Potential",
-          description: "Earn 10% of the first month's rent for every tenant you refer through your code—and your tenant gets 200 MAD off their booking.",
+          title: t('advertiser_onboarding.slide2.benefit2_title'),
+          description: t('advertiser_onboarding.slide2.benefit2_description'),
           icon: <FaGift />
         },
         {
-          title: "VIP Guidance at Every Step",
-          description: "Founding Partners receive personalized, proactive support—we walk you through bookings, referrals, and dashboard usage without you needing to ask.",
+          title: t('advertiser_onboarding.slide2.benefit3_title'),
+          description: t('advertiser_onboarding.slide2.benefit3_description'),
           icon: <FaStar />
         }
       ]
@@ -261,12 +263,12 @@ const AdvertiserOnboardingPage: React.FC = () => {
               <ContentDecoration1 $isWhite={isWhiteTheme} />
               <ContentDecoration2 $isWhite={isWhiteTheme} />
               
-              <SlideTitle $isWhite={isWhiteTheme}>Welcome to Kaari</SlideTitle>
+              <SlideTitle $isWhite={isWhiteTheme}>{t('advertiser_onboarding.slide1.title')}</SlideTitle>
               <SlideSubtitle $isWhite={isWhiteTheme}>
-                Morocco's easiest way to rent out your property—without lifting a finger.
+                {t('advertiser_onboarding.slide1.subtitle')}
               </SlideSubtitle>
               
-              <BenefitsHeader $isWhite={isWhiteTheme}>What We Do For You</BenefitsHeader>
+              <BenefitsHeader $isWhite={isWhiteTheme}>{t('advertiser_onboarding.slide1.benefits_header')}</BenefitsHeader>
               {isMobile ? (
                 <>
                   <MobileBenefitContainer
@@ -316,9 +318,9 @@ const AdvertiserOnboardingPage: React.FC = () => {
               )}
               
               <ClosingText $isWhite={isWhiteTheme}>
-                All You Do Is Hand Over the Keys.
+                {t('advertiser_onboarding.slide1.closing_text1')}
                 <br />
-                Kaari takes care of the rest.
+                {t('advertiser_onboarding.slide1.closing_text2')}
               </ClosingText>
             </SlideContent>
           )}
@@ -328,12 +330,12 @@ const AdvertiserOnboardingPage: React.FC = () => {
               <ContentDecoration1 $isWhite={isWhiteTheme} />
               <ContentDecoration2 $isWhite={isWhiteTheme} />
               
-              <SlideTitle $isWhite={isWhiteTheme}>Become One of Our 100 Founding Partners</SlideTitle>
+              <SlideTitle $isWhite={isWhiteTheme}>{t('advertiser_onboarding.slide2.title')}</SlideTitle>
               <SlideSubtitle $isWhite={isWhiteTheme}>
-                Unlock Exclusive Early-Access Benefits — Only for the First 100 Advertisers.
+                {t('advertiser_onboarding.slide2.subtitle')}
               </SlideSubtitle>
               
-              <BenefitsHeader $isWhite={isWhiteTheme}>Founding Partner Benefits (First 3 Months Only):</BenefitsHeader>
+              <BenefitsHeader $isWhite={isWhiteTheme}>{t('advertiser_onboarding.slide2.benefits_header')}</BenefitsHeader>
               {isMobile ? (
                 <>
                   <MobileBenefitContainer
@@ -383,11 +385,11 @@ const AdvertiserOnboardingPage: React.FC = () => {
               )}
               
               <ClosingText $isWhite={isWhiteTheme}>
-                Only 100 Spots Available
+                {t('advertiser_onboarding.slide2.closing_text1')}
                 <br />
-                Be part of the very first wave shaping Kaari's future.
+                {t('advertiser_onboarding.slide2.closing_text2')}
                 <br />
-                Earn more. Do less. Get paid faster.
+                {t('advertiser_onboarding.slide2.closing_text3')}
               </ClosingText>
             </SlideContent>
           )}
@@ -396,7 +398,7 @@ const AdvertiserOnboardingPage: React.FC = () => {
       
       <ButtonsContainer>
         <SkipButton $isWhite={isWhiteTheme} onClick={handleSkipOnboarding} disabled={animatingSlide}>
-          Skip
+          {t('common.skip')}
         </SkipButton>
         <NavigationButtons>
           {currentSlide > 0 && (
@@ -410,7 +412,7 @@ const AdvertiserOnboardingPage: React.FC = () => {
             disabled={animatingSlide}
             $isLast={currentSlide === slides.length - 1}
           >
-            {currentSlide === slides.length - 1 ? 'Sign Up Now' : 'Next'}
+            {currentSlide === slides.length - 1 ? t('advertiser_onboarding.sign_up_now') : t('common.next')}
             <FaArrowRight style={{ marginLeft: '8px' }} />
           </NextButton>
         </NavigationButtons>
@@ -723,11 +725,10 @@ const ContentContainer = styled.div`
   justify-content: center;
   padding: 0;
   max-width: 900px;
-  margin: 0 auto;
+  margin: -50px auto;
   width: 100%;
   position: relative;
   z-index: 10;
-  overflow: hidden;
   min-height: 0; /* Important for flex children */
   
   @media (max-width: 767px) {
