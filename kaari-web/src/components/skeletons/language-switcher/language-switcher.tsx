@@ -61,11 +61,11 @@ const LanguageSwitcher: React.FC = () => {
   // Get current language - ensure it's normalized to 'en' or 'fr'
   const currentLanguage = i18n.language ? 
     (i18n.language.startsWith('fr') ? 'fr' : 'en') : 
-    'en';
+    'fr'; // Default to French
   
   // Log the current language for debugging
   useEffect(() => {
-    console.log('Current language:', currentLanguage);
+    console.log('Language switcher - Current language:', currentLanguage);
   }, [currentLanguage]);
   
   const toggleLanguage = (lang: string) => {
@@ -73,7 +73,15 @@ const LanguageSwitcher: React.FC = () => {
     
     try {
       // Change language using i18next
-      i18n.changeLanguage(lang);
+      i18n.changeLanguage(lang).then(() => {
+        // Force reload translations after language change
+        i18n.reloadResources([lang]).then(() => {
+          console.log(`Translations reloaded for ${lang}`);
+          
+          // Force page refresh to ensure translations are applied
+          window.location.reload();
+        });
+      });
       
       // Save language preference to localStorage directly
       localStorage.setItem('i18nextLng', lang);

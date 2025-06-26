@@ -1,1153 +1,981 @@
-// Advertiser Onboarding Page
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styled, { keyframes, css } from 'styled-components';
-import { Theme } from '../../theme/theme';
-import { FaArrowRight, FaCamera, FaShieldAlt, FaCheckCircle, FaMoneyBillWave, FaPercentage, FaGift, FaStar, FaHandshake } from 'react-icons/fa';
-import LanguageSwitcher from '../../components/skeletons/language-switcher/language-switcher';
-import { useTranslation } from 'react-i18next';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import styled, { keyframes } from "styled-components";
+import { useTranslation } from "react-i18next";
+import PurpleLogo from "../../assets/images/purpleLogo.svg";
+import { Theme } from "../../theme/theme";
+import { MdCameraAlt, MdVerified, MdHandshake, MdHouse, MdAttachMoney, MdSupportAgent } from "react-icons/md";
+import LanguageSwitcher from "../../components/skeletons/language-switcher/language-switcher";
 
-// Onboarding slide interface
-interface Slide {
-  key: string;
-  benefits: { title: string; description: string; icon?: React.ReactNode }[];
-  isWhite?: boolean;
-}
+// Define a type for translation objects
+type TranslationValue = string | Record<string, any>;
+type TranslationRecord = Record<string, TranslationValue>;
 
-const AdvertiserOnboardingPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { t } = useTranslation();
-  
-  // Onboarding state
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [exiting, setExiting] = useState(false);
-  const [animatingSlide, setAnimatingSlide] = useState(false);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
-  const [activeBenefit, setActiveBenefit] = useState(0);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
-  
-  // Check if mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  
-  // Onboarding slides content
-  const slides: Slide[] = [
-    {
-      key: "slide1",
-      isWhite: true,
-      benefits: [
-        {
-          title: t('advertiser_onboarding.slide1.benefit1_title'),
-          description: t('advertiser_onboarding.slide1.benefit1_description'),
-          icon: <FaCamera />
-        },
-        {
-          title: t('advertiser_onboarding.slide1.benefit2_title'),
-          description: t('advertiser_onboarding.slide1.benefit2_description'),
-          icon: <FaShieldAlt />
-        },
-        {
-          title: t('advertiser_onboarding.slide1.benefit3_title'),
-          description: t('advertiser_onboarding.slide1.benefit3_description'),
-          icon: <FaCheckCircle />
-        },
-        {
-          title: t('advertiser_onboarding.slide1.benefit4_title'),
-          description: t('advertiser_onboarding.slide1.benefit4_description'),
-          icon: <FaMoneyBillWave />
-        }
-      ]
+// Hardcoded translations as fallback
+const fallbackTranslations: Record<'fr' | 'en', TranslationRecord> = {
+  fr: {
+    welcome: "Bienvenue sur Kaari",
+    subtitle: "Louez sans effort.",
+    feature_photos: {
+      title: "Photos + Annonce Gratuites",
+      description: "Nous prenons des photos et créons votre annonce."
     },
-    {
-      key: "slide2",
-      benefits: [
-        {
-          title: t('advertiser_onboarding.slide2.benefit1_title'),
-          description: t('advertiser_onboarding.slide2.benefit1_description'),
-          icon: <FaPercentage />
-        },
-        {
-          title: t('advertiser_onboarding.slide2.benefit2_title'),
-          description: t('advertiser_onboarding.slide2.benefit2_description'),
-          icon: <FaGift />
-        },
-        {
-          title: t('advertiser_onboarding.slide2.benefit3_title'),
-          description: t('advertiser_onboarding.slide2.benefit3_description'),
-          icon: <FaStar />
-        }
-      ]
+    feature_tenants: {
+      title: "Locataires Vérifiés",
+      description: "Filtrage pour des demandes sérieuses uniquement."
+    },
+    feature_approval: {
+      title: "Vous Approuvez, On Gère",
+      description: "Paiements et assistance gérés par nous."
+    },
+    founding_partner: {
+      title: "Programme Partenaire Fondateur",
+      description: "Avantages exclusifs pour nos 100 premiers annonceurs.",
+      benefit_commission: {
+        highlight: "0% Commission (3 Mois)",
+        text: "– 100% du loyer pour vous."
+      },
+      benefit_referral: {
+        highlight: "Programme de Parrainage",
+        text: "– 10% pour chaque locataire parrainé."
+      },
+      benefit_support: {
+        highlight: "Support VIP",
+        text: "– Aide personnalisée pour vos revenus."
+      }
+    },
+    cta: {
+      spots_available: "100 Places Disponibles",
+      description: "Rejoignez la première vague Kaari.",
+      button: "S'inscrire"
     }
-  ];
+  },
+  en: {
+    welcome: "Welcome to Kaari",
+    subtitle: "Rent out your property without lifting a finger.",
+    feature_photos: {
+      title: "Free Photos + Listing",
+      description: "We visit your property, take photos, write the listing, and publish it."
+    },
+    feature_tenants: {
+      title: "Verified Tenants, No Visits",
+      description: "We screen tenants so you only get serious requests."
+    },
+    feature_approval: {
+      title: "You Approve, We Do the Rest",
+      description: "Payments, coordination, tenant support — all handled by us."
+    },
+    founding_partner: {
+      title: "Founding Partner Program",
+      description: "Unlock exclusive perks – only for our first 100 advertisers.",
+      benefit_commission: {
+        highlight: "0% Commission (3 Months)",
+        text: "– Keep 100% of your rent."
+      },
+      benefit_referral: {
+        highlight: "Referral Program",
+        text: "– Earn 10% for every tenant you refer."
+      },
+      benefit_support: {
+        highlight: "VIP Support",
+        text: "– Personalized help to boost your earnings."
+      }
+    },
+    cta: {
+      spots_available: "Only 100 Spots Available",
+      description: "Be part of the very first wave shaping Kaari's future.",
+      button: "Sign Up Now"
+    }
+  }
+};
 
-  // Progress bar animation
-  useEffect(() => {
-    // Start progress animation
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
+const AdvertiserOnboardingPage = () => {
+  const navigate = useNavigate();
+  const { t, i18n } = useTranslation('translation', { useSuspense: false });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isExiting, setIsExiting] = useState(false);
+  const [animatedItems, setAnimatedItems] = useState({
+    welcome: false,
+    features: false,
+    foundingPartner: false,
+    cta: false
+  });
+
+  // Debug translations
+  console.log("Current language:", i18n.language);
+  console.log("Translation for welcome:", t('advertiser_onboarding.welcome'));
+  console.log("Available languages:", i18n.languages);
+  console.log("Translation resources:", i18n.options.resources);
+
+  // Helper function to get translations with fallback
+  const getTranslation = (key: string): string => {
+    // Try to get translation from i18n first
+    const translation = t(key);
+    
+    // If the key is returned as is, it means the translation is missing
+    if (translation === key) {
+      console.warn(`Missing translation for key: ${key}`);
+      
+      // Parse the key to get the nested properties
+      const keyParts = key.split('.');
+      
+      // Remove the namespace (advertiser_onboarding)
+      keyParts.shift();
+      
+      // Get the current language
+      const lang = i18n.language && i18n.language.startsWith('fr') ? 'fr' : 'en';
+      
+      // Try to get from fallback translations
+      let fallback: Record<string, any> = fallbackTranslations[lang as 'fr' | 'en'];
+      
+      // Navigate through the nested properties
+      for (const part of keyParts) {
+        if (fallback && typeof fallback === 'object' && part in fallback) {
+          fallback = fallback[part] as Record<string, any>;
+        } else {
+          // If property doesn't exist, try the other language
+          const otherLang = lang === 'fr' ? 'en' : 'fr';
+          fallback = fallbackTranslations[otherLang];
+          
+          for (const p of keyParts) {
+            if (fallback && typeof fallback === 'object' && p in fallback) {
+              fallback = fallback[p] as Record<string, any>;
+            } else {
+              return key; // Return the key if all else fails
+            }
+          }
+          
+          break;
+        }
+      }
+      
+      return typeof fallback === 'string' ? fallback : key;
     }
     
-    setProgress(0);
+    return translation;
+  };
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
     
-    progressIntervalRef.current = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          if (progressIntervalRef.current) {
-            clearInterval(progressIntervalRef.current);
-          }
-          return 100;
-        }
-        return prev + 1; // Increased from 0.5 to 1 for faster progress
-      });
-    }, 30); // Reduced from 50 to 30 for smoother animation
+    // Set default language to French if not already set
+    const currentLang = i18n.language;
+    if (!currentLang || (!currentLang.startsWith('fr') && !currentLang.startsWith('en'))) {
+      i18n.changeLanguage('fr');
+      localStorage.setItem('i18nextLng', 'fr');
+    }
+    
+    // Force reload translations to ensure they're available
+    i18n.reloadResources().then(() => {
+      console.log('Translations reloaded');
+      console.log("After reload - Translation for welcome:", t('advertiser_onboarding.welcome'));
+    });
+    
+    // Simulate loading animation
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      
+      // Trigger animations in sequence
+      setTimeout(() => setAnimatedItems(prev => ({ ...prev, welcome: true })), 100);
+      setTimeout(() => setAnimatedItems(prev => ({ ...prev, features: true })), 300);
+      setTimeout(() => setAnimatedItems(prev => ({ ...prev, foundingPartner: true })), 500);
+      setTimeout(() => setAnimatedItems(prev => ({ ...prev, cta: true })), 700);
+    }, 500);
     
     return () => {
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
+      document.body.style.overflow = "unset";
+      clearTimeout(timer);
     };
-  }, [currentSlide]);
-  
-  // Pre-load next slide content and manage animations
-  const [nextSlideReady, setNextSlideReady] = useState(true);
-  const [slideDirection, setSlideDirection] = useState<'next' | 'prev'>('next');
-  
-  // Handle next slide
-  const handleNextSlide = () => {
-    if (animatingSlide || !nextSlideReady) return; // Prevent multiple clicks during animation
-    
-    if (currentSlide < slides.length - 1) {
-      // Set direction for animation
-      setSlideDirection('next');
-      
-      // Animate slide transition
-      setAnimatingSlide(true);
-      setNextSlideReady(false);
-      
-      // Prepare next slide content with minimal delay
-      setTimeout(() => {
-        setCurrentSlide(currentSlide + 1);
-        setNextSlideReady(true);
-        
-        // End animation immediately after content is loaded
-        setTimeout(() => {
-          setAnimatingSlide(false);
-        }, 50);
-      }, 50);
-    } else {
-      // Last slide, proceed to signup with fade out animation
-      setExiting(true);
-      setTimeout(() => {
-        navigate('/advertiser-signup/form');
-      }, 200);
-    }
-  };
-  
-  // Handle previous slide
-  const handlePrevSlide = () => {
-    if (animatingSlide || !nextSlideReady || currentSlide === 0) return;
-    
-    // Set direction for animation
-    setSlideDirection('prev');
-    
-    // Animate slide transition
-    setAnimatingSlide(true);
-    setNextSlideReady(false);
-    
-    setTimeout(() => {
-      setCurrentSlide(currentSlide - 1);
-      setNextSlideReady(true);
-      
-      setTimeout(() => {
-        setAnimatingSlide(false);
-      }, 50);
-    }, 50);
-  };
-  
-  // Handle skip onboarding
-  const handleSkipOnboarding = () => {
-    // Redirect to the signup page
-    setExiting(true);
-    setTimeout(() => {
-      navigate('/advertiser-signup/form');
-    }, 300);
-  };
+  }, [i18n, t]);
 
-  const currentSlideData = slides[currentSlide];
-  const isWhiteTheme = currentSlideData.isWhite;
+  const handleGetStarted = () => {
+    setIsExiting(true);
+    setTimeout(() => {
+      navigate("/advertiser-signup/form");
+    }, 500);
+  };
   
-  // Auto-rotate benefits on mobile
+  // Also apply to body and html elements when on mobile
   useEffect(() => {
-    if (isMobile && currentSlideData.benefits.length > 1) {
-      const interval = setInterval(() => {
-        setActiveBenefit(prev => (prev + 1) % currentSlideData.benefits.length);
-      }, 3000); // Change every 3 seconds (reduced from 4)
-      
-      return () => clearInterval(interval);
-    }
-  }, [isMobile, currentSlideData.benefits.length]);
-  
-  // Reset active benefit when slide changes
-  useEffect(() => {
-    setActiveBenefit(0);
-  }, [currentSlide]);
-  
-  // Handle touch gestures for benefit swiper
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-  
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-  
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
+    const applyMobileStyles = () => {
+      if (window.innerWidth <= 768) {
+        // Create a style element to add CSS rules
+        const style = document.createElement('style');
+        style.textContent = `
+          html, body, #root {
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+            overflow-y: auto;
+          }
+          
+          html::-webkit-scrollbar, 
+          body::-webkit-scrollbar, 
+          #root::-webkit-scrollbar,
+          div::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            background: transparent !important;
+          }
+        `;
+        document.head.appendChild(style);
+        
+        return () => {
+          document.head.removeChild(style);
+        };
+      }
+      return undefined;
+    };
     
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
+    const cleanup = applyMobileStyles();
     
-    if (isLeftSwipe && activeBenefit < currentSlideData.benefits.length - 1) {
-      setActiveBenefit(activeBenefit + 1);
-    }
-    if (isRightSwipe && activeBenefit > 0) {
-      setActiveBenefit(activeBenefit - 1);
-    }
-  };
-  
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, []);
+
   return (
-    <OnboardingContainer className={exiting ? 'exiting' : ''} $isWhite={isWhiteTheme}>
-      <BackgroundDecoration $isWhite={isWhiteTheme} />
+    <Container isExiting={isExiting}>
+      <LoadingOverlay isLoading={isLoading} />
+      <GradientOverlay />
       
       <TopSection>
-        <LogoContainer>
-          {isWhiteTheme ? (
-            <LogoImage src="/src/assets/images/purpleLogo.svg" alt="Kaari" />
-          ) : (
-            <LogoImage src="/src/assets/images/purpleLogo.svg" alt="Kaari" $isWhite />
-          )}
-        </LogoContainer>
-        <LanguageSwitcherContainer>
+        <LogoWrapper>
+          <Logo src={PurpleLogo} alt="Kaari Logo" />
+        </LogoWrapper>
+        <LanguageSwitcherWrapper>
           <LanguageSwitcher />
-        </LanguageSwitcherContainer>
+        </LanguageSwitcherWrapper>
       </TopSection>
       
-      <ProgressContainer>
-        {slides.map((_, index) => (
-          <ProgressBar 
-            key={index} 
-            $active={index === currentSlide}
-            $completed={index < currentSlide}
-            $isWhite={isWhiteTheme}
-            onClick={() => !animatingSlide && setCurrentSlide(index)}
-          >
-            {index === currentSlide && <ProgressFill $isWhite={isWhiteTheme} style={{ width: `${progress}%` }} />}
-          </ProgressBar>
-        ))}
-      </ProgressContainer>
-      
       <ContentContainer>
-        <SlideWrapper $animating={animatingSlide} $direction={slideDirection}>
-          {currentSlide === 0 && (
-            <SlideContent>
-              <ContentDecoration1 $isWhite={isWhiteTheme} />
-              <ContentDecoration2 $isWhite={isWhiteTheme} />
+        <LeftColumn>
+          <LeftColumnContent>
+            <WelcomeSection isVisible={animatedItems.welcome}>
+              <WelcomeHeading>{getTranslation('advertiser_onboarding.welcome')}</WelcomeHeading>
+              <Subheading>{getTranslation('advertiser_onboarding.subtitle')}</Subheading>
+            </WelcomeSection>
+            
+            <FeatureList isVisible={animatedItems.features}>
+              <FeatureItem>
+                <FeatureIconWrapper>
+                  <MdCameraAlt size={20} color={Theme.colors.secondary} />
+                </FeatureIconWrapper>
+                <FeatureContent>
+                  <FeatureTitle>{getTranslation('advertiser_onboarding.feature_photos.title')}</FeatureTitle>
+                  <FeatureDescription>{getTranslation('advertiser_onboarding.feature_photos.description')}</FeatureDescription>
+                </FeatureContent>
+              </FeatureItem>
               
-              <SlideTitle $isWhite={isWhiteTheme}>{t('advertiser_onboarding.slide1.title')}</SlideTitle>
-              <SlideSubtitle $isWhite={isWhiteTheme}>
-                {t('advertiser_onboarding.slide1.subtitle')}
-              </SlideSubtitle>
+              <FeatureItem>
+                <FeatureIconWrapper>
+                  <MdVerified size={20} color={Theme.colors.secondary} />
+                </FeatureIconWrapper>
+                <FeatureContent>
+                  <FeatureTitle>{getTranslation('advertiser_onboarding.feature_tenants.title')}</FeatureTitle>
+                  <FeatureDescription>{getTranslation('advertiser_onboarding.feature_tenants.description')}</FeatureDescription>
+                </FeatureContent>
+              </FeatureItem>
               
-              <BenefitsHeader $isWhite={isWhiteTheme}>{t('advertiser_onboarding.slide1.benefits_header')}</BenefitsHeader>
-              {isMobile ? (
-                <>
-                  <MobileBenefitContainer
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
-                  >
-                    <BenefitItem $delay={0} $isWhite={isWhiteTheme} $isMobile>
-                      {currentSlideData.benefits[activeBenefit].icon && (
-                        <BenefitIconWrapper $isWhite={isWhiteTheme}>
-                          {currentSlideData.benefits[activeBenefit].icon}
-                        </BenefitIconWrapper>
-                      )}
-                      <BenefitContent>
-                        <BenefitTitle $isWhite={isWhiteTheme}>{currentSlideData.benefits[activeBenefit].title}</BenefitTitle>
-                        <BenefitDescription $isWhite={isWhiteTheme}>{currentSlideData.benefits[activeBenefit].description}</BenefitDescription>
-                      </BenefitContent>
-                    </BenefitItem>
-                    <MobileBenefitDots>
-                      {currentSlideData.benefits.map((_, index) => (
-                        <BenefitDot 
-                          key={index} 
-                          $active={index === activeBenefit}
-                          $isWhite={isWhiteTheme}
-                          onClick={() => setActiveBenefit(index)}
-                        />
-                      ))}
-                    </MobileBenefitDots>
-                  </MobileBenefitContainer>
-                </>
-              ) : (
-                <BenefitsList>
-                  {currentSlideData.benefits.map((benefit, index) => (
-                    <BenefitItem key={index} $delay={index * 0.1} $isWhite={isWhiteTheme}>
-                      {benefit.icon && (
-                        <BenefitIconWrapper $isWhite={isWhiteTheme}>
-                          {benefit.icon}
-                        </BenefitIconWrapper>
-                      )}
-                      <BenefitContent>
-                        <BenefitTitle $isWhite={isWhiteTheme}>{benefit.title}</BenefitTitle>
-                        <BenefitDescription $isWhite={isWhiteTheme}>{benefit.description}</BenefitDescription>
-                      </BenefitContent>
-                    </BenefitItem>
-                  ))}
-                </BenefitsList>
-              )}
+              <FeatureItem>
+                <FeatureIconWrapper>
+                  <MdHandshake size={20} color={Theme.colors.secondary} />
+                </FeatureIconWrapper>
+                <FeatureContent>
+                  <FeatureTitle>{getTranslation('advertiser_onboarding.feature_approval.title')}</FeatureTitle>
+                  <FeatureDescription>{getTranslation('advertiser_onboarding.feature_approval.description')}</FeatureDescription>
+                </FeatureContent>
+              </FeatureItem>
+            </FeatureList>
+            
+            <FoundingPartnerCard isVisible={animatedItems.foundingPartner}>
+              <FoundingPartnerHeader>
+                <FoundingPartnerDot />
+                <FoundingPartnerTitle>{getTranslation('advertiser_onboarding.founding_partner.title')}</FoundingPartnerTitle>
+              </FoundingPartnerHeader>
+              <FoundingPartnerDescription>
+                {getTranslation('advertiser_onboarding.founding_partner.description')}
+              </FoundingPartnerDescription>
               
-              <ClosingText $isWhite={isWhiteTheme}>
-                {t('advertiser_onboarding.slide1.closing_text1')}
-                <br />
-                {t('advertiser_onboarding.slide1.closing_text2')}
-              </ClosingText>
-            </SlideContent>
-          )}
-          
-          {currentSlide === 1 && (
-            <SlideContent>
-              <ContentDecoration1 $isWhite={isWhiteTheme} />
-              <ContentDecoration2 $isWhite={isWhiteTheme} />
+              <BenefitsList>
+                <BenefitItem>
+                  <BenefitIconWrapper>
+                    <MdAttachMoney size={16} color={Theme.colors.secondary} />
+                  </BenefitIconWrapper>
+                  <BenefitText>
+                    <BenefitHighlight>{getTranslation('advertiser_onboarding.founding_partner.benefit_commission.highlight')}</BenefitHighlight>
+                    {getTranslation('advertiser_onboarding.founding_partner.benefit_commission.text')}
+                  </BenefitText>
+                </BenefitItem>
+                
+                <BenefitItem>
+                  <BenefitIconWrapper>
+                    <MdHouse size={16} color={Theme.colors.secondary} />
+                  </BenefitIconWrapper>
+                  <BenefitText>
+                    <BenefitHighlight>{getTranslation('advertiser_onboarding.founding_partner.benefit_referral.highlight')}</BenefitHighlight>
+                    {getTranslation('advertiser_onboarding.founding_partner.benefit_referral.text')}
+                  </BenefitText>
+                </BenefitItem>
+                
+                <BenefitItem>
+                  <BenefitIconWrapper>
+                    <MdSupportAgent size={16} color={Theme.colors.secondary} />
+                  </BenefitIconWrapper>
+                  <BenefitText>
+                    <BenefitHighlight>{getTranslation('advertiser_onboarding.founding_partner.benefit_support.highlight')}</BenefitHighlight>
+                    {getTranslation('advertiser_onboarding.founding_partner.benefit_support.text')}
+                  </BenefitText>
+                </BenefitItem>
+              </BenefitsList>
+            </FoundingPartnerCard>
+          </LeftColumnContent>
+        </LeftColumn>
+        
+        <Divider />
+        
+        <RightColumn>
+          <RightColumnContent>
+            <CTALogo src={PurpleLogo} alt="Kaari Logo" isVisible={animatedItems.cta} />
+            
+            <CTACard isVisible={animatedItems.cta}>
+              <CTABadge>
+                {getTranslation('advertiser_onboarding.cta.spots_available')}
+              </CTABadge>
               
-              <SlideTitle $isWhite={isWhiteTheme}>{t('advertiser_onboarding.slide2.title')}</SlideTitle>
-              <SlideSubtitle $isWhite={isWhiteTheme}>
-                {t('advertiser_onboarding.slide2.subtitle')}
-              </SlideSubtitle>
+              <CTADescription>
+                {getTranslation('advertiser_onboarding.cta.description')}
+              </CTADescription>
               
-              <BenefitsHeader $isWhite={isWhiteTheme}>{t('advertiser_onboarding.slide2.benefits_header')}</BenefitsHeader>
-              {isMobile ? (
-                <>
-                  <MobileBenefitContainer
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
-                  >
-                    <BenefitItem $delay={0} $isWhite={isWhiteTheme} $isMobile>
-                      {currentSlideData.benefits[activeBenefit].icon && (
-                        <BenefitIconWrapper $isWhite={isWhiteTheme}>
-                          {currentSlideData.benefits[activeBenefit].icon}
-                        </BenefitIconWrapper>
-                      )}
-                      <BenefitContent>
-                        <BenefitTitle $isWhite={isWhiteTheme}>{currentSlideData.benefits[activeBenefit].title}</BenefitTitle>
-                        <BenefitDescription $isWhite={isWhiteTheme}>{currentSlideData.benefits[activeBenefit].description}</BenefitDescription>
-                      </BenefitContent>
-                    </BenefitItem>
-                    <MobileBenefitDots>
-                      {currentSlideData.benefits.map((_, index) => (
-                        <BenefitDot 
-                          key={index} 
-                          $active={index === activeBenefit}
-                          $isWhite={isWhiteTheme}
-                          onClick={() => setActiveBenefit(index)}
-                        />
-                      ))}
-                    </MobileBenefitDots>
-                  </MobileBenefitContainer>
-                </>
-              ) : (
-                <BenefitsList>
-                  {currentSlideData.benefits.map((benefit, index) => (
-                    <BenefitItem key={index} $delay={index * 0.1} $isWhite={isWhiteTheme}>
-                      {benefit.icon && (
-                        <BenefitIconWrapper $isWhite={isWhiteTheme}>
-                          {benefit.icon}
-                        </BenefitIconWrapper>
-                      )}
-                      <BenefitContent>
-                        <BenefitTitle $isWhite={isWhiteTheme}>{benefit.title}</BenefitTitle>
-                        <BenefitDescription $isWhite={isWhiteTheme}>{benefit.description}</BenefitDescription>
-                      </BenefitContent>
-                    </BenefitItem>
-                  ))}
-                </BenefitsList>
-              )}
-              
-              <ClosingText $isWhite={isWhiteTheme}>
-                {t('advertiser_onboarding.slide2.closing_text1')}
-                <br />
-                {t('advertiser_onboarding.slide2.closing_text2')}
-                <br />
-                {t('advertiser_onboarding.slide2.closing_text3')}
-              </ClosingText>
-            </SlideContent>
-          )}
-        </SlideWrapper>
+              <SignUpButton onClick={handleGetStarted}>
+                {getTranslation('advertiser_onboarding.cta.button')}
+              </SignUpButton>
+            </CTACard>
+          </RightColumnContent>
+        </RightColumn>
       </ContentContainer>
-      
-      <ButtonsContainer>
-        <SkipButton $isWhite={isWhiteTheme} onClick={handleSkipOnboarding} disabled={animatingSlide}>
-          {t('common.skip')}
-        </SkipButton>
-        <NavigationButtons>
-          {currentSlide > 0 && (
-            <NavButton $isWhite={isWhiteTheme} $isPrev onClick={handlePrevSlide} disabled={animatingSlide}>
-              <FaArrowRight style={{ transform: 'rotate(180deg)' }} />
-            </NavButton>
-          )}
-          <NextButton 
-            $isWhite={isWhiteTheme} 
-            onClick={handleNextSlide}
-            disabled={animatingSlide}
-            $isLast={currentSlide === slides.length - 1}
-          >
-            {currentSlide === slides.length - 1 ? t('advertiser_onboarding.sign_up_now') : t('common.next')}
-            <FaArrowRight style={{ marginLeft: '8px' }} />
-          </NextButton>
-        </NavigationButtons>
-      </ButtonsContainer>
-    </OnboardingContainer>
+    </Container>
   );
 };
 
-// Animations for onboarding
 const fadeIn = keyframes`
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 `;
 
 const fadeOut = keyframes`
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
 `;
 
-const slideInNext = keyframes`
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
+const shimmer = keyframes`
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
 `;
 
-const slideInPrev = keyframes`
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
+const floatAnimation = keyframes`
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 `;
 
-const slideOutNext = keyframes`
-  from { opacity: 1; transform: translateX(0); }
-  to { opacity: 0; transform: translateX(-30px); }
+const Container = styled.div<{ isExiting: boolean }>`
+  width: 100vw;
+  min-height: 100vh;
+  height: auto;
+  background: linear-gradient(135deg, ${Theme.colors.primary} 0%, ${Theme.colors.secondary} 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem 4rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+  animation: ${props => props.isExiting ? fadeOut : fadeIn} 0.5s ease-in-out;
+  position: relative;
+  
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    
+    &::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      background: transparent !important;
+    }
+  }
 `;
 
-const slideOutPrev = keyframes`
-  from { opacity: 1; transform: translateX(0); }
-  to { opacity: 0; transform: translateX(30px); }
+const GradientOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
 `;
 
-const float = keyframes`
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
-`;
-
-const pulse = keyframes`
-  0% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.05); opacity: 0.6; }
-  100% { transform: scale(1); opacity: 0.8; }
-`;
-
-const gradientMove = keyframes`
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-`;
-
-const slideIn = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-`;
-
-// Styled components for onboarding
-const OnboardingContainer = styled.div<{ $isWhite?: boolean }>`
+const LoadingOverlay = styled.div<{ isLoading: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100vh;
-  height: 100dvh; /* Dynamic viewport height for mobile browsers */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background: ${props => props.$isWhite 
-    ? 'white' 
-    : `linear-gradient(135deg, ${Theme.colors.primary} 0%, ${Theme.colors.secondary} 100%)`};
-  background-size: 200% 200%;
-  color: ${props => props.$isWhite ? Theme.colors.primary : 'white'};
-  padding: 12px;
-  box-sizing: border-box;
-  z-index: 1000;
-  animation: ${fadeIn} 0.2s ease-in-out, ${props => props.$isWhite ? 'none' : gradientMove} 15s ease infinite;
-  transition: background 0.2s ease-in-out;
-  overflow: hidden;
-  
-  @media (min-width: 768px) {
-    padding: 24px;
-  }
-  
-  @media (min-width: 1024px) {
-    padding: 40px 60px;
-  }
-  
-  &.exiting {
-    animation: ${fadeOut} 0.2s ease-in-out forwards;
-  }
-`;
-
-const BackgroundDecoration = styled.div<{ $isWhite?: boolean }>`
-  position: absolute;
-  top: -100px;
-  right: -100px;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  background: ${props => props.$isWhite 
-    ? `radial-gradient(circle, ${Theme.colors.primary}20 0%, transparent 70%)`
-    : 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)'};
-  z-index: 0;
-  animation: ${float} 6s ease-in-out infinite;
-  
-  &:before {
-    content: '';
-    position: absolute;
-    bottom: -250px;
-    left: -400px;
-    width: 500px;
-    height: 500px;
-    border-radius: 50%;
-    background: ${props => props.$isWhite 
-      ? `radial-gradient(circle, ${Theme.colors.secondary}20 0%, transparent 70%)`
-      : 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)'};
-    animation: ${float} 8s ease-in-out infinite reverse;
-  }
-`;
-
-const ContentDecoration1 = styled.div<{ $isWhite?: boolean }>`
-  position: absolute;
-  top: -20px;
-  right: -20px;
-  width: 80px;
-  height: 80px;
-  border-radius: 30px;
-  transform: rotate(45deg);
-  background: ${props => props.$isWhite 
-    ? `linear-gradient(135deg, ${Theme.colors.primary}10 0%, ${Theme.colors.secondary}15 100%)`
-    : 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 100%)'};
-  z-index: -1;
-  animation: ${float} 7s ease-in-out infinite;
-  opacity: 0.5;
-  display: none;
-  
-  @media (min-width: 768px) {
-    display: block;
-    width: 120px;
-    height: 120px;
-    top: -40px;
-    right: -40px;
-    opacity: 0.7;
-  }
-  
-  @media (min-width: 1024px) {
-    width: 150px;
-    height: 150px;
-    top: -50px;
-    right: -50px;
-    opacity: 1;
-  }
-  
-  &:after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60%;
-    height: 60%;
-    border-radius: inherit;
-    background: ${props => props.$isWhite 
-      ? `radial-gradient(circle, ${Theme.colors.primary}15 0%, transparent 70%)`
-      : 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)'};
-    animation: ${pulse} 4s ease-in-out infinite;
-  }
-`;
-
-const ContentDecoration2 = styled.div<{ $isWhite?: boolean }>`
-  position: absolute;
-  bottom: -10px;
-  left: -20px;
-  width: 60px;
-  height: 60px;
-  border-radius: 20px;
-  transform: rotate(30deg);
-  background: ${props => props.$isWhite 
-    ? `linear-gradient(135deg, ${Theme.colors.secondary}10 0%, ${Theme.colors.primary}15 100%)`
-    : 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)'};
-  z-index: -1;
-  animation: ${float} 9s ease-in-out infinite reverse;
-  opacity: 0.5;
-  display: none;
-  
-  @media (min-width: 768px) {
-    display: block;
-    width: 100px;
-    height: 100px;
-    bottom: -20px;
-    left: -40px;
-    opacity: 0.7;
-  }
-  
-  @media (min-width: 1024px) {
-    width: 120px;
-    height: 120px;
-    bottom: -30px;
-    left: -60px;
-    opacity: 1;
-  }
-  
-  &:after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 70%;
-    height: 70%;
-    border-radius: inherit;
-    background: ${props => props.$isWhite 
-      ? `radial-gradient(circle, ${Theme.colors.secondary}10 0%, transparent 70%)`
-      : 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)'};
-    animation: ${pulse} 5s ease-in-out infinite;
-  }
-`;
-
-const LogoContainer = styled.div`
-  padding: 5px;
-  position: relative;
-  z-index: 10;
-  
-  @media (min-width: 768px) {
-    padding: 15px;
-  }
-  
-  @media (min-width: 1024px) {
-    padding: 20px;
-  }
-`;
-
-const LogoImage = styled.img<{ $isWhite?: boolean }>`
-  width: 80px;
-  height: auto;
-  filter: ${props => props.$isWhite ? 'brightness(0) invert(1)' : 'none'};
-  transition: filter 0.3s ease-in-out;
-  
-  @media (min-width: 768px) {
-    width: 100px;
-  }
-  
-  @media (min-width: 1024px) {
-    width: 120px;
-  }
-`;
-
-const ProgressContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 5px;
-  position: relative;
-  z-index: 10;
-  max-width: 180px;
-  margin-left: auto;
-  margin-right: auto;
-  
-  @media (min-width: 768px) {
-    margin-top: 15px;
-    gap: 8px;
-    max-width: 200px;
-  }
-`;
-
-const ProgressBar = styled.div<{ $active: boolean; $completed: boolean; $isWhite?: boolean }>`
-  height: 4px;
-  flex: 1;
-  background-color: ${props => props.$isWhite 
-    ? 'rgba(0, 0, 0, 0.1)' 
-    : 'rgba(255, 255, 255, 0.3)'};
-  border-radius: 2px;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  
-  @media (min-width: 768px) {
-    height: 6px;
-  }
-  
-  ${props => props.$completed && `
-    background-color: ${props.$isWhite 
-      ? Theme.colors.primary 
-      : 'rgba(255, 255, 255, 0.9)'};
-  `}
-  
-  &:hover {
-    transform: ${props => props.$active ? 'none' : 'scaleY(1.5)'};
-  }
-`;
-
-const ProgressFill = styled.div<{ $isWhite?: boolean }>`
-  height: 100%;
-  background-color: ${props => props.$isWhite ? Theme.colors.primary : 'white'};
-  transition: width 0.03s linear;
-`;
-
-const ContentContainer = styled.div`
-  border-radius: 16px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 0;
-  max-width: 900px;
-  margin: -50px auto;
-  width: 100%;
-  position: relative;
-  z-index: 10;
-  min-height: 0; /* Important for flex children */
-  
-  @media (max-width: 767px) {
-    max-height: calc(100vh - 180px); /* Account for header, progress, and buttons */
-  }
-  
-  @media (min-width: 768px) {
-    padding: 10px 20px;
-  }
-  
-  @media (min-width: 1024px) {
-    padding: 20px 20px;
-  }
-`;
-
-const SlideWrapper = styled.div<{ $animating: boolean; $direction: 'next' | 'prev' }>`
-  position: relative;
-  width: 100%;
-  height: 100%;
-  animation: ${props => {
-    if (props.$animating) {
-      return props.$direction === 'next' 
-        ? css`${slideInNext} 0.15s ease-out forwards`
-        : css`${slideInPrev} 0.15s ease-out forwards`;
-    }
-    return 'none';
-  }};
-`;
-
-const SlideContent = styled.div`
-  opacity: 1;
-  text-align: left;
-  position: relative;
-`;
-
-const SlideTitle = styled.h1<{ $isWhite?: boolean }>`
-  font-size: clamp(20px, 5vw, 42px);
-  font-weight: 700;
-  line-height: 1.1;
-  margin-bottom: clamp(6px, 1.5vw, 16px);
-  color: ${props => props.$isWhite ? Theme.colors.primary : 'white'};
-  text-align: left;
-  position: relative;
-  
-  &:after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    width: 50px;
-    height: 2px;
-    background-color: ${props => props.$isWhite ? Theme.colors.secondary : 'rgba(255,255,255,0.6)'};
-    border-radius: 2px;
-  }
-`;
-
-const SlideSubtitle = styled.h2<{ $isWhite?: boolean }>`
-  font-size: clamp(13px, 3.5vw, 20px);
-  font-weight: 400;
-  line-height: 1.4;
-  margin-bottom: clamp(12px, 3vw, 32px);
-  color: ${props => props.$isWhite 
-    ? Theme.colors.secondary 
-    : 'rgba(255, 255, 255, 0.9)'};
-  text-align: left;
-`;
-
-const BenefitsHeader = styled.h3<{ $isWhite?: boolean }>`
-  font-size: clamp(14px, 3.5vw, 22px);
-  font-weight: 600;
-  margin-bottom: clamp(8px, 2vw, 20px);
-  color: ${props => props.$isWhite ? Theme.colors.primary : 'white'};
-  text-align: left;
-`;
-
-const BenefitsList = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-  position: relative;
-  
-  @media (min-width: 768px) {
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  
-  @media (min-width: 1024px) {
-    gap: 20px;
-  }
-`;
-
-const BenefitItem = styled.div<{ $delay: number; $isWhite?: boolean; $isMobile?: boolean }>`
-  display: flex;
-  align-items: flex-start;
-  gap: ${props => props.$isMobile ? '8px' : '10px'};
-  opacity: 0;
-  animation: ${slideIn} 0.3s ease-out forwards;
-  animation-delay: ${props => props.$delay * 0.05}s;
-  background: ${props => props.$isWhite 
-    ? 'rgba(0, 0, 0, 0.02)'
-    : 'rgba(255, 255, 255, 0.05)'};
-  border-radius: ${props => props.$isMobile ? '10px' : '12px'};
-  padding: ${props => props.$isMobile ? '10px' : '12px'};
-  transition: all 0.2s ease;
-  border: 1px solid ${props => props.$isWhite 
-    ? 'rgba(0, 0, 0, 0.08)'
-    : 'rgba(255, 255, 255, 0.1)'};
-  width: ${props => props.$isMobile ? '100%' : 'auto'};
-  
-  @media (min-width: 768px) {
-    padding: 16px;
-    gap: 12px;
-    border-radius: 16px;
-  }
-  
-  @media (min-width: 1024px) {
-    padding: 20px;
-    gap: 16px;
-  }
-  
-  &:hover {
-    transform: ${props => props.$isMobile ? 'none' : 'translateY(-4px)'};
-    box-shadow: ${props => props.$isMobile ? 'none' : `0 10px 30px ${props.$isWhite 
-      ? 'rgba(0, 0, 0, 0.1)'
-      : 'rgba(0, 0, 0, 0.2)'}`};
-    border-color: ${props => props.$isWhite 
-      ? Theme.colors.primary + '30'
-      : 'rgba(255, 255, 255, 0.2)'};
-    background: ${props => props.$isWhite 
-      ? 'rgba(0, 0, 0, 0.04)'
-      : 'rgba(255, 255, 255, 0.08)'};
-  }
-`;
-
-const BenefitIconWrapper = styled.div<{ $isWhite?: boolean }>`
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  background: ${props => props.$isWhite 
-    ? `linear-gradient(135deg, ${Theme.colors.primary}15 0%, ${Theme.colors.secondary}20 100%)`
-    : 'rgba(255, 255, 255, 0.1)'};
-  color: ${props => props.$isWhite ? Theme.colors.primary : 'white'};
-  transition: all 0.15s ease;
-  
-  @media (min-width: 768px) {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    font-size: 20px;
-    border-radius: 12px;
-  }
-  
-  @media (min-width: 1024px) {
-    width: 48px;
-    height: 48px;
-    min-width: 48px;
-    font-size: 24px;
-  }
-  
-  ${BenefitItem}:hover & {
-    transform: scale(1.1) rotate(5deg);
-    background: ${props => props.$isWhite 
-      ? `linear-gradient(135deg, ${Theme.colors.primary}25 0%, ${Theme.colors.secondary}30 100%)`
-      : 'rgba(255, 255, 255, 0.2)'};
-  }
-`;
-
-const BenefitContent = styled.div`
-  flex: 1;
-  text-align: left;
-  position: relative;
-`;
-
-const BenefitTitle = styled.h3<{ $isWhite?: boolean }>`
-  font-size: clamp(13px, 3.5vw, 18px);
-  font-weight: 600;
-  margin-bottom: 4px;
-  color: ${props => props.$isWhite ? Theme.colors.primary : 'white'};
-  position: relative;
-  line-height: 1.2;
-`;
-
-const BenefitDescription = styled.p<{ $isWhite?: boolean }>`
-  font-size: clamp(11px, 3vw, 15px);
-  color: ${props => props.$isWhite 
-    ? 'rgba(0, 0, 0, 0.7)' 
-    : 'rgba(255, 255, 255, 0.8)'};
-  line-height: 1.3;
-`;
-
-const ClosingText = styled.p<{ $isWhite?: boolean }>`
-  font-size: clamp(13px, 3vw, 20px);
-  font-weight: 600;
-  margin-top: clamp(12px, 3vw, 32px);
-  text-align: left;
-  color: ${props => props.$isWhite ? Theme.colors.primary : 'white'};
-  line-height: 1.4;
-  opacity: 0;
-  animation: ${slideIn} 0.3s ease-out forwards;
-  animation-delay: 0.2s;
-  
-  @media (max-width: 767px) {
-    display: none; /* Hide closing text on mobile to save space */
-  }
-  
-  @media (min-width: 768px) {
-    display: block;
-  }
-`;
-
-const ButtonsContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  position: relative;
-  z-index: 10;
-  flex-wrap: wrap;
-  gap: 8px;
-  
-  @media (min-width: 768px) {
-    padding: 16px 0;
-    flex-wrap: nowrap;
-    gap: 12px;
-  }
-  
-  @media (min-width: 1024px) {
-    padding: 20px 0;
-  }
-`;
-
-const NavigationButtons = styled.div`
-  display: flex;
-  gap: 12px;
-  align-items: center;
-`;
-
-const SkipButton = styled.button<{ $isWhite?: boolean }>`
-  background: none;
-  border: none;
-  color: ${props => props.$isWhite 
-    ? 'rgba(0, 0, 0, 0.5)' 
-    : 'rgba(255, 255, 255, 0.7)'};
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 8px 12px;
-  transition: all 0.15s ease;
-  position: relative;
-  
-  @media (min-width: 768px) {
-    font-size: 16px;
-    padding: 8px 16px;
-  }
-  
-  &:after {
-    content: '';
-    position: absolute;
-    bottom: 4px;
-    left: 50%;
-    width: 0;
-    height: 2px;
-    background-color: ${props => props.$isWhite ? Theme.colors.primary : 'white'};
-    transition: all 0.2s ease;
-    transform: translateX(-50%);
-  }
-  
-  &:hover {
-    color: ${props => props.$isWhite ? Theme.colors.primary : 'white'};
-    
-    &:after {
-      width: 50%;
-    }
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const NavButton = styled.button<{ $isWhite?: boolean; $isPrev?: boolean }>`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: ${props => props.$isWhite 
-    ? 'rgba(0, 0, 0, 0.05)' 
-    : 'rgba(255, 255, 255, 0.2)'};
-  color: ${props => props.$isWhite ? Theme.colors.primary : 'white'};
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  
-  &:hover {
-    background-color: ${props => props.$isWhite 
-      ? 'rgba(0, 0, 0, 0.1)' 
-      : 'rgba(255, 255, 255, 0.3)'};
-    transform: translateY(-2px);
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const NextButton = styled.button<{ $isWhite?: boolean; $isLast?: boolean }>`
-  background-color: ${props => props.$isWhite ? Theme.colors.primary : 'white'};
-  color: ${props => props.$isWhite ? 'white' : Theme.colors.secondary};
-  border: none;
-  border-radius: ${Theme.borders.radius.extreme};
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-  position: relative;
-  overflow: hidden;
-  
-  @media (min-width: 768px) {
-    padding: 12px 24px;
-    font-size: 16px;
-  }
-  
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent
-    );
-    transition: all 0.4s ease;
-  }
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    
-    &:before {
-      left: 100%;
-    }
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-  
-  &:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    transform: none;
-  }
+  right: 0;
+  bottom: 0;
+  background: ${Theme.colors.primary};
+  z-index: 100;
+  opacity: ${props => props.isLoading ? 1 : 0};
+  visibility: ${props => props.isLoading ? 'visible' : 'hidden'};
+  transition: opacity 0.5s ease, visibility 0.5s ease;
 `;
 
 const TopSection = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  padding: 0;
+  margin-bottom: 2rem;
   position: relative;
+  z-index: 2;
+`;
+
+const LogoWrapper = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const Logo = styled.img`
+  height: 40px;
+  filter: brightness(0) invert(1);
+`;
+
+const LanguageSwitcherWrapper = styled.div`
   z-index: 10;
+`;
+
+const ContentContainer = styled.div`
+  display: flex;
+  flex: 1;
+  gap: 2rem;
+  position: relative;
+  z-index: 2;
   
-  @media (min-width: 768px) {
-    padding: 0 20px;
+  @media (max-width: 968px) {
+    flex-direction: column;
+    overflow-y: auto;
+    padding-bottom: 2rem;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    
+    &::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      background: transparent !important;
+    }
   }
 `;
 
-const LanguageSwitcherContainer = styled.div`
-  z-index: 10;
+const LeftColumn = styled.div`
+  flex: 0.65;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  @media (max-width: 968px) {
+    flex: 1;
+    margin-bottom: 2rem;
+  }
 `;
 
-const MobileBenefitContainer = styled.div`
+const LeftColumnContent = styled.div`
+  max-width: 600px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  text-align: center;
+`;
+
+const WelcomeSection = styled.div<{ isVisible: boolean }>`
+  margin-bottom: 2.5rem;
+  opacity: ${props => props.isVisible ? 1 : 0};
+  transform: translateY(${props => props.isVisible ? '0' : '30px'});
+  transition: opacity 0.6s ease, transform 0.6s ease;
   width: 100%;
-  touch-action: pan-y;
-  position: relative;
-`;
-
-const MobileBenefitDots = styled.div`
   display: flex;
-  gap: 6px;
-  margin-top: 4px;
+  flex-direction: column;
+  align-items: center;
 `;
 
-const BenefitDot = styled.div<{ $active: boolean; $isWhite?: boolean }>`
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: ${props => props.$active 
-    ? (props.$isWhite ? Theme.colors.primary : 'white') 
-    : (props.$isWhite ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.3)')};
-  cursor: pointer;
-  transition: all 0.15s ease;
+const WelcomeHeading = styled.h1`
+  font-size: 3rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  background: linear-gradient(to right, #ffffff, #e0e0ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
   
-  &:hover {
-    background-color: ${props => props.$isWhite ? Theme.colors.primary : 'white'};
-    transform: scale(1.2);
+  @media (max-width: 768px) {
+    font-size: 2.5rem;
   }
 `;
 
-export default AdvertiserOnboardingPage; 
+const Subheading = styled.h2`
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin: 0;
+  opacity: 0.9;
+  
+  @media (max-width: 768px) {
+    font-size: 1.2rem;
+  }
+`;
+
+const FeatureList = styled.div<{ isVisible: boolean }>`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  opacity: ${props => props.isVisible ? 1 : 0};
+  transform: translateY(${props => props.isVisible ? '0' : '30px'});
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  width: 100%;
+`;
+
+const FeatureItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.25rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: left;
+  
+  &:hover {
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+`;
+
+const FeatureIconWrapper = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: rotate(5deg);
+  }
+  
+  @media (max-width: 768px) {
+    width: 36px;
+    height: 36px;
+  }
+`;
+
+const FeatureContent = styled.div`
+  flex: 1;
+`;
+
+const FeatureTitle = styled.h3`
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
+`;
+
+const FeatureDescription = styled.p`
+  font-size: 1rem;
+  opacity: 0.9;
+  line-height: 1.4;
+  margin: 0;
+  
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
+`;
+
+const FoundingPartnerCard = styled.div<{ isVisible: boolean }>`
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.75rem;
+  position: relative;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  opacity: ${props => props.isVisible ? 1 : 0};
+  transform: translateY(${props => props.isVisible ? '0' : '30px'});
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  width: 100%;
+  text-align: center;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    border-radius: 16px;
+    padding: 1px;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+  }
+`;
+
+const FoundingPartnerHeader = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  justify-content: center;
+`;
+
+const FoundingPartnerDot = styled.div`
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: white;
+  margin-right: 1rem;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+`;
+
+const FoundingPartnerTitle = styled.h3`
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  background: linear-gradient(to right, #ffffff, #e0e0ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  
+  @media (max-width: 768px) {
+    font-size: 1.3rem;
+  }
+`;
+
+const FoundingPartnerDescription = styled.p`
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0 0 1.5rem 0;
+  
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+  }
+`;
+
+const BenefitsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const BenefitItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+  text-align: left;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.6rem;
+  }
+`;
+
+const BenefitIconWrapper = styled.div`
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  
+  @media (max-width: 768px) {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
+const BenefitDot = styled.div`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #a36fe6;
+  margin-top: 0.5rem;
+  flex-shrink: 0;
+`;
+
+const BenefitText = styled.p`
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
+`;
+
+const BenefitHighlight = styled.span`
+  font-weight: 600;
+  color: white;
+`;
+
+const Divider = styled.div`
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  position: relative;
+  
+  &:after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: white;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.5);
+  }
+  
+  @media (max-width: 968px) {
+    display: none;
+  }
+`;
+
+const RightColumn = styled.div`
+  flex: 0.35;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  @media (max-width: 968px) {
+    flex: 1;
+    margin-top: 1.5rem;
+    padding-bottom: 3rem;
+  }
+`;
+
+const RightColumnContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+`;
+
+const CTALogo = styled.img<{ isVisible: boolean }>`
+  height: 60px;
+  filter: brightness(0) invert(1);
+  margin-bottom: 2rem;
+  opacity: ${props => props.isVisible ? 1 : 0};
+  transform: translateY(${props => props.isVisible ? '0' : '30px'});
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  animation: ${floatAnimation} 6s ease-in-out infinite;
+  
+  @media (max-width: 768px) {
+    height: 50px;
+    margin-bottom: 1.5rem;
+  }
+`;
+
+const CTACard = styled.div<{ isVisible: boolean }>`
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 2.5rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  opacity: ${props => props.isVisible ? 1 : 0};
+  transform: translateY(${props => props.isVisible ? '0' : '30px'});
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 24px;
+    padding: 1px;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 1.75rem;
+    border-radius: 20px;
+  }
+`;
+
+const CTABadge = styled.div`
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 100px;
+  padding: 0.75rem 1.5rem;
+  margin-bottom: 2rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    animation: ${shimmer} 5s infinite;
+    opacity: 0.5;
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 1.1rem;
+    padding: 0.6rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+`;
+
+const CTADescription = styled.p`
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0 0 2.5rem 0;
+  color: rgba(255, 255, 255, 0.9);
+  
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+`;
+
+const SignUpButton = styled.button`
+  background: white;
+  color: ${Theme.colors.secondary};
+  border: none;
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+  }
+  
+  &:after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 20%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(30deg);
+    transition: all 0.6s ease;
+  }
+  
+  &:hover:after {
+    left: 120%;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.9rem 2rem;
+    font-size: 1rem;
+  }
+`;
+
+export default AdvertiserOnboardingPage;

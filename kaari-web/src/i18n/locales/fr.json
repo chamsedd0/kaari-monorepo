@@ -88,7 +88,47 @@
     "next": "Suivant",
     "get_started": "Commencer",
     "return_home": "Retour à l'accueil",
-    "go_back": "Retour"
+    "go_back": "Retour",
+    "sign_up_now": "S'inscrire maintenant",
+    "loading": "Chargement..."
+  },
+  
+  "advertiser_onboarding": {
+    "welcome": "Bienvenue sur Kaari",
+    "subtitle": "Louez votre propriété sans lever le petit doigt.",
+    "feature_photos": {
+      "title": "Photos + Annonce Gratuites",
+      "description": "Nous visitons votre propriété, prenons des photos, rédigeons l'annonce et la publions."
+    },
+    "feature_tenants": {
+      "title": "Locataires Vérifiés, Sans Visites",
+      "description": "Nous filtrons les locataires pour que vous ne receviez que des demandes sérieuses."
+    },
+    "feature_approval": {
+      "title": "Vous Approuvez, Nous Faisons le Reste",
+      "description": "Paiements, coordination, assistance aux locataires — tout est géré par nous."
+    },
+    "founding_partner": {
+      "title": "Programme Partenaire Fondateur",
+      "description": "Débloquez des avantages exclusifs – uniquement pour nos 100 premiers annonceurs.",
+      "benefit_commission": {
+        "highlight": "0% de Commission (3 Mois)",
+        "text": "– Gardez 100% de votre loyer."
+      },
+      "benefit_referral": {
+        "highlight": "Programme de Parrainage",
+        "text": "– Gagnez 10% pour chaque locataire que vous parrainez."
+      },
+      "benefit_support": {
+        "highlight": "Support VIP",
+        "text": "– Aide personnalisée pour augmenter vos revenus."
+      }
+    },
+    "cta": {
+      "spots_available": "Seulement 100 Places Disponibles",
+      "description": "Faites partie de la toute première vague qui façonne l'avenir de Kaari.",
+      "button": "S'inscrire maintenant"
+    }
   },
   "header": {
     "profile_dropdown": {
@@ -353,6 +393,26 @@
     "question_message": "Bonjour ! Je voudrais poser quelques questions sur votre séjour",
     "detailed_greeting": "Bonjour ! Ravi de vous rencontrer ! Vous pouvez me demander n'importe quoi à tout moment. J'essaierai de répondre dès que possible. Si je ne réponds pas, appelez-moi au 070 123 45 67",
     "time_format": "10:45"
+  },
+  "advertiser": {
+    "onboarding": {
+      "welcome": "Bienvenue sur",
+      "kaari": "Kaari",
+      "description": "Rejoignez notre communauté de propriétaires et atteignez des milliers de locataires potentiels. Nous rendons la gestion immobilière simple, sécurisée et rentable.",
+      "feature1": {
+        "title": "Intégration en 48h",
+        "description": "Publiez votre bien et soyez prêt à accueillir des locataires en seulement 48 heures grâce à notre processus simplifié."
+      },
+      "feature2": {
+        "title": "Photographie Professionnelle",
+        "description": "Nos photographes professionnels mettront votre bien en valeur, totalement gratuitement."
+      },
+      "feature3": {
+        "title": "Gestion Intelligente",
+        "description": "Gérez les réservations, communiquez avec les locataires et suivez les paiements, le tout au même endroit."
+      },
+      "getStarted": "Commencer Maintenant"
+    }
   },
   "advertiser_dashboard": {
     "sections": {
@@ -999,46 +1059,26 @@
       "listing_info": "Informations d'Annonce"
     },
     "onboarding": {
-      "slide1": {
-        "title": "Bienvenue chez Kaari",
-        "subtitle": "La façon la plus simple au Maroc de louer votre propriété—sans lever le petit doigt.",
-        "benefits_header": "Ce que nous faisons pour vous",
-        "benefit1_title": "Photos professionnelles gratuites + création d'annonce",
-        "benefit1_description": "Nous photographions votre propriété, rédigeons votre annonce et la publions nous-mêmes. Vous ne faites rien—nous nous occupons de toute la mise en place.",
-        "benefit2_title": "Locataires vérifiés, pas de visites de propriété",
-        "benefit2_description": "Nous sélectionnons les locataires pour que vous ne receviez que des demandes de réservation sérieuses. Plus de visites, plus de temps perdu.",
-        "benefit3_title": "Vous approuvez simplement — Nous gérons le reste",
-        "benefit3_description": "Vous examinez la demande de réservation. Nous gérons tout le reste : paiement, assistance aux locataires et coordination.",
-        "benefit4_title": "Loyer garanti après l'emménagement",
-        "benefit4_description": "Dès que le locataire emménage, votre loyer est garanti à 100%. Rapide, fiable et sans souci.",
-        "closing_text1": "Vous n'avez qu'à remettre les clés.",
-        "closing_text2": "Kaari s'occupe du reste."
+      "welcome": "Bienvenue sur",
+      "kaari": "Kaari",
+      "description": "Rejoignez notre communauté de propriétaires et atteignez des milliers de locataires potentiels. Nous rendons la gestion immobilière simple, sécurisée et rentable.",
+      "feature1": {
+        "title": "Intégration en 48h",
+        "description": "Publiez votre bien et soyez prêt à accueillir des locataires en seulement 48 heures grâce à notre processus simplifié."
       },
-      "slide2": {
-        "title": "Rejoignez nos 100 partenaires fondateurs",
-        "subtitle": "Avantages exclusifs pour les 100 premiers annonceurs",
-        "benefits_header": "Avantages partenaires (3 premiers mois) :",
-        "benefit1_title": "0% de commission",
-        "benefit1_description": "Gardez 100% du loyer—Kaari ne prélève aucune commission pendant 3 mois.",
-        "benefit2_title": "Programme de parrainage – Gains illimités",
-        "benefit2_description": "Gagnez 10% du premier loyer pour chaque locataire parrainé—votre locataire reçoit 200 MAD de réduction.",
-        "benefit3_title": "Support VIP personnalisé",
-        "benefit3_description": "Bénéficiez d'un accompagnement proactif pour les réservations, parrainages et utilisation du tableau de bord.",
-        "closing_text1": "Seulement 100 places disponibles",
-        "closing_text2": "Soyez parmi les premiers à façonner l'avenir de Kaari.",
-        "closing_text3": "Plus de revenus. Moins d'effort. Paiement rapide."
+      "feature2": {
+        "title": "Photographie Professionnelle",
+        "description": "Nos photographes professionnels mettront votre bien en valeur, totalement gratuitement."
       },
-      "slide3": {
-        "title": "Plus d'avantages",
-        "subtitle": "Rejoignez Kaari aujourd'hui",
-        "benefit1": {
-          "title": "Loyer complet garanti",
-          "description": "Pas besoin de vous inquiéter de conclure l'affaire ou des arriérés de loyer"
-        },
-        "benefit2": {
-          "title": "Rejoignez notre communauté",
-          "description": "Faites partie de la plateforme de location à la croissance la plus rapide du Maroc"
-        }
+      "feature3": {
+        "title": "Gestion Intelligente",
+        "description": "Gérez les réservations, communiquez avec les locataires et suivez les paiements, le tout au même endroit."
+      },
+      "getStarted": "Commencer Maintenant",
+      "cta": {
+        "title": "Seulement 100 Places Disponibles",
+        "description": "Faites partie de la toute première vague qui façonne l'avenir de Kaari.",
+        "tagline": "Gagnez plus. Faites moins. Soyez payé plus rapidement."
       }
     },
     "buttons": {
@@ -1117,33 +1157,55 @@
   "advertiser_onboarding": {
     "slide1": {
       "title": "Bienvenue chez Kaari",
-      "subtitle": "La façon la plus simple au Maroc de louer votre propriété—sans lever le petit doigt.",
-      "benefits_header": "Ce que nous faisons pour vous",
-      "benefit1_title": "Photos professionnelles gratuites + création d'annonce",
-      "benefit1_description": "Nous photographions votre propriété, rédigeons votre annonce et la publions nous-mêmes. Vous ne faites rien—nous nous occupons de toute la mise en place.",
-      "benefit2_title": "Locataires vérifiés, pas de visites de propriété",
-      "benefit2_description": "Nous sélectionnons les locataires pour que vous ne receviez que des demandes de réservation sérieuses. Plus de visites, plus de temps perdu.",
-      "benefit3_title": "Vous approuvez simplement — Nous gérons le reste",
-      "benefit3_description": "Vous examinez la demande de réservation. Nous gérons tout le reste : paiement, assistance aux locataires et coordination.",
-      "benefit4_title": "Loyer garanti après l'emménagement",
-      "benefit4_description": "Dès que le locataire emménage, votre loyer est garanti à 100%. Rapide, fiable et sans souci.",
-      "closing_text1": "Vous n'avez qu'à remettre les clés.",
-      "closing_text2": "Kaari s'occupe du reste."
+      "subtitle": "La façon la plus simple de louer votre propriété au Maroc",
+      "subtitleUnit": "sans lever le petit doigt",
+      "description": "Ce que nous faisons pour vous",
+      "explanation": "🎯 Photos Professionnelles + Création d'Annonce Gratuites\nNous photographions votre propriété, rédigeons l'annonce et la publions nous-mêmes. Vous ne faites rien—nous nous occupons de toute la configuration.\n\n✅ Locataires Vérifiés, Sans Visites\nNous vérifions les locataires, vous ne recevez que des demandes de réservation sérieuses. Plus de visites, plus de temps perdu.\n\n👍 Vous Approuvez — Nous Gérons le Reste\nVous examinez la demande de réservation. Nous gérons tout le reste : paiement, support locataire et coordination.\n\n💰 Loyer Garanti Après l'Emménagement\nDès que le locataire emménage, votre loyer est 100% sécurisé. Rapide, fiable et sans souci.\n\n🔑 Tout ce que vous faites, c'est remettre les clés.\nKaari s'occupe du reste.",
+      "buttonText": "Suivant",
+      "image": "Grl_Photo_Onboarding.svg"
     },
     "slide2": {
-      "title": "Rejoignez nos 100 partenaires fondateurs",
-      "subtitle": "Avantages exclusifs pour les 100 premiers annonceurs",
-      "benefits_header": "Avantages partenaires (3 premiers mois) :",
-      "benefit1_title": "0% de commission",
-      "benefit1_description": "Gardez 100% du loyer—Kaari ne prélève aucune commission pendant 3 mois.",
-      "benefit2_title": "Programme de parrainage – Gains illimités",
-      "benefit2_description": "Gagnez 10% du premier loyer pour chaque locataire parrainé—votre locataire reçoit 200 MAD de réduction.",
-      "benefit3_title": "Support VIP personnalisé",
-      "benefit3_description": "Bénéficiez d'un accompagnement proactif pour les réservations, parrainages et utilisation du tableau de bord.",
-      "closing_text1": "Seulement 100 places disponibles",
-      "closing_text2": "Soyez parmi les premiers à façonner l'avenir de Kaari.",
-      "closing_text3": "Plus de revenus. Moins d'effort. Paiement rapide."
+      "title": "Devenez l'un de nos 100 Partenaires Fondateurs",
+      "description": "Débloquez des Avantages Exclusifs d'Accès Anticipé — Seulement pour les 100 Premiers Annonceurs.",
+      "explanation": "🏆 Avantages des Partenaires Fondateurs (3 Premiers Mois Seulement) :\n\n💸 0% de Commission Annonceur\nGardez 100% du loyer—Kaari ne facture aucune commission pendant vos 3 premiers mois.\n\n🎁 Accès au Programme de Parrainage – Potentiel de Gains Illimité\nGagnez 10% du loyer du premier mois pour chaque locataire que vous parrainez avec votre code—et votre locataire obtient 200 MAD de réduction sur sa réservation.\n\n⭐ Accompagnement VIP à Chaque Étape\nLes Partenaires Fondateurs reçoivent un support personnalisé et proactif—nous vous guidons à travers les réservations, parrainages et l'utilisation du tableau de bord sans que vous ayez besoin de demander.",
+      "buttonText": "Commencer",
+      "image": "Group 43.svg"
     },
-    "sign_up_now": "S'inscrire maintenant"
+    "slide3": {
+      "title": "",
+      "description": "",
+      "buttonText": "Suivant",
+      "image": ""
+    },
+    "slide4": {
+      "title": "",
+      "description": "",
+      "buttonText": "Commencer",
+      "image": ""
+    },
+    "why_do_we_need_this": "Pourquoi avons-nous besoin de cela ?",
+    "onboarding": {
+      "welcome": "Bienvenue sur",
+      "kaari": "Kaari",
+      "description": "Rejoignez notre communauté de propriétaires et atteignez des milliers de locataires potentiels. Nous rendons la gestion immobilière simple, sécurisée et rentable.",
+      "feature1": {
+        "title": "Intégration en 48h",
+        "description": "Publiez votre bien et soyez prêt à accueillir des locataires en seulement 48 heures grâce à notre processus simplifié."
+      },
+      "feature2": {
+        "title": "Photographie Professionnelle",
+        "description": "Nos photographes professionnels mettront votre bien en valeur, totalement gratuitement."
+      },
+      "feature3": {
+        "title": "Gestion Intelligente",
+        "description": "Gérez les réservations, communiquez avec les locataires et suivez les paiements, le tout au même endroit."
+      },
+      "getStarted": "Commencer Maintenant",
+      "cta": {
+        "title": "Seulement 100 Places Disponibles",
+        "description": "Faites partie de la toute première vague qui façonne l'avenir de Kaari.",
+        "tagline": "Gagnez plus. Faites moins. Soyez payé plus rapidement."
+      }
+    }
   }
 } 

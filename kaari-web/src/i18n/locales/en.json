@@ -90,7 +90,46 @@
     "return_home": "Return Home",
     "go_back": "Go Back",
     "loading": "Loading...",
-    "or": "or"
+    "or": "or",
+    "sign_up_now": "Sign Up Now"
+  },
+  
+  "advertiser_onboarding": {
+    "welcome": "Welcome to Kaari",
+    "subtitle": "Rent out your property without lifting a finger.",
+    "feature_photos": {
+      "title": "Free Photos + Listing",
+      "description": "We visit your property, take photos, write the listing, and publish it."
+    },
+    "feature_tenants": {
+      "title": "Verified Tenants, No Visits",
+      "description": "We screen tenants so you only get serious requests."
+    },
+    "feature_approval": {
+      "title": "You Approve, We Do the Rest",
+      "description": "Payments, coordination, tenant support — all handled by us."
+    },
+    "founding_partner": {
+      "title": "Founding Partner Program",
+      "description": "Unlock exclusive perks – only for our first 100 advertisers.",
+      "benefit_commission": {
+        "highlight": "0% Commission (3 Months)",
+        "text": "– Keep 100% of your rent."
+      },
+      "benefit_referral": {
+        "highlight": "Referral Program",
+        "text": "– Earn 10% for every tenant you refer."
+      },
+      "benefit_support": {
+        "highlight": "VIP Support",
+        "text": "– Personalized help to boost your earnings."
+      }
+    },
+    "cta": {
+      "spots_available": "Only 100 Spots Available",
+      "description": "Be part of the very first wave shaping Kaari's future.",
+      "button": "Sign Up Now"
+    }
   },
   "header": {
     "profile_dropdown": {
@@ -358,6 +397,26 @@
     "failed_to_start_conversation": "Failed to start conversation",
     "no_conversation_selected": "No conversation selected",
     "unknown_user": "Unknown User"
+  },
+  "advertiser": {
+    "onboarding": {
+      "welcome": "Welcome to",
+      "kaari": "Kaari",
+      "description": "Join our community of property owners and reach thousands of potential tenants. We make property management simple, secure, and profitable.",
+      "feature1": {
+        "title": "48-Hour Onboarding",
+        "description": "Get your property listed and ready for tenants in just 48 hours with our streamlined process."
+      },
+      "feature2": {
+        "title": "Professional Photography",
+        "description": "Our professional photographers will capture your property in its best light, completely free of charge."
+      },
+      "feature3": {
+        "title": "Smart Management",
+        "description": "Manage bookings, communicate with tenants, and track payments all in one place."
+      },
+      "getStarted": "Get Started Now"
+    }
   },
   "advertiser_dashboard": {
     "sections": {
@@ -829,66 +888,6 @@
       "learn_more": "Learn More"
     }
   },
-  "property_features": {
-    "title": "Property Features",
-    "balcony": "Balcony",
-    "central_heating": "Central Heating",
-    "parking_space": "Parking Space",
-    "air_conditioning": "Air Conditioning",
-    "wooden_floors": "Wooden Floors",
-    "elevator": "Elevator",
-    "swimming_pool": "Swimming Pool",
-    "fireplace": "Fireplace",
-    "accessible": "Accessible"
-  },
-  "referral_program": {
-    "title": "Kaari's Referral Program",
-    "my_performance": "My Performance",
-    "your_referral_code": "Your Referral Code",
-    "referral_code_info": "Give tenants your unique promocode when you can't accommodate them. They get 200 MAD off, and you earn a bonus!",
-    "your_current_performance": "Your Current Performance",
-    "current_bonus": "Current bonus: {{bonus}} of tenant's first rent",
-    "list_more_for_bonus": "List 1 more property to get 8% bonus",
-    "book_photoshoot": "Book a Photoshoot",
-    "go_to_simulator": "Go to Simulator",
-    "referral_history": "Referral History",
-    "tenant": "Tenant",
-    "status": "Status",
-    "property": "Property",
-    "date": "Date",
-    "status_pending": "pending",
-    "status_success": "success",
-    "view_all_history": "View All History",
-    "your_progress": "Your Progress",
-    "details": "Details",
-    "total_referrals": "Total Referrals",
-    "successful_bookings": "Successful Bookings",
-    "monthly_earnings": "Monthly earnings",
-    "annual_earnings": "Annual earnings",
-    "request_payout": "Request Payout",
-    "min_payout_note": "Minimum 500 MAD required for payout",
-    "eligibility": "Eligibility",
-    "eligible": "You're eligible to participate",
-    "ineligible": "You need at least one active listing",
-    "requirements": "Requirements",
-    "requirement_listing": "At least 1 active listing",
-    "requirement_verification": "Verified account",
-    "requirement_goodstanding": "Account in good standing",
-    "how_it_works": "How it works",
-    "step_share": "Share your code with tenants you can't accommodate",
-    "step_book": "They book with another host using your code",
-    "step_earn": "You earn a percentage of their first month's rent",
-    "boost_earnings": "Boost Your Earnings",
-    "promo_text": "List more properties to increase your referral bonus percentage!",
-    "add_property": "Add New Property",
-    "back_to_referral_program": "Back to Referral Program",
-    "your_referral_performance": "Your Referral Performance",
-    "referrals": "Referrals",
-    "bookings": "Bookings",
-    "bonus": "Bonus",
-    "you_are_eligible": "You are eligible",
-    "pending_payout": "Pending payout: {{amount}} MAD"
-  },
   "footer": {
     "for_advertisers": "For Advertisers",
     "manage_properties": "Manage Properties",
@@ -930,45 +929,24 @@
     },
     "onboarding": {
       "slide1": {
-        "title": "Welcome to Kaari",
-        "subtitle": "Morocco's easiest way to rent out your property—without lifting a finger.",
-        "benefits_header": "What We Do For You",
-        "benefit1_title": "Free Professional Photos + Listing Creation",
-        "benefit1_description": "We photograph your property, write your listing, and publish it ourselves. You do nothing—we take care of the entire setup.",
-        "benefit2_title": "Verified Tenants, No Property Visits",
-        "benefit2_description": "We screen tenants, so you only receive serious booking requests. No more visits, no more wasted time.",
-        "benefit3_title": "You Just Approve — We Handle the Rest",
-        "benefit3_description": "You review the booking request. We handle everything else: payment, tenant support, and coordination.",
-        "benefit4_title": "Guaranteed Rent After Move-In",
-        "benefit4_description": "As soon as the tenant moves in, your rent is 100% secured. Fast, reliable, and worry-free.",
-        "closing_text1": "All You Do Is Hand Over the Keys.",
-        "closing_text2": "Kaari takes care of the rest."
+        "title": "Professional Photos",
+        "subtitle": "We take care of everything",
+        "description": "We photograph your property, write your listing, and publish it ourselves. You do nothing—we take care of the entire setup."
       },
       "slide2": {
-        "title": "Become One of Our 100 Founding Partners",
-        "subtitle": "Unlock Exclusive Early-Access Benefits — Only for the First 100 Advertisers.",
-        "benefits_header": "Founding Partner Benefits (First 3 Months Only):",
-        "benefit1_title": "0% Advertiser Commission",
-        "benefit1_description": "Keep 100% of the rent—Kaari charges no commission during your first 3 months.",
-        "benefit2_title": "Referral Program Access – Unlimited Earning Potential",
-        "benefit2_description": "Earn 10% of the first month's rent for every tenant you refer through your code—and your tenant gets 200 MAD off their booking.",
-        "benefit3_title": "VIP Guidance at Every Step",
-        "benefit3_description": "Founding Partners receive personalized, proactive support—we walk you through bookings, referrals, and dashboard usage without you needing to ask.",
-        "closing_text1": "Only 100 Spots Available",
-        "closing_text2": "Be part of the very first wave shaping Kaari's future.",
-        "closing_text3": "Earn more. Do less. Get paid faster."
+        "title": "Verified Tenants",
+        "subtitle": "No property visits needed",
+        "description": "We screen tenants, so you only receive serious booking requests. No more visits, no more wasted time."
       },
       "slide3": {
-        "title": "More Benefits",
-        "subtitle": "Join Kaari today",
-        "benefit1": {
-          "title": "Guaranteed full rent",
-          "description": "No need to worry about closing the deal or rental arrears"
+        "title": "48-Hour Turnaround",
+        "subtitle": "Quick and efficient service",
+        "description": "From signup to listing, we get your property online and ready to rent in just 48 hours."
         },
-        "benefit2": {
-          "title": "Join our community",
-          "description": "Become part of Morocco's fastest growing rental platform"
-        }
+      "slide4": {
+        "title": "Join Our Platform",
+        "subtitle": "Morocco's easiest way to rent",
+        "description": "Become part of Morocco's premier property rental platform and start earning passive income today."
       }
     },
     "step1": {
@@ -1104,35 +1082,100 @@
     "resend_error": "Failed to send verification email. Please try again later."
   },
   "advertiser_onboarding": {
-    "slide1": {
-      "title": "Welcome to Kaari",
-      "subtitle": "Morocco's easiest way to rent out your property—without lifting a finger.",
-      "benefits_header": "What We Do For You",
-      "benefit1_title": "Free Professional Photos + Listing Creation",
-      "benefit1_description": "We photograph your property, write your listing, and publish it ourselves. You do nothing—we take care of the entire setup.",
-      "benefit2_title": "Verified Tenants, No Property Visits",
-      "benefit2_description": "We screen tenants, so you only receive serious booking requests. No more visits, no more wasted time.",
-      "benefit3_title": "You Just Approve — We Handle the Rest",
-      "benefit3_description": "You review the booking request. We handle everything else: payment, tenant support, and coordination.",
-      "benefit4_title": "Guaranteed Rent After Move-In",
-      "benefit4_description": "As soon as the tenant moves in, your rent is 100% secured. Fast, reliable, and worry-free.",
-      "closing_text1": "All You Do Is Hand Over the Keys.",
-      "closing_text2": "Kaari takes care of the rest."
+    "welcome": "Welcome to Kaari",
+    "subtitle": "Rent out your property without lifting a finger.",
+    "feature_photos": {
+      "title": "Free Photos + Listing",
+      "description": "We visit your property, take photos, write the listing, and publish it."
     },
-    "slide2": {
-      "title": "Become One of Our 100 Founding Partners",
-      "subtitle": "Unlock Exclusive Early-Access Benefits — Only for the First 100 Advertisers.",
-      "benefits_header": "Founding Partner Benefits (First 3 Months Only):",
-      "benefit1_title": "0% Advertiser Commission",
-      "benefit1_description": "Keep 100% of the rent—Kaari charges no commission during your first 3 months.",
-      "benefit2_title": "Referral Program Access – Unlimited Earning Potential",
-      "benefit2_description": "Earn 10% of the first month's rent for every tenant you refer through your code—and your tenant gets 200 MAD off their booking.",
-      "benefit3_title": "VIP Guidance at Every Step",
-      "benefit3_description": "Founding Partners receive personalized, proactive support—we walk you through bookings, referrals, and dashboard usage without you needing to ask.",
-      "closing_text1": "Only 100 Spots Available",
-      "closing_text2": "Be part of the very first wave shaping Kaari's future.",
-      "closing_text3": "Earn more. Do less. Get paid faster."
+    "feature_tenants": {
+      "title": "Verified Tenants, No Visits",
+      "description": "We screen tenants so you only get serious requests."
     },
-    "sign_up_now": "Sign Up Now"
+    "feature_approval": {
+      "title": "You Approve, We Do the Rest",
+      "description": "Payments, coordination, tenant support — all handled by us."
+    },
+    "founding_partner": {
+      "title": "Founding Partner Program",
+      "description": "Unlock exclusive perks – only for our first 100 advertisers.",
+      "benefit_commission": {
+        "highlight": "0% Commission (3 Months)",
+        "text": "– Keep 100% of your rent."
+      },
+      "benefit_referral": {
+        "highlight": "Referral Program",
+        "text": "– Earn 10% for every tenant you refer."
+      },
+      "benefit_support": {
+        "highlight": "VIP Support",
+        "text": "– Personalized help to boost your earnings."
+      }
+    },
+    "cta": {
+      "spots_available": "Only 100 Spots Available",
+      "description": "Be part of the very first wave shaping Kaari's future.",
+      "button": "Sign Up Now"
+    }
+  },
+  "property_features": {
+    "title": "Property Features",
+    "balcony": "Balcony",
+    "central_heating": "Central Heating",
+    "parking_space": "Parking Space",
+    "air_conditioning": "Air Conditioning",
+    "wooden_floors": "Wooden Floors",
+    "elevator": "Elevator",
+    "swimming_pool": "Swimming Pool",
+    "fireplace": "Fireplace",
+    "accessible": "Accessible"
+  },
+  "referral_program": {
+    "title": "Kaari's Referral Program",
+    "my_performance": "My Performance",
+    "your_referral_code": "Your Referral Code",
+    "referral_code_info": "Give tenants your unique promocode when you can't accommodate them. They get 200 MAD off, and you earn a bonus!",
+    "your_current_performance": "Your Current Performance",
+    "current_bonus": "Current bonus: {{bonus}} of tenant's first rent",
+    "list_more_for_bonus": "List 1 more property to get 8% bonus",
+    "book_photoshoot": "Book a Photoshoot",
+    "go_to_simulator": "Go to Simulator",
+    "referral_history": "Referral History",
+    "tenant": "Tenant",
+    "status": "Status",
+    "property": "Property",
+    "date": "Date",
+    "status_pending": "pending",
+    "status_success": "success",
+    "view_all_history": "View All History",
+    "your_progress": "Your Progress",
+    "details": "Details",
+    "total_referrals": "Total Referrals",
+    "successful_bookings": "Successful Bookings",
+    "monthly_earnings": "Monthly earnings",
+    "annual_earnings": "Annual earnings",
+    "request_payout": "Request Payout",
+    "min_payout_note": "Minimum 500 MAD required for payout",
+    "eligibility": "Eligibility",
+    "eligible": "You're eligible to participate",
+    "ineligible": "You need at least one active listing",
+    "requirements": "Requirements",
+    "requirement_listing": "At least 1 active listing",
+    "requirement_verification": "Verified account",
+    "requirement_goodstanding": "Account in good standing",
+    "how_it_works": "How it works",
+    "step_share": "Share your code with tenants you can't accommodate",
+    "step_book": "They book with another host using your code",
+    "step_earn": "You earn a percentage of their first month's rent",
+    "boost_earnings": "Boost Your Earnings",
+    "promo_text": "List more properties to increase your referral bonus percentage!",
+    "add_property": "Add New Property",
+    "back_to_referral_program": "Back to Referral Program",
+    "your_referral_performance": "Your Referral Performance",
+    "referrals": "Referrals",
+    "bookings": "Bookings",
+    "bonus": "Bonus",
+    "you_are_eligible": "You are eligible",
+    "pending_payout": "Pending payout: {{amount}} MAD"
   }
 } 
