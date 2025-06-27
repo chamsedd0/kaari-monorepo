@@ -57,8 +57,8 @@ const EmailVerificationErrorPage: React.FC = () => {
               {t('email_verification.try_again_button')}
             </PrimaryButton>
             
-            <SecondaryButton onClick={() => navigate('/')}>
-              {t('email_verification.go_home_button')}
+            <SecondaryButton onClick={() => navigate('/advertiser-signup/form')}>
+              {t('advertiser_signup.create_account')}
             </SecondaryButton>
           </ButtonsContainer>
         </ErrorCard>

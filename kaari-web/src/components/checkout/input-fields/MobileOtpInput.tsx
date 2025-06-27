@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
 
-interface OtpInputProps {
+interface MobileOtpInputProps {
   length?: number;
   value: string;
   onChange: (value: string) => void;
@@ -14,7 +14,7 @@ interface OtpInputProps {
   error?: string;
 }
 
-const OtpInput: React.FC<OtpInputProps> = ({
+const MobileOtpInput: React.FC<MobileOtpInputProps> = ({
   length = 6,
   value = '',
   onChange,
@@ -27,7 +27,6 @@ const OtpInput: React.FC<OtpInputProps> = ({
 }) => {
   const [activeInput, setActiveInput] = useState(0);
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
-  const isMobile = window.innerWidth <= 768;
 
   // Split the value into an array
   const getOtpValue = () => {
@@ -177,13 +176,13 @@ const OtpInput: React.FC<OtpInputProps> = ({
   }, []);
 
   return (
-    <OtpContainer>
+    <MobileOtpContainer>
       {label && (
-        <InputLabel isMobile={isMobile}>
+        <InputLabel>
           {label}
         </InputLabel>
       )}
-      <DigitsContainer isMobile={isMobile}>
+      <OtpContainer>
         {Array.from({ length }, (_, index) => {
           const digit = getOtpValue()[index] || '';
           return (
@@ -202,52 +201,51 @@ const OtpInput: React.FC<OtpInputProps> = ({
               placeholder={placeholder}
               autoComplete="off"
               aria-label={`digit ${index + 1}`}
-              isMobile={isMobile}
               hasError={!!error}
             />
           );
         })}
-      </DigitsContainer>
-      {error && <ErrorMessage isMobile={isMobile}>{error}</ErrorMessage>}
-    </OtpContainer>
+      </OtpContainer>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+    </MobileOtpContainer>
   );
 };
 
-const OtpContainer = styled.div`
+const MobileOtpContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
   margin-bottom: 16px;
 `;
 
-const InputLabel = styled.label<{ isMobile: boolean }>`
+const InputLabel = styled.label`
   font: ${Theme.typography.fonts.mediumM};
   color: ${Theme.colors.black};
   margin-bottom: 8px;
   padding-left: 5px;
-  font-size: ${props => props.isMobile ? '14px' : '16px'};
+  font-size: 14px;
 `;
 
-const DigitsContainer = styled.div<{ isMobile: boolean }>`
+const OtpContainer = styled.div`
   display: flex;
-  justify-content: center;
-  gap: ${props => props.isMobile ? '8px' : '12px'};
-  margin: ${props => props.isMobile ? '8px 0' : '16px 0'};
+  justify-content: space-between;
+  gap: 8px;
   width: 100%;
 `;
 
-const OtpDigit = styled.input<{ isMobile: boolean; hasError?: boolean }>`
-  width: ${props => props.isMobile ? '36px' : '50px'};
-  height: ${props => props.isMobile ? '46px' : '60px'};
+const OtpDigit = styled.input<{ hasError?: boolean }>`
+  width: 36px;
+  height: 46px;
   border: 1.5px solid ${props => props.hasError ? Theme.colors.error : Theme.colors.gray};
   border-radius: ${Theme.borders.radius.md};
-  font-size: ${props => props.isMobile ? '18px' : '24px'};
+  font-size: 18px;
   font-weight: bold;
   text-align: center;
   color: ${Theme.colors.black};
   background-color: ${Theme.colors.white};
   transition: all 0.2s ease;
   padding: 0;
+  flex: 1;
   
   &:focus {
     border-color: ${props => props.hasError ? Theme.colors.error : Theme.colors.secondary};
@@ -261,11 +259,11 @@ const OtpDigit = styled.input<{ isMobile: boolean; hasError?: boolean }>`
   }
 `;
 
-const ErrorMessage = styled.div<{ isMobile: boolean }>`
+const ErrorMessage = styled.div`
   color: ${Theme.colors.error};
-  font-size: ${props => props.isMobile ? '12px' : '14px'};
+  font-size: 12px;
   margin-top: 4px;
   padding-left: 5px;
 `;
 
-export default OtpInput; 
+export default MobileOtpInput; 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
@@ -6,10 +6,34 @@ import { Theme } from '../../theme/theme';
 import Logo from '../../assets/images/purpleLogo.svg';
 import { FaCheckCircle } from 'react-icons/fa';
 import LanguageSwitcher from '../../components/skeletons/language-switcher/language-switcher';
+import { getAuth } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../backend/firebase/config';
 
 const EmailVerificationSuccessPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  
+  // Update user status in Firestore
+  useEffect(() => {
+    const updateUserStatus = async () => {
+      const auth = getAuth();
+      if (auth.currentUser) {
+        try {
+          // Update user document to mark verification as complete
+          await setDoc(doc(db, 'users', auth.currentUser.uid), {
+            signupStatus: 'email_verified',
+            emailVerified: true,
+            verifiedAt: serverTimestamp()
+          }, { merge: true });
+        } catch (error) {
+          console.error('Error updating verification status:', error);
+        }
+      }
+    };
+    
+    updateUserStatus();
+  }, []);
   
   return (
     <VerificationContainer>
@@ -37,10 +61,6 @@ const EmailVerificationSuccessPage: React.FC = () => {
             <PrimaryButton onClick={() => navigate('/become-advertiser')}>
               {t('email_verification.continue_button')}
             </PrimaryButton>
-            
-            <SecondaryButton onClick={() => navigate('/')}>
-              {t('email_verification.go_home_button')}
-            </SecondaryButton>
           </ButtonsContainer>
         </SuccessCard>
       </ContentContainer>

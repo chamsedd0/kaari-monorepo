@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
@@ -17,6 +17,15 @@ const LanguageSwitcherStyle = styled.div`
     background: ${Theme.colors.quaternary}50;
     min-width: 80px; /* Ensure minimum width to prevent layout shift */
     
+    @media (max-width: 768px) {
+      border-radius: 16px;
+      height: 32px;
+      min-width: 70px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(4px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
     button {
       background: none;
       border: none;
@@ -29,10 +38,17 @@ const LanguageSwitcherStyle = styled.div`
       min-width: 41px; /* Ensure minimum width */
       color: ${Theme.colors.white};
       font-weight: bold;
-
+      
+      @media (max-width: 768px) {
+        padding: 0 10px;
+        font-size: 12px;
+        min-width: 35px;
+        opacity: 0.8;
+      }
       
       &.active {
         color: white;
+        opacity: 1;
       }
       
       &:hover:not(.active) {
@@ -48,6 +64,11 @@ const LanguageSwitcherStyle = styled.div`
       transition: transform 0.3s ease;
       border-radius: 20px;
       
+      @media (max-width: 768px) {
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 16px;
+      }
+      
       &.fr {
         transform: translateX(100%);
       }
@@ -55,8 +76,31 @@ const LanguageSwitcherStyle = styled.div`
   }
 `;
 
-const LanguageSwitcher: React.FC = () => {
+interface LanguageSwitcherProps {
+  className?: string;
+}
+
+const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ className }) => {
   const { i18n } = useTranslation();
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkMobile);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
   
   // Get current language - ensure it's normalized to 'en' or 'fr'
   const currentLanguage = i18n.language ? 
@@ -93,18 +137,20 @@ const LanguageSwitcher: React.FC = () => {
   };
   
   return (
-    <LanguageSwitcherStyle>
+    <LanguageSwitcherStyle className={`${className || ''} ${isMobile ? 'mobile' : ''}`}>
       <div className="language-toggle">
         <div className={`slider ${currentLanguage}`}></div>
         <button 
           className={currentLanguage === 'en' ? 'active' : ''}
           onClick={() => toggleLanguage('en')}
+          aria-label="Switch to English"
         >
           EN
         </button>
         <button 
           className={currentLanguage === 'fr' ? 'active' : ''}
           onClick={() => toggleLanguage('fr')}
+          aria-label="Switch to French"
         >
           FR
         </button>

@@ -1007,7 +1007,11 @@
       "condo": "Condo",
       "penthouse": "Penthouse",
       "studio": "Studio",
-      "terms_agreement": "I agree to the <a>Terms of Service</a> and <a>Privacy Policy</a>*"
+      "terms_agreement": "I agree to the <a>Terms of Service</a> and <a>Privacy Policy</a>*",
+      "i_agree_to_the": "I agree to the ",
+      "terms_of_service": "Terms of Service",
+      "and": " and ",
+      "privacy_policy": "Privacy Policy *"
     },
     "buttons": {
       "continue": "Continue",
@@ -1061,12 +1065,14 @@
     "create_account": "Create Account",
     "continue_with_google": "Continue with Google",
     "privacy_note": "By signing up, you agree to our Terms of Service and Privacy Policy.",
+    "language_note": "You can change to your preferred language using the language switcher above.",
     "verification_email_sent": "A verification email has been sent to your email address. Please check your inbox and verify your email.",
     "errors": {
       "all_fields_required": "Please fill in all fields",
       "passwords_dont_match": "Passwords don't match",
       "password_too_short": "Password must be at least 6 characters",
       "email_in_use": "This email is already in use",
+      "already_registered": "This account has already completed the registration process. Please sign in to access your account.",
       "generic_error": "Something went wrong. Please try again.",
       "google_error": "Google sign-in failed. Please try again."
     }
@@ -1079,7 +1085,14 @@
     "error_title": "Verification Failed",
     "error_message": "We couldn't verify your email. The verification link may have expired or is invalid.",
     "try_again_button": "Try Again",
-    "resend_error": "Failed to send verification email. Please try again later."
+    "resend_error": "Failed to send verification email. Please try again later.",
+    "waiting_title": "Please Verify Your Email",
+    "waiting_message": "We've sent a verification email to {{email}}. Please check your inbox and click the verification link.",
+    "time_remaining": "Time Remaining",
+    "resend_button": "Resend Verification Email",
+    "checking_status": "Checking verification status...",
+    "timeout_title": "Verification Time Expired",
+    "timeout_message": "The verification time has expired. Please sign up again to receive a new verification email."
   },
   "advertiser_onboarding": {
     "welcome": "Welcome to Kaari",
@@ -1177,5 +1190,58 @@
     "bonus": "Bonus",
     "you_are_eligible": "You are eligible",
     "pending_payout": "Pending payout: {{amount}} MAD"
+  },
+  "advertiser_registration": {
+    "title": "Advertiser Registration",
+    "subtitle": "Let's get your properties listed on Kaari",
+    "step_labels": {
+      "account_type": "Account Type",
+      "user_info": "User Info",
+      "verify_phone": "Verify Phone",
+      "listing_info": "Listing Info"
+    },
+    "step1": {
+      "title": "Select Account Type"
+    },
+    "step2": {
+      "title": "Your Information",
+      "first_name": "First Name",
+      "first_name_placeholder": "Enter your first name",
+      "last_name": "Last Name",
+      "last_name_placeholder": "Enter your last name",
+      "email": "Email Address",
+      "email_placeholder": "Enter your email address",
+      "mobile_number": "Mobile Number"
+    },
+    "step3": {
+      "title": "Verify Your Phone",
+      "verification_message": "We've sent a verification code to {phone}",
+      "otp_code": "Verification Code",
+      "resend_otp": "Resend Code",
+      "resend_in": "Resend code in"
+    }
+  },
+  "toast": {
+    "auth": {
+      "loginSuccess": "Login Successful",
+      "loginError": "Login Failed",
+      "loginErrorMessage": "There was a problem logging you in. Please try again.",
+      "userBlocked": "Account Blocked",
+      "userBlockedMessage": "Your account has been blocked. Please contact support at support@kaari.com for assistance.",
+      "logoutSuccess": "Logout Successful",
+      "logoutSuccessMessage": "You have been logged out successfully.",
+      "registrationSuccess": "Registration Successful",
+      "registrationSuccessMessage": "Your account has been created successfully. Welcome to Kaari!",
+      "registrationError": "Registration Failed",
+      "registrationErrorMessage": "There was a problem creating your account. Please try again.",
+      "resetPasswordSuccess": "Password Reset Email Sent",
+      "resetPasswordSuccessMessage": "Check your email for instructions to reset your password.",
+      "resetPasswordError": "Password Reset Failed",
+      "resetPasswordErrorMessage": "There was a problem sending the password reset email. Please try again.",
+      "passwordChangeSuccess": "Password Changed",
+      "passwordChangeSuccessMessage": "Your password has been updated successfully.",
+      "verificationEmailSent": "Verification Email Sent",
+      "verificationEmailSentMessage": "Check your email for a verification link."
+    }
   }
 } 

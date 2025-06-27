@@ -5,7 +5,8 @@ import { useTranslation } from "react-i18next";
 import PurpleLogo from "../../assets/images/purpleLogo.svg";
 import { Theme } from "../../theme/theme";
 import { MdCameraAlt, MdVerified, MdHandshake, MdHouse, MdAttachMoney, MdSupportAgent } from "react-icons/md";
-import LanguageSwitcher from "../../components/skeletons/language-switcher/language-switcher";
+import { LanguageSwitcher, MobileLanguageSwitcher } from "../../components/skeletons/language-switcher";
+import { hideHeadersAndFooters } from '../../utils/advertiser-signup';
 
 // Define a type for translation objects
 type TranslationValue = string | Record<string, any>;
@@ -94,6 +95,7 @@ const AdvertiserOnboardingPage = () => {
   const { t, i18n } = useTranslation('translation', { useSuspense: false });
   const [isLoading, setIsLoading] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [animatedItems, setAnimatedItems] = useState({
     welcome: false,
     features: false,
@@ -198,7 +200,10 @@ const AdvertiserOnboardingPage = () => {
   // Also apply to body and html elements when on mobile
   useEffect(() => {
     const applyMobileStyles = () => {
-      if (window.innerWidth <= 768) {
+      const isMobileView = window.innerWidth <= 768;
+      setIsMobile(isMobileView);
+      
+      if (isMobileView) {
         // Create a style element to add CSS rules
         const style = document.createElement('style');
         style.textContent = `
@@ -229,8 +234,27 @@ const AdvertiserOnboardingPage = () => {
     
     const cleanup = applyMobileStyles();
     
+    // Add event listener for window resize
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
     return () => {
       if (cleanup) cleanup();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Ensure headers and footers are hidden
+  useEffect(() => {
+    // Hide headers and footers
+    const cleanupHeadersFooters = hideHeadersAndFooters();
+    
+    // Cleanup function
+    return () => {
+      cleanupHeadersFooters();
     };
   }, []);
 
@@ -244,7 +268,7 @@ const AdvertiserOnboardingPage = () => {
           <Logo src={PurpleLogo} alt="Kaari Logo" />
         </LogoWrapper>
         <LanguageSwitcherWrapper>
-          <LanguageSwitcher />
+          {isMobile ? <MobileLanguageSwitcher /> : <LanguageSwitcher />}
         </LanguageSwitcherWrapper>
       </TopSection>
       
@@ -416,8 +440,8 @@ const Container = styled.div<{ isExiting: boolean }>`
   position: relative;
   
   @media (max-width: 768px) {
-    padding: 1.5rem;
-    height: auto;
+    padding: 1rem;
+    height: 100%;
     min-height: 100vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -464,6 +488,10 @@ const TopSection = styled.div`
   margin-bottom: 2rem;
   position: relative;
   z-index: 2;
+  
+  @media (max-width: 768px) {
+    margin-bottom: 1rem;
+  }
 `;
 
 const LogoWrapper = styled.div`
@@ -478,6 +506,12 @@ const Logo = styled.img`
 
 const LanguageSwitcherWrapper = styled.div`
   z-index: 10;
+  
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+  }
 `;
 
 const ContentContainer = styled.div`
@@ -490,7 +524,8 @@ const ContentContainer = styled.div`
   @media (max-width: 968px) {
     flex-direction: column;
     overflow-y: auto;
-    padding-bottom: 2rem;
+    padding-bottom: 1rem;
+    gap: 1rem;
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
     
@@ -511,7 +546,7 @@ const LeftColumn = styled.div`
   
   @media (max-width: 968px) {
     flex: 1;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
   }
 `;
 
@@ -525,7 +560,7 @@ const LeftColumnContent = styled.div`
 `;
 
 const WelcomeSection = styled.div<{ isVisible: boolean }>`
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   opacity: ${props => props.isVisible ? 1 : 0};
   transform: translateY(${props => props.isVisible ? '0' : '30px'});
   transition: opacity 0.6s ease, transform 0.6s ease;
@@ -545,7 +580,7 @@ const WelcomeHeading = styled.h1`
   text-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
   
   @media (max-width: 768px) {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
   }
 `;
 
@@ -556,15 +591,16 @@ const Subheading = styled.h2`
   opacity: 0.9;
   
   @media (max-width: 768px) {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+    padding: 0 1rem;
   }
 `;
 
 const FeatureList = styled.div<{ isVisible: boolean }>`
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 2.5rem;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
   opacity: ${props => props.isVisible ? 1 : 0};
   transform: translateY(${props => props.isVisible ? '0' : '30px'});
   transition: opacity 0.6s ease, transform 0.6s ease;
@@ -574,10 +610,10 @@ const FeatureList = styled.div<{ isVisible: boolean }>`
 const FeatureItem = styled.div`
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 0.75rem;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  padding: 1.25rem;
+  padding: 1rem;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
@@ -592,13 +628,14 @@ const FeatureItem = styled.div`
   }
   
   @media (max-width: 768px) {
-    padding: 1rem;
+    padding: 0.75rem;
+    gap: 0.5rem;
   }
 `;
 
 const FeatureIconWrapper = styled.div`
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 10px;
   background: white;
   display: flex;
@@ -613,8 +650,8 @@ const FeatureIconWrapper = styled.div`
   }
   
   @media (max-width: 768px) {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
   }
 `;
 
@@ -623,30 +660,30 @@ const FeatureContent = styled.div`
 `;
 
 const FeatureTitle = styled.h3`
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.15rem 0;
   
   @media (max-width: 768px) {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 `;
 
 const FeatureDescription = styled.p`
-  font-size: 1rem;
+  font-size: 0.9rem;
   opacity: 0.9;
-  line-height: 1.4;
+  line-height: 1.3;
   margin: 0;
   
   @media (max-width: 768px) {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 `;
 
 const FoundingPartnerCard = styled.div<{ isVisible: boolean }>`
   background: rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-  padding: 1.75rem;
+  padding: 1.25rem;
   position: relative;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -675,28 +712,29 @@ const FoundingPartnerCard = styled.div<{ isVisible: boolean }>`
   }
   
   @media (max-width: 768px) {
-    padding: 1.25rem;
+    padding: 1rem;
+    border-radius: 14px;
   }
 `;
 
 const FoundingPartnerHeader = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   justify-content: center;
 `;
 
 const FoundingPartnerDot = styled.div`
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: white;
-  margin-right: 1rem;
+  margin-right: 0.75rem;
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 `;
 
 const FoundingPartnerTitle = styled.h3`
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 600;
   margin: 0;
   background: linear-gradient(to right, #ffffff, #e0e0ff);
@@ -704,34 +742,34 @@ const FoundingPartnerTitle = styled.h3`
   -webkit-text-fill-color: transparent;
   
   @media (max-width: 768px) {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
   }
 `;
 
 const FoundingPartnerDescription = styled.p`
-  font-size: 1rem;
+  font-size: 0.9rem;
   opacity: 0.9;
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1rem 0;
   
   @media (max-width: 768px) {
-    font-size: 0.9rem;
-    margin-bottom: 1.25rem;
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
   }
 `;
 
 const BenefitsList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 `;
 
 const BenefitItem = styled.div`
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
+  gap: 0.5rem;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
-  padding: 0.75rem;
+  padding: 0.6rem;
   transition: all 0.3s ease;
   text-align: left;
   
@@ -741,13 +779,13 @@ const BenefitItem = styled.div`
   }
   
   @media (max-width: 768px) {
-    padding: 0.6rem;
+    padding: 0.5rem;
   }
 `;
 
 const BenefitIconWrapper = styled.div`
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 6px;
   background: white;
   display: flex;
@@ -757,28 +795,19 @@ const BenefitIconWrapper = styled.div`
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   
   @media (max-width: 768px) {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 `;
 
-const BenefitDot = styled.div`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #a36fe6;
-  margin-top: 0.5rem;
-  flex-shrink: 0;
-`;
-
 const BenefitText = styled.p`
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: 0.85rem;
+  line-height: 1.3;
   color: rgba(255, 255, 255, 0.9);
   margin: 0;
   
   @media (max-width: 768px) {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 `;
 
@@ -823,8 +852,8 @@ const RightColumn = styled.div`
   
   @media (max-width: 968px) {
     flex: 1;
-    margin-top: 1.5rem;
-    padding-bottom: 3rem;
+    margin-top: 0.5rem;
+    padding-bottom: 2rem;
   }
 `;
 
@@ -834,6 +863,10 @@ const RightColumnContent = styled.div`
   align-items: center;
   width: 100%;
   max-width: 400px;
+  
+  @media (max-width: 768px) {
+    max-width: 90%;
+  }
 `;
 
 const CTALogo = styled.img<{ isVisible: boolean }>`
@@ -885,8 +918,8 @@ const CTACard = styled.div<{ isVisible: boolean }>`
   }
   
   @media (max-width: 768px) {
-    padding: 1.75rem;
-    border-radius: 20px;
+    padding: 1.5rem;
+    border-radius: 18px;
   }
 `;
 
@@ -919,9 +952,9 @@ const CTABadge = styled.div`
   }
   
   @media (max-width: 768px) {
-    font-size: 1.1rem;
-    padding: 0.6rem 1.25rem;
-    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1.25rem;
   }
 `;
 
@@ -932,8 +965,9 @@ const CTADescription = styled.p`
   color: rgba(255, 255, 255, 0.9);
   
   @media (max-width: 768px) {
-    font-size: 0.9rem;
-    margin-bottom: 2rem;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+    padding: 0 0.5rem;
   }
 `;
 
@@ -973,9 +1007,11 @@ const SignUpButton = styled.button`
   }
   
   @media (max-width: 768px) {
-    padding: 0.9rem 2rem;
-    font-size: 1rem;
+    padding: 0.8rem 1.8rem;
+    font-size: 0.95rem;
   }
 `;
+
+
 
 export default AdvertiserOnboardingPage;

@@ -1,10 +1,11 @@
+import React from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { Theme } from '../../theme/theme';
 
 // Animation keyframes
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 `;
 
 const slideInRight = keyframes`
@@ -32,12 +33,30 @@ export const AdvertiserRegistrationPageStyle = styled.div`
   justify-content: center;
   margin-top: 80px;
   
+  .language-switcher-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+    
+    @media (max-width: 768px) {
+      top: 15px;
+      right: 15px;
+    }
+  }
+  
   .page-title {
     font: ${Theme.typography.fonts.h3};
     margin-bottom: 20px;
     color: ${Theme.colors.primary};
     text-align: center;
     animation: ${fadeIn} 0.6s ease-out;
+    
+    @media (max-width: 768px) {
+      font-size: 24px;
+      margin-bottom: 15px;
+      margin-top: 20px;
+    }
   }
   
   .page-subtitle {
@@ -49,27 +68,49 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     margin-left: auto;
     margin-right: auto;
     animation: ${fadeIn} 0.8s ease-out;
+    
+    @media (max-width: 768px) {
+      font-size: 14px;
+      margin-bottom: 25px;
+      padding: 0 10px;
+      color: ${Theme.colors.gray2};
+    }
   }
   
   .steps-container {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 40px;
     position: relative;
-    width: 800px;
-    margin-left: auto;
-    margin-right: auto;
+    margin-bottom: 40px;
+    width: 100%;
     
     &:after {
       content: '';
       position: absolute;
-      top: 24px;
-      left: 10%;
-      right: 10%;
+      top: 25px;
+      left: 0;
+      right: 0;
       height: 2px;
       background-color: ${Theme.colors.gray};
       z-index: 1;
-      transition: background-color 0.5s ease;
+    }
+    
+    .mobile-step-counter {
+      width: 100%;
+      padding: 0 16px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+      z-index: 2;
+    }
+    
+    @media (max-width: 768px) {
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 25px;
+      
+      &:after {
+        display: none; /* Hide the horizontal line for mobile */
+      }
     }
   }
   
@@ -109,6 +150,13 @@ export const AdvertiserRegistrationPageStyle = styled.div`
         border-color: ${Theme.colors.success};
         color: ${Theme.colors.white};
       }
+      
+      @media (max-width: 768px) {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
     }
     
     .step-label {
@@ -127,6 +175,12 @@ export const AdvertiserRegistrationPageStyle = styled.div`
         color: ${Theme.colors.success};
         font: ${Theme.typography.fonts.mediumB};
       }
+      
+      @media (max-width: 768px) {
+        font-size: 11px;
+        max-width: 70px;
+        line-height: 1.2;
+      }
     }
   }
   
@@ -144,6 +198,24 @@ export const AdvertiserRegistrationPageStyle = styled.div`
       animation: ${fadeIn} 0.4s ease-out;
       min-height: 300px;
       width: 100%;
+      padding: 20px;
+    }
+    
+    @media (max-width: 768px) {
+      width: 100%;
+      max-width: 90%;
+      border-radius: ${Theme.borders.radius.md};
+      padding: 0;
+      margin-bottom: 20px;
+      box-shadow: none;
+      
+      .step-content {
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: auto;
+      }
     }
   }
   
@@ -152,6 +224,13 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     margin-bottom: 30px;
     color: ${Theme.colors.black};
     animation: ${fadeIn} 0.5s ease-out;
+    
+    @media (max-width: 768px) {
+      font-size: 20px;
+      margin-bottom: 20px;
+      text-align: left;
+      padding-left: 5px;
+    }
   }
   
   .form-group {
@@ -177,6 +256,73 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     &.required label:after {
       content: ' *';
       color: ${Theme.colors.error};
+    }
+    
+    /* Add styles for regular input elements */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      height: 65px;
+      padding: 0 20px;
+      font: ${Theme.typography.fonts.text16};
+      color: ${Theme.colors.black};
+      border: 1px solid #ccc;
+      border-radius: ${Theme.borders.radius.extreme};
+      background-color: ${Theme.colors.white};
+      transition: all 0.3s ease;
+      
+      &:focus {
+        outline: none;
+        border-color: ${Theme.colors.secondary};
+        box-shadow: 0 0 0 2px rgba(143, 39, 206, 0.1);
+      }
+      
+      &::placeholder {
+        color: ${Theme.colors.gray};
+      }
+    }
+    
+    textarea {
+      padding: 15px 20px;
+      min-height: 120px;
+      resize: vertical;
+    }
+    
+    .error-message {
+      color: ${Theme.colors.error};
+      font-size: 12px;
+      margin-top: 5px;
+      animation: ${fadeIn} 0.3s ease;
+    }
+    
+    @media (max-width: 768px) {
+      margin-bottom: 16px;
+      
+      label {
+        font-size: 14px;
+        margin-bottom: 8px;
+        padding-left: 5px;
+      }
+      
+      input[type="text"],
+      input[type="email"],
+      input[type="password"],
+      input[type="number"],
+      textarea,
+      select {
+        height: 50px;
+        font-size: 14px;
+        padding: 0 15px;
+      }
+      
+      textarea {
+        padding: 12px 15px;
+        min-height: 100px;
+      }
     }
   }
   
@@ -375,9 +521,29 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(143, 39, 206, 0.1);
 
-    @media (max-width: 576px) {
-      padding: 30px 15px;
+    @media (max-width: 768px) {
+      padding: 20px 15px;
       max-width: 100%;
+      margin: 10px auto;
+      
+      .otp-title {
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
+      
+      .otp-subtitle {
+        font-size: 13px;
+        margin-bottom: 15px;
+      }
+      
+      .verify-button {
+        padding: 10px 30px;
+        font-size: 14px;
+      }
+      
+      .otp-resend {
+        font-size: 12px;
+      }
     }
   }
   
@@ -501,6 +667,11 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     flex-wrap: wrap;
     gap: 20px;
     margin-bottom: 30px;
+    
+    @media (max-width: 768px) {
+      gap: 12px;
+      margin-bottom: 20px;
+    }
     
     /* Card-like effect with modern styling */
     .radio-option {
@@ -685,13 +856,45 @@ export const AdvertiserRegistrationPageStyle = styled.div`
 
       @media (max-width: 768px) {
         min-width: 100%;
-        padding: 20px 60px 20px 20px;
-      }
-
-      @media (max-width: 576px) {
+        padding: 15px 50px 15px 15px;
+        min-height: auto;
+        border-width: 1px;
+        margin-bottom: 0;
+        
         .option-icon {
           right: 15px;
-          font-size: 24px;
+          font-size: 20px;
+        }
+        
+        .radio-title {
+          margin-bottom: 3px;
+          
+          input[type="radio"] {
+            width: 10px;
+            height: 10px;
+            margin-right: 8px;
+            border-width: 1px;
+            
+            &:after {
+              width: 4px;
+              height: 4px;
+            }
+          }
+          
+          span {
+            font-size: 14px;
+          }
+        }
+        
+        .radio-description {
+          font-size: 12px;
+          margin-left: 18px;
+          padding-bottom: 4px;
+        }
+        
+        &.selected {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 15px rgba(143, 39, 206, 0.15);
         }
       }
     }
@@ -704,28 +907,38 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     margin-top: 10px;
     
     .chip {
-      padding: 8px 16px;
+      padding: 10px 16px;
       border-radius: ${Theme.borders.radius.extreme};
-      background-color: ${Theme.colors.gray};
+      border: 1px solid ${Theme.colors.gray};
+      background-color: ${Theme.colors.white};
+      color: ${Theme.colors.gray2};
       font: ${Theme.typography.fonts.mediumM};
       cursor: pointer;
       transition: all 0.3s ease;
       
       &:hover {
-        background-color: rgba(143, 39, 206, 0.2);
+        border-color: ${Theme.colors.secondary};
+        color: ${Theme.colors.secondary};
+        background-color: rgba(143, 39, 206, 0.05);
         transform: translateY(-2px);
       }
       
       &.selected {
         background-color: ${Theme.colors.secondary};
         color: ${Theme.colors.white};
-        transform: translateY(-2px);
-        box-shadow: 0 3px 10px rgba(143, 39, 206, 0.2);
+        border-color: ${Theme.colors.secondary};
+        box-shadow: 0 4px 8px rgba(143, 39, 206, 0.2);
       }
-
-      @media (max-width: 576px) {
-        padding: 6px 12px;
-        font-size: 14px;
+    }
+    
+    @media (max-width: 768px) {
+      gap: 8px;
+      justify-content: center;
+      
+      .chip {
+        padding: 8px 12px;
+        font-size: 12px;
+        margin: 4px;
       }
     }
   }
@@ -759,7 +972,7 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     
     @media (max-width: 768px) {
       flex-direction: column;
-      gap: 10px;
+      gap: 15px;
     }
   }
   
@@ -784,14 +997,19 @@ export const AdvertiserRegistrationPageStyle = styled.div`
       }
     }
 
-    @media (max-width: 576px) {
+    @media (max-width: 768px) {
       flex-direction: column;
-      gap: 15px;
+      gap: 12px;
+      margin-top: 25px;
       
       button {
         width: 100%;
         margin: 0 !important;
         max-width: 100% !important;
+        height: 46px !important;
+        min-height: 46px !important;
+        font-size: 14px !important;
+        border-radius: 100px !important;
       }
     }
   }
@@ -899,6 +1117,37 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     &:hover label:before {
       border-color: ${Theme.colors.secondary};
     }
+    
+    @media (max-width: 768px) {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 280px;
+      
+      label {
+        font-size: 12px;
+        padding-left: 24px;
+        line-height: 1.5;
+        display: inline-block;
+        
+        &:before {
+          width: 16px;
+          height: 16px;
+          top: 1px;
+        }
+        
+        &:after {
+          left: 5px;
+          top: 3px;
+          width: 3px;
+          height: 7px;
+        }
+        
+        a {
+          display: inline-block;
+          margin: 0 2px;
+        }
+      }
+    }
   }
   
   .error-message {
@@ -953,30 +1202,160 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     }
   }
   
+  /* Mobile-specific styles */
+  .mobile-radio-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
   @media (max-width: 768px) {
-    padding: 30px 15px 60px;
+    padding: 10px 15px 40px;
+    margin-top: 40px;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     
     .form-container {
       padding: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     
-    .steps-container {
-      margin-bottom: 30px;
+    .step-content {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .form-group {
+      width: 100%;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       
-      &:after {
-        left: 15%;
-        right: 15%;
+      label {
+        align-self: flex-start;
+        max-width: 280px;
+        width: 100%;
+      }
+      
+      .error-message {
+        align-self: flex-start;
+        max-width: 280px;
+        width: 100%;
+        color: ${Theme.colors.error};
+        font-size: 12px;
+        margin-top: 5px;
       }
     }
     
-    .step .step-number {
-      width: 40px;
-      height: 40px;
-      font-size: 14px;
+    .form-title {
+      width: 100%;
+      max-width: 280px;
+      text-align: left;
     }
     
-    .step .step-label {
-      font-size: 12px;
+    .buttons-container {
+      width: 100%;
+      max-width: 280px;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    
+    .mobile-radio-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    
+    .radio-option {
+      max-width: 280px;
+      width: 100%;
+    }
+    
+    .chips-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 280px;
+      
+      .chip {
+        margin: 5px;
+      }
+    }
+    
+    .terms-checkbox {
+      max-width: 280px;
+      width: 100%;
+      display: flex;
+      align-items: flex-start;
+      
+      input {
+        margin-top: 3px;
+        width: 14px;
+        height: 14px;
+        min-width: 14px;
+      }
+      
+      label {
+        font-size: 13px;
+        margin-left: 8px;
+      }
+    }
+    
+    .steps-container {
+      margin-bottom: 25px;
+      width: 100%;
+      max-width: 90%;
+      justify-content: center;
+      
+      .step {
+        .step-number {
+          width: 36px;
+          height: 36px;
+          
+          &.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(143, 39, 206, 0.2);
+          }
+        }
+      }
+    }
+    
+    .mobile-step-counter {
+      width: 100%;
+      padding: 0;
+      margin-bottom: 16px;
+    }
+    
+    .buttons-container {
+      width: 100%;
+      max-width: 280px;
+      margin: 20px auto 0;
+      
+      .back-button, .next-button {
+        padding: 10px 20px;
+        font-size: 14px;
+      }
+    }
+    
+    .verification-message {
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    
+    .resend-otp {
+      font-size: 13px;
+      margin-top: 12px;
     }
   }
 
@@ -1010,6 +1389,115 @@ export const AdvertiserRegistrationPageStyle = styled.div`
       &:after {
         display: none;
       }
+    }
+  }
+
+  .mobile-otp-input {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  .verification-message {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: ${Theme.colors.gray2};
+    max-width: 280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .resend-otp {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+    font-size: 14px;
+    
+    .resend-button {
+      background: none;
+      border: none;
+      color: ${Theme.colors.secondary};
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+    
+    .resend-timer {
+      color: ${Theme.colors.gray2};
+    }
+  }
+
+  .buttons-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    
+    .back-button, .next-button {
+      padding: 12px 24px;
+      border-radius: ${Theme.borders.radius.extreme};
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .back-button {
+      background-color: white;
+      color: ${Theme.colors.secondary};
+      border: 1px solid ${Theme.colors.secondary};
+      
+      &:hover {
+        background-color: ${Theme.colors.quaternary}10;
+      }
+    }
+    
+    .next-button {
+      background-color: ${Theme.colors.secondary};
+      color: white;
+      border: none;
+      
+      &:hover {
+        background-color: ${Theme.colors.quaternary};
+      }
+    }
+  }
+
+  .mobile-terms-checkbox {
+    width: 100%;
+    max-width: 280px;
+    margin: 20px auto;
+    
+    .terms-checkbox {
+      width: 100%;
+      margin-top: 10px;
+      
+      label {
+        font-size: 12px;
+        line-height: 1.5;
+        
+        a {
+          color: ${Theme.colors.secondary};
+          text-decoration: none;
+          font-weight: 500;
+          position: relative;
+          display: inline-block;
+          border-bottom: 1px solid ${Theme.colors.secondary};
+          padding-bottom: 0;
+          margin-bottom: 0;
+          margin: 0 2px;
+          
+          &:after {
+            display: none;
+          }
+        }
+      }
+    }
+    
+    .error-message {
+      text-align: center;
+      margin-top: 8px;
+      font-size: 11px;
     }
   }
 `; 

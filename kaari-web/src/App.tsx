@@ -13,9 +13,12 @@ import PhotoshootBookingPage from './pages/photoshoot-booking/page';
 import ThankYouPage from './pages/photoshoot-booking/thank-you';
 import BecomeAdvertiserPage from './pages/become-advertiser/page';
 import AdvertiserThankYouPage from './pages/become-advertiser/thank-you';
-import EmailVerificationHandler from './pages/email-verification/handler';
-import EmailVerificationSuccessPage from './pages/email-verification/success';
-import EmailVerificationErrorPage from './pages/email-verification/error';
+import { 
+  EmailVerificationHandler,
+  EmailVerificationSuccessPage,
+  EmailVerificationErrorPage,
+  EmailVerificationWaitingPage
+} from './pages/email-verification';
 import HelpPage from './pages/help/page';
 import ReservationStatusPage from './pages/dashboards/user-dashboard/reservation-status/page';
 import CancellationRequestPage from './pages/dashboards/user-dashboard/cancellation-request/page';
@@ -27,7 +30,13 @@ import { useMemo, useEffect, useState } from 'react';
 import MainLayout from './layouts/MainLayout';
 import { isAdmin, isAdvertiser, isRegularUser } from './utils/user-roles';
 import eventBus, { EventType } from './utils/event-bus';
-import { registerSignupListener, checkIncompleteSignup, registerAuthListener } from './utils/advertiser-signup';
+import { 
+  registerSignupListener, 
+  checkIncompleteSignup, 
+  registerAuthListener,
+  isInSignupFlow,
+  hideHeadersAndFooters
+} from './utils/advertiser-signup';
 import { ToastProvider } from './contexts/ToastContext';
 import ScrollToTop from './components/ScrollToTop';
 import { useProfileCompletionReminder } from './hooks/useProfileCompletionReminder';
@@ -99,12 +108,8 @@ function App() {
     // Register the listener to clear signup progress on sign out
     const unsubscribeAuth = registerAuthListener();
     
-    // Only check for incomplete signup on initial load if we're not on the signup or thank you page
-    const currentPath = window.location.pathname;
-    if (
-      currentPath !== '/become-advertiser' && 
-      currentPath !== '/become-advertiser/thank-you'
-    ) {
+    // Only check for incomplete signup on initial load if we're not in the signup flow
+    if (!isInSignupFlow()) {
       checkIncompleteSignup();
     }
     
@@ -114,21 +119,55 @@ function App() {
     };
   }, []);
   
+  // Hide headers and footers when in signup flow
+  useEffect(() => {
+    // Use a ref to store the current cleanup function
+    const cleanupRef = { current: () => {} };
+    
+    // Check if we're in the signup flow
+    const checkAndHideElements = () => {
+      if (isInSignupFlow()) {
+        // Hide headers and footers
+        return hideHeadersAndFooters();
+      }
+      return () => {};
+    };
+    
+    // Initial check - call immediately
+    cleanupRef.current = checkAndHideElements();
+    
+    // Listen for route changes
+    const unsubscribeRouteChange = eventBus.on(EventType.NAV_ROUTE_CHANGED, () => {
+      // Clean up previous effect
+      cleanupRef.current();
+      // Check again after route change
+      cleanupRef.current = checkAndHideElements();
+    });
+    
+    // Also hide headers after a short delay to catch any late-rendered components
+    const delayedHideTimeout = setTimeout(() => {
+      if (isInSignupFlow()) {
+        hideHeadersAndFooters();
+      }
+    }, 500);
+    
+    return () => {
+      if (typeof cleanupRef.current === 'function') {
+        cleanupRef.current();
+      }
+      unsubscribeRouteChange();
+      clearTimeout(delayedHideTimeout);
+    };
+  }, []);
+  
   // Also listen for auth state changes directly from store
   useEffect(() => {
     // This effect will run when isAuthenticated or user changes
     setRenderKey(prev => prev + 1);
     
     // If the user just logged in, check for incomplete signup
-    if (isAuthenticated && user) {
-      // Skip checking if we're already on the signup or thank you page
-      const currentPath = window.location.pathname;
-      if (
-        currentPath !== '/become-advertiser' && 
-        currentPath !== '/become-advertiser/thank-you'
-      ) {
-        checkIncompleteSignup();
-      }
+    if (isAuthenticated && user && !isInSignupFlow()) {
+      checkIncompleteSignup();
     }
     
     // Emit route change event
@@ -202,10 +241,11 @@ function App() {
       <Route path="/become-advertiser" element={<BecomeAdvertiserPage />} />
       <Route path="/become-advertiser/thank-you" element={<AdvertiserThankYouPage />} />
       
-      {/* Email Verification Routes */}
+      {/* Email Verification Routes - No MainLayout */}
       <Route path="/email-verification" element={<EmailVerificationHandler />} />
       <Route path="/email-verification/success" element={<EmailVerificationSuccessPage />} />
       <Route path="/email-verification/error" element={<EmailVerificationErrorPage />} />
+      <Route path="/email-verification/waiting" element={<EmailVerificationWaitingPage />} />
       
       {/* Protected Routes with Coming Soon page */}
       <Route path="/photoshoot-booking" element={
@@ -643,8 +683,13 @@ function App() {
     const currentPath = window.location.pathname;
     const isAdvertiserSignupFlow = 
       currentPath === '/advertiser-signup' || 
+      currentPath === '/advertiser-signup/form' ||
       currentPath === '/become-advertiser' || 
-      currentPath === '/become-advertiser/thank-you';
+      currentPath === '/become-advertiser/thank-you' ||
+      currentPath === '/email-verification' ||
+      currentPath === '/email-verification/waiting' ||
+      currentPath === '/email-verification/success' ||
+      currentPath === '/email-verification/error';
     
     // If it's part of the isolated flow, don't use MainLayout
     if (isAdvertiserSignupFlow) {
