@@ -88,11 +88,40 @@ export const AdvertiserRegistrationPageStyle = styled.div`
       content: '';
       position: absolute;
       top: 25px;
-      left: 0;
-      right: 0;
+      left: calc(12.5% + 24px); /* Position from the center of first circle: 25%/2 = 12.5% + half circle width */
+      right: calc(12.5% + 24px); /* Position from the center of last circle: 25%/2 = 12.5% + half circle width */
       height: 2px;
       background-color: ${Theme.colors.gray};
       z-index: 1;
+    }
+    
+    /* Progress line for completed steps */
+    &:before {
+      content: '';
+      position: absolute;
+      top: 25px;
+      left: calc(12.5% + 24px); /* Same as the background line */
+      height: 2px;
+      background-color: ${Theme.colors.secondary};
+      z-index: 2;
+      transition: width 0.5s ease;
+    }
+    
+    /* Set width based on current step */
+    &.step-1:before {
+      width: 0;
+    }
+    
+    &.step-2:before {
+      width: calc(33.33% - 24px);
+    }
+    
+    &.step-3:before {
+      width: calc(66.66% - 24px);
+    }
+    
+    &.step-4:before {
+      width: calc(100% - 48px);
     }
     
     .mobile-step-counter {
@@ -108,8 +137,8 @@ export const AdvertiserRegistrationPageStyle = styled.div`
       max-width: 400px;
       margin-bottom: 25px;
       
-      &:after {
-        display: none; /* Hide the horizontal line for mobile */
+      &:after, &:before {
+        display: none; /* Hide the horizontal lines for mobile */
       }
     }
   }

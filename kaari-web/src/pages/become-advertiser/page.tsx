@@ -1578,7 +1578,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
       <h1 className="page-title">{t('advertiser_registration.title')}</h1>
       <p className="page-subtitle">{t('advertiser_registration.subtitle')}</p>
       
-      <div className="steps-container">
+      <div className={`steps-container step-${currentStep}`}>
         {!isMobile ? (
           // Desktop stepper (existing code)
           <>
@@ -1589,10 +1589,10 @@ const AdvertiserRegistrationPage: React.FC = () => {
               >
                 <div className={`step-number ${currentStep === index + 1 ? 'active' : ''} ${currentStep > index + 1 ? 'completed' : ''}`}>
                   {currentStep > index + 1 ? <FaCheckCircle /> : index + 1}
-            </div>
+                </div>
                 <div className="step-label">{step}</div>
-          </div>
-        ))}
+              </div>
+            ))}
           </>
         ) : (
           // Mobile step counter

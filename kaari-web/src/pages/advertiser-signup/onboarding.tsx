@@ -523,6 +523,7 @@ const ContentContainer = styled.div`
   
   @media (max-width: 968px) {
     flex-direction: column;
+    margin-top: 40px;
     overflow-y: auto;
     padding-bottom: 1rem;
     gap: 1rem;

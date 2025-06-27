@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 import { Theme } from '../../theme/theme';
-import { FaGoogle, FaArrowLeft } from 'react-icons/fa';
+import { FaGoogle, FaArrowLeft, FaEye, FaEyeSlash } from 'react-icons/fa';
 import Logo from '../../assets/images/purpleLogo.svg';
 import { getAuth, GoogleAuthProvider, signInWithPopup, sendEmailVerification, signInWithEmailAndPassword } from 'firebase/auth';
 import { useStore } from '../../backend/store';
@@ -318,7 +318,7 @@ const AdvertiserSignupForm: React.FC = () => {
               title={t('advertiser_signup.email')}
             />
             
-            <CompactInput
+            <PasswordInput
               type="password"
               placeholder={t('advertiser_signup.password_placeholder')}
               value={password}
@@ -326,7 +326,7 @@ const AdvertiserSignupForm: React.FC = () => {
               title={t('advertiser_signup.password')}
             />
             
-            <CompactInput
+            <PasswordInput
               type="password"
               placeholder={t('advertiser_signup.confirm_password_placeholder')}
               value={confirmPassword}
@@ -627,6 +627,43 @@ const CompactInputContainer = styled.div`
       height: 46px;
     }
   }
+  
+  .password-input {
+    position: relative;
+    width: 100%;
+    
+    input {
+      width: 100%;
+      padding-right: 45px; /* Make room for the eye icon */
+    }
+    
+    button {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      color: ${Theme.colors.gray2};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      &:hover {
+        color: ${Theme.colors.secondary};
+      }
+      
+      svg {
+        font-size: 18px;
+        
+        @media (max-width: 768px) {
+          font-size: 16px;
+        }
+      }
+    }
+  }
 `;
 
 const CompactPurpleButton = styled.button<{ isMobile: boolean }>`
@@ -921,6 +958,37 @@ const renderRadioGroup = (
         );
       })}
     </MobileRadioGroup>
+  );
+};
+
+const PasswordInput: React.FC<{ type: string; placeholder: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; title: string }> = ({ type, placeholder, value, onChange, title }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePasswordVisibility = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent form submission
+    e.stopPropagation(); // Stop event propagation
+    setShowPassword(!showPassword);
+  };
+
+  return (
+    <CompactInputContainer>
+      <label>{title}</label>
+      <div className="password-input">
+        <input
+          type={showPassword ? 'text' : type}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+        />
+        <button 
+          type="button" 
+          onClick={togglePasswordVisibility}
+          tabIndex={-1} // Prevent tab focus for better accessibility
+        >
+          {showPassword ? <FaEyeSlash /> : <FaEye />}
+        </button>
+      </div>
+    </CompactInputContainer>
   );
 };
 
