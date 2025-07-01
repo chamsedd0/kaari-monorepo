@@ -1,4 +1,4 @@
-import { User } from '../backend/models/entities';
+import { User } from 'firebase/auth';
 
 // Enable this flag during development to see access control logs
 const DEBUG_MODE = true;
