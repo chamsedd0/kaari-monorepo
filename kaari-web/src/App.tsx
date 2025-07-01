@@ -63,8 +63,8 @@ import {
   PrivacyPage,
   ComingSoonPage
 } from './pages/static';
-import ExpirationService from './services/ExpirationService';
 import { AdvertiserOnboardingPage, AdvertiserSignupForm } from './pages/advertiser-signup';
+import ExpirationService from './services/ExpirationService';
 
 function App() {
   // Use the global store for authentication
