@@ -6,9 +6,7 @@ const DEBUG_MODE = true;
 // List of admin/developer emails that should have full access
 const ADMIN_EMAILS = [
   // Add your admin/developer emails here
-  'admin@kaari.com',
-  'developer@kaari.com',
-  'intag@gmail.com',  // Add your actual email here
+  'lhouijchams@gmail.com',
   // Add more as needed
 ];
 

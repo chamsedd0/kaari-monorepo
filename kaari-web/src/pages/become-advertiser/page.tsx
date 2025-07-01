@@ -1117,7 +1117,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
     return (
         <div className="step-content">
           <h2 className="form-title">{t('advertiser_registration.step2.title')}</h2>
-          
+        
           <MobileInput
             type="text"
               value={formData.firstName}
@@ -1277,7 +1277,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
     return (
         <div className="step-content">
           <h2 className="form-title">{t('advertiser_registration.step3.title')}</h2>
-          
+        
           <p className="verification-message">
             {t('advertiser_registration.step3.verification_message', { phone: formData.mobileNumber })}
           </p>
@@ -1589,10 +1589,10 @@ const AdvertiserRegistrationPage: React.FC = () => {
               >
                 <div className={`step-number ${currentStep === index + 1 ? 'active' : ''} ${currentStep > index + 1 ? 'completed' : ''}`}>
                   {currentStep > index + 1 ? <FaCheckCircle /> : index + 1}
-                </div>
+            </div>
                 <div className="step-label">{step}</div>
-              </div>
-            ))}
+          </div>
+        ))}
           </>
         ) : (
           // Mobile step counter
