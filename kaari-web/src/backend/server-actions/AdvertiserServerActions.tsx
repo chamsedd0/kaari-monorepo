@@ -451,7 +451,6 @@ export async function approveReservationRequest(requestId: string): Promise<bool
           reservationForNotification as any
         );
         
-        console.log(`Reservation acceptance notification sent to client: ${request.userId}`);
       }
     } catch (error) {
       console.error('Error sending reservation accepted notification:', error);
@@ -542,7 +541,6 @@ export async function rejectReservationRequest(requestId: string): Promise<boole
           reason
         );
         
-        console.log(`Reservation rejection notification sent to client: ${request.userId}`);
       }
     } catch (error) {
       console.error('Error sending reservation rejected notification:', error);
@@ -584,7 +582,6 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
     );
     
     // Log the requests for debugging purposes
-    console.log(`Found ${requests.length} requests for property ${propertyId}`);
     
     // Check for moved-in tenants first (highest priority)
     const hasMovedInTenant = requests.some(req => 
@@ -789,7 +786,6 @@ export async function respondToPropertyInquiry(
           }
         );
         
-        console.log(`Inquiry response notification sent to client: ${inquiry.userId}`);
       }
     } catch (error) {
       console.error('Error sending inquiry response notification:', error);
@@ -877,7 +873,6 @@ export async function updatePropertyAvailability(
               { propertyId }
             );
             
-            console.log(`Property availability notification sent to user: ${user.id}`);
           }
         }
       }

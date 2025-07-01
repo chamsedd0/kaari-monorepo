@@ -1,7 +1,7 @@
 import { User } from 'firebase/auth';
 
 // Enable this flag during development to see access control logs
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 
 // List of admin/developer emails that should have full access
 const ADMIN_EMAILS = [
@@ -27,7 +27,6 @@ const RESTRICTED_PATHS = [
  */
 export const hasAdminAccess = (user: User | null): boolean => {
   if (!user || !user.email) {
-    if (DEBUG_MODE) console.log('Access denied: No user or email');
     return false;
   }
   
@@ -35,8 +34,6 @@ export const hasAdminAccess = (user: User | null): boolean => {
   const hasAccess = ADMIN_EMAILS.includes(userEmail);
   
   if (DEBUG_MODE) {
-    console.log(`Access check for email: ${userEmail}`);
-    console.log(`Admin access: ${hasAccess ? 'GRANTED' : 'DENIED'}`);
   }
   
   return hasAccess;
@@ -51,8 +48,6 @@ export const isRestrictedPath = (path: string): boolean => {
   const isRestricted = RESTRICTED_PATHS.some(restrictedPath => path.startsWith(restrictedPath));
   
   if (DEBUG_MODE) {
-    console.log(`Path check: ${path}`);
-    console.log(`Path restricted: ${isRestricted ? 'YES' : 'NO'}`);
   }
   
   return isRestricted;
@@ -67,7 +62,6 @@ export const isRestrictedPath = (path: string): boolean => {
 export const canAccessPath = (user: User | null, path: string): boolean => {
   // If path is not restricted, allow access
   if (!isRestrictedPath(path)) {
-    if (DEBUG_MODE) console.log(`Path ${path} is not restricted, access GRANTED`);
     return true;
   }
   
@@ -75,7 +69,6 @@ export const canAccessPath = (user: User | null, path: string): boolean => {
   const hasAccess = hasAdminAccess(user);
   
   if (DEBUG_MODE) {
-    console.log(`Access to restricted path ${path}: ${hasAccess ? 'GRANTED' : 'DENIED'}`);
   }
   
   return hasAccess;

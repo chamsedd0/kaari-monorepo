@@ -192,7 +192,6 @@ export async function dismissReviewPrompt(promptId: string): Promise<void> {
     // Check if the prompt exists
     const prompt = await getDocumentById(REVIEW_PROMPTS_COLLECTION, promptId);
     if (!prompt) {
-      console.warn('Prompt not found when attempting to dismiss:', promptId);
       return;
     }
     

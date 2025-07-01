@@ -171,7 +171,6 @@ export async function updateEditRequestStatus(
       // Update the property with the requested changes
       if (Object.keys(propertyData).length > 0) {
         await updateProperty(editRequest.propertyId, propertyData);
-        console.log(`Property ${editRequest.propertyId} updated with requested changes`);
       }
     }
     

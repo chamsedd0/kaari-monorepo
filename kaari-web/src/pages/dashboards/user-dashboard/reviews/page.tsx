@@ -124,8 +124,6 @@ const ReviewsPage: React.FC = () => {
                     getActiveReviewPrompts()
                 ]);
                 
-                console.log('Reviews to write:', toWriteData);
-                console.log('Active prompts:', promptsData);
                 
                 setReviewsToWrite(toWriteData);
                 setUserReviews(writtenData);
@@ -171,7 +169,6 @@ const ReviewsPage: React.FC = () => {
             
             // Check if the date is valid
             if (isNaN(dateObj.getTime())) {
-                console.warn('Invalid date encountered:', date);
                 return 'Date not available';
             }
             

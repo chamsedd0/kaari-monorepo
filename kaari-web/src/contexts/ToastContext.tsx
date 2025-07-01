@@ -106,7 +106,6 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     
     // If a duplicate toast exists, don't add another one
     if (hasDuplicateToast) {
-      console.log('Preventing duplicate toast:', title);
       return;
     }
     

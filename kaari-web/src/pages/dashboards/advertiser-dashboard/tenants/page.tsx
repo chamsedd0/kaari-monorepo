@@ -23,7 +23,6 @@ const TenantsPage: React.FC = () => {
         const data = await getAdvertiserReservationRequests();
         
         // Detailed logging of reservation data for debugging
-        console.log('All tenant data:', JSON.stringify(data, null, 2));
         
         // Filter tenants - show completed or moved-in reservations
         // Both 'completed' and 'movedIn' statuses represent active tenants
@@ -31,11 +30,9 @@ const TenantsPage: React.FC = () => {
           res.reservation.status === 'completed' || res.reservation.status === 'movedIn'
         );
         
-        console.log('Filtered tenant data:', filteredTenants.length, 'active tenants found');
         
         // Log all reservation date fields for debugging
         filteredTenants.forEach((tenant, index) => {
-          console.log(`Tenant ${index + 1} date fields:`, {
             moveInAt: tenant.reservation.movedInAt,
             moveInAtType: tenant.reservation.movedInAt ? typeof tenant.reservation.movedInAt : 'not set',
             movingDate: tenant.reservation.movingDate,
@@ -61,7 +58,6 @@ const TenantsPage: React.FC = () => {
 
   const formatDate = (date: Date | undefined | null) => {
     // Log the raw date input for debugging
-    console.log('Date input:', date);
     
     // Check if date is undefined or null
     if (!date) return 'Not specified';
@@ -73,18 +69,15 @@ const TenantsPage: React.FC = () => {
       if ('seconds' in date) {
         // Handle Firestore Timestamp object
         const timestamp = date as any;
-        console.log('Timestamp format detected:', timestamp);
         dateObj = new Date(timestamp.seconds * 1000);
       } else if ('toDate' in date && typeof date.toDate === 'function') {
         // Handle Firestore Timestamp with toDate method
-        console.log('Timestamp with toDate method detected');
         dateObj = (date as any).toDate();
       } else if (date instanceof Date) {
         // It's already a Date object
         dateObj = date;
       } else {
         // It's some other object
-        console.log('Unknown object format:', JSON.stringify(date));
         try {
           // Try to convert to date anyway
           dateObj = new Date(date as any);
@@ -95,25 +88,20 @@ const TenantsPage: React.FC = () => {
       }
     } else if (typeof date === 'string') {
       // Handle date string
-      console.log('String date format detected:', date);
       dateObj = new Date(date);
     } else if (typeof date === 'number') {
       // Handle timestamp number
-      console.log('Timestamp number detected:', date);
       dateObj = new Date(date);
     } else {
-      console.log('Unrecognized date format:', date, typeof date);
       return 'Invalid date format';
     }
     
     // Check if date is valid
     if (isNaN(dateObj.getTime())) {
-      console.log('Invalid date object:', dateObj);
       return 'Invalid date';
     }
     
     // Log the formatted date for verification
-    console.log('Formatted date:', dateObj.toLocaleDateString('en-GB'));
     
     // Return formatted date
     return dateObj.toLocaleDateString('en-GB');

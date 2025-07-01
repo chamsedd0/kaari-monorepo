@@ -10,8 +10,6 @@ interface ConfirmationYouGetThePlaceProps {
 }
 
 const ConfirmationYouGetThePlace: React.FC<ConfirmationYouGetThePlaceProps> = ({
-  onMovedIn = () => console.log("Moved in clicked"),
-  onHaveIssue = () => console.log("Have an issue clicked")
 }) => {
   return (
     <StatusCardStyleApproved>

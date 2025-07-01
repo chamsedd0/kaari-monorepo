@@ -52,11 +52,9 @@ const PropertyCardComponent = ({
     
     // Propagate change to parent component if callback provided
     if (onToggleFavorite && id !== undefined) {
-      console.log("Property card calling onToggleFavorite with ID:", id);
       // Pass the id directly without trying to convert it
       onToggleFavorite(id);
     } else {
-      console.warn("Cannot toggle favorite: missing callback or ID", { onToggleFavorite, id });
     }
   };
 

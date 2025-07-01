@@ -380,7 +380,6 @@ const AdvertiserRegistrationPage: React.FC = () => {
         if (process.env.NODE_ENV === 'development') {
           // Generate a fallback OTP for local testing
           const fallbackOtp = generateOTP();
-          console.log(`Fallback OTP for development: ${fallbackOtp}`);
           localStorage.setItem('demo_otp', fallbackOtp);
         }
       } else {
@@ -394,7 +393,6 @@ const AdvertiserRegistrationPage: React.FC = () => {
       if (process.env.NODE_ENV === 'development') {
         // Generate a fallback OTP for local testing
         const fallbackOtp = generateOTP();
-        console.log(`Fallback OTP for development: ${fallbackOtp}`);
         localStorage.setItem('demo_otp', fallbackOtp);
         
         setOtpSent(true);
@@ -789,7 +787,6 @@ const AdvertiserRegistrationPage: React.FC = () => {
         }
         
         userId = userDoc.id;
-        console.log("Using existing authenticated user:", userId);
       } else {
         // User is not authenticated, create a new account
         // Generate a random password - in a real app, you'd want to handle this differently
@@ -805,7 +802,6 @@ const AdvertiserRegistrationPage: React.FC = () => {
           );
           
           userId = newUser.id;
-          console.log("Created new user:", userId);
         } catch (signUpError: any) {
           console.error('Sign up error:', signUpError);
           

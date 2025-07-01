@@ -42,7 +42,7 @@ const HelpPage: React.FC = () => {
     
     try {
       // Here you would add the actual API call to submit the form
-      console.log('Form submitted:', formData);
+      // Form submitted
       
       // Reset form after successful submission
       setFormData({

@@ -8,7 +8,6 @@ interface ConfirmationPaymentFailedProps {
 }
 
 const ConfirmationPaymentFailed: React.FC<ConfirmationPaymentFailedProps> = ({
-  onRetryPayment = () => console.log("Retry payment clicked")
 }) => {
   return (
     <StatusCardStyleRejected>

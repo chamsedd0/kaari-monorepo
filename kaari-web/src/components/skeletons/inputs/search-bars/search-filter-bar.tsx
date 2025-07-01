@@ -364,13 +364,11 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
   // Prevent default form submission and call onSearch instead
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    console.log("Search form submitted - calling onSearch");
     onSearch();
   };
   
   // Handler for Apply Filters button
   const handleApplyFilters = () => {
-    console.log("Apply Filters button clicked");
     if (onApplyFilters) {
       // Apply filters to update filter state and show the search view
       onApplyFilters();
@@ -531,7 +529,6 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
 
   // Handle search button click
   const handleSearchClick = () => {
-    console.log("Search button clicked, triggering search");
     // Call onSearch function passed as prop
     onSearch();
   };

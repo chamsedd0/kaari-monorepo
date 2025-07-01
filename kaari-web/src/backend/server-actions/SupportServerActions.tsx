@@ -28,11 +28,6 @@ async function mockSendEmailJS(emailData: {
   await new Promise(resolve => setTimeout(resolve, 1000));
   
   // Log the email data that would be sent
-  console.log('📧 MOCK EMAIL BEING SENT:');
-  console.log('To:', emailData.to);
-  console.log('From:', emailData.from);
-  console.log('Subject:', emailData.subject);
-  console.log('Message:', emailData.html);
   
   // Return success (in a real app, this would be the API response)
   return true;

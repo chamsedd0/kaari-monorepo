@@ -109,18 +109,15 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
   useEffect(() => {
     // Retrieve rental application data from localStorage
     const savedData = localStorage.getItem('rentalApplicationData');
-    console.log('Loaded rental data from localStorage:', savedData);
     
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
-        console.log('Parsed rental data:', parsedData);
         setRentalData(parsedData);
       } catch (error) {
         console.error('Error parsing rental application data:', error);
       }
     } else {
-      console.warn('No rental application data found in localStorage');
     }
   }, []);
 
@@ -198,7 +195,6 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
         paymentMethodId: selectedPaymentMethod.id
       });
       
-      console.log('Reservation created:', reservation);
       
       // Navigate to success page
       navigateToSuccess();

@@ -16,7 +16,6 @@ export const createNewMessageNotification = async (
   senderName: string,
   conversationId: string
 ): Promise<string | undefined> => {
-  console.log(`createNewMessageNotification called for ${recipientType} ${recipientId} from ${senderName}`);
   try {
     return await NotificationService.createNotification(
       recipientId,
@@ -417,7 +416,6 @@ export const advertiserNotifications = {
     advertiserId: string, 
     booking: PhotoshootBooking
   ): Promise<string> => {
-    console.log(`advertiserNotifications.photoshootBooked called for advertiser ${advertiserId}`);
     const title = 'Photoshoot Booked';
     const message = `A new photoshoot has been booked for ${booking.propertyTitle}.`;
     const link = `/dashboard/advertiser/photoshoots/${booking.id}`;
@@ -438,8 +436,6 @@ export const advertiserNotifications = {
     advertiserId: string,
     reservation: Reservation
   ): Promise<string> => {
-    console.log(`advertiserNotifications.reservationRequest called for advertiser ${advertiserId}`);
-    console.log('Reservation data:', JSON.stringify(reservation));
     const title = 'New Reservation Request';
     const message = `${reservation.clientName} has requested to book ${reservation.propertyTitle}.`;
     const link = `/dashboard/advertiser/reservations`;
@@ -471,7 +467,6 @@ export const advertiserNotifications = {
     advertiserId: string,
     reservation: Reservation
   ): Promise<string> => {
-    console.log(`advertiserNotifications.reservationCancelled called for advertiser ${advertiserId}`);
     const title = 'Reservation Cancelled';
     const message = `${reservation.clientName} has cancelled their reservation for ${reservation.propertyTitle}.`;
     const link = `/dashboard/advertiser/reservations`;
@@ -492,7 +487,6 @@ export const advertiserNotifications = {
     advertiserId: string,
     reservation: Reservation
   ): Promise<string> => {
-    console.log(`advertiserNotifications.paymentConfirmed called for advertiser ${advertiserId}`);
     const title = 'Payment Received';
     const message = `${reservation.clientName} has completed payment for their reservation at ${reservation.propertyTitle}.`;
     const link = `/dashboard/advertiser/reservations`;
@@ -513,7 +507,6 @@ export const advertiserNotifications = {
     advertiserId: string,
     reservation: Reservation
   ): Promise<string> => {
-    console.log(`advertiserNotifications.clientMovedIn called for advertiser ${advertiserId}`);
     const title = 'Client Has Moved In';
     const message = `${reservation.clientName} has confirmed they have moved into ${reservation.propertyTitle}.`;
     const link = `/dashboard/advertiser/reservations`;
@@ -534,7 +527,6 @@ export const advertiserNotifications = {
     advertiserId: string,
     reservation: Reservation
   ): Promise<string> => {
-    console.log(`advertiserNotifications.cancellationUnderReview called for advertiser ${advertiserId}`);
     const title = 'Cancellation Request Received';
     const message = `${reservation.clientName} has requested to cancel their reservation for ${reservation.propertyTitle}.`;
     const link = `/dashboard/advertiser/reservations`;
@@ -559,7 +551,6 @@ export const advertiserNotifications = {
     reservationId: string,
     refundAmount?: number
   ): Promise<string | undefined> => {
-    console.log(`advertiserNotifications.refundRequested called for advertiser ${advertiserId}`);
     try {
       const amountText = refundAmount ? ` of ${refundAmount}` : '';
       return await NotificationService.createNotification(
@@ -587,7 +578,6 @@ export const advertiserNotifications = {
     propertyName: string,
     propertyId: string
   ): Promise<string | undefined> => {
-    console.log(`advertiserNotifications.propertyLiked called for advertiser ${advertiserId}`);
     try {
       return await NotificationService.createNotification(
         advertiserId,
@@ -635,7 +625,6 @@ export const userNotifications = {
     userId: string,
     reservation: Reservation
   ): Promise<string> => {
-    console.log(`userNotifications.reservationAccepted called for user ${userId}`);
     const title = 'Reservation Accepted';
     const message = `Your reservation for ${reservation.propertyTitle} has been accepted!`;
     const link = `/dashboard/user/reservations/${reservation.id}`;
@@ -657,7 +646,6 @@ export const userNotifications = {
     reservation: Reservation,
     reason?: string
   ): Promise<string> => {
-    console.log(`userNotifications.reservationRejected called for user ${userId}`);
     const title = 'Reservation Declined';
     const reasonText = reason ? ` Reason: ${reason}` : '';
     const message = `Your reservation for ${reservation.propertyTitle} has been declined.${reasonText}`;
@@ -862,7 +850,6 @@ export const userNotifications = {
     userId: string,
     reservation: Reservation
   ): Promise<string> => {
-    console.log(`userNotifications.paymentConfirmation called for user ${userId}`);
     const title = 'Payment Confirmed';
     const message = `Your payment for ${reservation.propertyTitle} has been confirmed. You're all set to move in!`;
     const link = `/dashboard/user/reservations/${reservation.id}`;

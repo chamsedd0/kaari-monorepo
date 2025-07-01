@@ -12,7 +12,6 @@ interface ConfirmationRequestRejectedProps {
 const ConfirmationRequestRejected: React.FC<ConfirmationRequestRejectedProps> = ({
   requestId = "2068291",
   location = "Apgar",
-  onFindAlternative = () => console.log("Find alternative housing clicked")
 }) => {
   return (
     <StatusCardStyleRejected>

@@ -12,7 +12,6 @@ const ContactDetailsPage: React.FC = () => {
 
     const handleSave = () => {
         // Implement contact details update logic here
-        console.log('Updating contact details...');
     };
 
     const handleInputChange = (setter: (value: string) => void) => (e: ChangeEvent<HTMLInputElement>) => {

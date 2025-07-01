@@ -175,7 +175,6 @@ const ReferralProgramPage: React.FC = () => {
   // Function to handle payout request
   const handleRequestPayout = () => {
     // This would make an API call to request a payout
-    console.log('Requesting payout');
   };
 
   // Function to book a photoshoot

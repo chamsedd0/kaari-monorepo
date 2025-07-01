@@ -71,7 +71,6 @@ export async function getReviewsToWrite(): Promise<{
     const threeHoursAgo = new Date();
     threeHoursAgo.setHours(threeHoursAgo.getHours() - 3);
     
-    console.log(`Total requests found: ${allRequests.length}`);
     
     // Get properties and check if already reviewed
     const reviewsToWritePromises = allRequests.map(async (request) => {
@@ -126,7 +125,6 @@ export async function getReviewsToWrite(): Promise<{
     // Wait for all promises to resolve and filter out nulls
     const reviewsToWrite = (await Promise.all(reviewsToWritePromises)).filter(Boolean);
     
-    console.log(`Found ${reviewsToWrite.length} reviews that need to be written`);
     
     return reviewsToWrite;
   } catch (error) {

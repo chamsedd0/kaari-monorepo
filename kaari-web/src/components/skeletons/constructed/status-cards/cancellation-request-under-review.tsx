@@ -7,7 +7,6 @@ interface CancellationRequestUnderReviewProps {
 }
 
 const CancellationRequestUnderReview: React.FC<CancellationRequestUnderReviewProps> = ({
-  onContactSupport = () => console.log("Contact support clicked")
 }) => {
   return (
     <StatusCardStylePending>

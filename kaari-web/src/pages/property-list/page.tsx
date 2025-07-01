@@ -135,11 +135,9 @@ const PropertyMarkers = memo(({ properties, onPropertyClick, selectedPropertyId 
 
   // Count properties with valid locations for debugging
   const propertiesWithLocation = properties.filter(p => p.location);
-  console.log(`Rendering ${propertiesWithLocation.length} property markers out of ${properties.length} total properties`);
   
   // Log the first few properties to debug
   if (propertiesWithLocation.length > 0) {
-    console.log("Sample property locations:", 
       propertiesWithLocation.slice(0, 3).map(p => ({
         id: p.id,
         title: p.title,
@@ -147,7 +145,6 @@ const PropertyMarkers = memo(({ properties, onPropertyClick, selectedPropertyId 
       }))
     );
   } else {
-    console.warn("No properties with location data found");
   }
 
   return (
@@ -159,7 +156,6 @@ const PropertyMarkers = memo(({ properties, onPropertyClick, selectedPropertyId 
           const isSelected = selectedPropertyId === property.id;
 
           // Log each marker being rendered for debugging
-          console.log(`Rendering marker for property ${property.id} at location:`, property.location);
 
           return (
             <Marker
@@ -222,9 +218,7 @@ const PropertyMap = memo(({
   // Debug properties being passed to map
   useEffect(() => {
     if (properties.length > 0) {
-      console.log(`PropertyMap received ${properties.length} properties`);
       const withLocations = properties.filter(p => p.location && typeof p.location.lat === 'number');
-      console.log(`${withLocations.length} properties have valid location data`);
     }
   }, [properties]);
 
@@ -298,7 +292,6 @@ const PropertyMap = memo(({
           // Join all components to create a full address string
           const fullAddress = addressComponents.join(", ");
           
-          console.log(`Geocoding address: ${fullAddress} for property ID: ${property.id}`);
           
           // Add a small delay between geocoding requests to respect API limits
           await new Promise(resolve => setTimeout(resolve, 300));
@@ -312,7 +305,6 @@ const PropertyMap = memo(({
           const result = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
             geocoderRef.current?.geocode(geocodingOptions, (results, status) => {
               if (status === google.maps.GeocoderStatus.OK && results && results.length > 0) {
-                console.log(`Geocoding successful for property ${property.id}:`, results[0].geometry.location.toJSON());
                 resolve(results);
               } else {
                 // Fallback to components geocoding if address string geocoding fails
@@ -321,7 +313,6 @@ const PropertyMap = memo(({
                     address: property.address.city + (property.address.country ? `, ${property.address.country}` : '')
                   }, (cityResults, cityStatus) => {
                     if (cityStatus === google.maps.GeocoderStatus.OK && cityResults && cityResults.length > 0) {
-                      console.log(`Fallback geocoding successful for property ${property.id} using city:`, cityResults[0].geometry.location.toJSON());
                       resolve(cityResults);
               } else {
                 reject(new Error(`Geocoding failed for address: ${fullAddress}, status: ${status}`));
@@ -359,7 +350,6 @@ const PropertyMap = memo(({
       );
       
       if (stillMissingLocations.length > 0) {
-        console.log(`${stillMissingLocations.length} properties still missing locations, trying city-level fallback`);
         
         const finalUpdatedProperties = [...updatedProperties];
         
@@ -375,7 +365,6 @@ const PropertyMap = memo(({
             // Try geocoding with just the city and country
             const cityCountry = `${property.address.city}${property.address.country ? `, ${property.address.country}` : ''}`;
             
-            console.log(`Final fallback geocoding attempt for property ${property.id} using: ${cityCountry}`);
             
             const result = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
               geocoderRef.current?.geocode({ 
@@ -383,7 +372,6 @@ const PropertyMap = memo(({
                 region: 'ma'
               }, (results, status) => {
                 if (status === google.maps.GeocoderStatus.OK && results && results.length > 0) {
-                  console.log(`City-level fallback successful for property ${property.id}`);
                   resolve(results);
                 } else {
                   reject(new Error(`City-level fallback failed for: ${cityCountry}`));
@@ -427,7 +415,6 @@ const PropertyMap = memo(({
         p => p.location && typeof p.location?.lat === 'number' && typeof p.location?.lng === 'number'
       );
       
-      console.log(`Fitting map to ${validProperties.length} valid properties`);
       
       if (validProperties.length > 0) {
         const bounds = new window.google.maps.LatLngBounds();
@@ -871,7 +858,6 @@ export default function PropertyListPage() {
         return [...filtersWithoutDate, { type: 'Date', value: date }];
       });
       
-      console.log('Date input changed to:', date);
     } catch (error) {
       console.error('Error processing date:', error);
     }
@@ -906,7 +892,6 @@ export default function PropertyListPage() {
       return [...filtersWithoutCapacity, { type: 'Capacity', value: capacityLabel }];
     });
     
-    console.log('Capacity input changed to:', capacityLabel);
   };
 
   // Toggle main content collapse
@@ -978,8 +963,6 @@ export default function PropertyListPage() {
   const applyCurrentFilters = useCallback((filtersToApply?: string[]) => {
     // Always hide filtering section and show search view when applying filters
     const filtersToUse = filtersToApply || activeFilters;
-    console.log("------- APPLYING FILTERS -------");
-    console.log("Filters to apply:", filtersToUse);
     
     // Update active filters if we were provided with new ones
     if (filtersToApply) {
@@ -997,7 +980,6 @@ export default function PropertyListPage() {
       
       // Important: Each filter must pass for the property to be included (AND logic)
       for (const filter of filtersToUse) {
-        console.log(`Testing filter: ${filter} on property ${property.id}`);
         
         // Process location filter - now works with or without commas
         if (filter.includes(':') && filter.split(':')[0].trim() === 'Location') {
@@ -1031,12 +1013,9 @@ export default function PropertyListPage() {
 
           // If no match found in any address component, filter out this property
           if (!matchFound) {
-            console.log(`Property ${property.id} filtered out by location: ${filterLoc}`);
-            console.log(`Address components:`, addressComponents);
             return false;
           }
           
-          console.log(`Property ${property.id} matches location filter "${filterLoc}"`);
           continue; // Continue to next filter since this one passed
         }
         
@@ -1046,7 +1025,6 @@ export default function PropertyListPage() {
           if (filter.includes(" to ")) {
             const [min, max] = filter.split(" to ").map(part => parseInt(part.replace(/\D/g, '')));
             if (property.price < min || property.price > max) {
-              console.log(`Property ${property.id} price ${property.price} not in range ${min}-${max}, filtering out`);
               return false;
             }
           }
@@ -1054,7 +1032,6 @@ export default function PropertyListPage() {
         
         // Handle amenities, features and other array-based filters with string normalization
         if ([...arrayBasedFilters.amenities, ...arrayBasedFilters.features].includes(filter)) {
-          console.log(`Processing filter: ${filter} for property ${property.id}`);
           
           // Function to safely normalize strings
           const normalize = (str: any): string => {
@@ -1065,7 +1042,6 @@ export default function PropertyListPage() {
           
           // Get the normalized filter value
           const normalizedFilter = normalize(filter);
-          console.log(`Normalized filter: "${normalizedFilter}" (from "${filter}")`);
           
           // Determine which array to check based on the filter
           let arrayToCheck: string[] = [];
@@ -1081,17 +1057,14 @@ export default function PropertyListPage() {
 
           // No array to check
           if (!arrayToCheck.length) {
-            console.log(`Property ${property.id} has no ${arrayName} array, filtering out`);
             return false;
           }
           
           // Log the array contents for debugging
-          console.log(`Property ${property.id} ${arrayName}:`, arrayToCheck);
           
           // Additional validation - check if any array item is empty or null
           const hasEmptyItems = arrayToCheck.some(item => !item || item.trim() === '');
           if (hasEmptyItems) {
-            console.warn(`Property ${property.id} has empty or null items in ${arrayName} array`);
           }
           
           // Check if any array item matches after normalization
@@ -1133,10 +1106,6 @@ export default function PropertyListPage() {
                                       return partIndex !== -1 ? partIndex + normalizedPart.length : -1;
                                     }, 0) !== -1;
             
-            console.log(`  Comparing: "${item}" → normalized: "${normalizedItem}"`);
-            console.log(`    - Exact match: ${exactMatch}`);
-            console.log(`    - Contains relationship: ${containmentMatch}`);
-            console.log(`    - Composite match: ${isCompositeMatch}`);
             
             // For walk-in-closet, be more strict
             if (filter === 'walk-in-closet') {
@@ -1156,11 +1125,9 @@ export default function PropertyListPage() {
           });
           
           if (!hasMatch) {
-            console.log(`Property ${property.id} does not match ${arrayName} filter: "${filter}", filtering out`);
             return false;
           }
           
-          console.log(`Property ${property.id} matches ${arrayName} filter: "${filter}"`);
           continue; // Continue to next filter since this one passed
         }
         
@@ -1183,13 +1150,11 @@ export default function PropertyListPage() {
             
             // Skip this filter if the date is invalid
             if (isNaN(selectedDate.getTime())) {
-              console.log(`Invalid date filter: ${filter}, skipping`);
               continue;
             }
              
             // If the property doesn't have an availableFrom date, we exclude it to be safe
             if (!property.availableFrom) {
-              console.log(`Property ${property.id} has no availableFrom date, filtering out`);
               return false;
             }
              
@@ -1224,13 +1189,11 @@ export default function PropertyListPage() {
               availableFromDate = new Date(timestamp.seconds * 1000);
             } else {
               // If we can't parse the date, skip this property
-              console.log(`Property ${property.id} has invalid availableFrom date format, filtering out`);
               return false;
             }
             
             // Check if the date is valid
             if (isNaN(availableFromDate.getTime())) {
-              console.log(`Property ${property.id} has invalid availableFrom date, filtering out`);
               return false;
             }
             
@@ -1238,7 +1201,6 @@ export default function PropertyListPage() {
             selectedDate.setHours(0, 0, 0, 0);
             availableFromDate.setHours(0, 0, 0, 0);
             
-            console.log(`Date comparison for property ${property.id}:`, {
               selectedDate: selectedDate.toISOString(),
               availableFromDate: availableFromDate.toISOString(),
               isAvailable: availableFromDate <= selectedDate
@@ -1246,11 +1208,9 @@ export default function PropertyListPage() {
             
             // Property must be available on or before the selected date
             if (availableFromDate > selectedDate) {
-              console.log(`Property ${property.id} not available from ${selectedDate.toISOString()}, filtering out. Available from: ${availableFromDate.toISOString()}`);
               return false;
             }
             
-            console.log(`Property ${property.id} is available from selected date ${selectedDate.toISOString()}`);
           } catch (err) {
             console.error(`Error processing date filter "${filter}"`, err);
             // Skip this filter rather than excluding all properties due to error
@@ -1264,7 +1224,6 @@ export default function PropertyListPage() {
           
           // Check if property has rules array and the gender rule is allowed
           if (!property.rules || !Array.isArray(property.rules)) {
-            console.log(`Property ${property.id} has no rules array, filtering out`);
             return false;
           }
           
@@ -1273,7 +1232,6 @@ export default function PropertyListPage() {
           );
           
           if (!hasRule) {
-            console.log(`Property ${property.id} doesn't allow ${ruleToCheck}, filtering out`);
             return false;
           }
         }
@@ -1304,7 +1262,6 @@ export default function PropertyListPage() {
             }
           }
           
-          console.log(`Checking capacity filter: ${capacityText} (${requiredCapacity}${isPlus ? '+' : ''}) for property ${property.id}`);
           
           // Parse property capacity, handling different formats
           let propertyCapacity: number | undefined;
@@ -1323,7 +1280,6 @@ export default function PropertyListPage() {
           
           // If property has no valid capacity info, filter it out
           if (propertyCapacity === undefined) {
-            console.log(`Property ${property.id} has no valid capacity info, filtering out`);
             return false;
           }
           
@@ -1331,25 +1287,21 @@ export default function PropertyListPage() {
           if (isPlus) {
             // For "X+ People", property capacity must be at least X
             if (propertyCapacity < requiredCapacity) {
-              console.log(`Property ${property.id} capacity ${propertyCapacity} is less than required ${requiredCapacity}+, filtering out`);
               return false;
             }
           } else {
             // For exact capacity, property must match exactly
             if (propertyCapacity !== requiredCapacity) {
-              console.log(`Property ${property.id} capacity ${propertyCapacity} does not match required ${requiredCapacity}, filtering out`);
               return false;
             }
           }
           
-          console.log(`Property ${property.id} passes capacity filter with capacity ${propertyCapacity}`);
         }
         
         // Handle bedroom filters like "Studio", "1 Bedroom", "2 Bedrooms", etc.
         if (filter === t('property_list.studio') || filter.includes(t('property_list.bedroom')) || filter.includes(t('property_list.bedrooms'))) {
         if (filter === t('property_list.studio')) {
           if (property.bedrooms === undefined || typeof property.bedrooms !== 'number' || property.bedrooms !== 0) {
-              console.log(`Property ${property.id} is not a studio, filtering out`);
             return false;
           }
           } else {
@@ -1359,15 +1311,12 @@ export default function PropertyListPage() {
             const isPlus = filter.includes('+');
             
             if (property.bedrooms === undefined || typeof property.bedrooms !== 'number') {
-                console.log(`Property ${property.id} has no bedroom info, filtering out`);
               return false;
             }
             
             if (isPlus && property.bedrooms < filterBedrooms) {
-                console.log(`Property ${property.id} has ${property.bedrooms} bedrooms, less than required ${filterBedrooms}+, filtering out`);
               return false;
             } else if (!isPlus && property.bedrooms !== filterBedrooms) {
-                console.log(`Property ${property.id} has ${property.bedrooms} bedrooms, not equal to required ${filterBedrooms}, filtering out`);
               return false;
               }
             }
@@ -1376,28 +1325,22 @@ export default function PropertyListPage() {
         
         // Handle the isFurnished filter separately
         if (filter === 'isFurnished') {
-          console.log(`Checking isFurnished filter for property ${property.id}: ${property.isFurnished}`);
           if (property.isFurnished !== true) {
-            console.log(`Property ${property.id} is not furnished, filtering out`);
             return false;
           }
-          console.log(`Property ${property.id} is furnished, passing filter`);
           continue; // Continue to next filter since this one passed
         }
         
         // Handle housing preferences (womenOnly, familiesOnly)
         if (filter === 'womenOnly' || filter === 'familiesOnly') {
-          console.log(`Checking housing preference filter: ${filter} for property ${property.id}`);
           
           // Check if we have a direct match on the housingPreference field
           if (property.housingPreference === filter) {
-            console.log(`Property ${property.id} matches housing preference via housingPreference field: ${filter}`);
             continue; // Continue to next filter since this one passed
           }
           
           // If no match and housingPreference is set to something else, filter out
           if (property.housingPreference) {
-            console.log(`Property ${property.id} has different housingPreference: ${property.housingPreference}, filtering out`);
             return false;
           }
           
@@ -1420,23 +1363,19 @@ export default function PropertyListPage() {
             });
             
             if (ruleMatch && ruleMatch.allowed) {
-              console.log(`Property ${property.id} has matching rule "${ruleMatch.name}" allowed: true`);
               continue; // Continue to next filter since this one passed
             }
           }
           
-          console.log(`Property ${property.id} does not match housing preference: ${filter}, filtering out`);
           return false;
         }
         
         // Handle special boolean filters: isFurnished, petsAllowed, smokingAllowed
         const booleanFilters = ['isFurnished', 'petsAllowed', 'smokingAllowed'];
         if (booleanFilters.includes(filter)) {
-          console.log(`Checking boolean filter: ${filter} for property ${property.id}`);
           
           // For these filters, check if the corresponding property field is true
           if (property[filter as keyof PropertyType] === true) {
-            console.log(`Property ${property.id} has ${filter} = true`);
             continue; // Continue to next filter since this one passed
           }
           
@@ -1457,28 +1396,23 @@ export default function PropertyListPage() {
             });
             
             if (matchingRule && matchingRule.allowed === true) {
-              console.log(`Property ${property.id} has ${filter} allowed via rules array`);
               continue; // Continue to next filter since this one passed
             }
           }
           
-          console.log(`Property ${property.id} doesn't have ${filter} = true, filtering out`);
           return false;
         }
         
         // Housing preference filters
         if (filter === 'womenOnly' || filter === 'familiesOnly') {
-          console.log(`Checking housing preference filter: ${filter} for property ${property.id}`);
           
           // Exact match on the housingPreference field
           if (property.housingPreference === filter) {
-            console.log(`Property ${property.id} matches housing preference via housingPreference field: ${filter}`);
             continue; // Continue to next filter since this one passed
           }
           
           // If a different preference is set, filter out
           if (property.housingPreference) {
-            console.log(`Property ${property.id} has different housingPreference: ${property.housingPreference}, filtering out`);
             return false;
           }
           
@@ -1498,37 +1432,29 @@ export default function PropertyListPage() {
             });
             
             if (matchingRule && matchingRule.allowed === true) {
-              console.log(`Property ${property.id} matches ${filter} via rules array`);
               continue; // Continue to next filter since this one passed
             }
           }
           
-          console.log(`Property ${property.id} does not match housing preference: ${filter}, filtering out`);
           return false;
         }
 
         // Property type filters
         if (['apartment', 'house', 'studio', 'room', 'condo', 'commercial', 'villa', 'penthouse', 'townhouse'].includes(filter)) {
-          console.log(`Checking property type filter: ${filter} for property ${property.id}, has type: ${property.propertyType}`);
           
           // Case-insensitive property type comparison
           if (property.propertyType && property.propertyType.toLowerCase() === filter.toLowerCase()) {
-            console.log(`Property ${property.id} matches property type: ${filter}`);
             continue; // Continue to next filter since this one passed
           }
           
-          console.log(`Property ${property.id} does not match property type: ${filter}, filtering out`);
           return false;
         }
       }
       
       // If we reach here, it means the property passed ALL filters
-      console.log(`Property ${property.id} passed ALL filters`);
       return true;
     });
     
-    console.log("Filtered properties:", newFiltered.length);
-    console.log("------ END FILTERING ------");
     
     // Sort the filtered properties
     const sortedProperties = applySort(newFiltered);
@@ -1563,7 +1489,6 @@ export default function PropertyListPage() {
     // Set loading to false
     setIsLoading(false);
     
-    console.log("All filters cleared");
   };
 
   // Handle search
@@ -1599,7 +1524,6 @@ export default function PropertyListPage() {
       // Combine remaining active filters with new pending filters
       const newActiveFilters = [...remainingActiveFilters, ...formattedFilters];
       
-      console.log('Applying filters:', newActiveFilters);
       
       // Set active filters and apply them
       setActiveFilters(newActiveFilters);
@@ -1640,7 +1564,6 @@ export default function PropertyListPage() {
           return [...newFilters, { type: 'Location', value: location }];
         });
         
-        console.log('Location input changed to:', location);
       } else {
         // If location is empty, mark to remove this filter type
         setPendingFilters(prev => prev.filter(f => f.type !== 'Location'));

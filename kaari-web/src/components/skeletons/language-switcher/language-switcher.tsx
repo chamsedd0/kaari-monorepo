@@ -109,18 +109,15 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ className }) => {
   
   // Log the current language for debugging
   useEffect(() => {
-    console.log('Language switcher - Current language:', currentLanguage);
   }, [currentLanguage]);
   
   const toggleLanguage = (lang: string) => {
-    console.log('Toggling language to:', lang);
     
     try {
       // Change language using i18next
       i18n.changeLanguage(lang).then(() => {
         // Force reload translations after language change
         i18n.reloadResources([lang]).then(() => {
-          console.log(`Translations reloaded for ${lang}`);
           
           // Force page refresh to ensure translations are applied
           window.location.reload();
@@ -130,7 +127,6 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ className }) => {
       // Save language preference to localStorage directly
       localStorage.setItem('i18nextLng', lang);
       
-      console.log('Language changed successfully to:', lang);
     } catch (error) {
       console.error('Error changing language:', error);
     }

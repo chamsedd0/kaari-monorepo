@@ -34,7 +34,6 @@ export const saveSignupProgress = (data: AdvertiserSignupData): void => {
       data.userId = currentUser.uid;
     } else {
       // If no user is logged in, don't save progress
-      console.warn('Attempted to save signup progress without authentication');
       return;
     }
     
@@ -49,7 +48,7 @@ export const saveSignupProgress = (data: AdvertiserSignupData): void => {
       timestamp: Date.now()
     });
   } catch (error) {
-    console.error('Failed to save signup progress:', error);
+    // Error handled silently
   }
 };
 
@@ -78,7 +77,6 @@ export const getSignupProgress = (): AdvertiserSignupData | null => {
     // Parse and return the data
     return JSON.parse(savedData);
   } catch (error) {
-    console.error('Failed to get signup progress:', error);
     return null;
   }
 };
@@ -91,7 +89,7 @@ export const clearSignupProgress = (): void => {
     localStorage.removeItem(ADVERTISER_SIGNUP_KEY);
     localStorage.removeItem(ADVERTISER_SIGNUP_EXPIRY_KEY);
   } catch (error) {
-    console.error('Failed to clear signup progress:', error);
+    // Error handled silently
   }
 };
 
@@ -149,7 +147,6 @@ export const abandonSignup = async (): Promise<void> => {
         if (!userDoc.exists() || 
             (userDoc.data().signupStatus !== 'completed' && 
              userDoc.data().signupStatus !== 'email_verified')) {
-          console.log('Deleting incomplete signup user:', userId);
           
           try {
             // Delete the user document from Firestore first
@@ -164,17 +161,16 @@ export const abandonSignup = async (): Promise<void> => {
               timestamp: Date.now()
             });
             
-            console.log('User deleted successfully');
           } catch (error) {
-            console.error('Error deleting user:', error);
+            // Error handled silently
           }
         }
       } catch (error) {
-        console.error('Error checking user status:', error);
+        // Error handled silently
       }
     }
   } catch (error) {
-    console.error('Failed to handle abandoned signup:', error);
+    // Error handled silently
   }
 };
 
@@ -236,7 +232,7 @@ export const checkIncompleteSignup = async (): Promise<boolean> => {
         }
       }
     } catch (error) {
-      console.error('Error checking user signup status in Firestore:', error);
+      // Error handled silently
     }
   }
   
@@ -295,7 +291,7 @@ export const registerSignupListener = (): () => void => {
     
     // Check for incomplete signup (async)
     checkIncompleteSignup().catch(error => {
-      console.error('Error checking incomplete signup:', error);
+      // Error handled silently
     });
   });
 };

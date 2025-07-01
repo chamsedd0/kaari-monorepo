@@ -649,9 +649,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   
   const bookingId = params.id || extractIdFromPath();
   
-  console.log('PhotoshootBookingDetail: params =', params);
-  console.log('PhotoshootBookingDetail: location =', location);
-  console.log('PhotoshootBookingDetail: extracted bookingId =', bookingId);
   
   const [booking, setBooking] = useState<PhotoshootBooking | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -826,7 +823,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       const snapshot = await getDocs(teamsCollection);
       
       if (snapshot.empty) {
-        console.log('No teams found in Firebase');
         setTeamDebugInfo('No teams found in the database. You may need to initialize sample data.');
         return [];
       }
@@ -841,7 +837,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         };
       });
       
-      console.log('Teams directly from Firebase:', teamsData);
       setTeamDebugInfo(`Found ${teamsData.length} teams directly in Firebase.`);
       
       // If we have teams in Firebase but not in our state, update the state
@@ -859,17 +854,12 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   
   // Function to create a property and link it to an advertiser
   const createPropertyAndLinkToAdvertiser = async (propertyData: PropertyFormData, advertiserId: string): Promise<string> => {
-    console.log('=== Starting createPropertyAndLinkToAdvertiser ===');
-    console.log('Advertiser ID:', advertiserId);
-    console.log('Property data:', JSON.stringify(propertyData, null, 2));
 
     try {
       // Create a new property document in the properties collection
       const propertiesCollectionRef = collection(db, 'properties');
-      console.log('Properties collection reference created');
 
       const propertyDocRef = doc(propertiesCollectionRef);
-      console.log('New property document reference created:', propertyDocRef.id);
       
       // Prepare the property data with timestamps
       const propertyWithTimestamps = {
@@ -951,16 +941,11 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       // Update the rules array with the processed rules
       propertyWithTimestamps.rules = processedRules;
       
-      console.log('Property data with timestamps:', JSON.stringify(propertyWithTimestamps, null, 2));
       
-      console.log('Attempting to set document in Firestore...');
       await setDoc(propertyDocRef, propertyWithTimestamps);
-      console.log('Document successfully set in Firestore');
       
       // Update the advertiser's properties array
-      console.log('Updating advertiser properties...');
       await updateAdvertiserProperties(advertiserId, propertyDocRef.id);
-      console.log('Advertiser properties updated successfully');
       
       return propertyDocRef.id;
     } catch (error) {
@@ -972,14 +957,10 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   
   // Function to update the advertiser's properties array
   const updateAdvertiserProperties = async (advertiserId: string, propertyId: string): Promise<void> => {
-    console.log('=== Starting updateAdvertiserProperties ===');
-    console.log('Advertiser ID:', advertiserId);
-    console.log('Property ID:', propertyId);
 
     try {
       // Get the advertiser document
       const advertiserDocRef = doc(db, 'users', advertiserId);
-      console.log('Getting advertiser document...');
       const advertiserDoc = await getDoc(advertiserDocRef);
       
       if (!advertiserDoc.exists()) {
@@ -987,16 +968,13 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         throw new Error(`Advertiser with ID ${advertiserId} not found`);
       }
       
-      console.log('Advertiser document found:', advertiserDoc.data());
       
       // Add the property ID to the advertiser's properties array
-      console.log('Updating advertiser document...');
       await updateDoc(advertiserDocRef, {
         properties: arrayUnion(propertyId),
         updatedAt: Timestamp.fromDate(new Date())
       });
       
-      console.log('Advertiser document updated successfully');
     } catch (error) {
       console.error('Error in updateAdvertiserProperties:', error);
       console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace available');
@@ -1006,7 +984,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   
   useEffect(() => {
     if (bookingId) {
-      console.log('ID for loading data:', bookingId);
       setLoadError(null);
       loadData(bookingId);
     } else {
@@ -1025,14 +1002,12 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     setLoadError(null);
     try {
       const bookingData = await PhotoshootBookingServerActions.getBookingById(id);
-      console.log('Loaded booking data:', bookingData);
       
       if (!bookingData) {
         throw new Error('Booking not found');
       }
       
       // Debug location information from booking
-      console.log('LOCATION DATA FROM BOOKING:', bookingData.location);
       
       setBooking(bookingData);
       
@@ -1082,7 +1057,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       
       // Load teams for assignment
       const teamsData = await TeamServerActions.getAllTeams();
-      console.log('Loaded teams data:', teamsData);
       setTeams(teamsData);
       
       // If no teams were found through server actions, try direct Firebase query
@@ -1217,7 +1191,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   
   const removeFeature = () => {
     // Since features is an object with fixed properties, we don't need this function
-    console.warn('removeFeature is not applicable to the current data structure');
   };
   
   // Function to add a new room
@@ -1326,7 +1299,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   
   const handleCompleteBooking = async () => {
     console.clear();
-    console.log('=== STARTING PROPERTY CREATION ===');
     
     if (!booking || !bookingId) {
       alert('No booking data available');
@@ -1356,10 +1328,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         ...(propertyData.videos || [])
       ].filter(Boolean); // Remove any null/undefined values
       
-      console.log(`Total images collected: ${allImages.length}`);
-      console.log('Images:', allImages);
-      console.log(`Total videos collected: ${allVideos.length}`);
-      console.log('Videos:', allVideos);
       
       if (allImages.length === 0) {
         alert('Please add at least one image to the property');
@@ -1369,7 +1337,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       
       // Upload any pending image files if needed
       if (imageFiles.length > 0) {
-        console.log(`Uploading ${imageFiles.length} image files...`);
         try {
           const tempPropertyId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
           const basePath = `public/properties/${tempPropertyId}/images`;
@@ -1380,7 +1347,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
             'property_'
           );
           
-          console.log(`Successfully uploaded ${uploadedUrls.length} files:`, uploadedUrls);
           
           // Add the newly uploaded images to our collection
           allImages.push(...uploadedUrls);
@@ -1396,7 +1362,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       
       // Upload any pending video files if needed
       if (videoFiles.length > 0) {
-        console.log(`Uploading ${videoFiles.length} video files...`);
         try {
           const tempPropertyId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
           const basePath = `public/properties/${tempPropertyId}/videos`;
@@ -1407,7 +1372,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
             'property_video_'
           );
           
-          console.log(`Successfully uploaded ${uploadedVideoUrls.length} video files:`, uploadedVideoUrls);
           
           // Add the newly uploaded videos to our collection
           allVideos.push(...uploadedVideoUrls);
@@ -1441,7 +1405,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         availableFromDate = new Date(); // Default to today
       }
       
-      console.log('Available from date:', availableFromDate);
       
       // Process features array to include service inclusions and property features
       let processedFeatures = [...(propertyData.features || [])];
@@ -1572,13 +1535,9 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         availableFrom: propertyToSave.availableFrom ? Timestamp.fromDate(propertyToSave.availableFrom) : null
       };
       
-      console.log('SAVING PROPERTY TO FIRESTORE WITH IMAGES:', propertyToSave.images);
-      console.log('Final property data with location:', firestoreProperty);
       
       // Save to Firestore
       await setDoc(newPropertyRef, firestoreProperty);
-      console.log(`Property created with ID: ${propertyId}`);
-      console.log(`Property has ${propertyToSave.images.length} images`);
       
       // Link property to user
       try {
@@ -1590,9 +1549,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
             properties: arrayUnion(propertyId),
             updatedAt: Timestamp.fromDate(now)
           });
-          console.log(`Added property to user ${ownerId}'s properties list`);
         } else {
-          console.warn(`User document ${ownerId} not found. Cannot update properties array.`);
         }
       } catch (error: any) {
         console.error('Error updating user properties:', error);
@@ -1601,7 +1558,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       
       // Complete the booking, passing the correct images
       await PhotoshootBookingServerActions.completeBooking(bookingId, propertyId, allImages);
-      console.log(`Booking ${bookingId} marked as completed with ${allImages.length} images`);
       
       // Show success message with image count
       alert(`Property created with ${allImages.length} images and ${allVideos.length} videos. Booking completed successfully!`);
@@ -1622,7 +1578,6 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
             `/dashboard/advertiser/properties/${propertyId}`,
             { propertyId, imageCount: allImages.length, videoCount: allVideos.length }
           );
-          console.log(`Additional frontend notification sent to advertiser ${ownerId} about property creation`);
         }
       } catch (notifError) {
         // Don't fail if notification fails

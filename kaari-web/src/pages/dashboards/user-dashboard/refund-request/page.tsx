@@ -297,14 +297,11 @@ const RefundRequestPage: React.FC = () => {
   const renderCount = React.useRef(0);
   
   // Log component renders for debugging
-  console.log(`RefundRequestPage render #${++renderCount.current}, redirectAttempted: ${redirectAttempted}, reservationId: ${reservationId}`);
   
   useEffect(() => {
-    console.log(`UseEffect for reservation data triggered, redirectAttempted: ${redirectAttempted}`);
     
     // Skip loading if we've already attempted a redirect
     if (redirectAttempted) {
-      console.log('Skipping reservation data loading due to previous redirect attempt');
       setLoading(false); // Ensure loading is set to false to avoid endless spinner
       return;
     }
@@ -346,7 +343,6 @@ const RefundRequestPage: React.FC = () => {
         
         // If the user hasn't moved in yet, they should be using the cancellation page, not the refund page
         if (reservationStatus !== 'movedIn') {
-          console.log(`User has reservation in '${reservationStatus}' status - redirecting to cancellation page`);
           
           // Mark that we've attempted redirection to prevent loops
           setRedirectAttempted(true);
@@ -387,7 +383,6 @@ const RefundRequestPage: React.FC = () => {
           }
         }
         
-        console.log('Loaded reservation data:', foundReservation);
         if (isActive) {
           setReservation(foundReservation);
         }
@@ -486,7 +481,6 @@ const RefundRequestPage: React.FC = () => {
       
       // If not in movedIn status, redirect to cancellation page (only if not already attempted)
       if (reservationStatus !== 'movedIn' && !redirectAttempted) {
-        console.log(`User trying to submit refund for '${reservationStatus}' status - redirecting to cancellation page`);
         
         // Mark that we've attempted redirection to prevent loops
         setRedirectAttempted(true);
@@ -580,7 +574,6 @@ const RefundRequestPage: React.FC = () => {
   // Calculate refund amount based on property price and service fee
   const calculateRefund = () => {
     if (!reservation?.property?.price) {
-      console.warn('Missing property price data for refund calculation', reservation);
       return { 
         originalAmount: '0$', 
         serviceFee: '0$', 
@@ -589,7 +582,6 @@ const RefundRequestPage: React.FC = () => {
       };
     }
     
-    console.log('Calculating refund with reservation data:', {
       reservationId: reservationId,
       propertyId: reservation.property?.id,
       status: reservation.reservation?.status,
@@ -616,7 +608,6 @@ const RefundRequestPage: React.FC = () => {
     const refundAmount = refundableRent; // User gets 50% of the rent back
     
     // Log the values for debugging
-    console.log('Refund calculation result:', {
       propertyPrice,
       serviceFee,
       refundableRent,

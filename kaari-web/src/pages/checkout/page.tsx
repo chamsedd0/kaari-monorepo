@@ -117,7 +117,6 @@ const CheckoutPage: React.FC = () => {
     
     const loadCheckoutData = async () => {
       try {
-        console.log(`Initiating checkout for propertyId=${propertyId}`);
         const data = await initiateCheckout(propertyId);
         setCheckoutData(data);
         

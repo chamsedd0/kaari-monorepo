@@ -333,7 +333,6 @@ const DashboardPage: React.FC = () => {
     
     const handleCancelPhotoshootRequest = (requestId: string) => {
         // This would be implemented with a real API call
-        console.log('Cancel photoshoot request:', requestId);
         // Show a confirmation dialog and then call the API
         navigate(`/dashboard/advertiser/photoshoot`);
     };
@@ -356,7 +355,6 @@ const DashboardPage: React.FC = () => {
 
         // Check if photoshoot is booked - any photoshoots (not just scheduled ones) should mark this as completed
         if (photoshoots.length > 0 && !completionStatus.bookPhotoshoot) {
-            console.log('Marking book_photoshoot as completed because photoshoots exist:', photoshoots);
             completeItem('book_photoshoot');
         }
         
@@ -420,7 +418,6 @@ const DashboardPage: React.FC = () => {
     // Render modules based on priority and active status
     const renderPrioritizedModules = () => {
         // Log the current module order for debugging
-        console.log('Rendering modules in order:', 
             dashboardModules
                 .filter(module => module.isActive)
                 .map(m => ({ id: m.id, priority: m.priority }))

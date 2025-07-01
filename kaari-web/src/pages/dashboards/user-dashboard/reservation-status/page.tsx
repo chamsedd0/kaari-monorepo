@@ -168,7 +168,6 @@ const ReservationStatusPage: React.FC = () => {
           return;
         }
         
-        console.log('Loaded reservation data:', foundReservation);
         setReservation(foundReservation);
       setLoading(false);
     } catch (err: any) {

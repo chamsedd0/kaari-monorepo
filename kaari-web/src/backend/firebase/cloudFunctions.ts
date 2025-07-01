@@ -76,7 +76,6 @@ export async function uploadFileWithSignedUrl(
     
     // Attempt a fallback approach if there might be a CORS issue
     if (error instanceof TypeError && error.message.includes('NetworkError')) {
-      console.warn('Attempting upload with no-cors mode as fallback...');
       try {
         // Try with no-cors mode as a fallback
         const fallbackResponse = await fetch(signedUrl, {
@@ -90,7 +89,6 @@ export async function uploadFileWithSignedUrl(
         
         // With no-cors, we can't actually read the response status
         // So we'll assume success but warn the user
-        console.warn('Upload attempted with no-cors mode. Result cannot be verified.');
         return true;
       } catch (fallbackError) {
         console.error('Fallback upload also failed:', fallbackError);

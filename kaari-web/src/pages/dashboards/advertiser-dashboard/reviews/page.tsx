@@ -62,7 +62,6 @@ const ReviewsPage: React.FC = () => {
             
             // Validate date before formatting
             if (!isValid(dateObj)) {
-                console.warn('Invalid date value:', date);
                 return 'Date not available';
             }
             

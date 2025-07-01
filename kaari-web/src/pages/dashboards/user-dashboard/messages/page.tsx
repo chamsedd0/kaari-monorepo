@@ -96,7 +96,6 @@ const getOrCreateConversation = async (
   user2Details: {name: string, profilePicUrl?: string}
 ): Promise<string> => {
   try {
-    console.log("Getting or creating conversation between", user1Id, "and", user2Id);
     
     // Sort participant IDs to ensure consistent queries
     const participants = [user1Id, user2Id].sort();
@@ -112,11 +111,9 @@ const getOrCreateConversation = async (
     // If conversation exists, return its ID
     if (!querySnapshot.empty) {
       const existingConversation = querySnapshot.docs[0];
-      console.log("Found existing conversation:", existingConversation.id);
       return existingConversation.id;
     }
     
-    console.log("No existing conversation found, creating new one");
     
     // Create new conversation with sorted participants
     const newConversationRef = await addDoc(collection(db, 'conversations'), {
@@ -139,7 +136,6 @@ const getOrCreateConversation = async (
       }
     });
     
-    console.log("Created new conversation with ID:", newConversationRef.id);
     return newConversationRef.id;
   } catch (error) {
     console.error("Error in getOrCreateConversation:", error);
@@ -531,17 +527,14 @@ const MessagesPage: React.FC = () => {
   const conversationsSubscribed = useRef<boolean>(false);
   const messagesSubscribed = useRef<boolean>(false);
   
-  console.log("MessagesPage rendering, user:", user?.id, "currentUser:", currentUser?.id, "loadingConversations:", loadingConversations);
   
   // Add debug effect to track loading state
   useEffect(() => {
-    console.log("Loading state changed - conversations:", loadingConversations, "messages:", loadingMessages);
   }, [loadingConversations, loadingMessages]);
 
   // Update currentUser when auth user changes
   useEffect(() => {
     if (user) {
-      console.log("Auth user detected:", user.id);
       try {
         const userData = {
           id: user.id || MOCK_CURRENT_USER_ID,
@@ -549,18 +542,15 @@ const MessagesPage: React.FC = () => {
           email: user.email || '',
           profilePicture: user.profilePicture || undefined
         };
-        console.log("Setting current user:", userData);
         setCurrentUser(userData);
       } catch (err) {
         console.error("Error setting current user:", err);
         setError("Error setting user data");
       }
     } else {
-      console.log("No auth user detected, checking auth state...");
       // Add a timeout to detect if authentication is stuck
       const authTimeout = setTimeout(() => {
         if (!user) {
-          console.warn("Authentication timeout - no user after 5 seconds");
           setError("Authentication timeout - please try logging in again");
         }
       }, 5000);
@@ -577,7 +567,6 @@ const MessagesPage: React.FC = () => {
       return;
     }
     
-    console.log("Setting up user presence for:", user.id);
     const fetchUser = async () => {
       if (!user) return;
       
@@ -589,7 +578,6 @@ const MessagesPage: React.FC = () => {
           isOnline: true,
           lastSeen: serverTimestamp()
         }).catch((updateError) => {
-          console.log("Update failed, attempting to create user doc:", updateError);
           // If update fails, the document might not exist yet
           return setDoc(userDocRef, {
             id: user.id || '',
@@ -604,15 +592,12 @@ const MessagesPage: React.FC = () => {
         // Get user data
         const userSnap = await getDoc(userDocRef);
         if (userSnap.exists()) {
-          console.log("User document exists, setting current user from Firestore");
           setCurrentUser({ id: userSnap.id, ...userSnap.data() } as User);
         } else {
-          console.warn("User document does not exist even after attempted creation");
         }
         
         // Set up presence cleanup
         const handleUserOffline = async () => {
-          console.log("Setting user offline");
           const userRef = doc(db, 'users', user.id || '');
           await updateDoc(userRef, {
             isOnline: false,
@@ -685,17 +670,14 @@ const MessagesPage: React.FC = () => {
     const contactUserPic = searchParams.get('contactUserPic');
     
     if (contactUserId && contactUserName) {
-      console.log("URL parameters detected for conversation:", contactUserId, contactUserName);
     }
     
     const initiateChatWithUser = async () => {
       if (!contactUserId || !contactUserName || !currentUser) {
-        console.log("Missing parameters for initiating chat");
         return;
       }
       
       try {
-        console.log("Creating/getting conversation with user:", contactUserId);
         // Create/get conversation with this user
         const conversationId = await getOrCreateConversation(
           currentUser.id,
@@ -711,26 +693,21 @@ const MessagesPage: React.FC = () => {
         );
         
         if (conversationId) {
-          console.log("Conversation created/found:", conversationId);
           // Clear search params to prevent re-opening on refresh
           setSearchParams({});
           
           // Find the conversation in our list and select it
           const targetConversation = conversations.find(conv => conv.id === conversationId);
           if (targetConversation) {
-            console.log("Found conversation in list, setting active");
             setActiveConversation(targetConversation);
           } else {
-            console.log("Conversation not in list yet, fetching directly");
             // If conversation not in our list yet, refetch conversations
             const conversationRef = doc(db, 'conversations', conversationId);
             const conversationSnap = await getDoc(conversationRef);
             if (conversationSnap.exists()) {
-              console.log("Direct fetch successful");
               const convData = conversationSnap.data() as Conversation;
               setActiveConversation({ ...convData, id: conversationId });
             } else {
-              console.warn("Conversation not found after creation");
             }
           }
         } else {
@@ -754,17 +731,14 @@ const MessagesPage: React.FC = () => {
   // Update the useEffect for fetching conversations to check the ref
   useEffect(() => {
     if (!currentUser) {
-      console.log("No current user, skipping conversation fetch");
       return;
     }
     
     // Only subscribe once
     if (conversationsSubscribed.current) {
-      console.log("Already subscribed to conversations, skipping");
       return;
     }
     
-    console.log("Fetching conversations for user:", currentUser.id);
     setLoadingConversations(true);
     setError(null);
     
@@ -779,7 +753,6 @@ const MessagesPage: React.FC = () => {
       conversationsSubscribed.current = true;
       
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        console.log("Received conversation snapshot with", querySnapshot.size, "conversations");
         const fetchedConversations: Conversation[] = [];
         querySnapshot.forEach((doc) => {
           fetchedConversations.push({ id: doc.id, ...doc.data() } as Conversation);
@@ -816,7 +789,6 @@ const MessagesPage: React.FC = () => {
       });
 
       return () => {
-        console.log("Unsubscribing from conversations listener");
         unsubscribe();
         // Reset subscription flag when unmounting
         conversationsSubscribed.current = false;
@@ -839,16 +811,13 @@ const MessagesPage: React.FC = () => {
 
     // Reset the subscription flag when active conversation changes
     if (messagesSubscribed.current) {
-      console.log("Already subscribed to messages, but active conversation changed. Resetting.");
       messagesSubscribed.current = false;
     }
 
     if (messagesSubscribed.current) {
-      console.log("Already subscribed to messages for this conversation, skipping");
       return;
     }
 
-    console.log("Fetching messages for conversation:", activeConversation.id);
     setLoadingMessages(true);
 
     try {
@@ -859,7 +828,6 @@ const MessagesPage: React.FC = () => {
       messagesSubscribed.current = true;
 
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        console.log("Received messages snapshot with", querySnapshot.size, "messages");
         const fetchedMessages: Message[] = [];
         querySnapshot.forEach((doc) => {
           fetchedMessages.push({ id: doc.id, ...doc.data() } as Message);
@@ -879,7 +847,6 @@ const MessagesPage: React.FC = () => {
       });
 
       return () => {
-        console.log("Unsubscribing from messages listener");
         unsubscribe();
         // Reset subscription flag when unmounting
         messagesSubscribed.current = false;
@@ -905,7 +872,6 @@ const MessagesPage: React.FC = () => {
     if (unreadMessages.length === 0) return;
     
     try {
-      console.log(`Marking ${unreadMessages.length} messages as read`);
       // Use a batch to update all messages at once
       const batch = writeBatch(db);
       unreadMessages.forEach(msg => {
@@ -918,7 +884,6 @@ const MessagesPage: React.FC = () => {
       batch.update(convRef, { [`unreadCounts.${currentUser.id}`]: 0 });
       
       await batch.commit();
-      console.log("Successfully marked messages as read");
     } catch (error) {
       console.error("Error marking messages as read:", error);
       setError("Failed to mark messages as read: " + (error as Error).message);

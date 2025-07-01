@@ -65,17 +65,14 @@ const fromFirestoreBooking = (id: string, data: DocumentData): PhotoshootBooking
     // Safely convert Timestamp fields to Date objects or use defaults
     // For required date fields
     if (!dataCopy.date || !(dataCopy.date instanceof Timestamp)) {
-      console.warn(`Document ${id}: Missing or invalid 'date' field, using current date as fallback`);
       dataCopy.date = Timestamp.fromDate(now);
     }
     
     if (!dataCopy.createdAt || !(dataCopy.createdAt instanceof Timestamp)) {
-      console.warn(`Document ${id}: Missing or invalid 'createdAt' field, using current date as fallback`);
       dataCopy.createdAt = Timestamp.fromDate(now);
     }
     
     if (!dataCopy.updatedAt || !(dataCopy.updatedAt instanceof Timestamp)) {
-      console.warn(`Document ${id}: Missing or invalid 'updatedAt' field, using current date as fallback`);
       dataCopy.updatedAt = Timestamp.fromDate(now);
     }
     
@@ -214,7 +211,6 @@ export class PhotoshootBookingServerActions {
           `/dashboard/advertiser/photoshoot`,
           { bookingId: docRef.id, date: bookingData.date, timeSlot: bookingData.timeSlot }
         );
-        console.log(`Notification sent to advertiser ${advertiserId} about new booking creation`);
       }
       
       // Also send a notification to admins
@@ -258,7 +254,6 @@ export class PhotoshootBookingServerActions {
       
       // No longer auto-initialize sample data
       if (querySnapshot.empty) {
-        console.log('No bookings found');
         return [];
       }
       
@@ -281,7 +276,6 @@ export class PhotoshootBookingServerActions {
       for (const booking of sampleBookings) {
         // Cast to PhotoshootBooking for type safety but toFirestoreBooking will handle missing completedAt
         const firestoreData = toFirestoreBooking(booking as PhotoshootBooking);
-        console.log('Adding sample booking to Firestore:', firestoreData);
         const docRef = await addDoc(bookingsCollection, firestoreData);
         bookingIds.push(docRef.id);
       }
@@ -362,7 +356,6 @@ export class PhotoshootBookingServerActions {
         }
       });
       
-      console.log(`Found ${bookings.length} bookings for advertiser ID ${advertiserId}`);
       
       return bookings;
     } catch (error) {
@@ -376,7 +369,6 @@ export class PhotoshootBookingServerActions {
    */
   static async getBookingById(id: string): Promise<PhotoshootBooking | null> {
     try {
-      console.log(`Getting booking with ID: ${id}`);
       
       if (!id) {
         console.error('Invalid booking ID provided');
@@ -384,21 +376,16 @@ export class PhotoshootBookingServerActions {
       }
       
       const docRef = doc(db, COLLECTION_NAME, id);
-      console.log(`Created document reference for ${COLLECTION_NAME}/${id}`);
       
       const docSnap = await getDoc(docRef);
-      console.log(`Document snapshot fetched, exists: ${docSnap.exists()}`);
       
       if (!docSnap.exists()) {
-        console.log(`No booking found with ID: ${id}`);
         return null;
       }
       
       const data = docSnap.data();
-      console.log(`Raw booking data:`, data);
       
       const booking = fromFirestoreBooking(docSnap.id, data);
-      console.log(`Converted booking:`, booking);
       
       return booking;
     } catch (error) {
@@ -453,7 +440,6 @@ export class PhotoshootBookingServerActions {
             timeSlot
           );
           
-          console.log(`Notification sent to advertiser ${advertiserId} about team assignment`);
         } catch (error) {
           console.error('Error sending notification about team assignment:', error);
           // Don't fail the whole operation if notification fails
@@ -507,7 +493,6 @@ export class PhotoshootBookingServerActions {
           `/dashboard/advertiser/properties`,
           { bookingId, propertyId, imageCount: images.length }
         );
-        console.log(`Notification sent to advertiser ${advertiserId} about photoshoot completion and property creation`);
       }
       
       // Also notify admin about completion
@@ -572,7 +557,6 @@ export class PhotoshootBookingServerActions {
           `/dashboard/advertiser/photoshoot`,
           { bookingId, reason }
         );
-        console.log(`Notification sent to advertiser ${advertiserId} about booking cancellation`);
       }
     } catch (error) {
       console.error('Error cancelling booking:', error);
@@ -613,11 +597,9 @@ export class PhotoshootBookingServerActions {
         const querySnapshot = await getDocs(q);
         
         if (querySnapshot.empty) {
-          console.log(`No sample bookings found for advertiser ${advertiserId}`);
           continue;
         }
         
-        console.log(`Deleting ${querySnapshot.size} sample bookings for advertiser ${advertiserId}`);
         
         // Delete all bookings for this advertiser
         for (const docSnapshot of querySnapshot.docs) {
@@ -675,7 +657,6 @@ export class PhotoshootBookingServerActions {
           `/dashboard/advertiser/photoshoot`,
           { bookingId, oldDate, oldTimeSlot, newDate, newTimeSlot }
         );
-        console.log(`Notification sent to advertiser ${advertiserId} about booking reschedule`);
       }
     } catch (error) {
       console.error('Error rescheduling booking:', error);

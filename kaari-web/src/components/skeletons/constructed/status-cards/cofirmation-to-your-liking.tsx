@@ -7,7 +7,6 @@ interface ConfirmationToYourLikingProps {
 }
 
 const ConfirmationToYourLiking: React.FC<ConfirmationToYourLikingProps> = ({
-  onHaveIssue = () => console.log("Have an issue clicked")
 }) => {
   return (
     <StatusCardStyleApproved>

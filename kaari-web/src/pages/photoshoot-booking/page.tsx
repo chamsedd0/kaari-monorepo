@@ -125,15 +125,12 @@ const PhotoshootBookingPage: React.FC = () => {
   // Force marker to be visible when component mounts and any time isLoaded changes
   useEffect(() => {
     if (isLoaded) {
-      console.log("Maps API loaded, ensuring marker is visible");
       // Always set a marker position when the map loads
       setMarkerPosition(prevPosition => {
         // Only update if not already set
         if (!prevPosition || (prevPosition.lat === 0 && prevPosition.lng === 0)) {
-          console.log("Setting initial marker position to:", DEFAULT_MAP_CENTER);
           return DEFAULT_MAP_CENTER;
         }
-        console.log("Keeping existing marker position:", prevPosition);
         return prevPosition;
       });
       
@@ -147,7 +144,6 @@ const PhotoshootBookingPage: React.FC = () => {
     if (isLoaded) {
       const timer = setTimeout(() => {
         if (!markerPosition || (markerPosition.lat === 0 && markerPosition.lng === 0)) {
-          console.log("Timeout: forcing marker position to be set");
           setMarkerPosition(DEFAULT_MAP_CENTER);
         }
       }, 1000);
@@ -160,25 +156,20 @@ const PhotoshootBookingPage: React.FC = () => {
   useEffect(() => {
     if (isLoaded && window.google && window.google.maps) {
       geocoderRef.current = new window.google.maps.Geocoder();
-      console.log("Maps loaded, geocoder initialized");
     }
   }, [isLoaded]);
 
   // Create a function to handle reverse geocoding and updating fields
   const updateAddressFromLocation = useCallback((position: { lat: number, lng: number }) => {
     if (!geocoderRef.current) {
-      console.log("Geocoder not available");
       return;
     }
-    
-    console.log("Reverse geocoding position:", position);
     
     // Set flag to indicate we're updating from map
     setUpdatingFromMap(true);
     
     geocoderRef.current.geocode({ location: position }, (results, status) => {
       if (status === 'OK' && results && results[0]) {
-        console.log("Geocoding result:", results[0]);
         const place = results[0];
           
           // Extract address components
@@ -218,7 +209,6 @@ const PhotoshootBookingPage: React.FC = () => {
               }
             });
           
-          console.log("Extracted address components:", {
             streetName, streetNumber, city, state, postalCode, country
             });
             
@@ -235,7 +225,6 @@ const PhotoshootBookingPage: React.FC = () => {
             }));
           }
       } else {
-        console.log("Geocoding failed with status:", status);
         }
       
       // Reset flag after form update is complete
@@ -247,11 +236,9 @@ const PhotoshootBookingPage: React.FC = () => {
 
   // Handle map load
   const onMapLoad = useCallback((map: google.maps.Map) => {
-    console.log("Map loaded, setting ref");
     mapRef.current = map;
     
     // Make sure we have a marker visible by default
-    console.log("Current marker position on map load:", markerPosition);
     
     // Add click listener to map to allow placing marker by clicking
     map.addListener('click', (e: google.maps.MapMouseEvent) => {
@@ -261,7 +248,6 @@ const PhotoshootBookingPage: React.FC = () => {
           lng: e.latLng.lng()
         };
         
-        console.log("Map clicked, setting new position:", clickPosition);
         
         // Update marker position and map center
         setMarkerPosition(clickPosition);
@@ -286,11 +272,9 @@ const PhotoshootBookingPage: React.FC = () => {
     if (searchBoxRef.current) {
       const places = searchBoxRef.current.getPlaces();
       
-      console.log("Places changed, received places:", places?.length);
       
       if (places && places.length > 0) {
         const place = places[0];
-        console.log("Selected place:", place.formatted_address);
         
         if (place.geometry && place.geometry.location) {
           // Get location
@@ -299,7 +283,6 @@ const PhotoshootBookingPage: React.FC = () => {
             lng: place.geometry.location.lng()
           };
           
-          console.log("New location from search:", location);
           
           // Update map
           setMapCenter(location);
@@ -348,7 +331,6 @@ const PhotoshootBookingPage: React.FC = () => {
               }
             });
             
-            console.log("Extracted address components:", {
               streetName, streetNumber, city, state, postalCode, country
             });
             
@@ -380,7 +362,6 @@ const PhotoshootBookingPage: React.FC = () => {
         lng: event.latLng.lng()
       };
       
-      console.log("Marker dragged to new position:", newPosition);
       
       setMarkerPosition(newPosition);
       setMapCenter(newPosition);
@@ -399,7 +380,6 @@ const PhotoshootBookingPage: React.FC = () => {
   useEffect(() => {
     // Skip if we're currently updating from map to avoid infinite loop
     if (updatingFromMap) {
-      console.log("Skipping address-to-map update because we're updating from map");
       return;
     }
     
@@ -411,7 +391,6 @@ const PhotoshootBookingPage: React.FC = () => {
       geocoderRef.current && 
       isLoaded
     ) {
-      console.log("Address fields changed, updating map");
       
       // Build address string
       const addressString = `${formData.streetNumber} ${formData.streetName}, ${formData.city}, ${formData.stateRegion ? `${formData.stateRegion}, ` : ''}${formData.country}`;
@@ -428,7 +407,6 @@ const PhotoshootBookingPage: React.FC = () => {
           if (!markerPosition || 
               Math.abs(location.lat - markerPosition.lat) > 0.0001 || 
               Math.abs(location.lng - markerPosition.lng) > 0.0001) {
-            console.log("Setting new map position from address fields:", location);
             setMapCenter(location);
             setMarkerPosition(location);
             setMapZoom(16);
@@ -530,7 +508,6 @@ const PhotoshootBookingPage: React.FC = () => {
     e.preventDefault();
     }
     
-    console.log('Submitting form data:', formData);
     
     // Validate form
     if (!selectedDate || !selectedTimeSlot) {
@@ -562,21 +539,17 @@ const PhotoshootBookingPage: React.FC = () => {
     // Submit the booking
     setIsSubmitting(true);
     try {
-      console.log('Calling bookPhotoshoot service...');
       const response = await photoshootService.bookPhotoshoot(submissionData);
-      console.log('Received booking response:', response);
       
       setResponseMessage(response.message);
       
       if (response.success) {
-        console.log('Booking successful, navigating to thank you page with ID:', response.bookingId);
         
         // Mark the "Book photoshoot" checklist item as completed
         completeItem('book_photoshoot');
         
         // Try direct location change instead of navigate
         const thankYouUrl = `/photoshoot-booking/thank-you?bookingId=${response.bookingId}`;
-        console.log('Navigating to URL:', thankYouUrl);
         
         // Use both methods to ensure navigation works
         window.location.href = thankYouUrl;
@@ -586,7 +559,6 @@ const PhotoshootBookingPage: React.FC = () => {
           state: { bookingId: response.bookingId }
         });
       } else {
-        console.log('Booking unsuccessful:', response.message);
         setShowErrorModal(true);
       }
     } catch (error) {
@@ -640,7 +612,6 @@ const PhotoshootBookingPage: React.FC = () => {
   };
   
   // Add a console log to debug marker position in the render method
-  console.log("Rendering component with marker position:", markerPosition);
 
   // Add a useEffect to update the phone number and name if the user data loads after component mount
   useEffect(() => {
@@ -660,14 +631,12 @@ const PhotoshootBookingPage: React.FC = () => {
           ...prev,
           ...updates
         }));
-        console.log("Prefilled user data:", updates);
       }
     }
   }, [currentUser, formData.phoneNumber, formData.name]);
 
   // Add these console logs to check marker position state
   useEffect(() => {
-    console.log("Marker position changed:", markerPosition);
   }, [markerPosition]);
 
   // Component for a fallback DOM marker

@@ -334,9 +334,7 @@ const CancellationRequests: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching cancellation requests...');
       const data = await getCancellationRequests();
-      console.log('Received cancellation requests:', data);
       
       // Filter out any malformed data
       const validRequests = data.filter(request => {
@@ -348,7 +346,6 @@ const CancellationRequests: React.FC = () => {
           request.status;
         
         if (!isValid) {
-          console.warn('Found invalid cancellation request:', request);
         }
         return isValid;
       });
@@ -384,13 +381,11 @@ const CancellationRequests: React.FC = () => {
     if (!date) return 'Not set';
     
     try {
-      console.log('Formatting date:', date, typeof date);
       
       // Handle Firestore Timestamp
       if (typeof date === 'object' && date !== null) {
         // Check if it's a Firestore Timestamp (has seconds property)
         if ('seconds' in date) {
-          console.log('Formatting Firestore Timestamp');
           return new Date(date.seconds * 1000).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -400,7 +395,6 @@ const CancellationRequests: React.FC = () => {
         
         // Handle Date object
         if (date instanceof Date) {
-          console.log('Formatting Date object');
           return date.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -410,7 +404,6 @@ const CancellationRequests: React.FC = () => {
         
         // Handle server timestamp (special Firebase value)
         if (date.toDate && typeof date.toDate === 'function') {
-          console.log('Formatting with toDate() method');
           const jsDate = date.toDate();
           return jsDate.toLocaleDateString('en-US', {
             year: 'numeric',
@@ -422,7 +415,6 @@ const CancellationRequests: React.FC = () => {
       
       // Handle string (ISO date string)
       if (typeof date === 'string') {
-        console.log('Formatting string date');
         return new Date(date).toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'short',
@@ -432,7 +424,6 @@ const CancellationRequests: React.FC = () => {
       
       // Handle number (timestamp in milliseconds)
       if (typeof date === 'number') {
-        console.log('Formatting number timestamp');
         return new Date(date).toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'short',

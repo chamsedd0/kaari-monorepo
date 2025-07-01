@@ -6,9 +6,8 @@ const TestImports: React.FC = () => {
   const testFunction = async () => {
     try {
       const userData = await getAdvertiserSignupData('test-user-id');
-      console.log('Advertiser data:', userData);
     } catch (error) {
-      console.error('Error testing import:', error);
+      // Error handled silently
     }
   };
 

@@ -35,7 +35,6 @@ const PaymentsPage = () => {
             ]}
             placeholder={t('advertiser_dashboard.payments.select_status', 'Select Status')}
             value={t('advertiser_dashboard.payments.all', 'All')}
-            onChange={(value) => console.log(value)}
           />
         </div>
         <div className="border-container">

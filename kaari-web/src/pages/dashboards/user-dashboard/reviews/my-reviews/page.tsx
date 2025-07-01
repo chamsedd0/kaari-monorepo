@@ -59,7 +59,6 @@ const MyReviewsPage: React.FC = () => {
             
             // Check if the date is valid
             if (isNaN(dateObj.getTime())) {
-                console.warn('Invalid date encountered:', date);
                 return 'Date not available';
             }
             

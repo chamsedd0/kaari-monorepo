@@ -78,10 +78,8 @@ export async function secureUploadFile(
         throw new Error('File upload failed');
       }
     } catch (error) {
-      console.warn('Secure upload failed, falling back to direct upload:', error);
       
       // Fall back to direct upload if we get a CORS error or other error with the cloud function
-      console.log('Falling back to direct upload for path:', path);
       await uploadFile(path, file, {
         contentType: file.type,
         customMetadata: {
@@ -220,7 +218,6 @@ export async function secureUploadMultipleFiles(
       // Get download URLs for all files
       return await Promise.all(paths.map(path => getFileUrl(path)));
     } catch (error) {
-      console.warn('Secure multiple upload failed, falling back to direct upload:', error);
       
       // Fallback to direct upload if cloud function fails (like CORS issues)
       return await uploadMultipleFiles(files, basePath, prefix);

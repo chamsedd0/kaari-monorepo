@@ -43,7 +43,6 @@ const toFirestoreTeam = (team: Team): Omit<FirestoreTeam, 'id'> => {
 const fromFirestoreTeam = (id: string, data: DocumentData): Team => {
   // Ensure all required date fields exist before converting
   if (!data.createdAt || !data.updatedAt) {
-    console.warn(`Document ${id} is missing required date fields:`, data);
     
     // Create default dates for missing fields to prevent errors
     const now = new Date();
@@ -130,7 +129,6 @@ export class TeamServerActions {
       
       // No longer auto-initialize sample data
       if (querySnapshot.empty) {
-        console.log('No teams found');
         return [];
       }
       
@@ -342,11 +340,9 @@ export class TeamServerActions {
         const querySnapshot = await getDocs(q);
         
         if (querySnapshot.empty) {
-          console.log(`No sample team found with name ${teamName}`);
           continue;
         }
         
-        console.log(`Deleting ${querySnapshot.size} sample teams with name ${teamName}`);
         
         // Delete all teams with this name
         for (const docSnapshot of querySnapshot.docs) {

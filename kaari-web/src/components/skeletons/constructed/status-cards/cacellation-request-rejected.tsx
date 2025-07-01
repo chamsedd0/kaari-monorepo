@@ -8,7 +8,6 @@ interface CancellationRequestRejectedProps {
 }
 
 const CancellationRequestRejected: React.FC<CancellationRequestRejectedProps> = ({
-  onResubmit = () => console.log("Resubmit request clicked")
 }) => {
   return (
     <StatusCardStyleRejected>

@@ -137,7 +137,6 @@ export const generateTestNotifications = async (
       );
     }
 
-    console.log(`Successfully generated test notifications for ${userType} with ID ${userId}`);
   } catch (error) {
     console.error('Error generating test notifications:', error);
   }
@@ -249,7 +248,6 @@ export const generateSingleNotification = async (
       }
     }
 
-    console.log(`Successfully generated ${notificationType} notification for ${userType} with ID ${userId}`);
   } catch (error) {
     console.error(`Error generating ${notificationType} notification:`, error);
   }

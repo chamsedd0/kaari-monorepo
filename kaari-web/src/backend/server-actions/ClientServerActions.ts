@@ -125,7 +125,6 @@ export async function cancelReservation(reservationId: string): Promise<void> {
             reservationForNotification as any
           );
           
-          console.log(`Cancellation notification sent to advertiser: ${property.ownerId}`);
         }
       }
     } catch (notifError) {
@@ -208,7 +207,6 @@ export async function completeReservation(reservationId: string): Promise<void> 
             reservationForNotification as any
           );
           
-          console.log(`Move-in notification sent to advertiser: ${property.ownerId}`);
         }
       }
     } catch (notifError) {
@@ -366,7 +364,6 @@ export async function requestRefund(
             data?.refundAmount
           );
           
-          console.log(`Refund request notification sent to advertiser: ${property.ownerId}`);
         }
       } catch (notifError) {
         console.error('Error sending refund request notification:', notifError);
@@ -466,7 +463,6 @@ export async function processStandardCancellation(data: {
             reservationForNotification as any
           );
           
-          console.log(`Standard cancellation notification sent to advertiser: ${property.ownerId}`);
         }
       } catch (notifError) {
         console.error('Error sending standard cancellation notification:', notifError);
@@ -581,7 +577,6 @@ export async function requestExceptionCancellation(data: {
             reservationForNotification as any
           );
           
-          console.log(`Exception cancellation notification sent to advertiser: ${property.ownerId}`);
         }
       } catch (notifError) {
         console.error('Error sending exception cancellation notification:', notifError);
@@ -669,7 +664,6 @@ export async function processRefund(
             adminNotes || ''
           );
           
-          console.log(`Refund processing notification sent to client: ${reservation.userId}`);
         }
       }
     } catch (notifError) {
@@ -764,7 +758,6 @@ export async function processCancellation(
             adminNotes || (approved ? 'Your cancellation was approved' : 'Your cancellation was not approved')
           );
           
-          console.log(`Cancellation handling notification sent to client: ${reservation.userId}`);
         }
       }
     } catch (notifError) {
@@ -860,7 +853,6 @@ export async function processPayment(reservationId: string): Promise<void> {
             reservationForNotification as any
           );
           
-          console.log(`Payment notifications sent to advertiser and client`);
         }
       }
     } catch (notifError) {
@@ -945,7 +937,6 @@ export async function toggleSavedProperty(propertyId: string): Promise<boolean> 
             propertyId
           );
           
-          console.log(`Property liked notification sent to advertiser: ${property.ownerId}`);
         }
       } catch (notifError) {
         console.error('Error sending property liked notification:', notifError);

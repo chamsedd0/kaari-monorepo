@@ -75,7 +75,6 @@ const CheckoutProcessContainer: React.FC<CheckoutProcessContainerProps> = ({
   
   const handleDone = () => {
     // Redirect to dashboard or home page
-    console.log('Checkout process completed');
     // Here you would typically redirect to a different page
     // or reset the checkout process
   };

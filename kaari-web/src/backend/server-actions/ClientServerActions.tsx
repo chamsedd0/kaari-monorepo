@@ -313,7 +313,6 @@ export async function processPayment(reservationId: string): Promise<boolean> {
             }
           );
           
-          console.log(`Payment notifications sent to advertiser and client`);
         }
       }
     } catch (notifError) {
@@ -498,7 +497,6 @@ export async function toggleFavoriteProperty(propertyId: string): Promise<{ adde
           propertyId
         );
         
-        console.log(`Favorite notification sent to advertiser: ${property.ownerId}`);
       }
     } catch (notifError) {
       console.error('Error sending favorite notification:', notifError);
@@ -608,7 +606,6 @@ export async function completeReservation(reservationId: string): Promise<boolea
             }
           );
           
-          console.log(`Direct move-in notification sent to advertiser: ${property.ownerId}`);
         } catch (notifError) {
           console.error('Error sending move-in notification:', notifError);
         }

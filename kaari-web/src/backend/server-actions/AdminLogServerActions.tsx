@@ -139,7 +139,6 @@ export async function logPropertyRefresh(
       }
     });
     
-    console.log(`Logged property refresh for property ${propertyId} by user ${advertiserId}`);
   } catch (error) {
     console.error('Error logging property refresh:', error);
     // Don't throw error here as logging shouldn't break the main functionality

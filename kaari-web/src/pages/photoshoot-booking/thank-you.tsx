@@ -22,7 +22,6 @@ const ThankYouPage: React.FC = () => {
   
   const handleDownloadSummary = () => {
     // In a real implementation, this would generate and download a PDF
-    console.log('Downloading booking summary for ID:', bookingId);
     alert('Summary download functionality would be implemented here');
   };
   

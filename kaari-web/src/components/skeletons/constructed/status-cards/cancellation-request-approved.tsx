@@ -8,7 +8,6 @@ interface CancellationRequestApprovedProps {
 }
 
 const CancellationRequestApproved: React.FC<CancellationRequestApprovedProps> = ({
-  onGoBack = () => console.log("Go Back clicked")
 }) => {
   return (
     <StatusCardStyleApproved>

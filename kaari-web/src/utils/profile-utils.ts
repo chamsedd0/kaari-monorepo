@@ -29,13 +29,7 @@ export const isProfileComplete = (user: User | null): boolean => {
     user.identificationDocuments && 
     (user.identificationDocuments.frontId || user.identificationDocuments.backId);
   
-  // List the missing fields for debugging
-  if (missingFields.length > 0 || !hasIdentificationDocuments) {
-    console.log('Profile incomplete. Missing fields:', missingFields);
-    if (!hasIdentificationDocuments) {
-      console.log('Missing identification documents');
-    }
-  }
+  // Check if profile is complete
   
   return missingFields.length === 0 && hasIdentificationDocuments;
 };

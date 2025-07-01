@@ -256,7 +256,6 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
 
   // Apply local state to parent component when the apply button is clicked
   const handleApply = () => {
-    console.log("Applying filters in FilteringSection");
     // Update parent component's state with local values
     onLocationChange(localLocation);
     onDateChange(localDate);
@@ -378,7 +377,6 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
       }
     });
     
-    console.log("Final filters to apply:", finalFilters);
     
     // Set the final filters list directly in the parent component
     if (setActiveFilters) {
@@ -386,7 +384,6 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
     }
     
     // Call parent's apply function with the final filters directly
-    console.log("Calling parent's onApplyFilters with filters");
     onApplyFilters(finalFilters);
   };
 

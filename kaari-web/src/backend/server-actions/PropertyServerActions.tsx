@@ -360,11 +360,9 @@ export async function removeSampleData(): Promise<{ count: number }> {
       const properties = await getDocumentsByField<Property>(PROPERTIES_COLLECTION, 'ownerId', ownerId);
       
       if (properties.length === 0) {
-        console.log(`No sample properties found for owner ${ownerId}`);
         continue;
       }
       
-      console.log(`Deleting ${properties.length} sample properties for owner ${ownerId}`);
       
       // Delete all properties for this owner
       for (const property of properties) {
@@ -392,7 +390,6 @@ export const refreshPropertyAvailability = async (propertyId: string): Promise<v
       updatedAt: serverTimestamp()
     });
     
-    console.log(`Property ${propertyId} availability refreshed successfully`);
   } catch (error) {
     console.error(`Error refreshing property ${propertyId} availability:`, error);
     throw error;
@@ -405,7 +402,6 @@ export const refreshPropertyAvailability = async (propertyId: string): Promise<v
  */
 export async function checkAndSendPropertyRefreshNotifications(): Promise<void> {
   try {
-    console.log('Starting property refresh notification check...');
     
     // Get all properties
     const properties = await getDocuments<Property>(PROPERTIES_COLLECTION, {
@@ -485,11 +481,9 @@ export async function checkAndSendPropertyRefreshNotifications(): Promise<void> 
       
       // Log what was sent
       if (propertiesNeedingWarning.length > 0 || propertiesNeedingReminder.length > 0) {
-        console.log(`Sent notifications to advertiser ${advertiserId}: ${propertiesNeedingWarning.length} warnings, ${propertiesNeedingReminder.length} reminders`);
       }
     }
     
-    console.log('Property refresh notification check completed');
   } catch (error) {
     console.error('Error checking and sending property refresh notifications:', error);
     throw error;
@@ -506,7 +500,6 @@ export async function testPropertyRefreshNotifications(): Promise<{
   details: any 
 }> {
   try {
-    console.log('Testing property refresh notifications...');
     
     // Get all properties
     const properties = await getDocuments<Property>(PROPERTIES_COLLECTION, {

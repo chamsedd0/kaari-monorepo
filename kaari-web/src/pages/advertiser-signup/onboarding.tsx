@@ -74,7 +74,6 @@ const AdvertiserOnboardingPage = () => {
     
     // If the key is returned as is, it means the translation is missing
     if (translation === key) {
-      console.warn(`Missing translation for key: ${key}`);
       
       // Parse the key to get the nested properties
       const keyParts = key.split('.');
@@ -127,7 +126,6 @@ const AdvertiserOnboardingPage = () => {
     
     // Force reload translations to ensure they're available
     i18n.reloadResources().then(() => {
-      console.log('Translations reloaded');
     });
     
     // Simulate loading animation

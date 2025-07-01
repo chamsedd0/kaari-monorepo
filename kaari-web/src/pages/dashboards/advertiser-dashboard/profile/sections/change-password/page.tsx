@@ -12,7 +12,6 @@ const ChangePasswordPage: React.FC = () => {
 
     const handleSave = () => {
         // Implement password change logic here
-        console.log('Changing password...');
     };
 
     const handleInputChange = (setter: (value: string) => void) => (e: ChangeEvent<HTMLInputElement>) => {

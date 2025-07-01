@@ -7,7 +7,6 @@ import enTranslation from './locales/en.json';
 import frTranslation from './locales/fr.json';
 
 // Log the translation files
-console.log('Translation files loaded:', {
   en: !!enTranslation,
   fr: !!frTranslation
 });
@@ -30,7 +29,6 @@ const defaultLang = getDefaultLanguage();
 localStorage.setItem('i18nextLng', defaultLang);
 
 // Log the advertiser onboarding translations to verify they're loaded
-console.log('Advertiser onboarding translations:', {
   en: enTranslation.advertiser_onboarding ? 'Loaded' : 'Missing',
   fr: frTranslation.advertiser_onboarding ? 'Loaded' : 'Missing'
 });
@@ -74,15 +72,11 @@ i18n
 
 // Log when language changes
 i18n.on('languageChanged', (lng) => {
-  console.log(`Language changed to: ${lng}`);
   localStorage.setItem('i18nextLng', lng);
 });
 
 // Force reload translations
 i18n.reloadResources().then(() => {
-  console.log('Initial translations loaded');
-  console.log('Current language:', i18n.language);
-  console.log('Translation for welcome:', i18n.t('advertiser_onboarding.welcome'));
 });
 
 export default i18n; 

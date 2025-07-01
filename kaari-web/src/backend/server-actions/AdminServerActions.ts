@@ -74,15 +74,12 @@ export interface CancellationRequest {
  */
 export const getRefundRequests = async (): Promise<RefundRequest[]> => {
   try {
-    console.log('Fetching refund requests');
     const refundRequestsRef = collection(db, 'refundRequests');
     const q = query(refundRequestsRef);
     const querySnapshot = await getDocs(q);
     
-    console.log(`Found ${querySnapshot.docs.length} refund requests`);
     
     if (querySnapshot.docs.length === 0) {
-      console.log('No refund requests found. Collection may be empty.');
       return []; // Return empty array instead of continuing
     }
     
@@ -90,7 +87,6 @@ export const getRefundRequests = async (): Promise<RefundRequest[]> => {
     
     for (const docSnapshot of querySnapshot.docs) {
       const data = docSnapshot.data() as Record<string, any>;
-      console.log('Processing refund request:', docSnapshot.id, data);
       
       try {
         // Get user details - handle both document references and string IDs
@@ -171,7 +167,6 @@ export const getRefundRequests = async (): Promise<RefundRequest[]> => {
       }
     }
     
-    console.log('Processed refund requests:', refundRequests);
     return refundRequests;
   } catch (error) {
     console.error('Error getting refund requests:', error);
@@ -184,15 +179,12 @@ export const getRefundRequests = async (): Promise<RefundRequest[]> => {
  */
 export const getCancellationRequests = async (): Promise<CancellationRequest[]> => {
   try {
-    console.log('Fetching cancellation requests');
     const cancellationRequestsRef = collection(db, 'cancellationRequests');
     const q = query(cancellationRequestsRef, orderBy('createdAt', 'desc'));
     const querySnapshot = await getDocs(q);
     
-    console.log(`Found ${querySnapshot.docs.length} cancellation requests`);
     
     if (querySnapshot.docs.length === 0) {
-      console.log('No cancellation requests found. Collection may be empty.');
       return [];
     }
     
@@ -266,7 +258,6 @@ export const getCancellationRequests = async (): Promise<CancellationRequest[]> 
       }
     }
     
-    console.log('Processed cancellation requests:', cancellationRequests);
     return cancellationRequests;
   } catch (error) {
     console.error('Error getting cancellation requests:', error);
@@ -345,9 +336,7 @@ export const approveRefundRequest = async (refundRequestId: string): Promise<voi
             processedBy: auth.currentUser?.uid
           });
           
-          console.log(`Updated reservation in 'reservations' collection and created refund record with ID: ${newRefundRef.id} for amount: ${refundAmount}`);
         } else {
-          console.log(`Reservation ${refundData.reservationId} not found in either collection. Only the refund request status has been updated.`);
         }
       } else {
         // Found in 'requests' collection
@@ -381,7 +370,6 @@ export const approveRefundRequest = async (refundRequestId: string): Promise<voi
           processedBy: auth.currentUser?.uid
         });
         
-        console.log(`Updated reservation in 'requests' collection and created refund record with ID: ${newRefundRef.id} for amount: ${refundAmount}`);
       }
       
       // Send notification to the user about the approved refund
@@ -407,7 +395,6 @@ export const approveRefundRequest = async (refundRequestId: string): Promise<voi
             refundData.reason || refundData.reasonsText || 'Your refund request has been approved.'
           );
           
-          console.log(`Sent refund approval notification to user ${refundData.userId}`);
         } catch (notifError) {
           console.error('Error sending refund approved notification:', notifError);
           // Don't throw error, just log it (non-critical)
@@ -426,7 +413,6 @@ export const approveRefundRequest = async (refundRequestId: string): Promise<voi
           updatedAt: serverTimestamp()
         });
         
-        console.log(`Updated related cancellation request ${refundData.cancellationRequestId} with refund status`);
       }
     }
     
@@ -486,9 +472,7 @@ export const rejectRefundRequest = async (refundRequestId: string): Promise<void
             updatedAt: serverTimestamp(),
           });
           
-          console.log(`Updated reservation ${refundData.reservationId} in 'reservations' collection status to refundFailed`);
         } else {
-          console.log(`Reservation ${refundData.reservationId} not found in either collection. Only the refund request status has been updated.`);
         }
       } else {
         // Found in 'requests' collection
@@ -498,7 +482,6 @@ export const rejectRefundRequest = async (refundRequestId: string): Promise<void
           updatedAt: serverTimestamp(),
         });
         
-        console.log(`Updated reservation ${refundData.reservationId} in 'requests' collection status to refundFailed`);
       }
       
       // Send notification to the user about the rejected refund
@@ -524,7 +507,6 @@ export const rejectRefundRequest = async (refundRequestId: string): Promise<void
             refundData.reason || refundData.reasonsText || 'Your refund request has been rejected.'
           );
           
-          console.log(`Sent refund rejection notification to user ${refundData.userId}`);
         } catch (notifError) {
           console.error('Error sending refund rejected notification:', notifError);
           // Don't throw error, just log it (non-critical)
@@ -543,7 +525,6 @@ export const rejectRefundRequest = async (refundRequestId: string): Promise<void
           updatedAt: serverTimestamp()
         });
         
-        console.log(`Updated related cancellation request ${refundData.cancellationRequestId} with refund status (failed)`);
       }
     }
     
@@ -653,9 +634,7 @@ export const approveCancellationRequest = async (cancellationRequestId: string):
             createdBy: auth.currentUser?.uid
           });
           
-          console.log(`Updated reservation in 'reservations' collection and created refund request ${newRefundRequestRef.id} for amount: ${refundAmount}`);
         } else {
-          console.log(`Reservation ${cancellationData.reservationId} not found in either collection. Only the cancellation request status has been updated.`);
         }
       } else {
         // Found in 'requests' collection
@@ -702,7 +681,6 @@ export const approveCancellationRequest = async (cancellationRequestId: string):
           createdBy: auth.currentUser?.uid
         });
         
-        console.log(`Updated reservation in 'requests' collection and created refund request ${newRefundRequestRef.id} for amount: ${refundAmount}`);
       }
       
       // Send notification to the user about the approved cancellation
@@ -723,7 +701,6 @@ export const approveCancellationRequest = async (cancellationRequestId: string):
             'Your cancellation request has been approved and a refund is being processed.'
           );
           
-          console.log(`Sent cancellation approval notification to user ${cancellationData.userId}`);
         } catch (notifError) {
           console.error('Error sending cancellation approved notification:', notifError);
           // Don't throw error, just log it (non-critical)
@@ -800,9 +777,7 @@ export const rejectCancellationRequest = async (cancellationRequestId: string): 
             status: 'cancelled',
             updatedAt: serverTimestamp(),
           });
-          console.log(`Updated reservation ${cancellationData.reservationId} in 'reservations' collection status to cancelled`);
         } else {
-          console.log(`Reservation ${cancellationData.reservationId} not found in either collection. Only the cancellation request status has been updated.`);
         }
       } else {
         // Found in 'requests' collection
@@ -811,7 +786,6 @@ export const rejectCancellationRequest = async (cancellationRequestId: string): 
           status: 'cancelled',
           updatedAt: serverTimestamp(),
         });
-        console.log(`Updated reservation ${cancellationData.reservationId} in 'requests' collection status to cancelled`);
       }
       
       // Send notification to the user about the rejected cancellation
@@ -832,7 +806,6 @@ export const rejectCancellationRequest = async (cancellationRequestId: string): 
             'Your cancellation request has been rejected. Please contact support for more information.'
           );
           
-          console.log(`Sent cancellation rejection notification to user ${cancellationData.userId}`);
         } catch (notifError) {
           console.error('Error sending cancellation rejected notification:', notifError);
           // Don't throw error, just log it (non-critical)
@@ -905,7 +878,6 @@ export const createSampleRefundRequest = async (): Promise<string> => {
     };
     
     await setDoc(reservationRef, reservationData);
-    console.log('Created sample reservation with ID:', reservationRef.id);
     
     // Create a new refund request
     const refundRequestRef = collection(db, 'refundRequests');
@@ -929,7 +901,6 @@ export const createSampleRefundRequest = async (): Promise<string> => {
     
     await setDoc(newRequestRef, newRequest);
     
-    console.log('Created sample refund request with ID:', newRequestRef.id);
     
     return newRequestRef.id;
   } catch (error) {
@@ -989,7 +960,6 @@ export const createSampleCancellationRequest = async (): Promise<string> => {
     };
     
     await setDoc(reservationRef, reservationData);
-    console.log('Created sample reservation with ID:', reservationRef.id);
     
     // Calculate refund amount based on cancellation policy
     const cancellationFee = 50;
@@ -1021,7 +991,6 @@ export const createSampleCancellationRequest = async (): Promise<string> => {
     
     await setDoc(newRequestRef, newRequest);
     
-    console.log('Created sample cancellation request with ID:', newRequestRef.id);
     
     return newRequestRef.id;
   } catch (error) {

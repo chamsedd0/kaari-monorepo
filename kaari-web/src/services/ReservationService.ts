@@ -83,16 +83,8 @@ class ReservationService {
         updatedAt: now,
       };
 
-      console.log(`Creating reservation with data:`, JSON.stringify({
-        advertiserId: newReservation.advertiserId,
-        clientId: newReservation.clientId,
-        propertyId: newReservation.propertyId,
-        status: newReservation.status
-      }));
-
       // Add to database
       const docRef = await addDoc(collection(db, this.collection), newReservation);
-      console.log(`Reservation created with ID: ${docRef.id}`);
       
       // Send notification to advertiser
       try {
@@ -104,7 +96,6 @@ class ReservationService {
             status: 'pending'
           } as Reservation
         );
-        console.log(`Reservation notification sent to advertiser: ${reservationData.advertiserId}`);
       } catch (notifError) {
         console.error('Error sending reservation notification:', notifError);
         // Don't throw this error as it's non-critical
@@ -578,7 +569,6 @@ class ReservationService {
 
       if (expiredCount > 0) {
         await batch.commit();
-        console.log(`Updated ${expiredCount} expired reservations`);
       }
     } catch (error) {
       console.error('Error handling expired reservations:', error);

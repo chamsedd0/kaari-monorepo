@@ -25,24 +25,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   
   // Add detailed console logs for debugging
   useEffect(() => {
-    console.log('=== Protected Route Check ===');
-    console.log('Path:', location.pathname);
-    console.log('User authenticated:', isAuthenticated ? 'Yes' : 'No');
-    console.log('User email:', user?.email || 'No email');
-    console.log('User ID:', user?.id || 'No ID');
-    console.log('User object:', user);
     
     // Check if user is in the admin list (by email or ID)
     const hasEmailAccess = user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
     const hasIdAccess = user?.id && ADMIN_IDS.includes(user.id);
-    console.log('Has access by email:', hasEmailAccess ? 'Yes' : 'No');
-    console.log('Has access by ID:', hasIdAccess ? 'Yes' : 'No');
-    console.log('==========================');
   }, [location.pathname, user, isAuthenticated]);
   
   // If no user, redirect to coming soon page
   if (!user) {
-    console.log('ACCESS DENIED: No user');
     return <Navigate to="/static/coming-soon" replace state={{ from: location }} />;
   }
   
@@ -52,12 +42,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   
   // If not in admin list, redirect to coming soon page
   if (!hasEmailAccess && !hasIdAccess) {
-    console.log(`ACCESS DENIED for ${user.email || user.id}: Not in admin list`);
     return <Navigate to="/static/coming-soon" replace state={{ from: location }} />;
   }
   
   // If user has access, render the children
-  console.log(`ACCESS GRANTED for ${user.email || user.id}`);
   return <>{children}</>;
 };
 

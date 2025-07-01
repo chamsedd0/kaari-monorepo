@@ -190,7 +190,6 @@ export default function PropertyListPage() {
     // Show loading state
     setIsLoading(true);
     
-    console.log("Starting filtering with:", {
       activeFilters,
       locationInput,
       dateInput,
@@ -204,7 +203,6 @@ export default function PropertyListPage() {
       
       // Apply location filter if present
       if (locationInput) {
-        console.log("Filtering by location:", locationInput);
         filtered = filtered.filter(property => {
           const propertyLocation = `${property.address.city}, ${property.address.state}`.toLowerCase();
           return propertyLocation.includes(locationInput.toLowerCase());
@@ -213,7 +211,6 @@ export default function PropertyListPage() {
       
       // Apply active filters
       if (activeFilters.length > 0) {
-        console.log("Applying active filters:", activeFilters);
         
         filtered = filtered.filter(property => {
           // For each property, check all active filters
@@ -271,7 +268,6 @@ export default function PropertyListPage() {
       }
       
       // Apply sorting
-      console.log("Applying sort option:", sortOption);
       if (sortOption) {
         if (sortOption === t('property_list.recommended')) {
           filtered.sort((a, b) => {
@@ -292,7 +288,6 @@ export default function PropertyListPage() {
         }
       }
       
-      console.log("Filtered properties count:", filtered.length);
       
       // Update filtered properties
       setFilteredProperties(filtered);
@@ -422,7 +417,6 @@ export default function PropertyListPage() {
 
   // Replacement for filter toggle function
   const toggleFilter = (filter: string) => {
-    console.log("Toggling filter:", filter);
     setIsLoading(true);
     
     // Update active filters state
@@ -440,7 +434,6 @@ export default function PropertyListPage() {
 
   // Clear all filters
   const clearAllFilters = () => {
-    console.log("Clearing all filters");
     setIsLoading(true);
     setActiveFilters([]);
     setLocationInput('');
@@ -453,7 +446,6 @@ export default function PropertyListPage() {
 
   // Function to apply current filters
   const applyCurrentFilters = () => {
-    console.log("Applying current filters:", activeFilters);
   // Update sort options with translations
   const updatedSortOptions: SortOptionType[] = [
     t('property_list.recommended'),
@@ -590,7 +582,6 @@ export default function PropertyListPage() {
     navigate(newUrl, { replace: true });
     
     // Apply filtering immediately
-    console.log("Searching and filtering immediately");
     applyCurrentFilters();
   };
 
@@ -663,7 +654,6 @@ export default function PropertyListPage() {
 
   // Toggle favorite status
   const toggleFavorite = useCallback((id: string | number) => {
-    console.log("PropertyListPage toggleFavorite called with ID:", id);
     
     if (!isAuthenticated) {
       // Show toast notification if user is not logged in
@@ -685,7 +675,6 @@ export default function PropertyListPage() {
     setProperties(prevProperties => {
       return prevProperties.map(property => {
         if (property.id === id) {
-          console.log("Found matching property to toggle favorite:", property.id);
           return { ...property, isFavorite: !property.isFavorite };
         }
         return property;
@@ -695,7 +684,6 @@ export default function PropertyListPage() {
     setFilteredProperties(prevFilteredProperties => {
       return prevFilteredProperties.map(property => {
         if (property.id === id) {
-          console.log("Found matching filtered property to toggle favorite:", property.id);
           return { ...property, isFavorite: !property.isFavorite };
         }
         return property;
@@ -707,7 +695,6 @@ export default function PropertyListPage() {
     if (isAuthenticated) {
       // Example API call (replace with your actual implementation)
       // saveFavoriteStatus(id, isFavorite);
-      console.log("Saving favorite status to backend for property ID:", id);
     }
   }, [isAuthenticated, navigate, location.pathname]);
 
@@ -721,7 +708,6 @@ export default function PropertyListPage() {
   // Function to apply current filters
   const applyCurrentFilters = (filters?: string[]) => {
     const filtersToApply = filters || activeFilters;
-    console.log('Applying filters:', filtersToApply);
     
     // First set loading state to give visual feedback
     setIsLoading(true);

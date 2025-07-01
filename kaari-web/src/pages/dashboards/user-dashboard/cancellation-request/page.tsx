@@ -507,7 +507,6 @@ const CancellationRequestPage: React.FC = () => {
           return;
         }
         
-        console.log('Loaded reservation data:', foundReservation);
         setReservation(foundReservation);
       } catch (err: any) {
         console.error('Error loading reservation details:', err);

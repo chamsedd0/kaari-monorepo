@@ -321,7 +321,6 @@ export async function createCheckoutReservation(data: {
             reservationForNotification
           );
           
-          console.log(`Reservation request notifications sent to advertiser: ${property.ownerId}`);
         } catch (helperError) {
           console.error('Error using notification helper:', helperError);
           // The direct notification above should still work even if this fails
@@ -423,7 +422,6 @@ export async function processPayment(reservationId: string): Promise<boolean> {
             }
           );
           
-          console.log(`Direct payment notifications sent to advertiser and client`);
         } catch (notifError) {
           console.error('Error sending payment notification:', notifError);
         }

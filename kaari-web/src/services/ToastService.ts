@@ -49,7 +49,6 @@ export const useToastService = () => {
     
     // Check if we should suppress this toast
     if (shouldSuppressToast(cacheKey)) {
-      console.log(`Toast suppressed (duplicate): ${title}`);
       return;
     }
     
@@ -68,7 +67,6 @@ export const useToastService = () => {
       // Use a special flag to ensure this message only shows once per session
       const cacheKey = 'error:Account_Blocked';
       if (shouldSuppressToast(cacheKey)) {
-        console.log('Blocked account message already shown, suppressing duplicate');
         return;
       }
       

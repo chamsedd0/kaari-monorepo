@@ -48,7 +48,6 @@ export class OtpService {
         localStorage.setItem(OTP_EXPIRY_KEY, expiryTime.toString());
         localStorage.setItem(OTP_ATTEMPTS_KEY, "0");
         
-        console.log(`[DEV MODE] OTP for ${normalizedPhone}: ${otp}`);
         return { success: true, message: "OTP sent successfully" };
       } else {
         // In production, use Firebase Cloud Function
@@ -70,7 +69,6 @@ export class OtpService {
         localStorage.setItem(OTP_EXPIRY_KEY, expiryTime.toString());
         localStorage.setItem(OTP_ATTEMPTS_KEY, "0");
         
-        console.log(`[DEV MODE] Fallback OTP: ${otp}`);
         return { success: true, message: "OTP sent successfully (fallback)" };
       }
       
@@ -92,7 +90,6 @@ export class OtpService {
       if (this.isDevelopment) {
         // In development mode, always accept "000000" as a valid OTP for easier testing
         if (otp === "000000") {
-          console.log(`[DEV MODE] Accepting default OTP code for ${normalizedPhone}`);
           return { success: true, message: "OTP verified successfully" };
         }
         
@@ -143,7 +140,6 @@ export class OtpService {
       
       // For development fallback, accept "000000" as valid OTP
       if (this.isDevelopment && otp === "000000") {
-        console.log(`[DEV MODE] Accepting default OTP code in error handler`);
         return { success: true, message: "OTP verified successfully (fallback)" };
       }
       

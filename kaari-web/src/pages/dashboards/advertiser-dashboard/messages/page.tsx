@@ -473,11 +473,9 @@ const MessagesPage: React.FC = () => {
   const conversationsSubscribed = useRef<boolean>(false);
   const messagesSubscribed = useRef<boolean>(false);
   
-  console.log("AdvertiserMessagesPage rendering, user:", authUser?.id, "currentUser:", currentUser?.id, "loadingConversations:", loadingConversations);
 
   // Add debug effect to track loading state
   useEffect(() => {
-    console.log("Loading state changed - conversations:", loadingConversations, "messages:", loadingMessages);
   }, [loadingConversations, loadingMessages]);
   
   // Scroll to bottom of messages
@@ -613,17 +611,14 @@ const MessagesPage: React.FC = () => {
   // Fetch conversations for the current user
   useEffect(() => {
     if (!currentUser) {
-      console.log("No current user, skipping conversation fetch");
       return;
     }
     
     // Only subscribe once
     if (conversationsSubscribed.current) {
-      console.log("Already subscribed to conversations, skipping");
       return;
     }
     
-    console.log("Fetching conversations for advertiser:", currentUser.id);
     setLoadingConversations(true);
     setError(null);
     
@@ -638,7 +633,6 @@ const MessagesPage: React.FC = () => {
       conversationsSubscribed.current = true;
       
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        console.log("Received conversation snapshot with", querySnapshot.size, "conversations");
         const fetchedConversations: Conversation[] = [];
         querySnapshot.forEach((doc) => {
           fetchedConversations.push({ id: doc.id, ...doc.data() } as Conversation);
@@ -673,7 +667,6 @@ const MessagesPage: React.FC = () => {
       });
 
       return () => {
-        console.log("Unsubscribing from conversations listener");
         unsubscribe();
         // Reset subscription flag when unmounting
         conversationsSubscribed.current = false;
@@ -696,16 +689,13 @@ const MessagesPage: React.FC = () => {
 
     // Reset the subscription flag when active conversation changes
     if (messagesSubscribed.current) {
-      console.log("Already subscribed to messages, but active conversation changed. Resetting.");
       messagesSubscribed.current = false;
     }
 
     if (messagesSubscribed.current) {
-      console.log("Already subscribed to messages for this conversation, skipping");
       return;
     }
 
-    console.log("Fetching messages for conversation:", activeConversation.id);
     setLoadingMessages(true);
 
     try {
@@ -716,7 +706,6 @@ const MessagesPage: React.FC = () => {
       messagesSubscribed.current = true;
 
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        console.log("Received messages snapshot with", querySnapshot.size, "messages");
         const fetchedMessages: Message[] = [];
         querySnapshot.forEach((doc) => {
           fetchedMessages.push({ id: doc.id, ...doc.data() } as Message);
@@ -736,7 +725,6 @@ const MessagesPage: React.FC = () => {
       });
 
       return () => {
-        console.log("Unsubscribing from messages listener");
         unsubscribe();
         // Reset subscription flag when unmounting
         messagesSubscribed.current = false;
@@ -762,7 +750,6 @@ const MessagesPage: React.FC = () => {
     if (unreadMessages.length === 0) return;
     
     try {
-      console.log(`Marking ${unreadMessages.length} messages as read`);
       // Use a batch to update all messages at once
       const batch = writeBatch(db);
       unreadMessages.forEach(msg => {
@@ -775,7 +762,6 @@ const MessagesPage: React.FC = () => {
       batch.update(convRef, { [`unreadCounts.${currentUser.id}`]: 0 });
       
       await batch.commit();
-      console.log("Successfully marked messages as read");
     } catch (error) {
       console.error("Error marking messages as read:", error);
       setError("Failed to mark messages as read: " + (error as Error).message);

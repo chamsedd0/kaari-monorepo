@@ -230,7 +230,6 @@ interface PropertyRequestCardProps {
     };
     localStorage.setItem('rentalApplicationData', JSON.stringify(rentalData));
     
-    console.log(`Navigating to checkout with propertyId=${propertyId} and moveInDate=${date}`);
     // Navigate to the new checkout page with propertyId as a query parameter
     navigate(`/checkout?propertyId=${propertyId}&moveInDate=${date}`);
   };

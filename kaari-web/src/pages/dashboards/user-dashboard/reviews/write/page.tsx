@@ -125,7 +125,6 @@ const WriteReviewPage: React.FC = () => {
                 promptId: promptId || undefined
             });
             
-            console.log('Review submitted successfully with promptId:', promptId);
             setSuccess(true);
             
             // Redirect after a short delay

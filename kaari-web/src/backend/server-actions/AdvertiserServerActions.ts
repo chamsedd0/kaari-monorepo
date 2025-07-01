@@ -47,7 +47,6 @@ interface Inquiry {
  * Create a new property
  */
 export async function createProperty(propertyData: Omit<Property, 'id' | 'createdAt' | 'updatedAt'>): Promise<Property> {
-  console.warn('Using placeholder createProperty - implement this properly');
   return { id: 'placeholder-id', ...propertyData, createdAt: new Date(), updatedAt: new Date() } as Property;
 }
 
@@ -63,7 +62,6 @@ export async function getAdvertiserStatistics(): Promise<{
   photoshootsScheduled: number;
   inquiriesCount: number;
 }> {
-  console.warn('Using placeholder getAdvertiserStatistics - implement this properly');
   return {
     totalProperties: 0,
     activeListings: 0,
@@ -75,12 +73,10 @@ export async function getAdvertiserStatistics(): Promise<{
 }
 
 export async function getAdvertiserProperties(): Promise<Property[]> {
-  console.warn('Using placeholder getAdvertiserProperties - implement this properly');
   return [];
 }
 
 export async function getAdvertiserRequests(): Promise<Request[]> {
-  console.warn('Using placeholder getAdvertiserRequests - implement this properly');
   return [];
 }
 
@@ -90,7 +86,6 @@ export async function getAdvertiserReservationRequests(): Promise<{
   property?: any;
   client?: any;
 }[]> {
-  console.warn('Using placeholder getAdvertiserReservationRequests - implement this properly');
   return [];
 }
 
@@ -100,7 +95,6 @@ export async function getAdvertiserPhotoshoots(): Promise<Photoshoot[]> {
     const user = auth.currentUser;
     
     if (!user) {
-      console.warn('User not authenticated, cannot fetch photoshoots');
       return [];
     }
     
@@ -172,7 +166,6 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
   hasActiveReservations: boolean;
   reason: 'none' | 'completed' | 'pending' | 'accepted' | 'paid' | 'movedIn';
 }> {
-  console.warn('Using placeholder checkPropertyHasActiveReservations - implement this properly');
   return { hasActiveReservations: false, reason: 'none' };
 }
 
@@ -180,7 +173,6 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
  * Approve a reservation request
  */
 export async function approveReservationRequest(requestId: string): Promise<boolean> {
-  console.warn('Using placeholder approveReservationRequest - implement this properly');
   return true;
 }
 
@@ -188,7 +180,6 @@ export async function approveReservationRequest(requestId: string): Promise<bool
  * Reject a reservation request
  */
 export async function rejectReservationRequest(requestId: string): Promise<boolean> {
-  console.warn('Using placeholder rejectReservationRequest - implement this properly');
   return true;
 }
 
@@ -199,7 +190,6 @@ export async function updatePropertyAvailability(
   propertyId: string,
   isAvailable: boolean
 ): Promise<boolean> {
-  console.warn('Using placeholder updatePropertyAvailability - implement this properly');
   return true;
 }
 
@@ -211,7 +201,6 @@ export async function getAdvertiserPropertyReviews(): Promise<{
   property: Property;
   reviewer: User | null;
 }[]> {
-  console.warn('Using placeholder getAdvertiserPropertyReviews - implement this properly');
   return [];
 }
 
@@ -219,7 +208,6 @@ export async function getAdvertiserPropertyReviews(): Promise<{
  * Get reviews for a specific advertiser
  */
 export async function getAdvertiserReviews(advertiserId: string): Promise<Review[]> {
-  console.warn('Using placeholder getAdvertiserReviews - implement this properly');
   return [];
 }
 
@@ -231,7 +219,6 @@ export async function respondToPropertyInquiry(
   response: string, 
   status: 'answered' | 'rejected' = 'answered'
 ): Promise<boolean> {
-  console.warn('Using placeholder respondToPropertyInquiry - implement this properly');
   return true;
 }
 
@@ -350,7 +337,6 @@ const getDefaultItemOrder = (itemId: string): number => {
 export const getAdvertiserSignupData = async (userId: string): Promise<any> => {
   try {
     // For now, return a mock data object
-    console.log(`Fetching advertiser signup data for user ${userId}`);
     
     return {
       companyName: "Example Company",

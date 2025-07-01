@@ -92,7 +92,6 @@ const PhotoshootBookingsPage: React.FC = () => {
       return;
     }
     
-    console.log('Navigating to booking details:', id);
     
     // Use a timeout to ensure any pending state updates are completed
     // before navigating to the detail page

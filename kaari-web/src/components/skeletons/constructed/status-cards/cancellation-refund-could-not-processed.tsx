@@ -8,7 +8,6 @@ interface CancellationRefundCouldNotProcessedProps {
 }
 
 const CancellationRefundCouldNotProcessed: React.FC<CancellationRefundCouldNotProcessedProps> = ({
-  onTryAgain = () => console.log("Try again clicked")
 }) => {
   return (
     <StatusCardStyleRejected>

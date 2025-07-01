@@ -184,7 +184,6 @@ export const CardDetailsModal: React.FC<CardDetailsModalProps> = ({
             <div className="payment-method-selector">
               <a href="#" onClick={(e) => {
                 e.preventDefault();
-                console.log('Choose another payment method');
               }}>
                 Choose another payment method
               </a>

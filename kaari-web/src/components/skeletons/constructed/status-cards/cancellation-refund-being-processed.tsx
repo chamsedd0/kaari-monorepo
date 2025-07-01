@@ -8,7 +8,6 @@ interface CancellationRefundBeingProcessedProps {
 }
 
 const CancellationRefundBeingProcessed: React.FC<CancellationRefundBeingProcessedProps> = ({
-  onContactSupport = () => console.log("Contact support clicked")
 }) => {
   return (
     <StatusCardStylePending>
