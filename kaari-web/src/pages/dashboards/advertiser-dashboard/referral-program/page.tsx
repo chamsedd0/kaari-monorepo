@@ -14,64 +14,14 @@ import IconVerified from '../../../../components/skeletons/icons/Icon_Verified.s
 
 // Mock data for the referral program (replace with actual API calls later)
 const mockReferralData = {
-  code: 'ABC1234',
+  code: "ABC1234",
   totalReferrals: 10,
   successfulBookings: 7,
   monthlyEarnings: 1200,
   annualEarnings: 14400,
-  isEligible: true,
-  listings: 1,
-  history: [
-    { 
-      id: 1, 
-      tenant: 'John Price', 
-      status: 'pending', 
-      property: 'Apartment - flat in the center of Agadir',
-      date: new Date(2023, 5, 15)
-    },
-    { 
-      id: 2, 
-      tenant: 'John Price', 
-      status: 'pending', 
-      property: 'Apartment - flat in the center of Agadir',
-      date: new Date(2023, 5, 10)
-    },
-    { 
-      id: 3, 
-      tenant: 'John Price', 
-      status: 'pending', 
-      property: 'Apartment - flat in the center of Agadir',
-      date: new Date(2023, 5, 5)
-    },
-    { 
-      id: 4, 
-      tenant: 'John Price', 
-      status: 'pending', 
-      property: 'Apartment - flat in the center of Agadir',
-      date: new Date(2023, 4, 28)
-    },
-    { 
-      id: 5, 
-      tenant: 'John Price', 
-      status: 'pending', 
-      property: 'Apartment - flat in the center of Agadir',
-      date: new Date(2023, 4, 20)
-    },
-    { 
-      id: 6, 
-      tenant: 'John Price', 
-      status: 'pending', 
-      property: 'Apartment - flat in the center of Agadir',
-      date: new Date(2023, 4, 15)
-    },
-    { 
-      id: 7, 
-      tenant: 'John Price', 
-      status: 'pending', 
-      property: 'Apartment - flat in the center of Agadir',
-      date: new Date(2023, 4, 10)
-    }
-  ]
+  currentBonus: "5%",
+  nextBonus: "8%",
+  nextBonusRequirement: "List 1 more property"
 };
 
 // Icons
