@@ -11,7 +11,8 @@ export const DashboardPageStyle = styled.div`
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        margin-top: 18px;
+        gap: 24px;
     }
 
     .right {

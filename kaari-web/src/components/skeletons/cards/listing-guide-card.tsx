@@ -8,13 +8,12 @@ import { useNavigate } from 'react-router-dom';
 import listingGuideImage from '../../../assets/images/explaining.svg';
 
 const ListingGuideCardContainer = styled.div`
-  border-radius: 12px;
+  border-radius: 16px;
   border: ${Theme.borders.primary};
   background: white;
   padding: 30px;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 24px;
   
   @media (max-width: 768px) {
     flex-direction: column;

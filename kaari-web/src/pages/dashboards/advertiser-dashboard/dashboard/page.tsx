@@ -1,16 +1,17 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { DashboardPageStyle } from './styles';
-import UpcomingPhotoshoot from '../../../../components/skeletons/cards/upcoming-photoshoot';
 import PhotoshootStatusCard from '../../../../components/skeletons/cards/photoshoot-status-card';
 import LatestRequestDashboardCard from '../../../../components/skeletons/cards/lateest-request-dashboard-card';
 import MessagesCard from '../../../../components/skeletons/cards/messages-card';
 import BookAPhotoshootComponent from '../../../../components/skeletons/cards/book-a-photoshoot-card';
 import { PerformanceChart } from '../../../../components/skeletons/constructed/chart/performance-chart';
+import { PropertyViewsTable } from '../../../../components/skeletons/constructed/chart/property-views-table';
 import UpToDateCardComponent from '../../../../components/skeletons/cards/up-to-date-card';
 import ListingGuideCard from '../../../../components/skeletons/cards/listing-guide-card';
 import GettingStartedChecklist from '../../../../components/skeletons/cards/getting-started-checklist';
 import { useGettingStartedChecklist } from '../../../../hooks/useGettingStartedChecklist';
 import ReferralBanner from '../../../../components/skeletons/banners/referral-banner';
+import FreePhotoshootBanner from '../../../../components/skeletons/banners/free-photoshoot-banner';
 import emptyBox from '../../../../assets/images/emptybox.svg';
 import profile from '../../../../assets/images/ProfilePicture.png'; // Default profile image for photographer
 import { useNavigate } from 'react-router-dom';
@@ -128,6 +129,9 @@ const DashboardPage: React.FC = () => {
         { id: 'performanceChart', priority: 4, isActive: false } // Performance chart has lowest priority when not empty
     ]);
     
+    // Add state to track if the free photoshoot banner should be shown
+    const [showFreePhotoshootBanner, setShowFreePhotoshootBanner] = useState(true);
+    
     // Load data function - extracted to be reusable for real-time updates
     const loadData = useCallback(async (showLoading = true) => {
         if (showLoading) setLoading(true);
@@ -174,7 +178,7 @@ const DashboardPage: React.FC = () => {
         }
     }, [t]);
     
-    // Update which modules are active based on data
+    // Update the updateActiveModules function to check if the free photoshoot banner should be shown
     const updateActiveModules = useCallback((
         reservationReqs: any[],
         reqs: ExtendedRequest[],
@@ -183,6 +187,10 @@ const DashboardPage: React.FC = () => {
         stats: any
     ) => {
         const updatedModules = [...dashboardModules];
+        
+        // Check if there are any photoshoots - if there are, don't show the free photoshoot banner
+        const hasNoPhotoshoots = shoots.length === 0;
+        setShowFreePhotoshootBanner(hasNoPhotoshoots);
         
         // Latest request module - check if it has actual content
         const hasLatestRequest = reservationReqs.some(req => req.reservation.status === 'pending');
@@ -400,7 +408,7 @@ const DashboardPage: React.FC = () => {
         properties
     ]);
 
-  
+
 
     // Render modules in priority order
     const renderDashboardModules = () => {
@@ -436,7 +444,7 @@ const DashboardPage: React.FC = () => {
                     case 'messages':
                         // Messages are only shown if they exist (controlled by isActive flag)
                         return (
-                            <div key="messages" style={{ margin: '16px 0' }}>
+                            <div key="messages">
                                 <MessagesCard 
                                     title={t('advertiser_dashboard.dashboard.messages')}
                                     name={latestReservationRequest?.client 
@@ -453,7 +461,7 @@ const DashboardPage: React.FC = () => {
                         );
                     case 'upcomingPhotoshoot':
                         return (
-                            <div key="photoshoot" style={{ margin: '16px 0' }}>
+                            <div key="photoshoot">
                                 {upcomingPhotoshoot ? (
                                     <PhotoshootStatusCard 
                                         photoshootId={upcomingPhotoshoot.id}
@@ -474,27 +482,20 @@ const DashboardPage: React.FC = () => {
                                         onCancel={() => navigate('/dashboard/advertiser/photoshoot')}
                                     />
                                 ) : (
-                                    // Empty state for photoshoots
                                     <div className="empty-module">
-                                        <h3>{t('advertiser_dashboard.photoshoot.section_title', 'Book a photoshoot')}</h3>
+                                        <h3>{t('advertiser_dashboard.dashboard.upcoming_photoshoot')}</h3>
                                         <div className="empty-state">
-                                            <img src={emptyBox} alt="No photoshoots" />
-                                            <div className="title">{t('advertiser_dashboard.photoshoot.no_photoshoots', 'No upcoming photoshoots')}</div>
-                                            <div className="description">{t('advertiser_dashboard.photoshoot.no_photoshoots_hint', 'Book a free photoshoot to get professional photos of your property')}</div>
-                                            <button 
-                                                className="action-button"
-                                                onClick={() => navigate('/photoshoot-booking')}
-                                            >
-                                                {t('advertiser_dashboard.photoshoot.book_button', 'Book a free photoshoot')}
-                                            </button>
+                                            <img src={emptyBox} alt="No upcoming photoshoot" />
+                                            <div className="title">{t('advertiser_dashboard.dashboard.no_upcoming_photoshoot', 'No upcoming photoshoot')}</div>
+                                            <div className="description">{t('advertiser_dashboard.dashboard.no_upcoming_photoshoot_hint', 'Book a photoshoot to start getting views')}</div>
                                         </div>
                                     </div>
                                 )}
                             </div>
                         );
                     case 'performanceChart':
-    return (
-                            <div key="performance" style={{ margin: '16px 0' }}>
+                        return (
+                            <div key="performance">
                                 {hasPerformanceData ? (
                                     <PerformanceChart 
                                         title={t('advertiser_dashboard.dashboard.performance_overview')} 
@@ -513,24 +514,44 @@ const DashboardPage: React.FC = () => {
                                         </div>
                                     </div>
                                 )}
-                                
+
+                                <div style={{ marginTop: '24px' }}>
                                 {hasProperties ? (
-                                    <div style={{ marginTop: '16px' }}>
-                                        <PerformanceChart 
+                                        <PropertyViewsTable 
                                             title={t('advertiser_dashboard.dashboard.views_of_properties', 'Views of Properties')}
-                                            viewCount={statistics.viewsCount}
-                                            inquiryCount={statistics.inquiriesCount}
-                                            bookingCount={statistics.pendingReservations}
+                                            properties={propertyDataForChart.map(p => ({
+                                                id: p.propertyName,
+                                                name: p.propertyName,
+                                                image: p.propertyImage,
+                                                thisMonth: parseInt(p.thisMonth) || 0,
+                                                lastMonth: parseInt(p.lastMonth) || 0,
+                                                clicks: parseInt(p.clicks) || 0,
+                                                requests: parseInt(p.requests) || 0,
+                                                listedOn: p.listedOn,
+                                                totalViews: parseInt(p.views) || 0
+                                            }))}
+                                            totalViews={statistics.viewsCount}
                                             loading={loading}
                                         />
-                                    </div>
                                 ) : !loading && (
-                                    <div className="empty-state" style={{ marginTop: '16px' }}>
-                                        <img src={emptyBox} alt="No views" />
-                                        <div className="title">{t('advertiser_dashboard.dashboard.no_views', 'You have no views yet')}</div>
-                                        <div className="description">{t('advertiser_dashboard.dashboard.no_views_hint', 'List your property by booking a photoshoot and start getting views')}</div>
-                                    </div>
+                                    <PropertyViewsTable 
+                                            title={t('advertiser_dashboard.dashboard.views_of_properties', 'Views of Properties')}
+                                            properties={propertyDataForChart.map(p => ({
+                                                id: p.propertyName,
+                                                name: p.propertyName,
+                                                image: p.propertyImage,
+                                                thisMonth: parseInt(p.thisMonth) || 0,
+                                                lastMonth: parseInt(p.lastMonth) || 0,
+                                                clicks: parseInt(p.clicks) || 0,
+                                                requests: parseInt(p.requests) || 0,
+                                                listedOn: p.listedOn,
+                                                totalViews: parseInt(p.views) || 0
+                                            }))}
+                                            totalViews={statistics.viewsCount}
+                                            loading={loading}
+                                        />
                                 )}
+                                </div>
                             </div>
                         );
                     default:
@@ -542,7 +563,7 @@ const DashboardPage: React.FC = () => {
     // Render the latest request module (always show, but with empty state if needed)
     const renderLatestRequestModule = () => {
         return (
-            <div key="latestRequest" style={{ marginTop: '4px' }}>
+            <div key="latestRequest">
                 {latestReservationRequest ? (
                     <LatestRequestDashboardCard 
                         title={t('advertiser_dashboard.dashboard.latest_request')}
@@ -578,39 +599,16 @@ const DashboardPage: React.FC = () => {
         );
     };
 
-    // Last update indicator styles
-    const lastUpdateStyle = {
-        fontSize: '12px',
-        color: '#666',
-        textAlign: 'right' as const,
-        padding: '8px 16px',
-        marginBottom: '8px',
-        display: 'flex',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-        gap: '4px'
-    };
-
-    // Refresh button styles
-    const refreshButtonStyle = {
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        color: '#8F27CE',
-        fontSize: '12px',
-        padding: '4px 8px',
-        borderRadius: '4px',
-        marginLeft: '8px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px'
-    };
-
     return (
         <DashboardPageStyle>
             <div className="left">
                 {/* Referral Banner - Always visible */}
                 <ReferralBanner />
+                
+                {/* Free Photoshoot Banner - Only visible if no photoshoots */}
+                {showFreePhotoshootBanner && (
+                    <FreePhotoshootBanner />
+                )}
                 
                 {/* Dynamic dashboard modules */}
                 {renderDashboardModules()}

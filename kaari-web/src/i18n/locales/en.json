@@ -432,6 +432,12 @@
       "support": "Support",
       "referral_program": "Referral Program"
     },
+    "free_photoshoot_banner": {
+      "title": "List your property with our",
+      "highlight": "Free Photoshoot!",
+      "description": "We collect a commission after your flat is rented. We provide a free photoshoot and ensure your property is verified.",
+      "book_button": "Book a Photoshoot"
+    },
     "getting_started": {
       "title": "Getting Started",
       "book_photoshoot": "Book photoshoot",
@@ -454,11 +460,17 @@
       "not_listed": "Not listed",
       "active_listings": "Active Listings",
       "properties": "Properties",
+      "property": "Property",
+      "this_month": "This month",
+      "last_month": "Last Month",
+      "clicks": "Clicks",
+      "requests": "Requests",
+      "listed_on": "Listed on",
+      "total_views": "Total Views",
       "errors": {
         "loading_data": "Error loading dashboard data:"
       },
       "views": "Views",
-      "clicks": "Clicks",
       "booking_requests": "Booking Requests",
       "chart_date": "April 2025",
       "property_alt": "Property",
