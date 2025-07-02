@@ -10,6 +10,7 @@ import UpToDateCardComponent from '../../../../components/skeletons/cards/up-to-
 import ListingGuideCard from '../../../../components/skeletons/cards/listing-guide-card';
 import GettingStartedChecklist from '../../../../components/skeletons/cards/getting-started-checklist';
 import { useGettingStartedChecklist } from '../../../../hooks/useGettingStartedChecklist';
+import ReferralBanner from '../../../../components/skeletons/banners/referral-banner';
 import emptyBox from '../../../../assets/images/emptybox.svg';
 import profile from '../../../../assets/images/ProfilePicture.png'; // Default profile image for photographer
 import { useNavigate } from 'react-router-dom';
@@ -608,7 +609,8 @@ const DashboardPage: React.FC = () => {
     return (
         <DashboardPageStyle>
             <div className="left">
-               
+                {/* Referral Banner - Always visible */}
+                <ReferralBanner />
                 
                 {/* Dynamic dashboard modules */}
                 {renderDashboardModules()}

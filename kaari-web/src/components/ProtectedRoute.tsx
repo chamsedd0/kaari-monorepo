@@ -10,7 +10,7 @@ const ADMIN_EMAILS = [
 
 // User IDs that should have admin access
 const ADMIN_IDS = [
-  '0fZ0G9wBbGPwPap1X0DKCbx739u1',
+  'Yw2FKw9Fdwe0wZ7wEROn1tuH8273',
   // Add any other user IDs that should have access
 ];
 

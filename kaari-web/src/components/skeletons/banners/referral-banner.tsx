@@ -3,8 +3,7 @@ import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-interface PhotoshootBannerProps {
-  onClose?: () => void;
+interface ReferralBannerProps {
 }
 
 const BannerContainer = styled.div`
@@ -59,7 +58,7 @@ const Description = styled.p`
   opacity: 0.9;
 `;
 
-const BookButton = styled.button`
+const LearnMoreButton = styled.button`
   background-color: white;
   color: #8F27CE;
   border: none;
@@ -76,56 +75,29 @@ const BookButton = styled.button`
   }
 `;
 
-const CloseButton = styled.button`
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 18px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-`;
-
-const PhotoshootBanner: React.FC<PhotoshootBannerProps> = ({ onClose }) => {
+const ReferralBanner: React.FC<ReferralBannerProps> = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   
-  const handleBookClick = () => {
-    navigate('/photoshoot-booking');
+  const handleLearnMoreClick = () => {
+    navigate('/dashboard/advertiser/referral-program');
   };
   
   return (
     <BannerContainer>
       <ContentSection>
         <TextContent>
-          <Title>{t('advertiser_dashboard.photoshoot_banner.title', 'Book a Professional Photoshoot')}</Title>
+          <Title>Earn up to 100 000 MAD a month with Kaari Referrals</Title>
           <Description>
-            {t('advertiser_dashboard.photoshoot_banner.description', 'Professional photos can help showcase your property to potential tenants. Book a photoshoot session with our photographers.')}
+            List 10 active properties —or complete 3 bookings—to unlock a 10 % reward on every tenant you refer.
           </Description>
         </TextContent>
-        <BookButton onClick={handleBookClick}>
-          {t('advertiser_dashboard.photoshoot_banner.book_button', 'Book Now')}
-        </BookButton>
+        <LearnMoreButton onClick={handleLearnMoreClick}>
+          Learn More
+        </LearnMoreButton>
       </ContentSection>
-      
-      {onClose && (
-        <CloseButton onClick={onClose} aria-label={t('common.close', 'Close')}>
-          ✕
-        </CloseButton>
-      )}
     </BannerContainer>
   );
 };
 
-export default PhotoshootBanner; 
+export default ReferralBanner; 

@@ -1,4 +1,4 @@
-import { User } from '../backend/models/entities';
+import { User } from 'firebase/auth';
 
 // Enable this flag during development to see access control logs
 const DEBUG_MODE = true;
@@ -6,9 +6,7 @@ const DEBUG_MODE = true;
 // List of admin/developer emails that should have full access
 const ADMIN_EMAILS = [
   // Add your admin/developer emails here
-  'admin@kaari.com',
-  'developer@kaari.com',
-  'intag@gmail.com',  // Add your actual email here
+  'lhouijchams@gmail.com',
   // Add more as needed
 ];
 

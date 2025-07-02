@@ -4,9 +4,10 @@ import styled, { keyframes } from "styled-components";
 import { useTranslation } from "react-i18next";
 import PurpleLogo from "../../assets/images/purpleLogo.svg";
 import { Theme } from "../../theme/theme";
-import { MdCameraAlt, MdVerified, MdHandshake, MdHouse, MdAttachMoney, MdSupportAgent } from "react-icons/md";
+import { FaHome, FaCamera, FaCog, FaArrowRight, FaTimes } from "react-icons/fa";
 import { LanguageSwitcher, MobileLanguageSwitcher } from "../../components/skeletons/language-switcher";
 import { hideHeadersAndFooters } from '../../utils/advertiser-signup';
+import { MdHouse, MdCameraAlt, MdHandshake, MdVerified, MdAttachMoney, MdSupportAgent } from "react-icons/md";
 
 // Define a type for translation objects
 type TranslationValue = string | Record<string, any>;
@@ -16,76 +17,40 @@ type TranslationRecord = Record<string, TranslationValue>;
 const fallbackTranslations: Record<'fr' | 'en', TranslationRecord> = {
   fr: {
     welcome: "Bienvenue sur Kaari",
-    subtitle: "Louez sans effort.",
-    feature_photos: {
-      title: "Photos + Annonce Gratuites",
-      description: "Nous prenons des photos et créons votre annonce."
+    subtitle: "Rejoignez notre communauté de propriétaires et atteignez des milliers de locataires potentiels. Nous rendons la gestion immobilière simple, sécurisée et rentable.",
+    feature_integration: {
+      title: "Intégration en 48h",
+      description: "Publiez votre bien et soyez prêt à accueillir des locataires en seulement 48 heures grâce à notre processus simplifié."
     },
-    feature_tenants: {
-      title: "Locataires Vérifiés",
-      description: "Filtrage pour des demandes sérieuses uniquement."
+    feature_photography: {
+      title: "Photographie Professionnelle",
+      description: "Nos photographes professionnels mettront votre bien en valeur, totalement gratuitement."
     },
-    feature_approval: {
-      title: "Vous Approuvez, On Gère",
-      description: "Paiements et assistance gérés par nous."
-    },
-    founding_partner: {
-      title: "Programme Partenaire Fondateur",
-      description: "Avantages exclusifs pour nos 100 premiers annonceurs.",
-      benefit_commission: {
-        highlight: "0% Commission (3 Mois)",
-        text: "– 100% du loyer pour vous."
-      },
-      benefit_referral: {
-        highlight: "Programme de Parrainage",
-        text: "– 10% pour chaque locataire parrainé."
-      },
-      benefit_support: {
-        highlight: "Support VIP",
-        text: "– Aide personnalisée pour vos revenus."
-      }
+    feature_management: {
+      title: "Gestion Intelligente",
+      description: "Gérez les réservations, communiquez avec les locataires et suivez les paiements, le tout au même endroit."
     },
     cta: {
-      spots_available: "100 Places Disponibles",
-      description: "Rejoignez la première vague Kaari.",
-      button: "S'inscrire"
+      button: "Commencer Maintenant"
     }
   },
   en: {
     welcome: "Welcome to Kaari",
-    subtitle: "Rent out your property without lifting a finger.",
-    feature_photos: {
-      title: "Free Photos + Listing",
-      description: "We visit your property, take photos, write the listing, and publish it."
+    subtitle: "Join our community of landlords and reach thousands of potential tenants. We make property management simple, secure and profitable.",
+    feature_integration: {
+      title: "48-Hour Integration",
+      description: "List your property and be ready to welcome tenants in just 48 hours with our streamlined process."
     },
-    feature_tenants: {
-      title: "Verified Tenants, No Visits",
-      description: "We screen tenants so you only get serious requests."
+    feature_photography: {
+      title: "Professional Photography",
+      description: "Our professional photographers will showcase your property at its best, completely free of charge."
     },
-    feature_approval: {
-      title: "You Approve, We Do the Rest",
-      description: "Payments, coordination, tenant support — all handled by us."
-    },
-    founding_partner: {
-      title: "Founding Partner Program",
-      description: "Unlock exclusive perks – only for our first 100 advertisers.",
-      benefit_commission: {
-        highlight: "0% Commission (3 Months)",
-        text: "– Keep 100% of your rent."
-      },
-      benefit_referral: {
-        highlight: "Referral Program",
-        text: "– Earn 10% for every tenant you refer."
-      },
-      benefit_support: {
-        highlight: "VIP Support",
-        text: "– Personalized help to boost your earnings."
-      }
+    feature_management: {
+      title: "Intelligent Management",
+      description: "Manage bookings, communicate with tenants, and track payments, all in one place."
     },
     cta: {
-      spots_available: "Only 100 Spots Available",
-      description: "Be part of the very first wave shaping Kaari's future.",
-      button: "Sign Up Now"
+      button: "Start Now"
     }
   }
 };
@@ -99,15 +64,8 @@ const AdvertiserOnboardingPage = () => {
   const [animatedItems, setAnimatedItems] = useState({
     welcome: false,
     features: false,
-    foundingPartner: false,
     cta: false
   });
-
-  // Debug translations
-  console.log("Current language:", i18n.language);
-  console.log("Translation for welcome:", t('advertiser_onboarding.welcome'));
-  console.log("Available languages:", i18n.languages);
-  console.log("Translation resources:", i18n.options.resources);
 
   // Helper function to get translations with fallback
   const getTranslation = (key: string): string => {
@@ -170,7 +128,6 @@ const AdvertiserOnboardingPage = () => {
     // Force reload translations to ensure they're available
     i18n.reloadResources().then(() => {
       console.log('Translations reloaded');
-      console.log("After reload - Translation for welcome:", t('advertiser_onboarding.welcome'));
     });
     
     // Simulate loading animation
@@ -180,70 +137,30 @@ const AdvertiserOnboardingPage = () => {
       // Trigger animations in sequence
       setTimeout(() => setAnimatedItems(prev => ({ ...prev, welcome: true })), 100);
       setTimeout(() => setAnimatedItems(prev => ({ ...prev, features: true })), 300);
-      setTimeout(() => setAnimatedItems(prev => ({ ...prev, foundingPartner: true })), 500);
-      setTimeout(() => setAnimatedItems(prev => ({ ...prev, cta: true })), 700);
+      setTimeout(() => setAnimatedItems(prev => ({ ...prev, cta: true })), 500);
     }, 500);
     
     return () => {
       document.body.style.overflow = "unset";
       clearTimeout(timer);
     };
-  }, [i18n, t]);
+  }, [i18n]);
 
-  const handleGetStarted = () => {
-    setIsExiting(true);
-    setTimeout(() => {
-      navigate("/advertiser-signup/form");
-    }, 500);
-  };
-  
-  // Also apply to body and html elements when on mobile
+  // Check if device is mobile
   useEffect(() => {
-    const applyMobileStyles = () => {
-      const isMobileView = window.innerWidth <= 768;
-      setIsMobile(isMobileView);
-      
-      if (isMobileView) {
-        // Create a style element to add CSS rules
-        const style = document.createElement('style');
-        style.textContent = `
-          html, body, #root {
-            scrollbar-width: none !important;
-            -ms-overflow-style: none !important;
-            overflow-y: auto;
-          }
-          
-          html::-webkit-scrollbar, 
-          body::-webkit-scrollbar, 
-          #root::-webkit-scrollbar,
-          div::-webkit-scrollbar {
-            display: none !important;
-            width: 0 !important;
-            height: 0 !important;
-            background: transparent !important;
-          }
-        `;
-        document.head.appendChild(style);
-        
-        return () => {
-          document.head.removeChild(style);
-        };
-      }
-      return undefined;
-    };
-    
-    const cleanup = applyMobileStyles();
-    
-    // Add event listener for window resize
-    const handleResize = () => {
+    const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
     
-    window.addEventListener('resize', handleResize);
+    // Initial check
+    checkMobile();
     
+    // Add event listener for window resize
+    window.addEventListener('resize', checkMobile);
+    
+    // Cleanup
     return () => {
-      if (cleanup) cleanup();
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', checkMobile);
     };
   }, []);
 
@@ -257,6 +174,17 @@ const AdvertiserOnboardingPage = () => {
       cleanupHeadersFooters();
     };
   }, []);
+
+  const handleGetStarted = () => {
+    setIsExiting(true);
+    setTimeout(() => {
+      navigate("/advertiser-signup/form");
+    }, 500);
+  };
+
+  const handleClose = () => {
+    navigate("/");
+  };
 
   return (
     <Container isExiting={isExiting}>
@@ -273,167 +201,98 @@ const AdvertiserOnboardingPage = () => {
       </TopSection>
       
       <ContentContainer>
-        <LeftColumn>
-          <LeftColumnContent>
-            <WelcomeSection isVisible={animatedItems.welcome}>
-              <WelcomeHeading>{getTranslation('advertiser_onboarding.welcome')}</WelcomeHeading>
-              <Subheading>{getTranslation('advertiser_onboarding.subtitle')}</Subheading>
-            </WelcomeSection>
+        <MainContent>
+          <WelcomeSection isVisible={animatedItems.welcome}>
+            <WelcomeHeading>Bienvenue sur Kaari</WelcomeHeading>
+            <Subheading>
+              Rejoignez notre communauté de propriétaires et atteignez des milliers de locataires potentiels. 
+              Nous rendons la gestion immobilière simple, sécurisée et rentable.
+            </Subheading>
+          </WelcomeSection>
+          
+          <FeatureList isVisible={animatedItems.features}>
+            <FeatureItem>
+              <FeatureIconWrapper>
+                <MdHouse size={20} color="white" />
+              </FeatureIconWrapper>
+              <FeatureContent>
+                <FeatureTitle>Intégration en 48h</FeatureTitle>
+                <FeatureDescription>
+                  Publiez votre bien et soyez prêt à accueillir des locataires en seulement 48 heures grâce à notre processus simplifié.
+                </FeatureDescription>
+              </FeatureContent>
+            </FeatureItem>
             
-            <FeatureList isVisible={animatedItems.features}>
-              <FeatureItem>
-                <FeatureIconWrapper>
-                  <MdCameraAlt size={20} color={Theme.colors.secondary} />
-                </FeatureIconWrapper>
-                <FeatureContent>
-                  <FeatureTitle>{getTranslation('advertiser_onboarding.feature_photos.title')}</FeatureTitle>
-                  <FeatureDescription>{getTranslation('advertiser_onboarding.feature_photos.description')}</FeatureDescription>
-                </FeatureContent>
-              </FeatureItem>
-              
-              <FeatureItem>
-                <FeatureIconWrapper>
-                  <MdVerified size={20} color={Theme.colors.secondary} />
-                </FeatureIconWrapper>
-                <FeatureContent>
-                  <FeatureTitle>{getTranslation('advertiser_onboarding.feature_tenants.title')}</FeatureTitle>
-                  <FeatureDescription>{getTranslation('advertiser_onboarding.feature_tenants.description')}</FeatureDescription>
-                </FeatureContent>
-              </FeatureItem>
-              
-              <FeatureItem>
-                <FeatureIconWrapper>
-                  <MdHandshake size={20} color={Theme.colors.secondary} />
-                </FeatureIconWrapper>
-                <FeatureContent>
-                  <FeatureTitle>{getTranslation('advertiser_onboarding.feature_approval.title')}</FeatureTitle>
-                  <FeatureDescription>{getTranslation('advertiser_onboarding.feature_approval.description')}</FeatureDescription>
-                </FeatureContent>
-              </FeatureItem>
-            </FeatureList>
+            <FeatureItem>
+              <FeatureIconWrapper>
+                <MdCameraAlt size={20} color="white" />
+              </FeatureIconWrapper>
+              <FeatureContent>
+                <FeatureTitle>Photographie Professionnelle</FeatureTitle>
+                <FeatureDescription>
+                  Nos photographes professionnels mettront votre bien en valeur, totalement gratuitement.
+                </FeatureDescription>
+              </FeatureContent>
+            </FeatureItem>
             
-            <FoundingPartnerCard isVisible={animatedItems.foundingPartner}>
-              <FoundingPartnerHeader>
-                <FoundingPartnerDot />
-                <FoundingPartnerTitle>{getTranslation('advertiser_onboarding.founding_partner.title')}</FoundingPartnerTitle>
-              </FoundingPartnerHeader>
-              <FoundingPartnerDescription>
-                {getTranslation('advertiser_onboarding.founding_partner.description')}
-              </FoundingPartnerDescription>
-              
-              <BenefitsList>
-                <BenefitItem>
-                  <BenefitIconWrapper>
-                    <MdAttachMoney size={16} color={Theme.colors.secondary} />
-                  </BenefitIconWrapper>
-                  <BenefitText>
-                    <BenefitHighlight>{getTranslation('advertiser_onboarding.founding_partner.benefit_commission.highlight')}</BenefitHighlight>
-                    {getTranslation('advertiser_onboarding.founding_partner.benefit_commission.text')}
-                  </BenefitText>
-                </BenefitItem>
-                
-                <BenefitItem>
-                  <BenefitIconWrapper>
-                    <MdHouse size={16} color={Theme.colors.secondary} />
-                  </BenefitIconWrapper>
-                  <BenefitText>
-                    <BenefitHighlight>{getTranslation('advertiser_onboarding.founding_partner.benefit_referral.highlight')}</BenefitHighlight>
-                    {getTranslation('advertiser_onboarding.founding_partner.benefit_referral.text')}
-                  </BenefitText>
-                </BenefitItem>
-                
-                <BenefitItem>
-                  <BenefitIconWrapper>
-                    <MdSupportAgent size={16} color={Theme.colors.secondary} />
-                  </BenefitIconWrapper>
-                  <BenefitText>
-                    <BenefitHighlight>{getTranslation('advertiser_onboarding.founding_partner.benefit_support.highlight')}</BenefitHighlight>
-                    {getTranslation('advertiser_onboarding.founding_partner.benefit_support.text')}
-                  </BenefitText>
-                </BenefitItem>
-              </BenefitsList>
-            </FoundingPartnerCard>
-          </LeftColumnContent>
-        </LeftColumn>
+            <FeatureItem>
+              <FeatureIconWrapper>
+                <MdHandshake size={20} color="white" />
+              </FeatureIconWrapper>
+              <FeatureContent>
+                <FeatureTitle>Gestion Intelligente</FeatureTitle>
+                <FeatureDescription>
+                  Gérez les réservations, communiquez avec les locataires et suivez les paiements, le tout au même endroit.
+                </FeatureDescription>
+              </FeatureContent>
+            </FeatureItem>
+          </FeatureList>
+          
+          <CTASection isVisible={animatedItems.cta}>
+            <StartButton onClick={handleGetStarted}>
+              Commencer Maintenant
+              <FaArrowRight />
+            </StartButton>
+          </CTASection>
+        </MainContent>
         
-        <Divider />
-        
-        <RightColumn>
-          <RightColumnContent>
-            <CTALogo src={PurpleLogo} alt="Kaari Logo" isVisible={animatedItems.cta} />
-            
-            <CTACard isVisible={animatedItems.cta}>
-              <CTABadge>
-                {getTranslation('advertiser_onboarding.cta.spots_available')}
-              </CTABadge>
-              
-              <CTADescription>
-                {getTranslation('advertiser_onboarding.cta.description')}
-              </CTADescription>
-              
-              <SignUpButton onClick={handleGetStarted}>
-                {getTranslation('advertiser_onboarding.cta.button')}
-              </SignUpButton>
-            </CTACard>
-          </RightColumnContent>
-        </RightColumn>
+        <IllustrationContainer>
+          <PlaceholderIllustration>
+            <PlaceholderText>Illustration Placeholder</PlaceholderText>
+          </PlaceholderIllustration>
+        </IllustrationContainer>
       </ContentContainer>
     </Container>
   );
 };
 
+// Animations
 const fadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 `;
 
 const fadeOut = keyframes`
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-`;
-
-const shimmer = keyframes`
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-20px); }
 `;
 
 const floatAnimation = keyframes`
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 `;
 
+// Styled Components
 const Container = styled.div<{ isExiting: boolean }>`
   width: 100vw;
   min-height: 100vh;
-  height: auto;
-  background: linear-gradient(135deg, ${Theme.colors.primary} 0%, ${Theme.colors.secondary} 100%);
+  height: 100vh;
+  background: #6a1b9a; /* Back to the previous purple color */
   color: white;
   display: flex;
   flex-direction: column;
-  padding: 2rem 4rem;
+  padding: 1.5rem 2rem;
   box-sizing: border-box;
   overflow-y: auto;
   animation: ${props => props.isExiting ? fadeOut : fadeIn} 0.5s ease-in-out;
@@ -457,17 +316,6 @@ const Container = styled.div<{ isExiting: boolean }>`
   }
 `;
 
-const GradientOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
-`;
-
 const LoadingOverlay = styled.div<{ isLoading: boolean }>`
   position: fixed;
   top: 0;
@@ -481,16 +329,29 @@ const LoadingOverlay = styled.div<{ isLoading: boolean }>`
   transition: opacity 0.5s ease, visibility 0.5s ease;
 `;
 
+const GradientOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1), transparent 70%);
+  z-index: 1;
+  pointer-events: none;
+`;
+
 const TopSection = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
   position: relative;
   z-index: 2;
+  height: 60px;
   
   @media (max-width: 768px) {
-    margin-bottom: 1rem;
+    margin-bottom: 0;
+    height: 50px;
   }
 `;
 
@@ -506,513 +367,191 @@ const Logo = styled.img`
 
 const LanguageSwitcherWrapper = styled.div`
   z-index: 10;
-  
-  @media (max-width: 768px) {
-    position: fixed;
-    top: 1.5rem;
-    right: 1.5rem;
-  }
 `;
 
 const ContentContainer = styled.div`
   display: flex;
   flex: 1;
-  gap: 2rem;
-  position: relative;
-  z-index: 2;
+  gap: 4rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  height: calc(100vh - 100px); /* Adjust for header height */
+  align-items: center;
   
-  @media (max-width: 968px) {
+  @media (max-width: 1024px) {
     flex-direction: column;
-    margin-top: 40px;
-    overflow-y: auto;
-    padding-bottom: 1rem;
-    gap: 1rem;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-    
-    &::-webkit-scrollbar {
-      display: none !important;
-      width: 0 !important;
-      height: 0 !important;
-      background: transparent !important;
-    }
+    gap: 2rem;
+    height: auto;
+    min-height: calc(100vh - 100px);
   }
 `;
 
-const LeftColumn = styled.div`
-  flex: 0.65;
+const MainContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  justify-content: center;
+  
+  @media (max-width: 768px) {
+    gap: 1rem;
+  }
+`;
+
+const IllustrationContainer = styled.div`
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 100%;
   
-  @media (max-width: 968px) {
-    flex: 1;
-    margin-bottom: 1rem;
+  @media (max-width: 1024px) {
+    display: none;
   }
 `;
 
-const LeftColumnContent = styled.div`
-  max-width: 600px;
+const PlaceholderIllustration = styled.div`
   width: 100%;
+  max-height: 80%;
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  animation: ${floatAnimation} 6s ease-in-out infinite;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+`;
+
+const PlaceholderText = styled.p`
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+  opacity: 0.8;
   text-align: center;
 `;
 
 const WelcomeSection = styled.div<{ isVisible: boolean }>`
-  margin-bottom: 1.5rem;
   opacity: ${props => props.isVisible ? 1 : 0};
   transform: translateY(${props => props.isVisible ? '0' : '30px'});
   transition: opacity 0.6s ease, transform 0.6s ease;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 `;
 
 const WelcomeHeading = styled.h1`
-  font-size: 3rem;
+  font-size: 3.2rem;
   font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  background: linear-gradient(to right, #ffffff, #e0e0ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
+  margin: 0 0 1rem 0;
+  line-height: 1.1;
   
   @media (max-width: 768px) {
-    font-size: 2.2rem;
+    font-size: 2.5rem;
+    margin-bottom: 0.8rem;
   }
 `;
 
-const Subheading = styled.h2`
-  font-size: 1.5rem;
-  font-weight: 400;
-  margin: 0;
+const Subheading = styled.p`
+  font-size: 1.1rem;
+  line-height: 1.5;
+  max-width: 650px;
+  margin: 0 0 1rem 0;
   opacity: 0.9;
   
   @media (max-width: 768px) {
-    font-size: 1.1rem;
-    padding: 0 1rem;
+    font-size: 0.95rem;
+    margin-bottom: 0.8rem;
   }
 `;
 
 const FeatureList = styled.div<{ isVisible: boolean }>`
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
   opacity: ${props => props.isVisible ? 1 : 0};
   transform: translateY(${props => props.isVisible ? '0' : '30px'});
   transition: opacity 0.6s ease, transform 0.6s ease;
   width: 100%;
+  max-width: 600px;
 `;
 
 const FeatureItem = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.2rem;
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 1rem;
+  gap: 1rem;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  text-align: left;
-  
-  &:hover {
-    transform: translateY(-3px);
-    background: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 0.75rem;
-    gap: 0.5rem;
-  }
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 `;
 
 const FeatureIconWrapper = styled.div`
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
-  background: white;
+  background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
   
-  &:hover {
-    transform: rotate(5deg);
-  }
-  
-  @media (max-width: 768px) {
-    width: 32px;
-    height: 32px;
+  svg {
+    font-size: 20px;
+    color: white;
   }
 `;
 
 const FeatureContent = styled.div`
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 `;
 
 const FeatureTitle = styled.h3`
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-weight: 600;
-  margin: 0 0 0.15rem 0;
-  
-  @media (max-width: 768px) {
-    font-size: 0.95rem;
-  }
-`;
-
-const FeatureDescription = styled.p`
-  font-size: 0.9rem;
-  opacity: 0.9;
-  line-height: 1.3;
-  margin: 0;
-  
-  @media (max-width: 768px) {
-    font-size: 0.85rem;
-  }
-`;
-
-const FoundingPartnerCard = styled.div<{ isVisible: boolean }>`
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 1.25rem;
-  position: relative;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  opacity: ${props => props.isVisible ? 1 : 0};
-  transform: translateY(${props => props.isVisible ? '0' : '30px'});
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  width: 100%;
-  text-align: center;
-  
-  &:before {
-    content: '';
-    position: absolute;
-    top: -1px;
-    left: -1px;
-    right: -1px;
-    bottom: -1px;
-    border-radius: 16px;
-    padding: 1px;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
-  
-  @media (max-width: 768px) {
-    padding: 1rem;
-    border-radius: 14px;
-  }
-`;
-
-const FoundingPartnerHeader = styled.div`
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  justify-content: center;
-`;
-
-const FoundingPartnerDot = styled.div`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: white;
-  margin-right: 0.75rem;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-`;
-
-const FoundingPartnerTitle = styled.h3`
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin: 0;
-  background: linear-gradient(to right, #ffffff, #e0e0ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  
-  @media (max-width: 768px) {
-    font-size: 1.2rem;
-  }
-`;
-
-const FoundingPartnerDescription = styled.p`
-  font-size: 0.9rem;
-  opacity: 0.9;
-  margin: 0 0 1rem 0;
-  
-  @media (max-width: 768px) {
-    font-size: 0.85rem;
-    margin-bottom: 0.75rem;
-  }
-`;
-
-const BenefitsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-const BenefitItem = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  padding: 0.6rem;
-  transition: all 0.3s ease;
-  text-align: left;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateX(5px);
-  }
-  
-  @media (max-width: 768px) {
-    padding: 0.5rem;
-  }
-`;
-
-const BenefitIconWrapper = styled.div`
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  
-  @media (max-width: 768px) {
-    width: 18px;
-    height: 18px;
-  }
-`;
-
-const BenefitText = styled.p`
-  font-size: 0.85rem;
-  line-height: 1.3;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  
-  @media (max-width: 768px) {
-    font-size: 0.8rem;
-  }
-`;
-
-const BenefitHighlight = styled.span`
-  font-weight: 600;
+  margin: 0 0 0.4rem 0;
   color: white;
 `;
 
-const Divider = styled.div`
-  width: 1px;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.7) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  position: relative;
-  
-  &:after {
-    content: '';
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: white;
-    border-radius: 50%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.5);
-  }
-  
-  @media (max-width: 968px) {
-    display: none;
-  }
-`;
-
-const RightColumn = styled.div`
-  flex: 0.35;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  
-  @media (max-width: 968px) {
-    flex: 1;
-    margin-top: 0.5rem;
-    padding-bottom: 2rem;
-  }
-`;
-
-const RightColumnContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 400px;
-  
-  @media (max-width: 768px) {
-    max-width: 90%;
-  }
-`;
-
-const CTALogo = styled.img<{ isVisible: boolean }>`
-  height: 60px;
-  filter: brightness(0) invert(1);
-  margin-bottom: 2rem;
-  opacity: ${props => props.isVisible ? 1 : 0};
-  transform: translateY(${props => props.isVisible ? '0' : '30px'});
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  animation: ${floatAnimation} 6s ease-in-out infinite;
-  
-  @media (max-width: 768px) {
-    height: 50px;
-    margin-bottom: 1.5rem;
-  }
-`;
-
-const CTACard = styled.div<{ isVisible: boolean }>`
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  padding: 2.5rem;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  opacity: ${props => props.isVisible ? 1 : 0};
-  transform: translateY(${props => props.isVisible ? '0' : '30px'});
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: 24px;
-    padding: 1px;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1));
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-  }
-  
-  @media (max-width: 768px) {
-    padding: 1.5rem;
-    border-radius: 18px;
-  }
-`;
-
-const CTABadge = styled.div`
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 100px;
-  padding: 0.75rem 1.5rem;
-  margin-bottom: 2rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-  
-  &:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      to right,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.2) 50%,
-      rgba(255, 255, 255, 0) 100%
-    );
-    animation: ${shimmer} 5s infinite;
-    opacity: 0.5;
-  }
-  
-  @media (max-width: 768px) {
-    font-size: 0.95rem;
-    padding: 0.5rem 1rem;
-    margin-bottom: 1.25rem;
-  }
-`;
-
-const CTADescription = styled.p`
-  font-size: 1rem;
+const FeatureDescription = styled.p`
+  font-size: 0.95rem;
   line-height: 1.5;
-  margin: 0 0 2.5rem 0;
+  margin: 0;
   color: rgba(255, 255, 255, 0.9);
-  
-  @media (max-width: 768px) {
-    font-size: 0.85rem;
-    margin-bottom: 1.5rem;
-    padding: 0 0.5rem;
-  }
 `;
 
-const SignUpButton = styled.button`
+const CTASection = styled.div<{ isVisible: boolean }>`
+  margin-top: 1rem;
+  opacity: ${props => props.isVisible ? 1 : 0};
+  transform: translateY(${props => props.isVisible ? '0' : '30px'});
+  transition: opacity 0.6s ease, transform 0.6s ease;
+`;
+
+const StartButton = styled.button`
   background: white;
   color: ${Theme.colors.secondary};
   border: none;
-  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  padding: 0.9rem 2.5rem;
   font-size: 1.1rem;
   font-weight: 600;
-  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
-  position: relative;
-  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
   }
   
-  &:after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -60%;
-    width: 20%;
-    height: 200%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: rotate(30deg);
-    transition: all 0.6s ease;
-  }
-  
-  &:hover:after {
-    left: 120%;
-  }
-  
-  @media (max-width: 768px) {
-    padding: 0.8rem 1.8rem;
-    font-size: 0.95rem;
+  svg {
+    font-size: 0.9rem;
   }
 `;
-
-
 
 export default AdvertiserOnboardingPage;

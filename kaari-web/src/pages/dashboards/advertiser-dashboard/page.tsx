@@ -239,9 +239,6 @@ const AdvertiserDashboard: React.FC = () => {
                     getTranslatedSectionName={getTranslatedSectionName}
                 />
                 <AdvertiserDashboardStyle>
-                    {showPhotoshootBanner && activeSection === 'Dashboard' && (
-                        <PhotoshootBanner onClose={handleBannerClose} />
-                    )}
                     <div className={`section-container ${isAnimating ? 'animating' : ''}`}>
                         {renderSection()}
                     </div>
