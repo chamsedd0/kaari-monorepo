@@ -558,7 +558,7 @@ const SignupForm = styled.form`
 `;
 
 const SubmitButtonWrapper = styled.div<{ isMobile: boolean }>`
-  margin-top: ${props => props.isMobile ? '8px' : '5px'};
+  margin-top: ${props => props.isMobile ? '8px' : '4px'};
 `;
 
 const PrivacyNote = styled.p<{ isMobile: boolean }>`

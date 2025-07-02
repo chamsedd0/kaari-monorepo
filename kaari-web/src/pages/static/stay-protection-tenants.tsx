@@ -57,7 +57,7 @@ const StayProtectionStyles = styled(StaticPageWrapper)`
     th, td {
       padding: 15px 20px;
       text-align: left;
-      border-bottom: 1px solid ${Theme.colors.gray3};
+      border-bottom: 1px solid ${Theme.colors.gray2};
     }
     
     th {
@@ -77,7 +77,7 @@ const StayProtectionStyles = styled(StaticPageWrapper)`
     }
     
     .feature-unavailable {
-      color: ${Theme.colors.gray3};
+      color: ${Theme.colors.gray2};
     }
     
     @media (max-width: 768px) {

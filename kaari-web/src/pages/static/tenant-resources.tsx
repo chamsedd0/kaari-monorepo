@@ -49,7 +49,7 @@ const ResourcesPageStyles = styled(StaticPageWrapper)`
         color: white;
         font: ${Theme.typography.fonts.largeB};
         padding: 10px 20px;
-        border-radius: ${Theme.borders.radius.full};
+        border-radius: ${Theme.borders.radius.extreme};
         text-decoration: none;
         transition: all 0.3s ease;
         
@@ -117,7 +117,7 @@ const ResourcesPageStyles = styled(StaticPageWrapper)`
         color: ${Theme.colors.primary};
         font: ${Theme.typography.fonts.largeB};
         padding: 8px 15px;
-        border-radius: ${Theme.borders.radius.full};
+        border-radius: ${Theme.borders.radius.extreme};
         text-decoration: none;
         transition: all 0.3s ease;
         
