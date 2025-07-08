@@ -4,7 +4,7 @@ import { useStore } from '../backend/store';
 
 // IMPORTANT: Add your email here to get access to restricted features
 const ADMIN_EMAILS = [
-  'lhouijcham@gmail.com',
+  'lhouijchams@gmail.com',
   // Add any other emails that should have access
 ];
 
@@ -12,6 +12,7 @@ const ADMIN_EMAILS = [
 const ADMIN_IDS = [
   'Yw2FKw9Fdwe0wZ7wEROn1tuH8273',
   '9ue4Lfd70eWgLwQOHQ8avVKlhr42',
+  'ar1zXIkJxYN3TjAE802cm8lwWs22',
   // Add any other user IDs that should have access
 ];
 
