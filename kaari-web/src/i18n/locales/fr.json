@@ -90,7 +90,9 @@
     "return_home": "Retour à l'accueil",
     "go_back": "Retour",
     "sign_up_now": "S'inscrire maintenant",
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "or": "ou",
+    "confetti_decoration": "Décoration de confettis"
   },
   
   "advertiser_onboarding": {
@@ -109,19 +111,32 @@
       "description": "Paiements, coordination, assistance aux locataires — tout est géré par nous."
     },
     "founding_partner": {
-      "title": "Programme Partenaire Fondateur",
-      "description": "Débloquez des avantages exclusifs – uniquement pour nos 100 premiers annonceurs.",
+      "title": "Partenaires Fondateurs",
+      "be_part_first": "Faites partie des premiers",
+      "description": "...et accédez en avant-première à notre offre de lancement la plus exclusive.",
+      "benefits_duration": "Ces avantages durent seulement 3 mois",
+      "benefits_heading": "Profitez au maximum de votre statut de Partenaire Fondateur.",
+      "tagline": "Gagnez plus. Faites moins. Soyez payé plus vite.",
       "benefit_commission": {
         "highlight": "0% de Commission (3 Mois)",
-        "text": "– Gardez 100% de votre loyer."
+        "text": "– Gardez 100% de votre loyer.",
+        "subtitle": "Commission Annonceur",
+        "description": "Gardez 100% du loyer—Kaari ne prélève aucune commission pendant vos 3 premiers mois.",
+        "alt": "0% de Commission"
       },
       "benefit_referral": {
-        "highlight": "Programme de Parrainage",
-        "text": "– Gagnez 10% pour chaque locataire que vous parrainez."
+        "highlight": "Illimité",
+        "text": "– Gagnez 10% pour chaque locataire que vous parrainez.",
+        "subtitle": "Gains de Parrainage",
+        "description": "Gagnez 10% du premier mois de loyer pour chaque locataire que vous parrainez. Votre locataire obtient 200 MAD de réduction.",
+        "alt": "Gains Illimités"
       },
       "benefit_support": {
-        "highlight": "Support VIP",
-        "text": "– Aide personnalisée pour augmenter vos revenus."
+        "highlight": "Accompagnement VIP",
+        "text": "– Aide personnalisée pour augmenter vos revenus.",
+        "subtitle": "À Chaque Étape",
+        "description": "Les Partenaires Fondateurs bénéficient d'un accompagnement personnalisé, d'une aide proactive pour les réservations et d'un support personnel.",
+        "alt": "Support VIP"
       }
     },
     "cta": {

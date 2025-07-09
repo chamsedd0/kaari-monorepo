@@ -387,6 +387,7 @@ export const isInSignupFlow = (): boolean => {
   const currentPath = window.location.pathname;
   return (
     currentPath === '/advertiser-signup' ||
+    currentPath === '/advertiser-signup/founding-partners' ||
     currentPath === '/advertiser-signup/form' ||
     currentPath === '/become-advertiser' ||
     currentPath === '/become-advertiser/thank-you' ||

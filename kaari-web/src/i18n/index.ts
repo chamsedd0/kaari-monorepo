@@ -32,8 +32,20 @@ localStorage.setItem('i18nextLng', defaultLang);
 // Log the advertiser onboarding translations to verify they're loaded
 console.log('Advertiser onboarding translations:', {
   en: enTranslation.advertiser_onboarding ? 'Loaded' : 'Missing',
-  fr: frTranslation.advertiser_onboarding ? 'Loaded' : 'Missing'
+  fr: frTranslation.advertiser_onboarding ? 'Loaded' : 'Missing',
+  enWelcome: enTranslation.advertiser_onboarding?.welcome,
+  frWelcome: frTranslation.advertiser_onboarding?.welcome
 });
+
+// Pre-load translations into memory
+const resources = {
+  en: {
+    translation: enTranslation
+  },
+  fr: {
+    translation: frTranslation
+  }
+};
 
 i18n
   // Detect user language
@@ -42,14 +54,7 @@ i18n
   .use(initReactI18next)
   // Initialize i18next
   .init({
-    resources: {
-      en: {
-        translation: enTranslation
-      },
-      fr: {
-        translation: frTranslation
-      }
-    },
+    resources,
     lng: defaultLang, // Force the language to be the default one
     fallbackLng: 'fr', // Changed from 'en' to 'fr'
     debug: true, // Enable debug
@@ -69,13 +74,31 @@ i18n
     },
     
     // Ensure translations are loaded immediately
-    initImmediate: false
+    initImmediate: false,
+    
+    // Add additional options to ensure translations are loaded
+    preload: ['en', 'fr'],
+    load: 'all',
+    returnEmptyString: false,
+    returnNull: false,
+    returnObjects: true,
+    joinArrays: true,
+    parseMissingKeyHandler: (key) => {
+      console.warn(`Missing translation key: ${key}`);
+      return key;
+    }
   });
 
 // Log when language changes
 i18n.on('languageChanged', (lng) => {
   console.log(`Language changed to: ${lng}`);
   localStorage.setItem('i18nextLng', lng);
+  
+  // Force reload translations after language change
+  i18n.reloadResources([lng]).then(() => {
+    console.log(`Translations reloaded for ${lng}`);
+    console.log('Translation for welcome:', i18n.t('advertiser_onboarding.welcome'));
+  });
 });
 
 // Force reload translations
@@ -83,6 +106,12 @@ i18n.reloadResources().then(() => {
   console.log('Initial translations loaded');
   console.log('Current language:', i18n.language);
   console.log('Translation for welcome:', i18n.t('advertiser_onboarding.welcome'));
+  
+  // Add all translations to window for debugging
+  (window as any).translations = {
+    en: enTranslation,
+    fr: frTranslation
+  };
 });
 
 export default i18n; 

@@ -9,55 +9,10 @@ import { LanguageSwitcher, MobileLanguageSwitcher } from "../../components/skele
 import { hideHeadersAndFooters } from '../../utils/advertiser-signup';
 import { MdHouse, MdCameraAlt, MdHandshake, MdVerified, MdAttachMoney, MdSupportAgent } from "react-icons/md";
 
-// Define a type for translation objects
-type TranslationValue = string | Record<string, any>;
-type TranslationRecord = Record<string, TranslationValue>;
-
-// Hardcoded translations as fallback
-const fallbackTranslations: Record<'fr' | 'en', TranslationRecord> = {
-  fr: {
-    welcome: "Bienvenue sur Kaari",
-    subtitle: "Rejoignez notre communauté de propriétaires et atteignez des milliers de locataires potentiels. Nous rendons la gestion immobilière simple, sécurisée et rentable.",
-    feature_integration: {
-      title: "Intégration en 48h",
-      description: "Publiez votre bien et soyez prêt à accueillir des locataires en seulement 48 heures grâce à notre processus simplifié."
-    },
-    feature_photography: {
-      title: "Photographie Professionnelle",
-      description: "Nos photographes professionnels mettront votre bien en valeur, totalement gratuitement."
-    },
-    feature_management: {
-      title: "Gestion Intelligente",
-      description: "Gérez les réservations, communiquez avec les locataires et suivez les paiements, le tout au même endroit."
-    },
-    cta: {
-      button: "Commencer Maintenant"
-    }
-  },
-  en: {
-    welcome: "Welcome to Kaari",
-    subtitle: "Join our community of landlords and reach thousands of potential tenants. We make property management simple, secure and profitable.",
-    feature_integration: {
-      title: "48-Hour Integration",
-      description: "List your property and be ready to welcome tenants in just 48 hours with our streamlined process."
-    },
-    feature_photography: {
-      title: "Professional Photography",
-      description: "Our professional photographers will showcase your property at its best, completely free of charge."
-    },
-    feature_management: {
-      title: "Intelligent Management",
-      description: "Manage bookings, communicate with tenants, and track payments, all in one place."
-    },
-    cta: {
-      button: "Start Now"
-    }
-  }
-};
-
+// Remove unused translation types
 const AdvertiserOnboardingPage = () => {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation('translation', { useSuspense: false });
+  const { t, i18n } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -67,31 +22,65 @@ const AdvertiserOnboardingPage = () => {
     cta: false
   });
 
+  // Hardcoded translations as fallback
+  const fallbackTranslations = {
+    fr: {
+      welcome: "Bienvenue sur Kaari",
+      subtitle: "Louez votre propriété sans lever le petit doigt.",
+      feature_photos: {
+        title: "Photos + Annonce Gratuites",
+        description: "Nous visitons votre propriété, prenons des photos, rédigeons l'annonce et la publions."
+      },
+      feature_tenants: {
+        title: "Locataires Vérifiés, Sans Visites",
+        description: "Nous filtrons les locataires pour que vous ne receviez que des demandes sérieuses."
+      },
+      feature_approval: {
+        title: "Vous Approuvez, Nous Faisons le Reste",
+        description: "Paiements, coordination, assistance aux locataires — tout est géré par nous."
+      }
+    },
+    en: {
+      welcome: "Welcome to Kaari",
+      subtitle: "Rent out your property without lifting a finger.",
+      feature_photos: {
+        title: "Free Photos + Listing",
+        description: "We visit your property, take photos, write the listing, and publish it."
+      },
+      feature_tenants: {
+        title: "Verified Tenants, No Visits",
+        description: "We screen tenants so you only get serious requests."
+      },
+      feature_approval: {
+        title: "You Approve, We Do the Rest",
+        description: "Payments, coordination, tenant support — all handled by us."
+      }
+    }
+  };
+
   // Helper function to get translations with fallback
   const getTranslation = (key: string): string => {
+    const fullKey = `advertiser_onboarding.${key}`;
     // Try to get translation from i18n first
-    const translation = t(key);
+    const translation = t(fullKey);
     
     // If the key is returned as is, it means the translation is missing
-    if (translation === key) {
-      console.warn(`Missing translation for key: ${key}`);
+    if (translation === fullKey) {
+      console.warn(`Missing translation for key: ${fullKey}`);
       
       // Parse the key to get the nested properties
       const keyParts = key.split('.');
-      
-      // Remove the namespace (advertiser_onboarding)
-      keyParts.shift();
       
       // Get the current language
       const lang = i18n.language && i18n.language.startsWith('fr') ? 'fr' : 'en';
       
       // Try to get from fallback translations
-      let fallback: Record<string, any> = fallbackTranslations[lang as 'fr' | 'en'];
+      let fallback = fallbackTranslations[lang as 'fr' | 'en'];
       
       // Navigate through the nested properties
       for (const part of keyParts) {
         if (fallback && typeof fallback === 'object' && part in fallback) {
-          fallback = fallback[part] as Record<string, any>;
+          fallback = fallback[part] as any;
         } else {
           // If property doesn't exist, try the other language
           const otherLang = lang === 'fr' ? 'en' : 'fr';
@@ -99,7 +88,7 @@ const AdvertiserOnboardingPage = () => {
           
           for (const p of keyParts) {
             if (fallback && typeof fallback === 'object' && p in fallback) {
-              fallback = fallback[p] as Record<string, any>;
+              fallback = fallback[p] as any;
             } else {
               return key; // Return the key if all else fails
             }
@@ -178,7 +167,8 @@ const AdvertiserOnboardingPage = () => {
   const handleGetStarted = () => {
     setIsExiting(true);
     setTimeout(() => {
-      navigate("/advertiser-signup/form");
+      // Navigate to the founding partners page instead of directly to the form
+      navigate("/advertiser-signup/founding-partners");
     }, 500);
   };
 
@@ -191,77 +181,95 @@ const AdvertiserOnboardingPage = () => {
       <LoadingOverlay isLoading={isLoading} />
       <GradientOverlay />
       
-      <TopSection>
-        <LogoWrapper>
-          <Logo src={PurpleLogo} alt="Kaari Logo" />
-        </LogoWrapper>
-        <LanguageSwitcherWrapper>
-          {isMobile ? <MobileLanguageSwitcher /> : <LanguageSwitcher />}
-        </LanguageSwitcherWrapper>
+      <TopSection isMobile={isMobile}>
+        {isMobile ? (
+          <CenteredLogoWrapper>
+            <Logo src={PurpleLogo} alt={t('common.kaari_logo')} isMobile={isMobile} />
+          </CenteredLogoWrapper>
+        ) : (
+          <>
+            <LogoWrapper>
+              <Logo src={PurpleLogo} alt={t('common.kaari_logo')} isMobile={isMobile} />
+            </LogoWrapper>
+            <LanguageSwitcherWrapper>
+              <LanguageSwitcher />
+            </LanguageSwitcherWrapper>
+            <CloseButton onClick={handleClose}>
+              <FaTimes />
+            </CloseButton>
+          </>
+        )}
       </TopSection>
       
-      <ContentContainer>
+      <ContentContainer isMobile={isMobile}>
         <MainContent>
           <WelcomeSection isVisible={animatedItems.welcome}>
-            <WelcomeHeading>Bienvenue sur Kaari</WelcomeHeading>
-            <Subheading>
-              Rejoignez notre communauté de propriétaires et atteignez des milliers de locataires potentiels. 
-              Nous rendons la gestion immobilière simple, sécurisée et rentable.
+            <WelcomeHeading isMobile={isMobile}>{getTranslation('welcome')}</WelcomeHeading>
+            <Subheading isMobile={isMobile}>
+              {getTranslation('subtitle')}
             </Subheading>
           </WelcomeSection>
           
           <FeatureList isVisible={animatedItems.features}>
-            <FeatureItem>
+            <FeatureItem isMobile={isMobile}>
               <FeatureIconWrapper>
-                <MdHouse size={20} color="white" />
+                <MdHouse size={isMobile ? 16 : 20} color="white" />
               </FeatureIconWrapper>
               <FeatureContent>
-                <FeatureTitle>Intégration en 48h</FeatureTitle>
-                <FeatureDescription>
-                  Publiez votre bien et soyez prêt à accueillir des locataires en seulement 48 heures grâce à notre processus simplifié.
+                <FeatureTitle isMobile={isMobile}>{getTranslation('feature_photos.title')}</FeatureTitle>
+                <FeatureDescription isMobile={isMobile}>
+                  {getTranslation('feature_photos.description')}
                 </FeatureDescription>
               </FeatureContent>
             </FeatureItem>
             
-            <FeatureItem>
+            <FeatureItem isMobile={isMobile}>
               <FeatureIconWrapper>
-                <MdCameraAlt size={20} color="white" />
+                <MdCameraAlt size={isMobile ? 16 : 20} color="white" />
               </FeatureIconWrapper>
               <FeatureContent>
-                <FeatureTitle>Photographie Professionnelle</FeatureTitle>
-                <FeatureDescription>
-                  Nos photographes professionnels mettront votre bien en valeur, totalement gratuitement.
+                <FeatureTitle isMobile={isMobile}>{getTranslation('feature_tenants.title')}</FeatureTitle>
+                <FeatureDescription isMobile={isMobile}>
+                  {getTranslation('feature_tenants.description')}
                 </FeatureDescription>
               </FeatureContent>
             </FeatureItem>
             
-            <FeatureItem>
+            <FeatureItem isMobile={isMobile}>
               <FeatureIconWrapper>
-                <MdHandshake size={20} color="white" />
+                <MdHandshake size={isMobile ? 16 : 20} color="white" />
               </FeatureIconWrapper>
               <FeatureContent>
-                <FeatureTitle>Gestion Intelligente</FeatureTitle>
-                <FeatureDescription>
-                  Gérez les réservations, communiquez avec les locataires et suivez les paiements, le tout au même endroit.
+                <FeatureTitle isMobile={isMobile}>{getTranslation('feature_approval.title')}</FeatureTitle>
+                <FeatureDescription isMobile={isMobile}>
+                  {getTranslation('feature_approval.description')}
                 </FeatureDescription>
               </FeatureContent>
             </FeatureItem>
           </FeatureList>
           
           <CTASection isVisible={animatedItems.cta}>
-            <StartButton onClick={handleGetStarted}>
-              Commencer Maintenant
+            <StartButton onClick={handleGetStarted} isMobile={isMobile}>
+              {t('common.get_started')}
               <FaArrowRight />
             </StartButton>
           </CTASection>
         </MainContent>
         
-        <IllustrationContainer>
-          <PlaceholderIllustration>
-            <PlaceholderText>Illustration Placeholder</PlaceholderText>
-          </PlaceholderIllustration>
-        </IllustrationContainer>
+        {!isMobile && (
+          <IllustrationContainer>
+            <PlaceholderIllustration>
+              <PlaceholderText>Illustration Placeholder</PlaceholderText>
+            </PlaceholderIllustration>
+          </IllustrationContainer>
+        )}
       </ContentContainer>
+      
+      {isMobile && (
+        <BottomLanguageSwitcher>
+          <MobileLanguageSwitcher />
+        </BottomLanguageSwitcher>
+      )}
     </Container>
   );
 };
@@ -294,7 +302,7 @@ const Container = styled.div<{ isExiting: boolean }>`
   flex-direction: column;
   padding: 1.5rem 2rem;
   box-sizing: border-box;
-  overflow-y: auto;
+  overflow: hidden;
   animation: ${props => props.isExiting ? fadeOut : fadeIn} 0.5s ease-in-out;
   position: relative;
   
@@ -304,14 +312,14 @@ const Container = styled.div<{ isExiting: boolean }>`
     min-height: 100vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     
     &::-webkit-scrollbar {
-      display: none !important;
-      width: 0 !important;
-      height: 0 !important;
-      background: transparent !important;
+      display: none;
+      width: 0;
+      height: 0;
+      background: transparent;
     }
   }
 `;
@@ -340,14 +348,14 @@ const GradientOverlay = styled.div`
   pointer-events: none;
 `;
 
-const TopSection = styled.div`
+const TopSection = styled.div<{ isMobile: boolean }>`
   display: flex;
-  justify-content: space-between;
+  justify-content: ${props => props.isMobile ? 'center' : 'space-between'};
   align-items: center;
   margin-bottom: 0;
   position: relative;
   z-index: 2;
-  height: 60px;
+  height: ${props => props.isMobile ? '50px' : '60px'};
   
   @media (max-width: 768px) {
     margin-bottom: 0;
@@ -360,8 +368,15 @@ const LogoWrapper = styled.div`
   align-items: center;
 `;
 
-const Logo = styled.img`
-  height: 40px;
+const CenteredLogoWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+`;
+
+const Logo = styled.img<{ isMobile: boolean }>`
+  height: ${props => props.isMobile ? '30px' : '40px'};
   filter: brightness(0) invert(1);
 `;
 
@@ -369,15 +384,59 @@ const LanguageSwitcherWrapper = styled.div`
   z-index: 10;
 `;
 
-const ContentContainer = styled.div`
+const BottomLanguageSwitcher = styled.div`
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  
+  /* Ensure visibility with background and shadow */
+  padding: 8px;
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  z-index: 10;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const ContentContainer = styled.div<{ isMobile: boolean }>`
   display: flex;
   flex: 1;
-  gap: 4rem;
+  flex-direction: ${props => props.isMobile ? 'column' : 'row'};
+  gap: ${props => props.isMobile ? '1.5rem' : '4rem'};
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
-  height: calc(100vh - 100px); /* Adjust for header height */
+  height: ${props => props.isMobile ? 'auto' : 'calc(100vh - 100px)'};
   align-items: center;
+  padding: ${props => props.isMobile ? '1rem 0' : '0'};
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
   
   @media (max-width: 1024px) {
     flex-direction: column;
@@ -396,6 +455,7 @@ const MainContent = styled.div`
   
   @media (max-width: 768px) {
     gap: 1rem;
+    width: 100%;
   }
 `;
 
@@ -437,30 +497,37 @@ const WelcomeSection = styled.div<{ isVisible: boolean }>`
   opacity: ${props => props.isVisible ? 1 : 0};
   transform: translateY(${props => props.isVisible ? '0' : '30px'});
   transition: opacity 0.6s ease, transform 0.6s ease;
+  text-align: center;
+  
+  @media (max-width: 768px) {
+    text-align: center;
+  }
 `;
 
-const WelcomeHeading = styled.h1`
-  font-size: 3.2rem;
+const WelcomeHeading = styled.h1<{ isMobile: boolean }>`
+  font-size: ${props => props.isMobile ? '2rem' : '3.2rem'};
   font-weight: 700;
   margin: 0 0 1rem 0;
   line-height: 1.1;
   
   @media (max-width: 768px) {
-    font-size: 2.5rem;
+    font-size: 2rem;
     margin-bottom: 0.8rem;
   }
 `;
 
-const Subheading = styled.p`
-  font-size: 1.1rem;
+const Subheading = styled.p<{ isMobile: boolean }>`
+  font-size: ${props => props.isMobile ? '0.9rem' : '1.1rem'};
   line-height: 1.5;
   max-width: 650px;
   margin: 0 0 1rem 0;
   opacity: 0.9;
   
   @media (max-width: 768px) {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     margin-bottom: 0.8rem;
+    margin-left: auto;
+    margin-right: auto;
   }
 `;
 
@@ -473,15 +540,20 @@ const FeatureList = styled.div<{ isVisible: boolean }>`
   transition: opacity 0.6s ease, transform 0.6s ease;
   width: 100%;
   max-width: 600px;
+  
+  @media (max-width: 768px) {
+    margin: 0 auto;
+    gap: 0.8rem;
+  }
 `;
 
-const FeatureItem = styled.div`
+const FeatureItem = styled.div<{ isMobile: boolean }>`
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 1.2rem;
+  border-radius: ${props => props.isMobile ? '12px' : '16px'};
+  padding: ${props => props.isMobile ? '0.9rem' : '1.2rem'};
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  gap: ${props => props.isMobile ? '0.8rem' : '1rem'};
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 `;
@@ -496,9 +568,19 @@ const FeatureIconWrapper = styled.div`
   justify-content: center;
   flex-shrink: 0;
   
+  @media (max-width: 768px) {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+  
   svg {
     font-size: 20px;
     color: white;
+    
+    @media (max-width: 768px) {
+      font-size: 16px;
+    }
   }
 `;
 
@@ -508,18 +590,27 @@ const FeatureContent = styled.div`
   align-items: flex-start;
 `;
 
-const FeatureTitle = styled.h3`
-  font-size: 1.2rem;
+const FeatureTitle = styled.h3<{ isMobile: boolean }>`
+  font-size: ${props => props.isMobile ? '1rem' : '1.2rem'};
   font-weight: 600;
   margin: 0 0 0.4rem 0;
   color: white;
+  
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    margin: 0 0 0.2rem 0;
+  }
 `;
 
-const FeatureDescription = styled.p`
-  font-size: 0.95rem;
+const FeatureDescription = styled.p<{ isMobile: boolean }>`
+  font-size: ${props => props.isMobile ? '0.85rem' : '0.95rem'};
   line-height: 1.5;
   margin: 0;
   color: rgba(255, 255, 255, 0.9);
+  
+  @media (max-width: 768px) {
+    font-size: 0.85rem;
+  }
 `;
 
 const CTASection = styled.div<{ isVisible: boolean }>`
@@ -527,15 +618,22 @@ const CTASection = styled.div<{ isVisible: boolean }>`
   opacity: ${props => props.isVisible ? 1 : 0};
   transform: translateY(${props => props.isVisible ? '0' : '30px'});
   transition: opacity 0.6s ease, transform 0.6s ease;
+  display: flex;
+  justify-content: center;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
 `;
 
-const StartButton = styled.button`
+const StartButton = styled.button<{ isMobile: boolean }>`
   background: white;
   color: ${Theme.colors.secondary};
   border: none;
   border-radius: 50px;
-  padding: 0.9rem 2.5rem;
-  font-size: 1.1rem;
+  padding: ${props => props.isMobile ? '0.8rem 2rem' : '0.9rem 2.5rem'};
+  font-size: ${props => props.isMobile ? '1rem' : '1.1rem'};
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -551,6 +649,17 @@ const StartButton = styled.button`
   
   svg {
     font-size: 0.9rem;
+    
+    @media (max-width: 768px) {
+      font-size: 0.8rem;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    width: 80%;
+    justify-content: center;
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
   }
 `;
 

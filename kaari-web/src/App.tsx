@@ -64,7 +64,20 @@ import {
   ComingSoonPage
 } from './pages/static';
 import ExpirationService from './services/ExpirationService';
-import { AdvertiserOnboardingPage, AdvertiserSignupForm } from './pages/advertiser-signup';
+import { AdvertiserOnboardingPage, AdvertiserSignupForm, FoundingPartnersPage } from './pages/advertiser-signup';
+import i18n from './i18n';
+
+// Function to ensure French is the default language
+const ensureFrenchAsDefault = () => {
+  const currentLang = i18n.language;
+  if (!currentLang || (!currentLang.startsWith('fr') && !currentLang.startsWith('en'))) {
+    i18n.changeLanguage('fr');
+    localStorage.setItem('i18nextLng', 'fr');
+    console.log('Setting default language to French');
+  } else {
+    console.log('Current language:', currentLang);
+  }
+};
 
 function App() {
   // Use the global store for authentication
@@ -72,6 +85,11 @@ function App() {
   const user = useStore(state => state.user);
   const initAuth = useStore(state => state.initAuth);
   const [renderKey, setRenderKey] = useState(0);
+  
+  // Set French as default language on app load
+  useEffect(() => {
+    ensureFrenchAsDefault();
+  }, []);
   
   // Initialize authentication on app load
   useEffect(() => {
@@ -237,6 +255,7 @@ function App() {
       
       {/* Isolated Advertiser Signup Flow - No MainLayout */}
       <Route path="/advertiser-signup" element={<AdvertiserOnboardingPage />} />
+      <Route path="/advertiser-signup/founding-partners" element={<FoundingPartnersPage />} />
       <Route path="/advertiser-signup/form" element={<AdvertiserSignupForm />} />
       <Route path="/become-advertiser" element={<BecomeAdvertiserPage />} />
       <Route path="/become-advertiser/thank-you" element={<AdvertiserThankYouPage />} />

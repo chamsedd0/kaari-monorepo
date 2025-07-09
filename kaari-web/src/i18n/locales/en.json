@@ -91,7 +91,8 @@
     "go_back": "Go Back",
     "loading": "Loading...",
     "or": "or",
-    "sign_up_now": "Sign Up Now"
+    "sign_up_now": "Sign Up Now",
+    "confetti_decoration": "Confetti decoration"
   },
   
   "advertiser_onboarding": {
@@ -110,19 +111,32 @@
       "description": "Payments, coordination, tenant support — all handled by us."
     },
     "founding_partner": {
-      "title": "Founding Partner Program",
-      "description": "Unlock exclusive perks – only for our first 100 advertisers.",
+      "title": "Founding Partners",
+      "be_part_first": "Be part of the first",
+      "description": "...and get early access to our most exclusive launch offer yet.",
+      "benefits_duration": "These benefits last 3 months only",
+      "benefits_heading": "Make the most of your Founding Partner status.",
+      "tagline": "Earn more. Do less. Get paid faster.",
       "benefit_commission": {
         "highlight": "0% Commission (3 Months)",
-        "text": "– Keep 100% of your rent."
+        "text": "– Keep 100% of your rent.",
+        "subtitle": "Advertiser Commission",
+        "description": "Keep 100% of the rent—Kaari charges no commission during your first 3 months.",
+        "alt": "0% Commission"
       },
       "benefit_referral": {
-        "highlight": "Referral Program",
-        "text": "– Earn 10% for every tenant you refer."
+        "highlight": "Unlimited",
+        "text": "– Earn 10% for every tenant you refer.",
+        "subtitle": "Referral Earnings",
+        "description": "Earn 10% of the first month's rent for every tenant you refer. Your tenant gets 200 MAD off.",
+        "alt": "Unlimited Earnings"
       },
       "benefit_support": {
-        "highlight": "VIP Support",
-        "text": "– Personalized help to boost your earnings."
+        "highlight": "VIP Guidance",
+        "text": "– Personalized help to boost your earnings.",
+        "subtitle": "At Every Step",
+        "description": "Founding Partners get white-glove onboarding, proactive booking help, and personal support.",
+        "alt": "VIP Support"
       }
     },
     "cta": {
