@@ -512,7 +512,7 @@ const LanguageSwitcherWrapper = styled.div`
 const BottomLanguageSwitcher = styled.div`
   position: fixed;
   bottom: 20px;
-  left: 10%;
+  left: 15%;
   transform: translateX(-50%);
   z-index: 1000;
   
