@@ -411,7 +411,7 @@ const TopSection = styled.div<{ isMobile: boolean }>`
 
 const LogoContainer = styled.div`
   img {
-    height: 40px;
+    height: 25px;
   }
 `;
 
@@ -431,9 +431,13 @@ const ContentContainer = styled.div<{ isMobile: boolean }>`
   flex: 1;
   padding: 0;
   width: 100%;
+  
   max-width: ${props => props.isMobile ? '90%' : '500px'};
+  
   margin: 0 auto;
-  margin-top: ${props => props.isMobile ? '0' : '50px'};
+  
+  margin-top: ${props => props.isMobile ? '0px' : '50px'};
+  
   overflow-y: ${props => props.isMobile ? 'auto' : 'visible'};
   -webkit-overflow-scrolling: touch;
   

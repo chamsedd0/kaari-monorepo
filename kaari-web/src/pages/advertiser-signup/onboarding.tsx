@@ -387,7 +387,7 @@ const LanguageSwitcherWrapper = styled.div`
 const BottomLanguageSwitcher = styled.div`
   position: fixed;
   bottom: 20px;
-  left: 50%;
+  left: 20px;
   transform: translateX(-50%);
   z-index: 1000;
   
@@ -400,20 +400,7 @@ const BottomLanguageSwitcher = styled.div`
 `;
 
 const CloseButton = styled.button`
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.5rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  z-index: 10;
-  
-  &:hover {
-    opacity: 0.8;
-  }
+  display: none;
 `;
 
 const ContentContainer = styled.div<{ isMobile: boolean }>`
