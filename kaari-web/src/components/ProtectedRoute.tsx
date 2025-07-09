@@ -15,6 +15,7 @@ const ADMIN_IDS = [
   'ar1zXIkJxYN3TjAE802cm8lwWs22',
   'T8Vyhbk9KfdKOGf0eAEXZixucpQ2',
   '6A0LLKFmBIX7TiSnyWTGXsoblLc2',
+  'VbyG1m1hFyZXDiF5M935vgH8BHb2',
 
   // Add any other user IDs that should have access
 ];
