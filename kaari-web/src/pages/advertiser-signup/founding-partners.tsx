@@ -242,6 +242,17 @@ const FoundingPartnersPage: React.FC = () => {
     };
   }, [i18n]);
 
+  // Add a new effect to respond to language changes
+  useEffect(() => {
+    // This effect will run whenever the language changes
+    console.log('Language changed in founding-partners page:', i18n.language);
+    // Force component update when language changes
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
+  }, [i18n.language]);
+
   const handleSignUpNow = () => {
     setIsExiting(true);
     setTimeout(() => {

@@ -113,22 +113,22 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ className }) => {
   }, [currentLanguage]);
   
   const toggleLanguage = (lang: string) => {
+    if (lang === currentLanguage) return;
+    
     console.log('Toggling language to:', lang);
     
     try {
+      // Save language preference to localStorage directly
+      localStorage.setItem('i18nextLng', lang);
+      
       // Change language using i18next
       i18n.changeLanguage(lang).then(() => {
         // Force reload translations after language change
         i18n.reloadResources([lang]).then(() => {
           console.log(`Translations reloaded for ${lang}`);
-          
-          // Force page refresh to ensure translations are applied
-          window.location.reload();
+          // No page refresh - let React handle the re-rendering
         });
       });
-      
-      // Save language preference to localStorage directly
-      localStorage.setItem('i18nextLng', lang);
       
       console.log('Language changed successfully to:', lang);
     } catch (error) {

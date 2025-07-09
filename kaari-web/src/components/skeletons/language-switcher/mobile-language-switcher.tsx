@@ -84,18 +84,20 @@ const MobileLanguageSwitcher: React.FC<MobileLanguageSwitcherProps> = ({
     'fr'; // Default to French
   
   const toggleLanguage = (lang: string) => {
+    if (lang === currentLanguage) return;
+    
     try {
+      // Save language preference to localStorage directly
+      localStorage.setItem('i18nextLng', lang);
+      
       // Change language using i18next
       i18n.changeLanguage(lang).then(() => {
         // Force reload translations after language change
         i18n.reloadResources([lang]).then(() => {
-          // Force page refresh to ensure translations are applied
-          window.location.reload();
+          console.log(`Mobile switcher: Translations reloaded for ${lang}`);
+          // No page refresh - let React handle the re-rendering
         });
       });
-      
-      // Save language preference to localStorage directly
-      localStorage.setItem('i18nextLng', lang);
     } catch (error) {
       console.error('Error changing language:', error);
     }

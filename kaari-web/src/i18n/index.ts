@@ -57,7 +57,7 @@ i18n
     resources,
     lng: defaultLang, // Force the language to be the default one
     fallbackLng: 'fr', // Changed from 'en' to 'fr'
-    debug: true, // Enable debug
+    debug: false, // Disable debug in production
     
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
@@ -70,7 +70,11 @@ i18n
       lookupLocalStorage: 'i18nextLng',
     },
     react: {
-      useSuspense: false
+      useSuspense: false,
+      bindI18n: 'languageChanged loaded', // React to language changes and loaded resources
+      bindI18nStore: 'added removed', // React to resource changes
+      transSupportBasicHtmlNodes: true, // Allow basic HTML in translations
+      transKeepBasicHtmlNodesFor: ['br', 'strong', 'i', 'p', 'span'], // List of HTML nodes to keep
     },
     
     // Ensure translations are loaded immediately
