@@ -1421,13 +1421,13 @@ const AdvertiserRegistrationPage: React.FC = () => {
               />
               <label htmlFor="termsAgreed">
                 {t('become_advertiser.step4.i_agree_to_the')}
-                <a href="/terms" target="_blank" rel="noopener noreferrer">
+                <b>
                   {t('become_advertiser.step4.terms_of_service')}
-                </a>
+                </b>
                 {t('become_advertiser.step4.and')}
-                <a href="/privacy" target="_blank" rel="noopener noreferrer">
+                <b>
                   {t('become_advertiser.step4.privacy_policy')}
-                </a>
+                </b>
               </label>
             </div>
             {errors.termsAgreed && <div className="error-message">{errors.termsAgreed}</div>}

@@ -8,6 +8,7 @@ import { FaHome, FaCamera, FaCog, FaArrowRight, FaTimes } from "react-icons/fa";
 import { LanguageSwitcher, MobileLanguageSwitcher } from "../../components/skeletons/language-switcher";
 import { hideHeadersAndFooters } from '../../utils/advertiser-signup';
 import { MdHouse, MdCameraAlt, MdHandshake, MdVerified, MdAttachMoney, MdSupportAgent } from "react-icons/md";
+import OnboardingIllustration from "../../assets/images/onboardingIllustration.svg";
 
 // Remove unused translation types
 const AdvertiserOnboardingPage = () => {
@@ -258,9 +259,7 @@ const AdvertiserOnboardingPage = () => {
         
         {!isMobile && (
           <IllustrationContainer>
-            <PlaceholderIllustration>
-              <PlaceholderText>Illustration Placeholder</PlaceholderText>
-            </PlaceholderIllustration>
+            <img src={OnboardingIllustration} alt="Onboarding Illustration" />
           </IllustrationContainer>
         )}
       </ContentContainer>
@@ -387,14 +386,14 @@ const LanguageSwitcherWrapper = styled.div`
 const BottomLanguageSwitcher = styled.div`
   position: fixed;
   bottom: 20px;
-  left: 15%;
+  left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
   
   /* Ensure visibility with background and shadow */
   padding: 8px;
   border-radius: 20px;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(76, 27, 97, 0.2);
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 `;
@@ -441,6 +440,8 @@ const MainContent = styled.div`
   justify-content: center;
   
   @media (max-width: 768px) {
+    justify-content: start;
+    margin-top: 50px;
     gap: 1rem;
     width: 100%;
   }
@@ -527,19 +528,22 @@ const FeatureList = styled.div<{ isVisible: boolean }>`
   transition: opacity 0.6s ease, transform 0.6s ease;
   width: 100%;
   max-width: 600px;
+
   
   @media (max-width: 768px) {
     margin: 0 auto;
     gap: 0.8rem;
+    margin-top: 30px;
   }
 `;
 
 const FeatureItem = styled.div<{ isMobile: boolean }>`
   background: rgba(255, 255, 255, 0.1);
   border-radius: ${props => props.isMobile ? '12px' : '16px'};
-  padding: ${props => props.isMobile ? '0.9rem' : '1.2rem'};
+  min-height: ${props => props.isMobile ? '30%' : 'unset'};
+  padding: ${props => props.isMobile ? '1.5rem' : '1.2rem'};
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: ${props => props.isMobile ? '0.8rem' : '1rem'};
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
@@ -628,6 +632,7 @@ const StartButton = styled.button<{ isMobile: boolean }>`
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  margin-top: ${props => props.isMobile ? '30px' : '0'};
   
   &:hover {
     transform: translateY(-2px);

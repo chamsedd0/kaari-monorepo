@@ -932,6 +932,8 @@ export const AdvertiserRegistrationPageStyle = styled.div`
   .chips-container {
     display: flex;
     flex-wrap: wrap;
+    align-items: start;
+    justify-content: start;
     gap: 12px;
     margin-top: 10px;
     
@@ -1053,7 +1055,8 @@ export const AdvertiserRegistrationPageStyle = styled.div`
   
   .terms-checkbox {
     display: flex;
-    align-items: flex-start;
+    align-items: start;
+    justify-content: start;
     margin-top: 30px;
     position: relative;
     
@@ -1071,7 +1074,7 @@ export const AdvertiserRegistrationPageStyle = styled.div`
       display: flex;
       align-items: center;
       position: relative;
-      padding-left: 28px;
+      padding-left: 40px;
       line-height: 1.4;
       
       &:before {
@@ -1101,7 +1104,7 @@ export const AdvertiserRegistrationPageStyle = styled.div`
         transition: all 0.2s ease;
       }
       
-      a {
+      b {
         color: ${Theme.colors.secondary};
         text-decoration: none;
         font-weight: 600;

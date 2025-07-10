@@ -64,21 +64,21 @@ const FoundingPartnersPage: React.FC = () => {
       benefits_heading: "Profitez au maximum de votre statut de Partenaire Fondateur.",
       tagline: "Gagnez plus. Faites moins. Soyez payé plus vite.",
       benefit_commission: {
-        highlight: "0% de Commission (3 Mois)",
+        highlight: "0%",
         subtitle: "Commission Annonceur",
-        description: "Gardez 100% du loyer—Kaari ne prélève aucune commission pendant vos 3 premiers mois.",
+        description: "Gardez 100% du loyer pendant 3 mois sans commission.",
         alt: "0% de Commission"
       },
       benefit_referral: {
-        highlight: "Illimité",
+        highlight: "Programme de Parrainage",
         subtitle: "Gains de Parrainage",
-        description: "Gagnez 10% du premier mois de loyer pour chaque locataire que vous parrainez. Votre locataire obtient 200 MAD de réduction.",
+        description: "Gagnez 10% du premier loyer. 200 MAD de réduction pour vos filleuls.",
         alt: "Gains Illimités"
       },
       benefit_support: {
         highlight: "Accompagnement VIP",
         subtitle: "À Chaque Étape",
-        description: "Les Partenaires Fondateurs bénéficient d'un accompagnement personnalisé, d'une aide proactive pour les réservations et d'un support personnel.",
+        description: "Accompagnement personnalisé, aide proactive et support dédié.",
         alt: "Support VIP"
       },
       cta: {
@@ -94,21 +94,21 @@ const FoundingPartnersPage: React.FC = () => {
       benefits_heading: "Make the most of your Founding Partner status.",
       tagline: "Earn more. Do less. Get paid faster.",
       benefit_commission: {
-        highlight: "0% Commission (3 Months)",
+        highlight: "0%",
         subtitle: "Advertiser Commission",
-        description: "Keep 100% of the rent—Kaari charges no commission during your first 3 months.",
+        description: "Keep 100% of the rent for 3 months with no commission.",
         alt: "0% Commission"
       },
       benefit_referral: {
-        highlight: "Unlimited",
+        highlight: "Referral Program",
         subtitle: "Referral Earnings",
-        description: "Earn 10% of the first month's rent for every tenant you refer. Your tenant gets 200 MAD off.",
+        description: "Earn 10% of the first rent. 200 MAD discount for your referrals.",
         alt: "Unlimited Earnings"
       },
       benefit_support: {
-        highlight: "VIP Guidance",
+        highlight: "VIP Support",
         subtitle: "At Every Step",
-        description: "Founding Partners get white-glove onboarding, proactive booking help, and personal support.",
+        description: "Personalized guidance, proactive help and dedicated support.",
         alt: "VIP Support"
       },
       cta: {
@@ -141,7 +141,7 @@ const FoundingPartnersPage: React.FC = () => {
         // Navigate through the nested properties
         for (const part of keyParts) {
           if (fallback && typeof fallback === 'object' && part in fallback) {
-            fallback = fallback[part] as Record<string, any>;
+            fallback = fallback[part as keyof typeof fallback];
           } else {
             // If property doesn't exist, try the other language
             const otherLang = lang === 'fr' ? 'en' : 'fr';
@@ -149,7 +149,7 @@ const FoundingPartnersPage: React.FC = () => {
             
             for (const p of keyParts) {
               if (fallback && typeof fallback === 'object' && p in fallback) {
-                fallback = fallback[p] as Record<string, any>;
+                fallback = fallback[p as keyof typeof fallback];
               } else {
                 return key; // Return the key if all else fails
               }
@@ -185,7 +185,7 @@ const FoundingPartnersPage: React.FC = () => {
       // Use fallback
       try {
         const ctaFallback = fallbackTranslations[lang].cta as Record<string, string>;
-        return key in ctaFallback ? ctaFallback[key] : key;
+        return key in ctaFallback ? ctaFallback[key as keyof typeof ctaFallback] : key;
       } catch (error) {
         console.error('Error retrieving CTA translation:', error);
         return key;
@@ -311,48 +311,48 @@ const FoundingPartnersPage: React.FC = () => {
             
             <BenefitsGrid isMobile={isMobile}>
               <BenefitCard isMobile={isMobile}>
+                <BenefitIconWrapper>
+                  <BenefitIconImg src={MoneyShieldIcon} alt={getTranslation('benefit_commission.alt')} />
+                </BenefitIconWrapper>
                 <BenefitHeader>
-                  <BenefitIconWrapper>
-                    <BenefitIconImg src={MoneyShieldIcon} alt={getTranslation('benefit_commission.alt')} />
-                  </BenefitIconWrapper>
                   <BenefitTitle>
                     <BenefitHighlight isMobile={isMobile}>0%</BenefitHighlight>
                     <BenefitSubtitle isMobile={isMobile}>{getTranslation('benefit_commission.subtitle')}</BenefitSubtitle>
                   </BenefitTitle>
+                  <BenefitDescription isMobile={isMobile}>
+                    {getTranslation('benefit_commission.description')}
+                  </BenefitDescription>
                 </BenefitHeader>
-                <BenefitDescription isMobile={isMobile}>
-                  {getTranslation('benefit_commission.description')}
-                </BenefitDescription>
               </BenefitCard>
               
               <BenefitCard isMobile={isMobile}>
+                <BenefitIconWrapper>
+                  <BenefitIconImg src={ExplainingIcon} alt={getTranslation('benefit_referral.alt')} />
+                </BenefitIconWrapper>
                 <BenefitHeader>
-                  <BenefitIconWrapper>
-                    <BenefitIconImg src={ExplainingIcon} alt={getTranslation('benefit_referral.alt')} />
-                  </BenefitIconWrapper>
                   <BenefitTitle>
                     <BenefitHighlight isMobile={isMobile}>{getTranslation('benefit_referral.highlight')}</BenefitHighlight>
                     <BenefitSubtitle isMobile={isMobile}>{getTranslation('benefit_referral.subtitle')}</BenefitSubtitle>
                   </BenefitTitle>
+                  <BenefitDescription isMobile={isMobile}>
+                    {getTranslation('benefit_referral.description')}
+                  </BenefitDescription>
                 </BenefitHeader>
-                <BenefitDescription isMobile={isMobile}>
-                  {getTranslation('benefit_referral.description')}
-                </BenefitDescription>
               </BenefitCard>
               
               <BenefitCard isMobile={isMobile}>
+                <BenefitIconWrapper>
+                  <BenefitIconImg src={SupportIcon} alt={getTranslation('benefit_support.alt')} />
+                </BenefitIconWrapper>
                 <BenefitHeader>
-                  <BenefitIconWrapper>
-                    <BenefitIconImg src={SupportIcon} alt={getTranslation('benefit_support.alt')} />
-                  </BenefitIconWrapper>
                   <BenefitTitle>
                     <BenefitHighlight isMobile={isMobile}>{getTranslation('benefit_support.highlight')}</BenefitHighlight>
                     <BenefitSubtitle isMobile={isMobile}>{getTranslation('benefit_support.subtitle')}</BenefitSubtitle>
                   </BenefitTitle>
+                  <BenefitDescription isMobile={isMobile}>
+                    {getTranslation('benefit_support.description')}
+                  </BenefitDescription>
                 </BenefitHeader>
-                <BenefitDescription isMobile={isMobile}>
-                  {getTranslation('benefit_support.description')}
-                </BenefitDescription>
               </BenefitCard>
             </BenefitsGrid>
           </BenefitsSection>
@@ -404,8 +404,8 @@ const Container = styled.div<{ isExiting: boolean }>`
   width: 100vw;
   min-height: 100vh;
   height: 100vh;
-  background: white;
   color: ${Theme.colors.secondary};
+  
   display: flex;
   flex-direction: column;
   padding: 1.5rem 2rem;
@@ -438,7 +438,6 @@ const LoadingOverlay = styled.div<{ isLoading: boolean }>`
   left: 0;
   right: 0;
   bottom: 0;
-  background: white;
   z-index: 100;
   opacity: ${props => props.isLoading ? 1 : 0};
   visibility: ${props => props.isLoading ? 'visible' : 'hidden'};
@@ -447,10 +446,10 @@ const LoadingOverlay = styled.div<{ isLoading: boolean }>`
 
 // Confetti styled components
 const ConfettiLeft = styled.img`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  z-index: 999;
+  z-index: 0;
   max-width: 300px;
   pointer-events: none;
   
@@ -460,10 +459,10 @@ const ConfettiLeft = styled.img`
 `;
 
 const ConfettiRight = styled.img`
-  position: absolute;
+  position: fixed;
   top: 0;
   right: 0;
-  z-index: 999;
+  z-index: 0;
   max-width: 300px;
   transform: scaleX(-1);
   pointer-events: none;
@@ -512,14 +511,14 @@ const LanguageSwitcherWrapper = styled.div`
 const BottomLanguageSwitcher = styled.div`
   position: fixed;
   bottom: 20px;
-  left: 15%;
+  left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
   
   /* Ensure visibility with background and shadow */
   padding: 8px;
   border-radius: 20px;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(76, 27, 97, 0.2);
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 `;
@@ -538,6 +537,8 @@ const ContentWrapper = styled.div<{ isMobile: boolean }>`
   scrollbar-width: none;
   -ms-overflow-style: none;
   
+  
+  
   &::-webkit-scrollbar {
     display: none;
     width: 0;
@@ -551,14 +552,17 @@ const MainContent = styled.div<{ isMobile: boolean }>`
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: ${props => props.isMobile ? '1.5rem' : '2rem'};
-  padding: ${props => props.isMobile ? '0' : '2rem'};
+  gap: ${props => props.isMobile ? '1rem' : '1.5rem'};
+  padding: ${props => props.isMobile ? '0' : '1.5rem'};
   position: relative;
   z-index: 2;
-  margin-top: 80px;
+  margin-top: ${props => props.isMobile ? '40px' : '60px'};
+  background-color: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(2px);
+  border-radius: 1rem;
   
   @media (max-width: 768px) {
-    gap: 1.5rem;
+    gap: 1rem;
   }
 `;
 
@@ -582,7 +586,7 @@ const Heading = styled.h1<{ isMobile: boolean }>`
 `;
 
 const LargeNumber = styled.div<{ isMobile: boolean }>`
-  font-size: ${props => props.isMobile ? '5rem' : '8rem'};
+  font-size: ${props => props.isMobile ? '5rem' : '6rem'};
   font-weight: 900;
   line-height: 1;
   color: ${Theme.colors.secondary};
@@ -623,10 +627,10 @@ const Divider = styled.hr`
 const BenefitsSection = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
   
   @media (max-width: 768px) {
-    gap: 1.5rem;
+    gap: 1rem;
   }
 `;
 
@@ -654,10 +658,10 @@ const BenefitsHeading = styled.h3<{ isMobile: boolean }>`
 const BenefitsGrid = styled.div<{ isMobile: boolean }>`
   display: grid;
   grid-template-columns: ${props => props.isMobile ? '1fr' : 'repeat(3, 1fr)'};
-  gap: 1.5rem;
+  gap: 1rem;
   
   @media (max-width: 768px) {
-    gap: 1rem;
+    gap: 0.8rem;
   }
 `;
 
@@ -666,74 +670,82 @@ const BenefitCard = styled.div<{ isMobile: boolean }>`
   border: 1px solid #CFABE5;
   box-shadow: 1px 4px 8px #CFABE550;
   border-radius: ${props => props.isMobile ? '0.8rem' : '1rem'};
-  padding: ${props => props.isMobile ? '1.2rem' : '1.5rem'};
+  padding: ${props => props.isMobile ? '0.8rem' : '1rem'};
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: ${props => props.isMobile ? '0.8rem' : '1rem'};
+  height: ${props => props.isMobile ? 'auto' : '120px'};
 `;
 
 const BenefitHeader = styled.div`
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
   
   @media (max-width: 768px) {
-    gap: 0.8rem;
+    gap: 0.3rem;
   }
 `;
 
 const BenefitIconWrapper = styled.div`
-  width: 50px;
-  height: 50px;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-right: 1rem;
   
   @media (max-width: 768px) {
-    width: 40px;
-    height: 40px;
+    padding-right: 0.8rem;
   }
 `;
 
 const BenefitIconImg = styled.img`
-  width: 100%;
-  height: 100%;
+  height: 80%;
+  width: auto;
+  max-width: 50px;
   object-fit: contain;
+  
+  @media (max-width: 768px) {
+    max-width: 40px;
+  }
 `;
 
 const BenefitTitle = styled.div`
   display: flex;
   flex-direction: column;
+  margin-bottom: 0.3rem;
 `;
 
 const BenefitHighlight = styled.span<{ isMobile: boolean }>`
-  font-size: ${props => props.isMobile ? '1.3rem' : '1.5rem'};
+  font-size: ${props => props.isMobile ? '1.1rem' : '1.3rem'};
   font-weight: 700;
   color: ${Theme.colors.secondary} !important;
   
   @media (max-width: 768px) {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
   }
 `;
 
 const BenefitSubtitle = styled.span<{ isMobile: boolean }>`
-  font-size: ${props => props.isMobile ? '0.9rem' : '1rem'};
+  font-size: ${props => props.isMobile ? '0.8rem' : '0.9rem'};
   font-weight: 700;
   color: ${Theme.colors.black};
   
   @media (max-width: 768px) {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
 `;
 
 const BenefitDescription = styled.p<{ isMobile: boolean }>`
-  font-size: ${props => props.isMobile ? '0.85rem' : '0.9rem'};
+  font-size: ${props => props.isMobile ? '0.75rem' : '0.8rem'};
   color: ${Theme.colors.gray2};
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.2;
   
   @media (max-width: 768px) {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
   }
 `;
 
@@ -741,11 +753,11 @@ const FooterSection = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem;
   text-align: center;
   
   @media (max-width: 768px) {
-    gap: 1.5rem;
+    gap: 1rem;
   }
 `;
 
@@ -775,12 +787,12 @@ const SignUpButton = styled.button<{ isMobile: boolean }>`
   color: white;
   border: none;
   border-radius: 50px;
-  padding: ${props => props.isMobile ? '0.8rem 2rem' : '1rem 2.5rem'};
+  padding: ${props => props.isMobile ? '0.7rem 2rem' : '0.8rem 2.5rem'};
   font-size: ${props => props.isMobile ? '1rem' : '1.1rem'};
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-bottom: 50px;
+  margin-bottom: ${props => props.isMobile ? '60px' : '40px'};
   
   &:hover {
     transform: translateY(-2px);
@@ -789,7 +801,7 @@ const SignUpButton = styled.button<{ isMobile: boolean }>`
   
   @media (max-width: 768px) {
     width: 80%;
-    padding: 0.8rem 2rem;
+    padding: 0.7rem 2rem;
     font-size: 1rem;
   }
 `;
