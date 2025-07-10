@@ -311,47 +311,47 @@ const FoundingPartnersPage: React.FC = () => {
             
             <BenefitsGrid isMobile={isMobile}>
               <BenefitCard isMobile={isMobile}>
-                <BenefitIconWrapper>
-                  <BenefitIconImg src={MoneyShieldIcon} alt={getTranslation('benefit_commission.alt')} />
-                </BenefitIconWrapper>
+                  <BenefitIconWrapper>
+                    <BenefitIconImg src={MoneyShieldIcon} alt={getTranslation('benefit_commission.alt')} />
+                  </BenefitIconWrapper>
                 <BenefitHeader>
                   <BenefitTitle>
                     <BenefitHighlight isMobile={isMobile}>0%</BenefitHighlight>
                     <BenefitSubtitle isMobile={isMobile}>{getTranslation('benefit_commission.subtitle')}</BenefitSubtitle>
                   </BenefitTitle>
-                  <BenefitDescription isMobile={isMobile}>
-                    {getTranslation('benefit_commission.description')}
-                  </BenefitDescription>
+                <BenefitDescription isMobile={isMobile}>
+                  {getTranslation('benefit_commission.description')}
+                </BenefitDescription>
                 </BenefitHeader>
               </BenefitCard>
               
               <BenefitCard isMobile={isMobile}>
-                <BenefitIconWrapper>
-                  <BenefitIconImg src={ExplainingIcon} alt={getTranslation('benefit_referral.alt')} />
-                </BenefitIconWrapper>
+                  <BenefitIconWrapper>
+                    <BenefitIconImg src={ExplainingIcon} alt={getTranslation('benefit_referral.alt')} />
+                  </BenefitIconWrapper>
                 <BenefitHeader>
                   <BenefitTitle>
                     <BenefitHighlight isMobile={isMobile}>{getTranslation('benefit_referral.highlight')}</BenefitHighlight>
                     <BenefitSubtitle isMobile={isMobile}>{getTranslation('benefit_referral.subtitle')}</BenefitSubtitle>
                   </BenefitTitle>
-                  <BenefitDescription isMobile={isMobile}>
-                    {getTranslation('benefit_referral.description')}
-                  </BenefitDescription>
+                <BenefitDescription isMobile={isMobile}>
+                  {getTranslation('benefit_referral.description')}
+                </BenefitDescription>
                 </BenefitHeader>
               </BenefitCard>
               
               <BenefitCard isMobile={isMobile}>
-                <BenefitIconWrapper>
-                  <BenefitIconImg src={SupportIcon} alt={getTranslation('benefit_support.alt')} />
-                </BenefitIconWrapper>
+                  <BenefitIconWrapper>
+                    <BenefitIconImg src={SupportIcon} alt={getTranslation('benefit_support.alt')} />
+                  </BenefitIconWrapper>
                 <BenefitHeader>
                   <BenefitTitle>
                     <BenefitHighlight isMobile={isMobile}>{getTranslation('benefit_support.highlight')}</BenefitHighlight>
                     <BenefitSubtitle isMobile={isMobile}>{getTranslation('benefit_support.subtitle')}</BenefitSubtitle>
                   </BenefitTitle>
-                  <BenefitDescription isMobile={isMobile}>
-                    {getTranslation('benefit_support.description')}
-                  </BenefitDescription>
+                <BenefitDescription isMobile={isMobile}>
+                  {getTranslation('benefit_support.description')}
+                </BenefitDescription>
                 </BenefitHeader>
               </BenefitCard>
             </BenefitsGrid>

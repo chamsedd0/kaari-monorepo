@@ -8,7 +8,7 @@ import { FaHome, FaCamera, FaCog, FaArrowRight, FaTimes } from "react-icons/fa";
 import { LanguageSwitcher, MobileLanguageSwitcher } from "../../components/skeletons/language-switcher";
 import { hideHeadersAndFooters } from '../../utils/advertiser-signup';
 import { MdHouse, MdCameraAlt, MdHandshake, MdVerified, MdAttachMoney, MdSupportAgent } from "react-icons/md";
-import OnboardingIllustration from "../../assets/images/onboardingIllustration.svg";
+import OnboardingIllustration from "../../assets/images/onBoardingIllustration.svg";
 
 // Remove unused translation types
 const AdvertiserOnboardingPage = () => {
