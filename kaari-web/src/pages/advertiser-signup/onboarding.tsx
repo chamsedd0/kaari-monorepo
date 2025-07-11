@@ -385,9 +385,8 @@ const LanguageSwitcherWrapper = styled.div`
 
 const BottomLanguageSwitcher = styled.div`
   position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 15px;
+  right:  15px;
   z-index: 1000;
   
   /* Ensure visibility with background and shadow */
@@ -491,7 +490,6 @@ const Subheading = styled.p<{ isMobile: boolean }>`
   
   @media (max-width: 768px) {
     font-size: 0.9rem;
-    margin-bottom: 0.8rem;
     margin-left: auto;
     margin-right: auto;
   }
@@ -582,7 +580,7 @@ const FeatureDescription = styled.p<{ isMobile: boolean }>`
 `;
 
 const CTASection = styled.div<{ isVisible: boolean }>`
-  margin-top: 1rem;
+  margin-top: 0.2rem;
   opacity: ${props => props.isVisible ? 1 : 0};
   transform: translateY(${props => props.isVisible ? '0' : '30px'});
   transition: opacity 0.6s ease, transform 0.6s ease;
