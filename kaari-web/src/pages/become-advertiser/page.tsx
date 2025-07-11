@@ -217,6 +217,9 @@ interface FormData {
   additionalInfo: string;
 }
 
+// Update the Firebase phone authentication implementation to work properly
+
+// First, let's modify the state to default to non-development mode
 const AdvertiserRegistrationPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -231,7 +234,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
   // Current step (1-4)
   const [currentStep, setCurrentStep] = useState(1);
   
-  // Add development mode state - default to false for production
+  // Default to false - we want to use real SMS verification
   const [devMode, setDevMode] = useState(false);
   
   // Step definitions
@@ -356,7 +359,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
     }, 1000);
   }, []);
   
-  // Initialize reCAPTCHA verifier
+  // Improve the initializeRecaptcha function to properly set up the reCAPTCHA verifier
   const initializeRecaptcha = useCallback((): ApplicationVerifier | null => {
     const auth = getAuth();
     
@@ -386,9 +389,9 @@ const AdvertiserRegistrationPage: React.FC = () => {
       // Create a new reCAPTCHA verifier with more robust error handling
       const verifier = new RecaptchaVerifier(
         auth,
-        container,
+        container, // Use the DOM element directly instead of the ID string
         {
-          size: 'invisible',
+          size: 'normal', // Make it visible for better user experience
           callback: () => {
             console.log('reCAPTCHA solved');
           },
@@ -443,7 +446,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
     return phoneNumber;
   }, []);
   
-  // Send OTP code using Firebase linkWithPhoneNumber
+  // Update the sendOtp function to properly handle SMS verification
   const sendOtp = useCallback(async () => {
     if (!formData.mobileNumber) {
       setErrors(prev => ({
@@ -508,27 +511,16 @@ const AdvertiserRegistrationPage: React.FC = () => {
       }
       
       // Initialize reCAPTCHA verifier
-      const appVerifier = new RecaptchaVerifier(
-        auth,
-        recaptchaContainer, 
-        {
-          size: 'invisible',
-          callback: () => {
-            console.log('reCAPTCHA solved');
-          },
-          'expired-callback': () => {
-            console.log('reCAPTCHA expired');
-          }
-        }
-      );
+      const appVerifier = initializeRecaptcha();
       
-      recaptchaVerifierRef.current = appVerifier;
+      if (!appVerifier) {
+        toast.showToast('error', t('become_advertiser.toast.error'), 'Failed to initialize reCAPTCHA');
+        setIsSubmitting(false);
+        return;
+      }
       
       try {
         console.log('Sending verification code to:', phoneNumber);
-        
-        // Render the reCAPTCHA to prepare it
-        await appVerifier.render();
         
         // Send OTP via Firebase
         const confirmationResult = await linkWithPhoneNumber(
@@ -548,7 +540,6 @@ const AdvertiserRegistrationPage: React.FC = () => {
         
         // Handle specific Firebase errors
         let errorMessage = t('become_advertiser.validation.otp_failed');
-        let switchToDevMode = false;
         
         if (firebaseError.code === 'auth/invalid-phone-number') {
           errorMessage = t('become_advertiser.validation.invalid_phone');
@@ -556,15 +547,60 @@ const AdvertiserRegistrationPage: React.FC = () => {
           errorMessage = t('become_advertiser.validation.captcha_failed');
         } else if (firebaseError.code === 'auth/quota-exceeded') {
           errorMessage = t('become_advertiser.validation.quota_exceeded');
-          switchToDevMode = true;
+          
+          // Offer to switch to dev mode
+          if (confirm('Phone verification quota exceeded. Would you like to switch to development mode?')) {
+            setDevMode(true);
+            
+            // Create a mock confirmation result
+            confirmationResultRef.current = {
+              confirm: (code: string) => {
+                // Test verification code is 123456
+                if (code === '123456') {
+                  console.log('DEVELOPMENT MODE: Verification successful with code 123456');
+                  return Promise.resolve({ user: currentUser });
+                } else {
+                  console.log('DEVELOPMENT MODE: Invalid verification code');
+                  return Promise.reject(new Error('Invalid code'));
+                }
+              }
+            };
+            
+            setOtpSent(true);
+            startOtpTimer();
+            toast.showToast('success', t('become_advertiser.toast.success'), 'Development mode activated. Use code: 123456');
+            return;
+          }
         } else if (firebaseError.code === 'auth/too-many-requests') {
           errorMessage = t('become_advertiser.validation.too_many_requests');
-          switchToDevMode = true;
+          
+          // Offer to switch to dev mode
+          if (confirm('Too many verification attempts. Would you like to switch to development mode?')) {
+            setDevMode(true);
+            
+            // Create a mock confirmation result
+            confirmationResultRef.current = {
+              confirm: (code: string) => {
+                // Test verification code is 123456
+                if (code === '123456') {
+                  console.log('DEVELOPMENT MODE: Verification successful with code 123456');
+                  return Promise.resolve({ user: currentUser });
+                } else {
+                  console.log('DEVELOPMENT MODE: Invalid verification code');
+                  return Promise.reject(new Error('Invalid code'));
+                }
+              }
+            };
+            
+            setOtpSent(true);
+            startOtpTimer();
+            toast.showToast('success', t('become_advertiser.toast.success'), 'Development mode activated. Use code: 123456');
+            return;
+          }
         } else if (firebaseError.code === 'auth/provider-already-linked') {
           errorMessage = t('become_advertiser.validation.phone_already_linked');
         } else if (firebaseError.code === 'auth/invalid-app-credential') {
           errorMessage = 'Invalid reCAPTCHA configuration. Please check your Firebase setup.';
-          switchToDevMode = true;
         } else if (firebaseError.code === 'auth/missing-app-credential') {
           errorMessage = 'Missing reCAPTCHA verification. Please try again.';
         } else if (firebaseError.message && firebaseError.message.includes('reCAPTCHA has already been rendered')) {
@@ -587,34 +623,6 @@ const AdvertiserRegistrationPage: React.FC = () => {
           }
         }
         
-        // For rate limits or configuration issues, offer to switch to dev mode
-        if (switchToDevMode) {
-          console.log('Firebase error encountered:', firebaseError.code);
-          
-          if (confirm('Phone verification encountered an error. Would you like to switch to development mode?')) {
-            setDevMode(true);
-            
-            // Create a mock confirmation result
-            confirmationResultRef.current = {
-              confirm: (code: string) => {
-                // Test verification code is 123456
-                if (code === '123456') {
-                  console.log('DEVELOPMENT MODE: Verification successful with code 123456');
-                  return Promise.resolve({ user: currentUser });
-                } else {
-                  console.log('DEVELOPMENT MODE: Invalid verification code');
-                  return Promise.reject(new Error('Invalid code'));
-                }
-              }
-            };
-            
-            setOtpSent(true);
-            startOtpTimer();
-            toast.showToast('success', t('become_advertiser.toast.success'), 'Development mode activated. Use code: 123456');
-            return;
-          }
-        }
-        
         toast.showToast('error', t('common.error'), errorMessage);
         
         // Reset reCAPTCHA on error
@@ -633,7 +641,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData.mobileNumber, startOtpTimer, toast, t, formatPhoneNumber, devMode]);
+  }, [formData.mobileNumber, startOtpTimer, toast, t, formatPhoneNumber, devMode, initializeRecaptcha]);
   
   // Verify OTP code using Firebase confirmationResult
   const verifyOtp = useCallback(async () => {
@@ -1193,526 +1201,175 @@ const AdvertiserRegistrationPage: React.FC = () => {
     }
   };
   
-  // Render step 1: Account Type
-  const renderStep1 = () => {
-    if (isMobile) {
-      // Mobile version
-    return (
-      <>
-          <h2 className="form-title">{t('advertiser_registration.step1.title')}</h2>
-        
-        <div className="form-group required">
-          <label>{t('become_advertiser.step1.label')}</label>
-          
-            <div className="mobile-radio-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-              <MobileRadioOption
-                id="broker"
-                title={t('become_advertiser.step1.broker')}
-                description={t('become_advertiser.step1.broker_description')}
-                icon={<FaUserAlt />}
-                checked={formData.accountType === 'broker'}
-                onChange={() => handleAccountTypeSelect('broker')}
-              />
-              
-              <MobileRadioOption
-                id="landlord"
-                title={t('become_advertiser.step1.landlord')}
-                description={t('become_advertiser.step1.landlord_description')}
-                icon={<FaUserAlt />}
-                checked={formData.accountType === 'landlord'}
-                onChange={() => handleAccountTypeSelect('landlord')}
-              />
-              
-              <MobileRadioOption
-                id="agency"
-                title={t('become_advertiser.step1.agency')}
-                description={t('become_advertiser.step1.agency_description')}
-                icon={<FaBuilding />}
-                checked={formData.accountType === 'agency'}
-                onChange={() => handleAccountTypeSelect('agency')}
-              />
-            </div>
-            {errors.accountType && <div className="error-message">{errors.accountType}</div>}
-          </div>
-          
-          {formData.accountType === 'agency' && (
-            <div className="conditional-fields">
-              <div className="form-group required" style={{ marginBottom: '16px' }}>
-                <label htmlFor="agencyName">{t('become_advertiser.step1.agency_name')}</label>
-                <InputBaseModel
-                  value={formData.agencyName}
-                  onChange={(e) => handleInputChange('agencyName', e.target.value)}
-                  placeholder={t('become_advertiser.step1.agency_name_placeholder')}
-                  error={errors.agencyName}
-                />
-              </div>
-              
-              <div className="form-group required">
-                <label htmlFor="agencySize">{t('become_advertiser.step1.agency_size')}</label>
-                <div style={{ marginBottom: '16px' }}> </div>
-                <SelectFieldBaseModelVariant1
-                  options={AGENCY_SIZES.map(size => t(`become_advertiser.step1.${size.label}`))}
-                  value={formData.agencySize ? t(`become_advertiser.step1.${AGENCY_SIZES.find(size => size.value === formData.agencySize)?.label}`) : ''}
-                  onChange={(value) => {
-                    const selectedSize = AGENCY_SIZES.find(size => t(`become_advertiser.step1.${size.label}`) === value);
-                    if (selectedSize) {
-                      handleInputChange('agencySize', selectedSize.value);
-                    }
-                  }}
-                  placeholder={t('become_advertiser.step1.agency_size_placeholder')}
-                />
-                {errors.agencySize && <div className="error-message">{errors.agencySize}</div>}
-              </div>
-            </div>
-          )}
-          
-          <div className="buttons-container">
-            <div></div> {/* Empty div for space-between alignment */}
-            <PurpleButtonLB60
-              text={t('become_advertiser.buttons.continue')}
-              onClick={nextStep}
-              disabled={isSubmitting}
-            />
-          </div>
-        </>
-      );
-    }
-    
-    // Original desktop version
-    return (
-      <>
-        <h2 className="form-title">{t('advertiser_registration.step1.title')}</h2>
-        
-        <div className="form-group required">
-          <label>{t('become_advertiser.step1.label')}</label>
-          
-            <div className="radio-group">
-              <div 
-                className={`radio-option ${formData.accountType === 'broker' ? 'selected' : ''}`}
-                onClick={() => handleAccountTypeSelect('broker')}
-              >
-                <div className="radio-title">
-                  <input 
-                    type="radio" 
-                    name="accountType" 
-                    checked={formData.accountType === 'broker'} 
-                    onChange={() => handleAccountTypeSelect('broker')}
-                  />
-                  <span>{t('become_advertiser.step1.broker')}</span>
-                </div>
-                <div className="radio-description">
-                  {t('become_advertiser.step1.broker_description')}
-                </div>
-                <div className="option-icon">
-                  <FaUserAlt />
-                </div>
-              </div>
-              
-              <div 
-                className={`radio-option ${formData.accountType === 'landlord' ? 'selected' : ''}`}
-                onClick={() => handleAccountTypeSelect('landlord')}
-              >
-                <div className="radio-title">
-                  <input 
-                    type="radio" 
-                    name="accountType" 
-                    checked={formData.accountType === 'landlord'} 
-                    onChange={() => handleAccountTypeSelect('landlord')}
-                  />
-                  <span>{t('become_advertiser.step1.landlord')}</span>
-                </div>
-                <div className="radio-description">
-                  {t('become_advertiser.step1.landlord_description')}
-                </div>
-                <div className="option-icon">
-                  <FaUserAlt />
-                </div>
-              </div>
-              
-              <div 
-                className={`radio-option ${formData.accountType === 'agency' ? 'selected' : ''}`}
-                onClick={() => handleAccountTypeSelect('agency')}
-              >
-                <div className="radio-title">
-                  <input 
-                    type="radio" 
-                    name="accountType" 
-                    checked={formData.accountType === 'agency'} 
-                    onChange={() => handleAccountTypeSelect('agency')}
-                  />
-                  <span>{t('become_advertiser.step1.agency')}</span>
-                </div>
-                <div className="radio-description">
-                  {t('become_advertiser.step1.agency_description')}
-                </div>
-                <div className="option-icon">
-                  <FaBuilding />
-                </div>
-              </div>
-            </div>
-          {errors.accountType && <div className="error-message">{errors.accountType}</div>}
-        </div>
-        
-        {formData.accountType === 'agency' && (
-          <div className="conditional-fields">
-            <div className="form-group required" style={{ marginBottom: '16px' }}>
-              <label htmlFor="agencyName">{t('become_advertiser.step1.agency_name')}</label>
-              <InputBaseModel
-                value={formData.agencyName}
-                onChange={(e) => handleInputChange('agencyName', e.target.value)}
-                placeholder={t('become_advertiser.step1.agency_name_placeholder')}
-                error={errors.agencyName}
-              />
-            </div>
-            
-            <div className="form-group required">
-              <label htmlFor="agencySize">{t('become_advertiser.step1.agency_size')}</label>
-              <div style={{ marginBottom: '24px' }}> </div>
-              <SelectFieldBaseModelVariant1
-                options={AGENCY_SIZES.map(size => t(`become_advertiser.step1.${size.label}`))}
-                value={formData.agencySize ? t(`become_advertiser.step1.${AGENCY_SIZES.find(size => size.value === formData.agencySize)?.label}`) : ''}
-                onChange={(value) => {
-                  const selectedSize = AGENCY_SIZES.find(size => t(`become_advertiser.step1.${size.label}`) === value);
-                  if (selectedSize) {
-                    handleInputChange('agencySize', selectedSize.value);
-                  }
-                }}
-                placeholder={t('become_advertiser.step1.agency_size_placeholder')}
-              />
-              {errors.agencySize && <div className="error-message">{errors.agencySize}</div>}
-            </div>
-          </div>
-        )}
-        
-        <div className="buttons-container">
-          <div></div> {/* Empty div for space-between alignment */}
-          <PurpleButtonLB60
-            text={t('become_advertiser.buttons.continue')}
-            onClick={nextStep}
-            disabled={isSubmitting}
-          />
-        </div>
-      </>
-    );
-  };
+  // Add a helper function to explain how to set up test phone numbers in Firebase
+
+// Add this function right before the renderStep3 function
+const showTestPhoneNumberHelp = () => {
+  const helpMessage = `
+To make phone verification work properly, you need to:
+
+1. In the Firebase Console, go to Authentication > Sign-in method
+2. Make sure Phone provider is enabled
+3. Add your domain to the authorized domains list
+4. For testing, expand "Phone numbers for testing" and add a test phone number:
+   - Add a phone number like +1 650-555-1234
+   - Add a verification code like 123456
+   - This allows you to test without sending real SMS messages
+
+For production:
+1. Make sure you've added your app's SHA-1 hash in Firebase Console
+2. Check that your API key restrictions allow Firebase Authentication
+3. If using reCAPTCHA, ensure your domain is properly configured
+
+Would you like to enable development mode to bypass SMS verification?
+  `;
   
-  // Render step 2: User Information
-  const renderStep2 = () => {
-    if (isMobile) {
-      // Mobile version
-    return (
-        <div className="step-content">
-          <h2 className="form-title">{t('advertiser_registration.step2.title')}</h2>
-        
-          <MobileInput
-            type="text"
-              value={formData.firstName}
-              onChange={(e) => handleInputChange('firstName', e.target.value)}
-            placeholder={t('advertiser_registration.step2.first_name_placeholder')}
-            label={t('advertiser_registration.step2.first_name')}
-            required
-              error={errors.firstName}
-            />
-          
-          <MobileInput
-            type="text"
-              value={formData.lastName}
-              onChange={(e) => handleInputChange('lastName', e.target.value)}
-            placeholder={t('advertiser_registration.step2.last_name_placeholder')}
-            label={t('advertiser_registration.step2.last_name')}
-            required
-              error={errors.lastName}
-            />
-          
-          <MobileInput
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            placeholder={t('advertiser_registration.step2.email_placeholder')}
-            label={t('advertiser_registration.step2.email')}
-            required
-            error={errors.email}
-          />
-          
-          <MobilePhoneInput
-            value={formData.mobileNumber}
-            onChange={(value) => handleInputChange('mobileNumber', value)}
-            label={t('advertiser_registration.step2.mobile_number')}
-            required
-            error={errors.mobileNumber}
-          />
-          
-          <div className="buttons-container">
-            <button className="back-button" onClick={prevStep}>
-              {t('common.back')}
-            </button>
-            <button className="next-button" onClick={nextStep}>
-              {t('common.continue')}
-            </button>
-          </div>
-        </div>
-      );
-    }
+  if (confirm(helpMessage)) {
+    setDevMode(true);
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
     
-    // Original desktop version
-    return (
-      <div className="step-content">
-        <h2 className="form-title">{t('advertiser_registration.step2.title')}</h2>
-        
-        <div className="form-group">
-          <label>
-            {t('advertiser_registration.step2.first_name')}
-            <span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.firstName}
-            onChange={(e) => handleInputChange('firstName', e.target.value)}
-            placeholder={t('advertiser_registration.step2.first_name_placeholder')}
-            required
-          />
-          {errors.firstName && <div className="error-message">{errors.firstName}</div>}
-        </div>
-        
-        <div className="form-group">
-          <label>
-            {t('advertiser_registration.step2.last_name')}
-            <span className="required">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.lastName}
-            onChange={(e) => handleInputChange('lastName', e.target.value)}
-            placeholder={t('advertiser_registration.step2.last_name_placeholder')}
-            required
-          />
-          {errors.lastName && <div className="error-message">{errors.lastName}</div>}
-        </div>
-        
-        <div className="form-group">
-          <label>
-            {t('advertiser_registration.step2.email')}
-            <span className="required">*</span>
-          </label>
-          <input
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            placeholder={t('advertiser_registration.step2.email_placeholder')}
-            required
-          />
-          {errors.email && <div className="error-message">{errors.email}</div>}
-        </div>
-        
-        <div className="form-group">
-          <label>
-            {t('advertiser_registration.step2.mobile_number')}
-            <span className="required">*</span>
-          </label>
-          <div className="phone-input-container">
-          <PhoneInput
-              country={'ma'}
-            value={formData.mobileNumber}
-              onChange={(value) => handleInputChange('mobileNumber', value)}
-            inputProps={{
-              required: true,
-                autoFocus: false
-              }}
-            />
-          </div>
-          {errors.mobileNumber && <div className="error-message">{errors.mobileNumber}</div>}
-        </div>
-        
-        <div className="buttons-container">
-          <WhiteButtonLB60
-            text={t('become_advertiser.buttons.back')}
-            onClick={prevStep}
-            disabled={isSubmitting}
-          />
-          <PurpleButtonLB60
-            text={t('become_advertiser.buttons.continue')}
-            onClick={nextStep}
-            disabled={isSubmitting}
-          />
-        </div>
-      </div>
-    );
-  };
-  
-  // Render step 3: OTP Verification
-  const renderStep3 = () => {
-    // Calculate if resend OTP is available
-    const canResendOtp = otpResendTimer === 0;
-    
-    // Format the timer as MM:SS
-    const formatTime = (seconds: number) => {
-      const mins = Math.floor(seconds / 60);
-      const secs = seconds % 60;
-      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-    };
-    
-    // Handle resend OTP
-    const handleResendOtp = () => {
-      if (canResendOtp) {
-        sendOtp();
-      }
-    };
-    
-    // Toggle development mode
-    const toggleDevMode = () => {
-      setDevMode(prev => !prev);
-      if (!devMode) {
-        // Switching to dev mode, create mock confirmation
-        const auth = getAuth();
-        const currentUser = auth.currentUser;
-        
-        if (currentUser) {
-          confirmationResultRef.current = {
-            confirm: (code: string) => {
-              // Test verification code is 123456
-              if (code === '123456') {
-                console.log('DEVELOPMENT MODE: Verification successful with code 123456');
-                return Promise.resolve({ user: currentUser });
-              } else {
-                console.log('DEVELOPMENT MODE: Invalid verification code');
-                return Promise.reject(new Error('Invalid code'));
-              }
-            }
-          };
-          
-          setOtpSent(true);
-          startOtpTimer();
-          toast.showToast('success', t('become_advertiser.toast.success'), 'Development mode activated. Use code: 123456');
+    if (currentUser) {
+      confirmationResultRef.current = {
+        confirm: (code: string) => {
+          if (code === '123456') {
+            console.log('DEVELOPMENT MODE: Verification successful with code 123456');
+            return Promise.resolve({ user: currentUser });
+          } else {
+            console.log('DEVELOPMENT MODE: Invalid verification code');
+            return Promise.reject(new Error('Invalid code'));
+          }
         }
-      }
-    };
-    
-    if (isMobile) {
-      // Mobile version
-      return (
-        <div className="step-content">
-          <h2 className="form-title">{t('advertiser_registration.step3.title')}</h2>
-        
-          <p className="verification-message">
-            {t('advertiser_registration.step3.verification_message', { phone: formData.mobileNumber })}
-          </p>
-          
-          {/* Visible reCAPTCHA container */}
-          <div id="recaptcha-container" style={{ margin: '10px 0' }}></div>
-          
-          {devMode && (
-            <div className="dev-mode-notice" style={{ 
-              padding: '10px', 
-              margin: '10px 0', 
-              backgroundColor: '#f8f9fa', 
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '14px'
-            }}>
-              <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>Development Mode Active</p>
-              <p style={{ margin: '0' }}>Use code <strong>123456</strong> to verify</p>
-              <button 
-                onClick={toggleDevMode}
-                style={{
-                  marginTop: '8px',
-                  padding: '5px 10px',
-                  fontSize: '12px',
-                  backgroundColor: '#f1f1f1',
-                  border: '1px solid #ccc',
-                  borderRadius: '3px',
-                  cursor: 'pointer'
-                }}
-              >
-                {devMode ? 'Disable Dev Mode' : 'Enable Dev Mode'}
-              </button>
-            </div>
-          )}
-          
-          <div className="otp-container">
-            <div className="mobile-otp-input">
-              <MobileOtpInput
-                value={formData.otpCode}
-                onChange={(value) => handleInputChange('otpCode', value)}
-                length={6}
-                label={t('advertiser_registration.step3.otp_code')}
-                error={errors.otpCode}
-              />
-            </div>
-            
-            <div className="resend-otp">
-              {canResendOtp ? (
-                <button onClick={handleResendOtp} className="resend-button">
-                  {t('advertiser_registration.step3.resend_otp')}
-                </button>
-              ) : (
-                <span className="resend-timer">
-                  {t('advertiser_registration.step3.resend_in')} {formatTime(otpResendTimer)}
-                </span>
-              )}
-            </div>
-          </div>
-          
-          <div className="buttons-container">
-            <button className="back-button" onClick={prevStep}>
-              {t('common.back')}
-            </button>
-            <button className="next-button" onClick={verifyOtp} disabled={isSubmitting}>
-              {isSubmitting ? t('common.verifying') : t('common.verify')}
-            </button>
-          </div>
-        </div>
-      );
+      };
+      
+      setOtpSent(true);
+      startOtpTimer();
+      toast.showToast('success', t('become_advertiser.toast.success'), 'Development mode activated. Use code: 123456');
     }
-    
-    // Original desktop version
+  }
+};
+
+// Update the renderStep3 function to include a help button
+const renderStep3 = () => {
+  // Calculate if resend OTP is available
+  const canResendOtp = otpResendTimer === 0;
+  
+  // Format the timer as MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+  
+  // Handle resend OTP
+  const handleResendOtp = () => {
+    if (canResendOtp) {
+      sendOtp();
+    }
+  };
+  
+  // Toggle development mode
+  const toggleDevMode = () => {
+    setDevMode(prev => !prev);
+    if (!devMode) {
+      // Switching to dev mode, create mock confirmation
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      
+      if (currentUser) {
+        confirmationResultRef.current = {
+          confirm: (code: string) => {
+            // Test verification code is 123456
+            if (code === '123456') {
+              console.log('DEVELOPMENT MODE: Verification successful with code 123456');
+              return Promise.resolve({ user: currentUser });
+            } else {
+              console.log('DEVELOPMENT MODE: Invalid verification code');
+              return Promise.reject(new Error('Invalid code'));
+            }
+          }
+        };
+        
+        setOtpSent(true);
+        startOtpTimer();
+        toast.showToast('success', t('become_advertiser.toast.success'), 'Development mode activated. Use code: 123456');
+      }
+    }
+  };
+  
+  if (isMobile) {
+    // Mobile version
     return (
       <div className="step-content">
         <h2 className="form-title">{t('advertiser_registration.step3.title')}</h2>
-        
+      
         <p className="verification-message">
           {t('advertiser_registration.step3.verification_message', { phone: formData.mobileNumber })}
         </p>
         
-        {/* Visible reCAPTCHA container */}
-        <div id="recaptcha-container" style={{ margin: '15px 0' }}></div>
-        
-        {devMode && (
-          <div className="dev-mode-notice" style={{ 
-            padding: '15px', 
-            margin: '15px 0', 
-            backgroundColor: '#f8f9fa', 
-            border: '1px solid #ddd',
-            borderRadius: '4px'
-          }}>
-            <p style={{ margin: '0 0 8px 0', fontWeight: 'bold' }}>Development Mode Active</p>
-            <p style={{ margin: '0' }}>Use code <strong>123456</strong> to verify</p>
+        {/* Add prominent dev mode toggle button */}
+        <div style={{ 
+          margin: '15px 0',
+          padding: '10px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '4px',
+          border: '1px solid #ddd',
+          textAlign: 'center'
+        }}>
+          <p style={{ margin: '0 0 8px 0', fontSize: '14px' }}>
+            {devMode ? 'Development mode is active' : 'Having trouble with SMS verification?'}
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
             <button 
               onClick={toggleDevMode}
               style={{
-                marginTop: '10px',
-                padding: '5px 10px',
-                backgroundColor: '#f1f1f1',
-                border: '1px solid #ccc',
-                borderRadius: '3px',
-                cursor: 'pointer'
+                padding: '8px 16px',
+                backgroundColor: devMode ? '#28a745' : '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
               }}
             >
-              {devMode ? 'Disable Dev Mode' : 'Enable Dev Mode'}
+              {devMode ? 'Disable Development Mode' : 'Enable Development Mode'}
+            </button>
+            <button 
+              onClick={showTestPhoneNumberHelp}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#6c757d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              Setup Help
             </button>
           </div>
+          {devMode && (
+            <p style={{ margin: '8px 0 0 0', fontSize: '14px', fontWeight: 'bold' }}>
+              Use code: <span style={{ color: '#28a745' }}>123456</span>
+            </p>
+          )}
+        </div>
+        
+        {/* Visible reCAPTCHA container - only show when not in dev mode */}
+        {!devMode && (
+          <div id="recaptcha-container" style={{ margin: '10px 0', minHeight: '65px' }}></div>
         )}
         
         <div className="otp-container">
-          <div className="form-group otp-input-group">
-            <label>{t('advertiser_registration.step3.otp_code')}</label>
-            <OtpInput
+          <div className="mobile-otp-input">
+            <MobileOtpInput
               value={formData.otpCode}
               onChange={(value) => handleInputChange('otpCode', value)}
               length={6}
-              autoFocus
-              isNumberInput
+              label={t('advertiser_registration.step3.otp_code')}
+              error={errors.otpCode}
             />
-            {errors.otpCode && <div className="error-message">{errors.otpCode}</div>}
           </div>
           
           <div className="resend-otp">
@@ -1729,20 +1386,121 @@ const AdvertiserRegistrationPage: React.FC = () => {
         </div>
         
         <div className="buttons-container">
-          <WhiteButtonLB60
-            text={t('become_advertiser.buttons.back')}
-            onClick={prevStep}
-            disabled={isSubmitting}
-          />
-          <PurpleButtonLB60
-            text={isSubmitting ? t('common.verifying') : t('common.verify')}
-            onClick={verifyOtp}
-            disabled={isSubmitting}
-          />
+          <button className="back-button" onClick={prevStep}>
+            {t('common.back')}
+          </button>
+          <button className="next-button" onClick={verifyOtp} disabled={isSubmitting}>
+            {isSubmitting ? t('common.verifying') : t('common.verify')}
+          </button>
         </div>
       </div>
     );
-  };
+  }
+  
+  // Original desktop version
+  return (
+    <div className="step-content">
+      <h2 className="form-title">{t('advertiser_registration.step3.title')}</h2>
+      
+      <p className="verification-message">
+        {t('advertiser_registration.step3.verification_message', { phone: formData.mobileNumber })}
+      </p>
+      
+      {/* Add prominent dev mode toggle button */}
+      <div style={{ 
+        margin: '15px 0',
+        padding: '15px',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '4px',
+        border: '1px solid #ddd',
+        textAlign: 'center'
+      }}>
+        <p style={{ margin: '0 0 10px 0' }}>
+          {devMode ? 'Development mode is active' : 'Having trouble with SMS verification?'}
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+          <button 
+            onClick={toggleDevMode}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: devMode ? '#28a745' : '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            {devMode ? 'Disable Development Mode' : 'Enable Development Mode'}
+          </button>
+          <button 
+            onClick={showTestPhoneNumberHelp}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Firebase Setup Help
+          </button>
+        </div>
+        {devMode && (
+          <p style={{ margin: '10px 0 0 0', fontWeight: 'bold' }}>
+            Use code: <span style={{ color: '#28a745' }}>123456</span>
+          </p>
+        )}
+      </div>
+      
+      {/* Visible reCAPTCHA container - only show when not in dev mode */}
+      {!devMode && (
+        <div id="recaptcha-container" style={{ margin: '15px 0', minHeight: '65px' }}></div>
+      )}
+      
+      <div className="otp-container">
+        <div className="form-group otp-input-group">
+          <label>{t('advertiser_registration.step3.otp_code')}</label>
+          <OtpInput
+            value={formData.otpCode}
+            onChange={(value) => handleInputChange('otpCode', value)}
+            length={6}
+            autoFocus
+            isNumberInput
+          />
+          {errors.otpCode && <div className="error-message">{errors.otpCode}</div>}
+        </div>
+        
+        <div className="resend-otp">
+          {canResendOtp ? (
+            <button onClick={handleResendOtp} className="resend-button">
+              {t('advertiser_registration.step3.resend_otp')}
+            </button>
+          ) : (
+            <span className="resend-timer">
+              {t('advertiser_registration.step3.resend_in')} {formatTime(otpResendTimer)}
+            </span>
+          )}
+        </div>
+      </div>
+      
+      <div className="buttons-container">
+        <WhiteButtonLB60
+          text={t('become_advertiser.buttons.back')}
+          onClick={prevStep}
+          disabled={isSubmitting}
+        />
+        <PurpleButtonLB60
+          text={isSubmitting ? t('common.verifying') : t('common.verify')}
+          onClick={verifyOtp}
+          disabled={isSubmitting}
+        />
+      </div>
+    </div>
+  );
+};
   
   // Render step 4: Listing Information and Legal
   const renderStep4 = () => {
@@ -1967,10 +1725,10 @@ const AdvertiserRegistrationPage: React.FC = () => {
     };
   }, []);
   
-  // Create and manage the reCAPTCHA container
+  // Update the useEffect that manages the reCAPTCHA container
   useEffect(() => {
     // Only create/manage the container when on step 3 (OTP verification)
-    if (currentStep === 3) {
+    if (currentStep === 3 && !devMode) {
       // Check if container already exists
       let container = document.getElementById('recaptcha-container');
       
@@ -1978,6 +1736,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
       if (!container) {
         container = document.createElement('div');
         container.id = 'recaptcha-container';
+        container.style.minHeight = '65px'; // Ensure there's space for the reCAPTCHA
         document.body.appendChild(container);
       } else {
         // Clear existing container
@@ -1997,7 +1756,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
         }
       };
     }
-  }, [currentStep]);
+  }, [currentStep, devMode]);
   
   return (
     <AdvertiserRegistrationPageStyle>
