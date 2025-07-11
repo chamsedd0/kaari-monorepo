@@ -441,7 +441,6 @@ const MainContent = styled.div`
   
   @media (max-width: 768px) {
     justify-content: start;
-    margin-top: 50px;
     gap: 1rem;
     width: 100%;
   }
@@ -487,7 +486,7 @@ const Subheading = styled.p<{ isMobile: boolean }>`
   font-size: ${props => props.isMobile ? '0.9rem' : '1.1rem'};
   line-height: 1.5;
   max-width: 650px;
-  margin: 0 0 1rem 0;
+  margin: 0 0 0.6rem 0;
   opacity: 0.9;
   
   @media (max-width: 768px) {
@@ -512,7 +511,6 @@ const FeatureList = styled.div<{ isVisible: boolean }>`
   @media (max-width: 768px) {
     margin: 0 auto;
     gap: 0.8rem;
-    margin-top: 30px;
   }
 `;
 
@@ -593,7 +591,6 @@ const CTASection = styled.div<{ isVisible: boolean }>`
   
   @media (max-width: 768px) {
     width: 100%;
-    margin-top: 0.5rem;
   }
 `;
 
@@ -611,7 +608,6 @@ const StartButton = styled.button<{ isMobile: boolean }>`
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  margin-top: ${props => props.isMobile ? '30px' : '0'};
   
   &:hover {
     transform: translateY(-2px);

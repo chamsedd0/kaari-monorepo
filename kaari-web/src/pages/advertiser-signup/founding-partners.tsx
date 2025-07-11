@@ -481,11 +481,7 @@ const fadeOut = keyframes`
   to { opacity: 0; transform: translateY(-20px); }
 `;
 
-const float = keyframes`
-  0% { transform: translate(0, 0); }
-  50% { transform: translate(5px, -5px); }
-  100% { transform: translate(0, 0); }
-`;
+
 
 // Styled Components
 const Container = styled.div<{ isExiting: boolean }>`
@@ -800,7 +796,7 @@ const BenefitIconWrapper = styled.div`
 const BenefitTitle = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.1rem;
 `;
 
 const BenefitHighlight = styled.span<{ isMobile: boolean }>`
