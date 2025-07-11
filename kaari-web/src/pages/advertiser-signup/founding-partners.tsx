@@ -600,9 +600,8 @@ const LanguageSwitcherWrapper = styled.div`
 // Fix the mobile language switcher visibility
 const BottomLanguageSwitcher = styled.div`
   position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 15px;
+  right: 15px;
   z-index: 1000;
   
   /* Ensure visibility with background and shadow */
