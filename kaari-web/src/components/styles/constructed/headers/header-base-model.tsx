@@ -6,12 +6,13 @@ export const HeaderBaseModel = styled.div`
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 1000;
+    z-index: 1000 !important;
 
     height: 80px;
     width: 100%;
     border: ${Theme.borders.primary};
     padding: 20px;
+
 
     
 

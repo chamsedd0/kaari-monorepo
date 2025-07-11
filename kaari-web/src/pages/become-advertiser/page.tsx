@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import { AdvertiserRegistrationPageStyle } from './styles';
 import InputBaseModel from '../../components/skeletons/inputs/input-fields/input-variant';
-import TextAreaBaseModel from '../../components/skeletons/inputs/input-fields/textarea-variant';
 import SelectFieldBaseModelVariant1 from '../../components/skeletons/inputs/select-fields/select-field-base-model-variant-1';
 import { PurpleButtonLB60 } from '../../components/skeletons/buttons/purple_LB60';
 import { WhiteButtonLB60 } from '../../components/skeletons/buttons/white_LB60';
-import { FaCheckCircle, FaUserAlt, FaBuilding, FaGoogle, FaPhoneAlt, FaShieldAlt, FaArrowRight, FaAngleLeft, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaCheckCircle, FaUserAlt, FaBuilding, FaMapMarkerAlt } from 'react-icons/fa';
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useStore } from '../../backend/store';
 import { useToastService } from '../../services/ToastService';
@@ -18,7 +17,7 @@ import otpService from '../../services/OtpService';
 import OtpInput from '../../components/checkout/input-fields/OtpInput';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
-import { LanguageSwitcher, MobileLanguageSwitcher } from '../../components/skeletons/language-switcher';
+import { LanguageSwitcher } from '../../components/skeletons/language-switcher';
 import { 
   saveSignupProgress, 
   getSignupProgress, 
@@ -26,7 +25,6 @@ import {
   startSignup, 
   completeSignup,
   hideHeadersAndFooters,
-  AdvertiserSignupData 
 } from '../../utils/advertiser-signup';
 import { 
   MobileInput, 

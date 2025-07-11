@@ -11,6 +11,7 @@ import MoneyShieldIcon from '../../assets/images/moneyShieldsvg.svg';
 import ExplainingIcon from '../../assets/images/explaining.svg';
 import SupportIcon from '../../assets/images/support.svg';
 import { useTranslation } from 'react-i18next';
+import eventBus, { EventType } from '../../utils/event-bus';
 
 // Define types for the translations
 interface BenefitType {
@@ -227,18 +228,67 @@ const FoundingPartnersPage: React.FC = () => {
       console.log('Translations reloaded');
     });
     
-    // Hide headers and footers
+    // Add special class to body for CSS targeting
+    document.body.classList.add('kaari-signup-flow');
+    document.body.classList.add('kaari-founding-partners');
+    
+    // Apply direct styles to ensure headers are hidden
+    const style = document.createElement('style');
+    style.textContent = `
+      header, [class*="header"], [id*="header"], [class*="Header"], [id*="Header"],
+      footer, [class*="footer"], [id*="footer"], [class*="Footer"], [id*="Footer"],
+      nav, [class*="nav"], [id*="nav"], [class*="Nav"], [id*="Nav"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        position: absolute !important;
+        z-index: -9999 !important;
+      }
+      
+      body.kaari-signup-flow {
+        overflow-x: hidden;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Hide headers and footers - initial call
     const cleanupHeadersFooters = hideHeadersAndFooters();
     
+    // Hide headers again after a short delay to catch any late-rendered components
+    const timeoutId = setTimeout(() => {
+      hideHeadersAndFooters();
+    }, 100);
+    
+    // Set up an interval to keep hiding elements (some frameworks might re-render)
+    const intervalId = setInterval(() => {
+      hideHeadersAndFooters();
+    }, 500);
+    
+    // Emit route change event to trigger App.tsx header hiding logic
+    eventBus.emit(EventType.NAV_ROUTE_CHANGED, {
+      path: window.location.pathname,
+      params: Object.fromEntries(new URLSearchParams(window.location.search))
+    });
+    
     // Simulate loading animation
-    const timer = setTimeout(() => {
+    const loadingTimer = setTimeout(() => {
       setIsLoading(false);
     }, 500);
     
     // Cleanup function
     return () => {
       cleanupHeadersFooters();
-      clearTimeout(timer);
+      clearTimeout(timeoutId);
+      clearTimeout(loadingTimer);
+      clearInterval(intervalId);
+      document.body.classList.remove('kaari-signup-flow');
+      document.body.classList.remove('kaari-founding-partners');
+      if (style.parentNode) {
+        style.parentNode.removeChild(style);
+      }
     };
   }, [i18n]);
 
@@ -252,6 +302,38 @@ const FoundingPartnersPage: React.FC = () => {
       setIsLoading(false);
     }, 300);
   }, [i18n.language]);
+
+  // Additional effect to handle DOM mutations that might add headers
+  useEffect(() => {
+    // Set up a MutationObserver to detect and hide dynamically added headers
+    const observer = new MutationObserver(() => {
+      // Call hideHeadersAndFooters when DOM changes
+      hideHeadersAndFooters();
+    });
+    
+    // Start observing the document with the configured parameters
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // Return cleanup function
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  // Ensure the page is scrolled to the top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    
+    // Prevent body scrolling
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    
+    return () => {
+      // Restore body scrolling on unmount
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
 
   const handleSignUpNow = () => {
     setIsExiting(true);
@@ -405,6 +487,12 @@ const Container = styled.div<{ isExiting: boolean }>`
   min-height: 100vh;
   height: 100vh;
   color: ${Theme.colors.secondary};
+  z-index: 9999 !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   
   display: flex;
   flex-direction: column;
@@ -412,7 +500,7 @@ const Container = styled.div<{ isExiting: boolean }>`
   box-sizing: border-box;
   overflow: hidden;
   animation: ${props => props.isExiting ? fadeOut : fadeIn} 0.5s ease-in-out;
-  position: relative;
+  background-color: white;
   
   @media (max-width: 768px) {
     padding: 1rem;
