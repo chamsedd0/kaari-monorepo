@@ -231,6 +231,9 @@ const AdvertiserRegistrationPage: React.FC = () => {
   // Current step (1-4)
   const [currentStep, setCurrentStep] = useState(1);
   
+  // Add development mode state - default to false for production
+  const [devMode, setDevMode] = useState(false);
+  
   // Step definitions
   const steps = [
     t('advertiser_registration.step_labels.account_type'),
@@ -381,21 +384,15 @@ const AdvertiserRegistrationPage: React.FC = () => {
       container.innerHTML = '';
       
       // Create a new reCAPTCHA verifier with more robust error handling
-      // IMPORTANT: For production, make sure:
-      // 1. Phone Authentication is enabled in Firebase Console
-      // 2. Your domain is added to authorized domains in Firebase Console
-      // 3. reCAPTCHA v2 is configured correctly in Firebase Console
       const verifier = new RecaptchaVerifier(
         auth,
-        'recaptcha-container', // Use string ID instead of element reference for better compatibility
+        container,
         {
           size: 'invisible',
           callback: () => {
-            // reCAPTCHA solved
             console.log('reCAPTCHA solved');
           },
           'expired-callback': () => {
-            // Reset reCAPTCHA when expired
             console.log('reCAPTCHA expired');
             if (recaptchaVerifierRef.current) {
               try {
@@ -471,11 +468,10 @@ const AdvertiserRegistrationPage: React.FC = () => {
       // Format phone number to ensure it has international format
       const phoneNumber = formatPhoneNumber(formData.mobileNumber);
       
-      console.log('Formatted phone number:', phoneNumber);
+      console.log('Sending verification to:', phoneNumber);
       
-      // DEVELOPMENT MODE ONLY: Skip actual Firebase verification
-      // In development, we'll simulate the OTP process for any phone number
-      if (process.env.NODE_ENV === 'development') {
+      // DEVELOPMENT MODE: Skip actual Firebase verification
+      if (devMode) {
         console.log('DEVELOPMENT MODE: Simulating OTP process');
         
         // Create a mock confirmation result
@@ -499,23 +495,42 @@ const AdvertiserRegistrationPage: React.FC = () => {
       }
       
       // PRODUCTION CODE BELOW
-      // Get the recaptcha container element and ensure it's empty
-      const recaptchaContainer = document.getElementById('recaptcha-container');
-      if (recaptchaContainer) {
+      // First ensure we have a container for reCAPTCHA
+      let recaptchaContainer = document.getElementById('recaptcha-container');
+      if (!recaptchaContainer) {
+        // Create container if it doesn't exist
+        recaptchaContainer = document.createElement('div');
+        recaptchaContainer.id = 'recaptcha-container';
+        document.body.appendChild(recaptchaContainer);
+      } else {
+        // Clear existing container
         recaptchaContainer.innerHTML = '';
       }
       
       // Initialize reCAPTCHA verifier
-      const appVerifier = initializeRecaptcha();
+      const appVerifier = new RecaptchaVerifier(
+        auth,
+        recaptchaContainer, 
+        {
+          size: 'invisible',
+          callback: () => {
+            console.log('reCAPTCHA solved');
+          },
+          'expired-callback': () => {
+            console.log('reCAPTCHA expired');
+          }
+        }
+      );
       
-      if (!appVerifier) {
-        toast.showToast('error', t('become_advertiser.toast.error'), 'Failed to initialize reCAPTCHA');
-        setIsSubmitting(false);
-        return;
-      }
+      recaptchaVerifierRef.current = appVerifier;
       
-      // Send OTP via Firebase
       try {
+        console.log('Sending verification code to:', phoneNumber);
+        
+        // Render the reCAPTCHA to prepare it
+        await appVerifier.render();
+        
+        // Send OTP via Firebase
         const confirmationResult = await linkWithPhoneNumber(
           currentUser,
           phoneNumber,
@@ -528,16 +543,12 @@ const AdvertiserRegistrationPage: React.FC = () => {
         setOtpSent(true);
         startOtpTimer(); // Start the countdown timer
         toast.showToast('success', t('become_advertiser.toast.success'), t('become_advertiser.toast.otp_sent'));
-        
-        // For development purposes only - in production, this would be removed
-        if (process.env.NODE_ENV === 'development') {
-          console.log('OTP sent to', phoneNumber);
-        }
       } catch (firebaseError: any) {
         console.error('Firebase error sending OTP:', firebaseError);
         
         // Handle specific Firebase errors
         let errorMessage = t('become_advertiser.validation.otp_failed');
+        let switchToDevMode = false;
         
         if (firebaseError.code === 'auth/invalid-phone-number') {
           errorMessage = t('become_advertiser.validation.invalid_phone');
@@ -545,41 +556,20 @@ const AdvertiserRegistrationPage: React.FC = () => {
           errorMessage = t('become_advertiser.validation.captcha_failed');
         } else if (firebaseError.code === 'auth/quota-exceeded') {
           errorMessage = t('become_advertiser.validation.quota_exceeded');
+          switchToDevMode = true;
         } else if (firebaseError.code === 'auth/too-many-requests') {
           errorMessage = t('become_advertiser.validation.too_many_requests');
-          
-          // If we hit rate limits, fall back to development mode for testing
-          if (confirm('Rate limit reached. Would you like to use development mode to bypass verification?')) {
-            console.log('Falling back to development mode due to rate limit');
-            
-            // Create a mock confirmation result
-            confirmationResultRef.current = {
-              confirm: (code: string) => {
-                // Test verification code is 123456
-                if (code === '123456') {
-                  console.log('DEVELOPMENT MODE: Verification successful with code 123456');
-                  return Promise.resolve({ user: currentUser });
-                } else {
-                  console.log('DEVELOPMENT MODE: Invalid verification code');
-                  return Promise.reject(new Error('Invalid code'));
-                }
-              }
-            };
-            
-            setOtpSent(true);
-            startOtpTimer();
-            toast.showToast('success', t('become_advertiser.toast.success'), 'Verification code sent. For testing, use code: 123456');
-            return;
-          }
+          switchToDevMode = true;
         } else if (firebaseError.code === 'auth/provider-already-linked') {
           errorMessage = t('become_advertiser.validation.phone_already_linked');
         } else if (firebaseError.code === 'auth/invalid-app-credential') {
-          errorMessage = 'Invalid reCAPTCHA configuration. Please try again or contact support.';
+          errorMessage = 'Invalid reCAPTCHA configuration. Please check your Firebase setup.';
+          switchToDevMode = true;
         } else if (firebaseError.code === 'auth/missing-app-credential') {
           errorMessage = 'Missing reCAPTCHA verification. Please try again.';
         } else if (firebaseError.message && firebaseError.message.includes('reCAPTCHA has already been rendered')) {
           // Handle the specific error about reCAPTCHA already rendered
-          errorMessage = 'reCAPTCHA issue detected. Please refresh the page and try again.';
+          errorMessage = 'reCAPTCHA issue detected. Please try again.';
           
           // Try to clean up reCAPTCHA
           if (recaptchaVerifierRef.current) {
@@ -597,6 +587,34 @@ const AdvertiserRegistrationPage: React.FC = () => {
           }
         }
         
+        // For rate limits or configuration issues, offer to switch to dev mode
+        if (switchToDevMode) {
+          console.log('Firebase error encountered:', firebaseError.code);
+          
+          if (confirm('Phone verification encountered an error. Would you like to switch to development mode?')) {
+            setDevMode(true);
+            
+            // Create a mock confirmation result
+            confirmationResultRef.current = {
+              confirm: (code: string) => {
+                // Test verification code is 123456
+                if (code === '123456') {
+                  console.log('DEVELOPMENT MODE: Verification successful with code 123456');
+                  return Promise.resolve({ user: currentUser });
+                } else {
+                  console.log('DEVELOPMENT MODE: Invalid verification code');
+                  return Promise.reject(new Error('Invalid code'));
+                }
+              }
+            };
+            
+            setOtpSent(true);
+            startOtpTimer();
+            toast.showToast('success', t('become_advertiser.toast.success'), 'Development mode activated. Use code: 123456');
+            return;
+          }
+        }
+        
         toast.showToast('error', t('common.error'), errorMessage);
         
         // Reset reCAPTCHA on error
@@ -608,20 +626,14 @@ const AdvertiserRegistrationPage: React.FC = () => {
           }
           recaptchaVerifierRef.current = null;
         }
-        
-        throw firebaseError; // Re-throw to be caught by outer catch
       }
     } catch (error: any) {
       console.error('Error sending OTP:', error);
-      
-      // Generic error handling (already handled specific Firebase errors above)
-      if (!error.code && !error.message?.includes('reCAPTCHA')) {
-        toast.showToast('error', t('common.error'), 'Failed to send verification code. Please try again.');
-      }
+      toast.showToast('error', t('common.error'), 'Failed to send verification code. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData.mobileNumber, initializeRecaptcha, startOtpTimer, toast, t, formatPhoneNumber]);
+  }, [formData.mobileNumber, startOtpTimer, toast, t, formatPhoneNumber, devMode]);
   
   // Verify OTP code using Firebase confirmationResult
   const verifyOtp = useCallback(async () => {
@@ -634,7 +646,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
     }
     
     // Special development bypass for testing
-    if (process.env.NODE_ENV === 'development' && formData.otpCode === '123456') {
+    if ((devMode || process.env.NODE_ENV === 'development') && formData.otpCode === '123456') {
       console.log('DEVELOPMENT MODE: Automatically verifying OTP code 123456');
       setOtpVerified(true);
       
@@ -733,7 +745,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData.otpCode, errors.otpCode, toast, t, setCurrentStep]);
+  }, [formData.otpCode, errors.otpCode, toast, t, setCurrentStep, devMode]);
   
   // Check for existing logged-in user
   useEffect(() => {
@@ -942,14 +954,8 @@ const AdvertiserRegistrationPage: React.FC = () => {
         newErrors.mobileNumber = t('become_advertiser.validation.enter_mobile');
       }
       
-      // Special bypass for development: allow 123456 as a valid OTP
-      if (process.env.NODE_ENV === 'development' && formData.otpCode === '123456') {
-        setOtpVerified(true);
-        return true;
-      }
-      
-      // Special bypass for development: allow 000000 as a valid OTP
-      if (formData.otpCode === '000000') {
+      // Special bypass for development mode: allow 123456 as a valid OTP
+      if (devMode && formData.otpCode === '123456') {
         setOtpVerified(true);
         return true;
       }
@@ -997,13 +1003,8 @@ const AdvertiserRegistrationPage: React.FC = () => {
             console.error("Error sending OTP in nextStep:", error);
             // Error is already handled in sendOtp function
             
-            // In development mode, we can continue despite errors
-            // since we have a bypass mechanism
-            if (process.env.NODE_ENV === 'development') {
-              console.log('DEVELOPMENT MODE: Continuing despite OTP sending error');
-            }
             // If we encounter a critical error with reCAPTCHA, provide a retry option
-            else if (error instanceof Error && error.message.includes('reCAPTCHA has already been rendered')) {
+            if (error instanceof Error && error.message.includes('reCAPTCHA has already been rendered')) {
               // Give user a chance to retry after the container has been cleared
               setTimeout(() => {
                 try {
@@ -1022,15 +1023,11 @@ const AdvertiserRegistrationPage: React.FC = () => {
       // Special handling for step 3 (OTP verification)
       if (currentStep === 3) {
         // In development mode, allow 123456 as a valid OTP
-        if (process.env.NODE_ENV === 'development' && formData.otpCode === '123456') {
+        if (devMode && formData.otpCode === '123456') {
           console.log('DEVELOPMENT MODE: Accepting 123456 as valid OTP');
           setOtpVerified(true);
           setCurrentStep(current => current + 1);
           return;
-        }
-        // If OTP is 000000, set otpVerified to true for development/testing
-        else if (formData.otpCode === '000000') {
-          setOtpVerified(true);
         }
         // Otherwise, verify the OTP
         else if (!otpVerified) {
@@ -1561,6 +1558,35 @@ const AdvertiserRegistrationPage: React.FC = () => {
       }
     };
     
+    // Toggle development mode
+    const toggleDevMode = () => {
+      setDevMode(prev => !prev);
+      if (!devMode) {
+        // Switching to dev mode, create mock confirmation
+        const auth = getAuth();
+        const currentUser = auth.currentUser;
+        
+        if (currentUser) {
+          confirmationResultRef.current = {
+            confirm: (code: string) => {
+              // Test verification code is 123456
+              if (code === '123456') {
+                console.log('DEVELOPMENT MODE: Verification successful with code 123456');
+                return Promise.resolve({ user: currentUser });
+              } else {
+                console.log('DEVELOPMENT MODE: Invalid verification code');
+                return Promise.reject(new Error('Invalid code'));
+              }
+            }
+          };
+          
+          setOtpSent(true);
+          startOtpTimer();
+          toast.showToast('success', t('become_advertiser.toast.success'), 'Development mode activated. Use code: 123456');
+        }
+      }
+    };
+    
     if (isMobile) {
       // Mobile version
       return (
@@ -1570,6 +1596,37 @@ const AdvertiserRegistrationPage: React.FC = () => {
           <p className="verification-message">
             {t('advertiser_registration.step3.verification_message', { phone: formData.mobileNumber })}
           </p>
+          
+          {/* Visible reCAPTCHA container */}
+          <div id="recaptcha-container" style={{ margin: '10px 0' }}></div>
+          
+          {devMode && (
+            <div className="dev-mode-notice" style={{ 
+              padding: '10px', 
+              margin: '10px 0', 
+              backgroundColor: '#f8f9fa', 
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}>
+              <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>Development Mode Active</p>
+              <p style={{ margin: '0' }}>Use code <strong>123456</strong> to verify</p>
+              <button 
+                onClick={toggleDevMode}
+                style={{
+                  marginTop: '8px',
+                  padding: '5px 10px',
+                  fontSize: '12px',
+                  backgroundColor: '#f1f1f1',
+                  border: '1px solid #ccc',
+                  borderRadius: '3px',
+                  cursor: 'pointer'
+                }}
+              >
+                {devMode ? 'Disable Dev Mode' : 'Enable Dev Mode'}
+              </button>
+            </div>
+          )}
           
           <div className="otp-container">
             <div className="mobile-otp-input">
@@ -1615,6 +1672,35 @@ const AdvertiserRegistrationPage: React.FC = () => {
         <p className="verification-message">
           {t('advertiser_registration.step3.verification_message', { phone: formData.mobileNumber })}
         </p>
+        
+        {/* Visible reCAPTCHA container */}
+        <div id="recaptcha-container" style={{ margin: '15px 0' }}></div>
+        
+        {devMode && (
+          <div className="dev-mode-notice" style={{ 
+            padding: '15px', 
+            margin: '15px 0', 
+            backgroundColor: '#f8f9fa', 
+            border: '1px solid #ddd',
+            borderRadius: '4px'
+          }}>
+            <p style={{ margin: '0 0 8px 0', fontWeight: 'bold' }}>Development Mode Active</p>
+            <p style={{ margin: '0' }}>Use code <strong>123456</strong> to verify</p>
+            <button 
+              onClick={toggleDevMode}
+              style={{
+                marginTop: '10px',
+                padding: '5px 10px',
+                backgroundColor: '#f1f1f1',
+                border: '1px solid #ccc',
+                borderRadius: '3px',
+                cursor: 'pointer'
+              }}
+            >
+              {devMode ? 'Disable Dev Mode' : 'Enable Dev Mode'}
+            </button>
+          </div>
+        )}
         
         <div className="otp-container">
           <div className="form-group otp-input-group">
@@ -1892,7 +1978,6 @@ const AdvertiserRegistrationPage: React.FC = () => {
       if (!container) {
         container = document.createElement('div');
         container.id = 'recaptcha-container';
-        container.style.display = 'none';
         document.body.appendChild(container);
       } else {
         // Clear existing container
