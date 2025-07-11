@@ -1249,6 +1249,337 @@ Would you like to enable development mode to bypass SMS verification?
   }
 };
 
+// Add renderStep1 and renderStep2 functions above renderStep3
+
+// Render step 1: Account Type
+const renderStep1 = () => {
+  if (isMobile) {
+    // Mobile version
+    return (
+      <>
+        <h2 className="form-title">{t('advertiser_registration.step1.title')}</h2>
+        <p className="form-subtitle">{t('advertiser_registration.step1.subtitle')}</p>
+        
+        <div className="account-type-options">
+          <MobileRadioOption
+            id="broker"
+            title={t('advertiser_registration.step1.broker')}
+            description={t('advertiser_registration.step1.broker_desc')}
+            icon={<FaUserAlt />}
+            checked={formData.accountType === 'broker'}
+            onChange={() => handleAccountTypeSelect('broker')}
+          />
+          
+          <MobileRadioOption
+            id="landlord"
+            title={t('advertiser_registration.step1.landlord')}
+            description={t('advertiser_registration.step1.landlord_desc')}
+            icon={<FaBuilding />}
+            checked={formData.accountType === 'landlord'}
+            onChange={() => handleAccountTypeSelect('landlord')}
+          />
+          
+          <MobileRadioOption
+            id="agency"
+            title={t('advertiser_registration.step1.agency')}
+            description={t('advertiser_registration.step1.agency_desc')}
+            icon={<FaBuilding />}
+            checked={formData.accountType === 'agency'}
+            onChange={() => handleAccountTypeSelect('agency')}
+          />
+        </div>
+        
+        {errors.accountType && <div className="error-message">{errors.accountType}</div>}
+        
+        {/* Conditional agency fields */}
+        {formData.accountType === 'agency' && (
+          <div className="conditional-fields">
+            <MobileInput
+              label={t('advertiser_registration.step1.agency_name')}
+              value={formData.agencyName}
+              onChange={(e) => handleInputChange('agencyName', e.target.value)}
+              placeholder={t('advertiser_registration.step1.agency_name_placeholder')}
+              error={errors.agencyName}
+              required
+            />
+            
+            <MobileSelect
+              options={AGENCY_SIZES.map(size => t(`advertiser_registration.step1.${size.label}`))}
+              value={formData.agencySize ? t(`advertiser_registration.step1.${AGENCY_SIZES.find(s => s.value === formData.agencySize)?.label}`) : ''}
+              onChange={(value) => {
+                const selectedSize = AGENCY_SIZES.find(s => t(`advertiser_registration.step1.${s.label}`) === value);
+                if (selectedSize) {
+                  handleInputChange('agencySize', selectedSize.value);
+                }
+              }}
+              placeholder={t('advertiser_registration.step1.agency_size_placeholder')}
+              label={t('advertiser_registration.step1.agency_size')}
+              error={errors.agencySize}
+              required
+            />
+          </div>
+        )}
+        
+        <div className="buttons-container">
+          <button 
+            className="next-button" 
+            onClick={nextStep}
+            disabled={!formData.accountType || (formData.accountType === 'agency' && (!formData.agencyName || !formData.agencySize))}
+          >
+            {t('common.next')}
+          </button>
+        </div>
+      </>
+    );
+  }
+  
+  // Desktop version
+  return (
+    <>
+      <h2 className="form-title">{t('advertiser_registration.step1.title')}</h2>
+      <p className="form-subtitle">{t('advertiser_registration.step1.subtitle')}</p>
+      
+      <div className="account-type-options">
+        <div 
+          className={`account-type-option ${formData.accountType === 'broker' ? 'selected' : ''}`}
+          onClick={() => handleAccountTypeSelect('broker')}
+        >
+          <div className="option-icon">
+            <FaUserAlt />
+          </div>
+          <div className="option-content">
+            <h3>{t('advertiser_registration.step1.broker')}</h3>
+            <p>{t('advertiser_registration.step1.broker_desc')}</p>
+          </div>
+        </div>
+        
+        <div 
+          className={`account-type-option ${formData.accountType === 'landlord' ? 'selected' : ''}`}
+          onClick={() => handleAccountTypeSelect('landlord')}
+        >
+          <div className="option-icon">
+            <FaBuilding />
+          </div>
+          <div className="option-content">
+            <h3>{t('advertiser_registration.step1.landlord')}</h3>
+            <p>{t('advertiser_registration.step1.landlord_desc')}</p>
+          </div>
+        </div>
+        
+        <div 
+          className={`account-type-option ${formData.accountType === 'agency' ? 'selected' : ''}`}
+          onClick={() => handleAccountTypeSelect('agency')}
+        >
+          <div className="option-icon">
+            <FaBuilding />
+          </div>
+          <div className="option-content">
+            <h3>{t('advertiser_registration.step1.agency')}</h3>
+            <p>{t('advertiser_registration.step1.agency_desc')}</p>
+          </div>
+        </div>
+      </div>
+      
+      {errors.accountType && <div className="error-message">{errors.accountType}</div>}
+      
+      {/* Conditional agency fields */}
+      {formData.accountType === 'agency' && (
+        <div className="conditional-fields">
+          <div className="form-group required">
+            <label htmlFor="agencyName">{t('advertiser_registration.step1.agency_name')}</label>
+            <InputBaseModel
+              value={formData.agencyName}
+              onChange={(e) => handleInputChange('agencyName', e.target.value)}
+              placeholder={t('advertiser_registration.step1.agency_name_placeholder')}
+            />
+            {errors.agencyName && <div className="error-message">{errors.agencyName}</div>}
+          </div>
+          
+          <div className="form-group required">
+            <label htmlFor="agencySize">{t('advertiser_registration.step1.agency_size')}</label>
+            <SelectFieldBaseModelVariant1
+              options={AGENCY_SIZES.map(size => t(`advertiser_registration.step1.${size.label}`))}
+              value={formData.agencySize ? t(`advertiser_registration.step1.${AGENCY_SIZES.find(s => s.value === formData.agencySize)?.label}`) : ''}
+              onChange={(value) => {
+                const selectedSize = AGENCY_SIZES.find(s => t(`advertiser_registration.step1.${s.label}`) === value);
+                if (selectedSize) {
+                  handleInputChange('agencySize', selectedSize.value);
+                }
+              }}
+              placeholder={t('advertiser_registration.step1.agency_size_placeholder')}
+            />
+            {errors.agencySize && <div className="error-message">{errors.agencySize}</div>}
+          </div>
+        </div>
+      )}
+      
+      <div className="buttons-container">
+        <PurpleButtonLB60
+          text={t('common.next')}
+          onClick={nextStep}
+          disabled={!formData.accountType || (formData.accountType === 'agency' && (!formData.agencyName || !formData.agencySize))}
+        />
+      </div>
+    </>
+  );
+};
+
+// Render step 2: User Information
+const renderStep2 = () => {
+  if (isMobile) {
+    // Mobile version
+    return (
+      <>
+        <h2 className="form-title">{t('advertiser_registration.step2.title')}</h2>
+        
+        <div className="google-signin-container">
+          <button className="google-signin-button" onClick={handleGoogleSignIn} disabled={isSubmitting}>
+            <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+              <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
+              <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
+              <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
+              <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
+            </svg>
+            {t('advertiser_registration.step2.google_signin')}
+          </button>
+        </div>
+        
+        <div className="separator">
+          <span>{t('advertiser_registration.step2.or')}</span>
+        </div>
+        
+        <MobileInput
+          label={t('advertiser_registration.step2.first_name')}
+          value={formData.firstName}
+          onChange={(e) => handleInputChange('firstName', e.target.value)}
+          placeholder={t('advertiser_registration.step2.first_name_placeholder')}
+          error={errors.firstName}
+          required
+        />
+        
+        <MobileInput
+          label={t('advertiser_registration.step2.last_name')}
+          value={formData.lastName}
+          onChange={(e) => handleInputChange('lastName', e.target.value)}
+          placeholder={t('advertiser_registration.step2.last_name_placeholder')}
+          error={errors.lastName}
+          required
+        />
+        
+        <MobileInput
+          label={t('advertiser_registration.step2.email')}
+          value={formData.email}
+          onChange={(e) => handleInputChange('email', e.target.value)}
+          placeholder={t('advertiser_registration.step2.email_placeholder')}
+          error={errors.email}
+          required
+          type="email"
+        />
+        
+        <MobilePhoneInput
+          label={t('advertiser_registration.step2.mobile_number')}
+          value={formData.mobileNumber}
+          onChange={(value) => handleInputChange('mobileNumber', value)}
+          error={errors.mobileNumber}
+          required
+        />
+        
+        <div className="buttons-container">
+          <button className="back-button" onClick={prevStep}>
+            {t('common.back')}
+          </button>
+          <button className="next-button" onClick={nextStep}>
+            {t('common.next')}
+          </button>
+        </div>
+      </>
+    );
+  }
+  
+  // Desktop version
+  return (
+    <>
+      <h2 className="form-title">{t('advertiser_registration.step2.title')}</h2>
+      
+      <div className="google-signin-container">
+        <button className="google-signin-button" onClick={handleGoogleSignIn} disabled={isSubmitting}>
+          <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
+            <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
+            <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
+            <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path>
+          </svg>
+          {t('advertiser_registration.step2.google_signin')}
+        </button>
+      </div>
+      
+      <div className="separator">
+        <span>{t('advertiser_registration.step2.or')}</span>
+      </div>
+      
+      <div className="form-row">
+        <div className="form-group required">
+          <label htmlFor="firstName">{t('advertiser_registration.step2.first_name')}</label>
+          <InputBaseModel
+            value={formData.firstName}
+            onChange={(e) => handleInputChange('firstName', e.target.value)}
+            placeholder={t('advertiser_registration.step2.first_name_placeholder')}
+          />
+          {errors.firstName && <div className="error-message">{errors.firstName}</div>}
+        </div>
+        
+        <div className="form-group required">
+          <label htmlFor="lastName">{t('advertiser_registration.step2.last_name')}</label>
+          <InputBaseModel
+            value={formData.lastName}
+            onChange={(e) => handleInputChange('lastName', e.target.value)}
+            placeholder={t('advertiser_registration.step2.last_name_placeholder')}
+          />
+          {errors.lastName && <div className="error-message">{errors.lastName}</div>}
+        </div>
+      </div>
+      
+      <div className="form-group required">
+        <label htmlFor="email">{t('advertiser_registration.step2.email')}</label>
+        <InputBaseModel
+          value={formData.email}
+          onChange={(e) => handleInputChange('email', e.target.value)}
+          placeholder={t('advertiser_registration.step2.email_placeholder')}
+          type="email"
+        />
+        {errors.email && <div className="error-message">{errors.email}</div>}
+      </div>
+      
+      <div className="form-group required">
+        <label htmlFor="mobileNumber">{t('advertiser_registration.step2.mobile_number')}</label>
+        <div className="phone-input-container">
+          <PhoneInput
+            country={'ma'}
+            value={formData.mobileNumber}
+            onChange={(value) => handleInputChange('mobileNumber', value)}
+            inputStyle={{ width: '100%', height: '48px' }}
+            containerStyle={{ width: '100%' }}
+          />
+        </div>
+        {errors.mobileNumber && <div className="error-message">{errors.mobileNumber}</div>}
+      </div>
+      
+      <div className="buttons-container">
+        <WhiteButtonLB60
+          text={t('become_advertiser.buttons.back')}
+          onClick={prevStep}
+          disabled={isSubmitting}
+        />
+        <PurpleButtonLB60
+          text={t('common.next')}
+          onClick={nextStep}
+          disabled={isSubmitting}
+        />
+      </div>
+    </>
+  );
+};
+
 // Update the renderStep3 function to include a help button
 const renderStep3 = () => {
   // Calculate if resend OTP is available
