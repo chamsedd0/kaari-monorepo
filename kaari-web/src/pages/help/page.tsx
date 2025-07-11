@@ -140,7 +140,6 @@ const HelpPage: React.FC = () => {
               onClick={handleSubmit}
             />
           </div>
-
         </div>
 
 
