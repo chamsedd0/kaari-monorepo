@@ -459,27 +459,6 @@ const IllustrationContainer = styled.div`
   }
 `;
 
-const PlaceholderIllustration = styled.div`
-  width: 100%;
-  max-height: 80%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: ${floatAnimation} 6s ease-in-out infinite;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(5px);
-`;
-
-const PlaceholderText = styled.p`
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: white;
-  opacity: 0.8;
-  text-align: center;
-`;
 
 const WelcomeSection = styled.div<{ isVisible: boolean }>`
   opacity: ${props => props.isVisible ? 1 : 0};
@@ -499,7 +478,7 @@ const WelcomeHeading = styled.h1<{ isMobile: boolean }>`
   line-height: 1.1;
   
   @media (max-width: 768px) {
-    font-size: 2rem;
+    font-size: 2.5rem;
     margin-bottom: 0.8rem;
   }
 `;
@@ -652,6 +631,7 @@ const StartButton = styled.button<{ isMobile: boolean }>`
     justify-content: center;
     padding: 0.8rem 2rem;
     font-size: 1rem;
+    margin-bottom: 50px;
   }
 `;
 

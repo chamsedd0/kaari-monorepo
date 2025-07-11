@@ -7,11 +7,11 @@ import { FaArrowRight, FaTimes } from 'react-icons/fa';
 import { LanguageSwitcher, MobileLanguageSwitcher } from '../../components/skeletons/language-switcher';
 import { hideHeadersAndFooters } from '../../utils/advertiser-signup';
 import ConfettiSVG from '../../assets/images/confetti_foundingPartners.svg';
-import MoneyShieldIcon from '../../assets/images/moneyShieldsvg.svg';
-import ExplainingIcon from '../../assets/images/explaining.svg';
-import SupportIcon from '../../assets/images/support.svg';
 import { useTranslation } from 'react-i18next';
 import eventBus, { EventType } from '../../utils/event-bus';
+// Import better icons from react-icons
+import { FaShieldAlt, FaHandshake, FaHeadset } from 'react-icons/fa';
+import { MdAttachMoney } from 'react-icons/md';
 
 // Define types for the translations
 interface BenefitType {
@@ -66,20 +66,20 @@ const FoundingPartnersPage: React.FC = () => {
       tagline: "Gagnez plus. Faites moins. Soyez payé plus vite.",
       benefit_commission: {
         highlight: "0%",
-        subtitle: "Commission Annonceur",
-        description: "Gardez 100% du loyer pendant 3 mois sans commission.",
+        subtitle: "Offre Annonceur",
+        description: "Touchez 100% du loyer sur vos 3 premières réservations — zéro commission prélevée.",
         alt: "0% de Commission"
       },
       benefit_referral: {
-        highlight: "Programme de Parrainage",
-        subtitle: "Gains de Parrainage",
-        description: "Gagnez 10% du premier loyer. 200 MAD de réduction pour vos filleuls.",
-        alt: "Gains Illimités"
+        highlight: "Gagnez en Recommandant",
+        subtitle: "Parrainage Locataire",
+        description: "Touchez 10% du loyer + 200 MAD de remise pour chaque réservation parrainée.",
+        alt: "Gains de Parrainage"
       },
       benefit_support: {
-        highlight: "Accompagnement VIP",
-        subtitle: "À Chaque Étape",
-        description: "Accompagnement personnalisé, aide proactive et support dédié.",
+        highlight: "Support VIP Dédié",
+        subtitle: "Accompagnement Personnalisé",
+        description: "Profitez d'un suivi proactif à chaque étape, avec une équipe disponible et réactive.",
         alt: "Support VIP"
       },
       cta: {
@@ -95,21 +95,21 @@ const FoundingPartnersPage: React.FC = () => {
       benefits_heading: "Make the most of your Founding Partner status.",
       tagline: "Earn more. Do less. Get paid faster.",
       benefit_commission: {
-        highlight: "0%",
+        highlight: "🛡 0%",
         subtitle: "Advertiser Commission",
-        description: "Keep 100% of the rent for 3 months with no commission.",
+        description: "Keep 100% of the rent on your first 3 bookings — zero commission taken.",
         alt: "0% Commission"
       },
       benefit_referral: {
-        highlight: "Referral Program",
-        subtitle: "Referral Earnings",
-        description: "Earn 10% of the first rent. 200 MAD discount for your referrals.",
-        alt: "Unlimited Earnings"
+        highlight: "💸 Earn by Referring",
+        subtitle: "Tenant Referrals",
+        description: "Earn 10% of the rent + 200 MAD discount for each referred booking.",
+        alt: "Referral Earnings"
       },
       benefit_support: {
-        highlight: "VIP Support",
-        subtitle: "At Every Step",
-        description: "Personalized guidance, proactive help and dedicated support.",
+        highlight: "🤝 Dedicated VIP Support",
+        subtitle: "Personalized Guidance",
+        description: "Enjoy proactive support at every step, with a responsive and available team.",
         alt: "VIP Support"
       },
       cta: {
@@ -394,11 +394,13 @@ const FoundingPartnersPage: React.FC = () => {
             <BenefitsGrid isMobile={isMobile}>
               <BenefitCard isMobile={isMobile}>
                   <BenefitIconWrapper>
-                    <BenefitIconImg src={MoneyShieldIcon} alt={getTranslation('benefit_commission.alt')} />
+                    <IconWrapper>
+                      <FaShieldAlt size={isMobile ? 28 : 32} color={Theme.colors.secondary} />
+                    </IconWrapper>
                   </BenefitIconWrapper>
                 <BenefitHeader>
                   <BenefitTitle>
-                    <BenefitHighlight isMobile={isMobile}>0%</BenefitHighlight>
+                    <BenefitHighlight isMobile={isMobile}>{getTranslation('benefit_commission.highlight')}</BenefitHighlight>
                     <BenefitSubtitle isMobile={isMobile}>{getTranslation('benefit_commission.subtitle')}</BenefitSubtitle>
                   </BenefitTitle>
                 <BenefitDescription isMobile={isMobile}>
@@ -409,7 +411,9 @@ const FoundingPartnersPage: React.FC = () => {
               
               <BenefitCard isMobile={isMobile}>
                   <BenefitIconWrapper>
-                    <BenefitIconImg src={ExplainingIcon} alt={getTranslation('benefit_referral.alt')} />
+                    <IconWrapper>
+                      <FaHandshake size={isMobile ? 28 : 32} color={Theme.colors.secondary} />
+                    </IconWrapper>
                   </BenefitIconWrapper>
                 <BenefitHeader>
                   <BenefitTitle>
@@ -424,7 +428,9 @@ const FoundingPartnersPage: React.FC = () => {
               
               <BenefitCard isMobile={isMobile}>
                   <BenefitIconWrapper>
-                    <BenefitIconImg src={SupportIcon} alt={getTranslation('benefit_support.alt')} />
+                    <IconWrapper>
+                      <FaHeadset size={isMobile ? 28 : 32} color={Theme.colors.secondary} />
+                    </IconWrapper>
                   </BenefitIconWrapper>
                 <BenefitHeader>
                   <BenefitTitle>
@@ -789,16 +795,7 @@ const BenefitIconWrapper = styled.div`
   }
 `;
 
-const BenefitIconImg = styled.img`
-  height: 80%;
-  width: auto;
-  max-width: 50px;
-  object-fit: contain;
-  
-  @media (max-width: 768px) {
-    max-width: 40px;
-  }
-`;
+// BenefitIconImg removed as we're now using React Icons
 
 const BenefitTitle = styled.div`
   display: flex;
@@ -892,6 +889,15 @@ const SignUpButton = styled.button<{ isMobile: boolean }>`
     padding: 0.7rem 2rem;
     font-size: 1rem;
   }
+`;
+
+// Add a new styled component for the icons
+const IconWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 `;
 
 export default FoundingPartnersPage; 
