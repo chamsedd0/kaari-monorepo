@@ -1053,6 +1053,7 @@
       "invalid_phone": "Format de numéro de téléphone invalide. Veuillez utiliser le format international (+212XXXXXXXXX).",
       "captcha_failed": "La vérification CAPTCHA a échoué. Veuillez réessayer.",
       "quota_exceeded": "Trop de tentatives de vérification. Veuillez réessayer plus tard.",
+      "too_many_requests": "Trop de tentatives de vérification. Veuillez réessayer plus tard ou utiliser un autre numéro de téléphone.",
       "phone_already_linked": "Ce numéro de téléphone est déjà lié à un autre compte."
     },
     "toast": {

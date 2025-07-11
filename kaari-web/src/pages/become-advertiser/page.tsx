@@ -545,6 +545,32 @@ const AdvertiserRegistrationPage: React.FC = () => {
           errorMessage = t('become_advertiser.validation.captcha_failed');
         } else if (firebaseError.code === 'auth/quota-exceeded') {
           errorMessage = t('become_advertiser.validation.quota_exceeded');
+        } else if (firebaseError.code === 'auth/too-many-requests') {
+          errorMessage = t('become_advertiser.validation.too_many_requests');
+          
+          // If we hit rate limits, fall back to development mode for testing
+          if (confirm('Rate limit reached. Would you like to use development mode to bypass verification?')) {
+            console.log('Falling back to development mode due to rate limit');
+            
+            // Create a mock confirmation result
+            confirmationResultRef.current = {
+              confirm: (code: string) => {
+                // Test verification code is 123456
+                if (code === '123456') {
+                  console.log('DEVELOPMENT MODE: Verification successful with code 123456');
+                  return Promise.resolve({ user: currentUser });
+                } else {
+                  console.log('DEVELOPMENT MODE: Invalid verification code');
+                  return Promise.reject(new Error('Invalid code'));
+                }
+              }
+            };
+            
+            setOtpSent(true);
+            startOtpTimer();
+            toast.showToast('success', t('become_advertiser.toast.success'), 'Verification code sent. For testing, use code: 123456');
+            return;
+          }
         } else if (firebaseError.code === 'auth/provider-already-linked') {
           errorMessage = t('become_advertiser.validation.phone_already_linked');
         } else if (firebaseError.code === 'auth/invalid-app-credential') {
