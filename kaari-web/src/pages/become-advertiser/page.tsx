@@ -234,6 +234,9 @@ const AdvertiserRegistrationPage: React.FC = () => {
   // Add development mode state - default to false for production
   const [devMode, setDevMode] = useState(false);
   
+  // Add recaptcha widget ID state
+  const [recaptchaWidgetId, setRecaptchaWidgetId] = useState<number | null>(null);
+  
   // Step definitions
   const steps = [
     t('advertiser_registration.step_labels.account_type'),
@@ -443,7 +446,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
     return phoneNumber;
   }, []);
   
-  // Send OTP code using Firebase linkWithPhoneNumber
+  // Update the sendOtp function to properly use the RecaptchaVerifier according to Firebase docs
   const sendOtp = useCallback(async () => {
     if (!formData.mobileNumber) {
       setErrors(prev => ({
@@ -495,137 +498,128 @@ const AdvertiserRegistrationPage: React.FC = () => {
       }
       
       // PRODUCTION CODE BELOW
-      // First ensure we have a container for reCAPTCHA
-      let recaptchaContainer = document.getElementById('recaptcha-container');
-      if (!recaptchaContainer) {
-        // Create container if it doesn't exist
-        recaptchaContainer = document.createElement('div');
-        recaptchaContainer.id = 'recaptcha-container';
-        document.body.appendChild(recaptchaContainer);
-      } else {
-        // Clear existing container
-        recaptchaContainer.innerHTML = '';
-      }
-      
-      // Initialize reCAPTCHA verifier
-      const appVerifier = new RecaptchaVerifier(
-        auth,
-        recaptchaContainer, 
-        {
-          size: 'invisible',
-          callback: () => {
-            console.log('reCAPTCHA solved');
-          },
-          'expired-callback': () => {
-            console.log('reCAPTCHA expired');
-          }
-        }
-      );
-      
-      recaptchaVerifierRef.current = appVerifier;
-      
       try {
-        console.log('Sending verification code to:', phoneNumber);
-        
-        // Render the reCAPTCHA to prepare it
-        await appVerifier.render();
-        
-        // Send OTP via Firebase
-        const confirmationResult = await linkWithPhoneNumber(
-          currentUser,
-          phoneNumber,
-          appVerifier
-        );
-        
-        // Store confirmation result for later verification
-        confirmationResultRef.current = confirmationResult;
-        
-        setOtpSent(true);
-        startOtpTimer(); // Start the countdown timer
-        toast.showToast('success', t('become_advertiser.toast.success'), t('become_advertiser.toast.otp_sent'));
-      } catch (firebaseError: any) {
-        console.error('Firebase error sending OTP:', firebaseError);
-        
-        // Handle specific Firebase errors
-        let errorMessage = t('become_advertiser.validation.otp_failed');
-        let switchToDevMode = false;
-        
-        if (firebaseError.code === 'auth/invalid-phone-number') {
-          errorMessage = t('become_advertiser.validation.invalid_phone');
-        } else if (firebaseError.code === 'auth/captcha-check-failed') {
-          errorMessage = t('become_advertiser.validation.captcha_failed');
-        } else if (firebaseError.code === 'auth/quota-exceeded') {
-          errorMessage = t('become_advertiser.validation.quota_exceeded');
-          switchToDevMode = true;
-        } else if (firebaseError.code === 'auth/too-many-requests') {
-          errorMessage = t('become_advertiser.validation.too_many_requests');
-          switchToDevMode = true;
-        } else if (firebaseError.code === 'auth/provider-already-linked') {
-          errorMessage = t('become_advertiser.validation.phone_already_linked');
-        } else if (firebaseError.code === 'auth/invalid-app-credential') {
-          errorMessage = 'Invalid reCAPTCHA configuration. Please check your Firebase setup.';
-          switchToDevMode = true;
-        } else if (firebaseError.code === 'auth/missing-app-credential') {
-          errorMessage = 'Missing reCAPTCHA verification. Please try again.';
-        } else if (firebaseError.message && firebaseError.message.includes('reCAPTCHA has already been rendered')) {
-          // Handle the specific error about reCAPTCHA already rendered
-          errorMessage = 'reCAPTCHA issue detected. Please try again.';
-          
-          // Try to clean up reCAPTCHA
-          if (recaptchaVerifierRef.current) {
-            try {
-              recaptchaVerifierRef.current.clear();
-            } catch (e) {
-              console.log('Error clearing reCAPTCHA on render error:', e);
-            }
-            recaptchaVerifierRef.current = null;
-          }
-          
-          // Clear the container
-          if (recaptchaContainer) {
-            recaptchaContainer.innerHTML = '';
-          }
-        }
-        
-        // For rate limits or configuration issues, offer to switch to dev mode
-        if (switchToDevMode) {
-          console.log('Firebase error encountered:', firebaseError.code);
-          
-          if (confirm('Phone verification encountered an error. Would you like to switch to development mode?')) {
-            setDevMode(true);
-            
-            // Create a mock confirmation result
-            confirmationResultRef.current = {
-              confirm: (code: string) => {
-                // Test verification code is 123456
-                if (code === '123456') {
-                  console.log('DEVELOPMENT MODE: Verification successful with code 123456');
-                  return Promise.resolve({ user: currentUser });
-                } else {
-                  console.log('DEVELOPMENT MODE: Invalid verification code');
-                  return Promise.reject(new Error('Invalid code'));
-                }
-              }
-            };
-            
-            setOtpSent(true);
-            startOtpTimer();
-            toast.showToast('success', t('become_advertiser.toast.success'), 'Development mode activated. Use code: 123456');
-            return;
-          }
-        }
-        
-        toast.showToast('error', t('common.error'), errorMessage);
-        
-        // Reset reCAPTCHA on error
+        // Clear any existing reCAPTCHA
         if (recaptchaVerifierRef.current) {
           try {
             recaptchaVerifierRef.current.clear();
+            recaptchaVerifierRef.current = null;
           } catch (e) {
-            console.log('Error clearing reCAPTCHA after Firebase error:', e);
+            console.log('Error clearing existing reCAPTCHA:', e);
           }
-          recaptchaVerifierRef.current = null;
         }
+        
+        // Reset recaptcha container
+        const recaptchaContainer = document.getElementById('recaptcha-container');
+        if (recaptchaContainer) {
+          recaptchaContainer.innerHTML = '';
+        }
+        
+        // Create a new reCAPTCHA verifier
+        const appVerifier = new RecaptchaVerifier(
+          auth,
+          'recaptcha-container',
+          {
+            size: 'normal', // Use normal size for better visibility
+            callback: () => {
+              console.log('reCAPTCHA solved, proceeding with phone verification');
+              // The reCAPTCHA was solved, we can proceed with phone verification
+            },
+            'expired-callback': () => {
+              console.log('reCAPTCHA expired');
+              toast.showToast('warning', t('become_advertiser.toast.warning'), t('become_advertiser.toast.recaptcha_expired'));
+            }
+          }
+        );
+        
+        // Store the verifier for later use
+        recaptchaVerifierRef.current = appVerifier;
+        
+        // Pre-render the reCAPTCHA
+        appVerifier.render().then((widgetId) => {
+          console.log('reCAPTCHA rendered with widget ID:', widgetId);
+          setRecaptchaWidgetId(widgetId);
+          
+          // Now send the verification code
+          return linkWithPhoneNumber(currentUser, phoneNumber, appVerifier);
+        }).then((confirmationResult) => {
+          // Store confirmation result for later verification
+          confirmationResultRef.current = confirmationResult;
+          
+          setOtpSent(true);
+          startOtpTimer(); // Start the countdown timer
+          toast.showToast('success', t('become_advertiser.toast.success'), t('become_advertiser.toast.otp_sent'));
+        }).catch((error) => {
+          console.error('Error in reCAPTCHA render or sending OTP:', error);
+          
+          // Handle specific Firebase errors
+          let errorMessage = t('become_advertiser.validation.otp_failed');
+          let switchToDevMode = false;
+          
+          if (error.code === 'auth/invalid-phone-number') {
+            errorMessage = t('become_advertiser.validation.invalid_phone');
+          } else if (error.code === 'auth/captcha-check-failed') {
+            errorMessage = t('become_advertiser.validation.captcha_failed');
+          } else if (error.code === 'auth/quota-exceeded') {
+            errorMessage = t('become_advertiser.validation.quota_exceeded');
+            switchToDevMode = true;
+          } else if (error.code === 'auth/too-many-requests') {
+            errorMessage = t('become_advertiser.validation.too_many_requests');
+            switchToDevMode = true;
+          } else if (error.code === 'auth/provider-already-linked') {
+            errorMessage = t('become_advertiser.validation.phone_already_linked');
+          } else if (error.code === 'auth/invalid-app-credential') {
+            errorMessage = 'Invalid reCAPTCHA configuration. Please check your Firebase setup.';
+            switchToDevMode = true;
+          } else if (error.code === 'auth/missing-app-credential') {
+            errorMessage = 'Missing reCAPTCHA verification. Please try again.';
+          } else if (error.message && error.message.includes('reCAPTCHA has already been rendered')) {
+            errorMessage = 'reCAPTCHA issue detected. Please refresh and try again.';
+            
+            // Reset the reCAPTCHA
+            if (recaptchaWidgetId !== null) {
+              try {
+                // @ts-ignore - grecaptcha is available globally when reCAPTCHA is loaded
+                window.grecaptcha?.reset(recaptchaWidgetId);
+              } catch (e) {
+                console.log('Error resetting reCAPTCHA:', e);
+              }
+            }
+          }
+          
+          // For rate limits or configuration issues, offer to switch to dev mode
+          if (switchToDevMode) {
+            console.log('Firebase error encountered:', error.code);
+            
+            if (confirm('Phone verification encountered an error. Would you like to switch to development mode?')) {
+              setDevMode(true);
+              
+              // Create a mock confirmation result
+              confirmationResultRef.current = {
+                confirm: (code: string) => {
+                  // Test verification code is 123456
+                  if (code === '123456') {
+                    console.log('DEVELOPMENT MODE: Verification successful with code 123456');
+                    return Promise.resolve({ user: currentUser });
+                  } else {
+                    console.log('DEVELOPMENT MODE: Invalid verification code');
+                    return Promise.reject(new Error('Invalid code'));
+                  }
+                }
+              };
+              
+              setOtpSent(true);
+              startOtpTimer();
+              toast.showToast('success', t('become_advertiser.toast.success'), 'Development mode activated. Use code: 123456');
+              return;
+            }
+          }
+          
+          toast.showToast('error', t('common.error'), errorMessage);
+        });
+      } catch (error: any) {
+        console.error('Error in phone verification setup:', error);
+        toast.showToast('error', t('common.error'), 'Failed to initialize phone verification. Please try again.');
       }
     } catch (error: any) {
       console.error('Error sending OTP:', error);
@@ -633,9 +627,9 @@ const AdvertiserRegistrationPage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData.mobileNumber, startOtpTimer, toast, t, formatPhoneNumber, devMode]);
+  }, [formData.mobileNumber, startOtpTimer, toast, t, formatPhoneNumber, devMode, recaptchaWidgetId]);
   
-  // Verify OTP code using Firebase confirmationResult
+  // Update the verifyOtp function to handle errors better
   const verifyOtp = useCallback(async () => {
     if (!formData.otpCode) {
       setErrors(prev => ({
@@ -683,8 +677,12 @@ const AdvertiserRegistrationPage: React.FC = () => {
     setIsSubmitting(true);
     
     try {
+      console.log('Verifying OTP code:', formData.otpCode);
+      
       // Verify OTP via Firebase
       const result = await confirmationResultRef.current.confirm(formData.otpCode);
+      
+      console.log('OTP verification successful:', result);
       
       // OTP verified successfully
       setOtpVerified(true);
@@ -1539,7 +1537,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
     );
   };
   
-  // Render step 3: OTP Verification
+  // Update the renderStep3 function to include a better reCAPTCHA container
   const renderStep3 = () => {
     // Calculate if resend OTP is available
     const canResendOtp = otpResendTimer === 0;
@@ -1584,6 +1582,20 @@ const AdvertiserRegistrationPage: React.FC = () => {
           startOtpTimer();
           toast.showToast('success', t('become_advertiser.toast.success'), 'Development mode activated. Use code: 123456');
         }
+      } else {
+        // Switching back to production mode, clear any mock confirmation
+        confirmationResultRef.current = null;
+        setOtpSent(false);
+        
+        // Reset the reCAPTCHA if needed
+        if (recaptchaWidgetId !== null) {
+          try {
+            // @ts-ignore - grecaptcha is available globally when reCAPTCHA is loaded
+            window.grecaptcha?.reset(recaptchaWidgetId);
+          } catch (e) {
+            console.log('Error resetting reCAPTCHA:', e);
+          }
+        }
       }
     };
     
@@ -1597,8 +1609,16 @@ const AdvertiserRegistrationPage: React.FC = () => {
             {t('advertiser_registration.step3.verification_message', { phone: formData.mobileNumber })}
           </p>
           
-          {/* Visible reCAPTCHA container */}
-          <div id="recaptcha-container" style={{ margin: '10px 0' }}></div>
+          {/* reCAPTCHA container */}
+          <div 
+            id="recaptcha-container" 
+            style={{ 
+              margin: '10px 0',
+              display: 'flex',
+              justifyContent: 'center',
+              minHeight: '80px'
+            }}
+          ></div>
           
           {devMode && (
             <div className="dev-mode-notice" style={{ 
@@ -1673,8 +1693,17 @@ const AdvertiserRegistrationPage: React.FC = () => {
           {t('advertiser_registration.step3.verification_message', { phone: formData.mobileNumber })}
         </p>
         
-        {/* Visible reCAPTCHA container */}
-        <div id="recaptcha-container" style={{ margin: '15px 0' }}></div>
+        {/* reCAPTCHA container */}
+        <div 
+          id="recaptcha-container" 
+          style={{ 
+            margin: '15px auto',
+            display: 'flex',
+            justifyContent: 'center',
+            minHeight: '80px',
+            maxWidth: '400px'
+          }}
+        ></div>
         
         {devMode && (
           <div className="dev-mode-notice" style={{ 
