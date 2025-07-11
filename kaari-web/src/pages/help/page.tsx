@@ -6,6 +6,8 @@ import TextAreaBaseModel from '../../components/skeletons/inputs/input-fields/te
 import SelectFieldBaseModelVariant1 from '../../components/skeletons/inputs/select-fields/select-field-base-model-variant-1';
 import { PurpleButtonLB60 } from '../../components/skeletons/buttons/purple_LB60';
 import supportImage from '../../assets/images/support.svg';
+import ReferralPassGreenSkeleton from '../../components/skeletons/cards/referral-pass-green';
+import ReferralPassRedSkeleton from '../../components/skeletons/cards/referral-pass-red';
 
 const HelpPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -139,10 +141,11 @@ const HelpPage: React.FC = () => {
               onClick={handleSubmit}
             />
           </div>
+          <ReferralPassGreenSkeleton />
+          <ReferralPassRedSkeleton />
         </div>
 
 
-        
         
       </HelpStyle>
     </>
