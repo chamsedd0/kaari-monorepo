@@ -7,6 +7,7 @@ import SelectFieldBaseModelVariant1 from '../../components/skeletons/inputs/sele
 import { PurpleButtonLB60 } from '../../components/skeletons/buttons/purple_LB60';
 import supportImage from '../../assets/images/support.svg';
 
+
 const HelpPage: React.FC = () => {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -139,10 +140,10 @@ const HelpPage: React.FC = () => {
               onClick={handleSubmit}
             />
           </div>
+
         </div>
 
 
-        
         
       </HelpStyle>
     </>
