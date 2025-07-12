@@ -1036,11 +1036,15 @@
       "captcha_failed": "CAPTCHA verification failed. Please try again.",
       "quota_exceeded": "Too many verification attempts. Please try again later.",
       "too_many_requests": "Too many verification attempts. Please try again later or use a different phone number.",
-      "phone_already_linked": "This phone number is already linked to another account."
+      "phone_already_linked": "This phone number is already linked to another account.",
+      "service_unavailable": "Firebase service is temporarily unavailable. Please try again later.",
+      "network_error": "Network connection issue detected. Please check your internet connection.",
+      "recaptcha_issue": "reCAPTCHA issue detected. Please refresh and try again."
     },
     "toast": {
       "success": "Success",
       "error": "Error",
+      "warning": "Warning",
       "not_authenticated": "You must be logged in to verify your phone number.",
       "otp_sent": "Verification code sent successfully.",
       "otp_failed": "Failed to send verification code.",
@@ -1052,7 +1056,9 @@
       "registration_failed": "Registration failed",
       "registration_success": "Registration successful",
       "registration_incomplete": "Registration incomplete. Please try again.",
-      "email_in_use": "This email is already in use. Please try another one or login."
+      "email_in_use": "This email is already in use. Please try another one or login.",
+      "dev_mode_activated": "Development mode activated. Use code: 123456",
+      "recaptcha_unavailable": "reCAPTCHA service unavailable. Switching to development mode."
     }
   },
   "coming_soon": {

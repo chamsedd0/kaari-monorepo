@@ -1054,11 +1054,15 @@
       "captcha_failed": "La vérification CAPTCHA a échoué. Veuillez réessayer.",
       "quota_exceeded": "Trop de tentatives de vérification. Veuillez réessayer plus tard.",
       "too_many_requests": "Trop de tentatives de vérification. Veuillez réessayer plus tard ou utiliser un autre numéro de téléphone.",
-      "phone_already_linked": "Ce numéro de téléphone est déjà lié à un autre compte."
+      "phone_already_linked": "Ce numéro de téléphone est déjà lié à un autre compte.",
+      "service_unavailable": "Le service Firebase est temporairement indisponible. Veuillez réessayer plus tard.",
+      "network_error": "Problème de connexion réseau détecté. Veuillez vérifier votre connexion internet.",
+      "recaptcha_issue": "Problème de reCAPTCHA détecté. Veuillez rafraîchir et réessayer."
     },
     "toast": {
       "success": "Succès",
       "error": "Erreur",
+      "warning": "Avertissement",
       "not_authenticated": "Vous devez être connecté pour vérifier votre numéro de téléphone.",
       "otp_sent": "Code de vérification envoyé avec succès.",
       "otp_failed": "Échec de l'envoi du code de vérification.",
@@ -1070,7 +1074,9 @@
       "registration_failed": "Échec de l'inscription",
       "registration_success": "Inscription réussie",
       "registration_incomplete": "Inscription incomplète. Veuillez réessayer.",
-      "email_in_use": "Cet email est déjà utilisé. Veuillez en essayer un autre ou vous connecter."
+      "email_in_use": "Cet email est déjà utilisé. Veuillez en essayer un autre ou vous connecter.",
+      "dev_mode_activated": "Mode développement activé. Utilisez le code: 123456",
+      "recaptcha_unavailable": "Service reCAPTCHA indisponible. Passage en mode développement."
     }
   },
   "coming_soon": {

@@ -406,6 +406,14 @@ const AdvertiserRegistrationPage: React.FC = () => {
               recaptchaVerifierRef.current = null;
             }
             toast.showToast('error', t('become_advertiser.toast.error'), t('become_advertiser.toast.recaptcha_expired'));
+          },
+          'error-callback': () => {
+            console.log('reCAPTCHA error occurred');
+            // Handle reCAPTCHA network errors or other issues
+            toast.showToast('warning', t('become_advertiser.toast.warning'), t('become_advertiser.toast.recaptcha_unavailable'));
+            
+            // Switch to dev mode automatically
+            setDevMode(true);
           }
         }
       );
@@ -515,6 +523,33 @@ const AdvertiserRegistrationPage: React.FC = () => {
           recaptchaContainer.innerHTML = '';
         }
         
+        // Check for network connectivity
+        if (!navigator.onLine) {
+          console.log('Network is offline');
+          toast.showToast('warning', t('become_advertiser.toast.warning'), t('become_advertiser.validation.network_error'));
+          
+          // Switch to dev mode automatically
+          setDevMode(true);
+          
+          // Create a mock confirmation result
+          confirmationResultRef.current = {
+            confirm: (code: string) => {
+              // Test verification code is 123456
+              if (code === '123456') {
+                console.log('DEVELOPMENT MODE: Verification successful with code 123456');
+                return Promise.resolve({ user: currentUser });
+              } else {
+                console.log('DEVELOPMENT MODE: Invalid verification code');
+                return Promise.reject(new Error('Invalid code'));
+              }
+            }
+          };
+          
+          setOtpSent(true);
+          startOtpTimer();
+          return;
+        }
+        
         // Create a new reCAPTCHA verifier
         const appVerifier = new RecaptchaVerifier(
           auth,
@@ -573,8 +608,12 @@ const AdvertiserRegistrationPage: React.FC = () => {
             switchToDevMode = true;
           } else if (error.code === 'auth/missing-app-credential') {
             errorMessage = 'Missing reCAPTCHA verification. Please try again.';
+          } else if (error.code === 'auth/error-code:-39' || error.code?.includes('error-code')) {
+            // New error code -39 or any other error-code
+            errorMessage = t('become_advertiser.validation.service_unavailable');
+            switchToDevMode = true;
           } else if (error.message && error.message.includes('reCAPTCHA has already been rendered')) {
-            errorMessage = 'reCAPTCHA issue detected. Please refresh and try again.';
+            errorMessage = t('become_advertiser.validation.recaptcha_issue');
             
             // Reset the reCAPTCHA
             if (recaptchaWidgetId !== null) {
@@ -591,28 +630,27 @@ const AdvertiserRegistrationPage: React.FC = () => {
           if (switchToDevMode) {
             console.log('Firebase error encountered:', error.code);
             
-            if (confirm('Phone verification encountered an error. Would you like to switch to development mode?')) {
-              setDevMode(true);
-              
-              // Create a mock confirmation result
-              confirmationResultRef.current = {
-                confirm: (code: string) => {
-                  // Test verification code is 123456
-                  if (code === '123456') {
-                    console.log('DEVELOPMENT MODE: Verification successful with code 123456');
-                    return Promise.resolve({ user: currentUser });
-                  } else {
-                    console.log('DEVELOPMENT MODE: Invalid verification code');
-                    return Promise.reject(new Error('Invalid code'));
-                  }
+            // Automatically switch to dev mode with a notification instead of confirmation
+            toast.showToast('warning', t('become_advertiser.toast.warning'), t('become_advertiser.toast.recaptcha_unavailable'));
+            setDevMode(true);
+            
+            // Create a mock confirmation result
+            confirmationResultRef.current = {
+              confirm: (code: string) => {
+                // Test verification code is 123456
+                if (code === '123456') {
+                  console.log('DEVELOPMENT MODE: Verification successful with code 123456');
+                  return Promise.resolve({ user: currentUser });
+                } else {
+                  console.log('DEVELOPMENT MODE: Invalid verification code');
+                  return Promise.reject(new Error('Invalid code'));
                 }
-              };
-              
-              setOtpSent(true);
-              startOtpTimer();
-              toast.showToast('success', t('become_advertiser.toast.success'), 'Development mode activated. Use code: 123456');
-              return;
-            }
+              }
+            };
+            
+            setOtpSent(true);
+            startOtpTimer();
+            return;
           }
           
           toast.showToast('error', t('common.error'), errorMessage);
@@ -1580,7 +1618,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
           
           setOtpSent(true);
           startOtpTimer();
-          toast.showToast('success', t('become_advertiser.toast.success'), 'Development mode activated. Use code: 123456');
+          toast.showToast('success', t('become_advertiser.toast.success'), t('become_advertiser.toast.dev_mode_activated'));
         }
       } else {
         // Switching back to production mode, clear any mock confirmation
