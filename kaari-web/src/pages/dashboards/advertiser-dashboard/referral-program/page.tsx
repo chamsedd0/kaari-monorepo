@@ -5,12 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import { PurpleButtonSM32 } from '../../../../components/skeletons/buttons/purple_SM32';
 import { BpurpleButtonMB48 } from '../../../../components/skeletons/buttons/border_purple_MB48'
 import { PurpleButtonMB48 } from "../../../../components/skeletons/buttons/purple_MB48";
-import ArrowIcon from '../../../../components/skeletons/icons/Icon_Arrow_Right_W.svg';
-import ReferralProgramImage from '../../../../components/skeletons/icons/Referral_Program_Image.svg';
-import iconinfo from '../../../../components/skeletons/icons/Icon_Info2.svg'
 import arowdown from '../../../../components/skeletons/icons/Icon_arrow_Down.svg'
 import arowup from '../../../../components/skeletons/icons/Icon_arrow_Up.svg'
 import IconVerified from '../../../../components/skeletons/icons/Icon_Verified.svg'
+import ReferralPassGreenSkeleton from '../../../../components/skeletons/cards/referral-pass-green';
+import YourReferralLinkCard from '../../../../components/skeletons/cards/your-referral-link';
+import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-help-card';
+import YourEarningsCalculatorCard from '../../../../components/skeletons/cards/your-earnings-calculator-card';
 
 // Mock data for the referral program (replace with actual API calls later)
 const mockReferralData = {
@@ -161,77 +162,15 @@ const ReferralProgramPage: React.FC = () => {
     <ReferralProgramPageStyle>
       <div className="page-header">
         <h2>Kaari's Referral Program</h2>
-        <div className="header-buttons">
-          <PurpleButtonMB48 
-            text="My Performance"
-            onClick={handleViewPerformance}
-            type="button"
-            children={<img src={ArrowIcon} alt="Arrow" style={{ width: '20px', height: '20px' }}/>}
-          >
-          </PurpleButtonMB48>
-        </div>
       </div>
 
       <div className="cards-layout">
         <div className="main-column">
-          <div className="card referral-code">
-            <h2>Your Referral Code</h2>
-            <div className="referral-code-content">
-              <div className="code-section">
-                <div className="code-container">
-                  <input type="text" value="ABC1234" readOnly />
-                  <CopyButton />
-                </div>
-                <p className="info-text">
-                  Give tenants your unique promocode when you can't accommodate them. They get 200 MAD off, and you earn a bonus!
-                </p>
-              </div>
-              <div className="illustration">
-                <img src={ReferralProgramImage} alt="Referral Illustration" />
-              </div>
-            </div>
-          </div>
+        <ReferralPassGreenSkeleton />
+        <YourReferralLinkCard />
 
           {/* Current Performance Card */}
-          <div className="card performance">
-            <h2>Your Current Performance</h2>
-            <p className="bonus-text">
-              Current bonus: 5% of tenant's first rent
-            </p>
-
-            <div className="bonus-explainer">
-              <img src={iconinfo} alt='Info Icon'/>
-              <span>List 1 more property to get 8% bonus</span>
-            </div>
-
-            {/* Bonus Progress Bar */}
-            <div className="progress-container">
-              <div className="percentage-labels">
-                <span>5%</span>
-                <span>8%</span>
-                <span>10%</span>
-              </div>
-              <div className="progress-bar">
-                <div className="segment active"></div>
-                <div className="segment"></div>
-                <div className="segment"></div>
-              </div>
-              <div className="range-labels">
-                <span>1-2 listings</span>
-                <span>3-10 listings</span>
-                <span>11+ listings</span>
-              </div>
-            </div>
-
-            <div className="button-group">
-              <div className="button-wrapper">
-                <PurpleButtonMB48 text="Book a Photoshoot" onClick={handleBookPhotoshoot} />
-              </div>
-              <div className="button-wrapper">
-                <BpurpleButtonMB48 text="Go to Simulator" onClick={handleGoToSimulator} />
-              </div>
-            </div>
-          </div>
+          <YourEarningsCalculatorCard />
         </div>
 
         <div className="sidebar">
@@ -239,15 +178,12 @@ const ReferralProgramPage: React.FC = () => {
           <div className="card progress-card">
             <div className="card-header">
               <h2>Your Progress</h2>
-              <a href="#" className="details-link" onClick={(e) => { e.preventDefault(); handleViewPerformance(); }}>
-                Details <ArrowRightIcon  />
-              </a>
             </div>
 
             <div className="progress-divider"></div>
 
-            <div className="progress-stats">
-              <div className="stat-row">
+            <div className="progress-stats-row">
+              <div className="stat-col">
                 <span className="stat-label">Total Referrals</span>
                 <span className="stat-value positive">
                   <span className="trend-indicator up">
@@ -256,10 +192,7 @@ const ReferralProgramPage: React.FC = () => {
                   10
                 </span>
               </div>
-              
-              <div className="progress-divider"></div>
-
-              <div className="stat-row">
+              <div className="stat-col">
                 <span className="stat-label">Successful Bookings</span>
                 <span className="stat-value negative">
                   <span className="trend-indicator down">
@@ -268,45 +201,35 @@ const ReferralProgramPage: React.FC = () => {
                   7
                 </span>
               </div>
-              
-              <div className="progress-divider"></div>
+            </div>
 
-              <div className="stat-row">
+            <div className="earnings-row">
+              <div className="earning-col">
                 <span className="stat-label">Monthly earnings</span>
                 <span className="stat-value">1200 MAD</span>
               </div>
-              
-              <div className="progress-divider"></div>
-
-              <div className="stat-row">
+              <div className="earning-col">
                 <span className="stat-label">Annual earnings</span>
                 <span className="stat-value">14400 MAD</span>
               </div>
-              
-              <div className="progress-divider"></div>
             </div>
 
-            <h2 className="eligibility-title">Eligibility</h2>
-            
-            <div className="eligibility-status">
-              <CheckIcon />
-              <span className="status-text">You are eligible</span>
-              <div className="info-icon-wrapper">
-                <img src={iconinfo} alt='Info Icon'/>
+            <div className="progress-card-buttons">
+              <div className="button-wrapper">
+                <PurpleButtonMB48 
+                  text="Request Payout" 
+                  onClick={handleRequestPayout}
+                />
+              </div>
+              <div className="button-wrapper">
+                <BpurpleButtonMB48 
+                  text="Performance Details" 
+                  onClick={handleViewPerformance}
+                />
               </div>
             </div>
-            
-            <p className="eligibility-note">
-              You need to have at least 1 listing in the last 60 days to be eligible for the payout request
-            </p>
-
-            <div className="request-payout">
-              <PurpleButtonMB48 
-                text="Request Payout" 
-                onClick={handleRequestPayout}
-              />
-            </div>
           </div>
+          <NeedHelpCardComponent />
         </div>
       </div>
     </ReferralProgramPageStyle>
