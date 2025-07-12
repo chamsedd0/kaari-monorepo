@@ -92,11 +92,7 @@
     "loading": "Loading...",
     "or": "or",
     "sign_up_now": "Sign Up Now",
-    "confetti_decoration": "Confetti decoration",
-    "error": "Error",
-    "verify": "Verify",
-    "verifying": "Verifying...",
-    "continue": "Continue"
+    "confetti_decoration": "Confetti decoration"
   },
   
   "advertiser_onboarding": {
@@ -950,32 +946,55 @@
   },
   "become_advertiser": {
     "title": "Become an Advertiser",
-    "subtitle": "Join our network of verified property owners and start earning today.",
-    "buttons": {
-      "back": "Back",
-      "continue": "Continue",
-      "create_account": "Create Account",
-      "creating_account": "Creating Account..."
+    "subtitle": "Join our platform and start renting your properties",
+    "steps": {
+      "account_type": "Account Type",
+      "user_info": "User Info",
+      "verify_phone": "Verify Phone",
+      "listing_info": "Listing Info"
+    },
+    "onboarding": {
+      "slide1": {
+        "title": "Professional Photos",
+        "subtitle": "We take care of everything",
+        "description": "We photograph your property, write your listing, and publish it ourselves. You do nothing—we take care of the entire setup."
+      },
+      "slide2": {
+        "title": "Verified Tenants",
+        "subtitle": "No property visits needed",
+        "description": "We screen tenants, so you only receive serious booking requests. No more visits, no more wasted time."
+      },
+      "slide3": {
+        "title": "48-Hour Turnaround",
+        "subtitle": "Quick and efficient service",
+        "description": "From signup to listing, we get your property online and ready to rent in just 48 hours."
+        },
+      "slide4": {
+        "title": "Join Our Platform",
+        "subtitle": "Morocco's easiest way to rent",
+        "description": "Become part of Morocco's premier property rental platform and start earning passive income today."
+      }
     },
     "step1": {
+      "label": "Account Type",
       "title": "Select Account Type",
-      "label": "I am a:",
       "broker": "Broker",
-      "broker_description": "I represent multiple properties as an agent or broker.",
-      "landlord": "Individual Landlord",
-      "landlord_description": "I own and rent out my own property.",
-      "agency": "Real Estate Agency",
-      "agency_description": "We are a registered real estate company with multiple properties.",
+      "broker_description": "I'm a real estate broker or agent",
+      "landlord": "Landlord",
+      "landlord_description": "I'm a property owner",
+      "agency": "Real-Estate Agency",
+      "agency_description": "I represent a real estate company or agency",
       "agency_name": "Agency Name",
       "agency_name_placeholder": "Enter your agency name",
       "agency_size": "Agency Size",
       "agency_size_placeholder": "Select agency size",
-      "small_agency": "Small (1-5 employees)",
-      "medium_agency": "Medium (6-20 employees)",
-      "large_agency": "Large (21+ employees)"
+      "small_agency": "Small (1-5 agents)",
+      "medium_agency": "Medium (6-20 agents)",
+      "large_agency": "Large (21+ agents)"
     },
     "step2": {
-      "title": "Personal Information",
+      "label": "User Info",
+      "title": "Your Information",
       "first_name": "First Name",
       "first_name_placeholder": "Enter your first name",
       "last_name": "Last Name",
@@ -983,82 +1002,72 @@
       "email": "Email Address",
       "email_placeholder": "Enter your email address",
       "mobile_number": "Mobile Number",
-      "mobile_number_placeholder": "Enter your mobile number"
+      "mobile_placeholder": "06 XX XX XX XX"
     },
     "step3": {
-      "title": "Verify Your Phone",
-      "verification_message": "We've sent a verification code to {{phone}}",
-      "otp_code": "Verification Code",
-      "resend_otp": "Resend Code",
-      "resend_in": "Resend in",
-      "send_otp": "Send Verification Code",
-      "sending_otp": "Sending Code..."
+      "label": "Verify Phone",
+      "title": "Verify Your Phone Number",
+      "verify": "Verify",
+      "code_sent": "A verification code was sent to",
+      "verify_button": "Verify",
+      "no_code": "Didn't receive code?",
+      "request_again": "Request again",
+      "request_timer": "Request again ({{seconds}}s)",
+      "verification_success": "Mobile number verified successfully"
     },
     "step4": {
-      "title": "Property Information",
-      "city": "City",
-      "city_search": "Search for a city",
-      "property_quantity": "Number of Properties",
+      "label": "Listing Info",
+      "title": "Listing Information",
+      "city": "City of Operation",
+      "city_search": "Search for your city",
+      "city_enter": "Enter your city",
+      "property_quantity": "How many properties could you list?",
       "property_quantity_placeholder": "Select number of properties",
       "property_1_2": "1-2 properties",
       "property_3_10": "3-10 properties",
       "property_11plus": "11+ properties",
-      "property_types": "Property Types",
+      "property_types": "Primary property types",
       "apartment": "Apartment",
       "house": "House",
       "villa": "Villa",
       "condo": "Condo",
       "penthouse": "Penthouse",
       "studio": "Studio",
+      "terms_agreement": "I agree to the <a>Terms of Service</a> and <a>Privacy Policy</a>*",
       "i_agree_to_the": "I agree to the ",
       "terms_of_service": "Terms of Service",
       "and": " and ",
-      "privacy_policy": "Privacy Policy",
-      "terms_agreement": "I agree to the <a>Terms of Service</a> and <a>Privacy Policy</a>"
+      "privacy_policy": "Privacy Policy *"
+    },
+    "buttons": {
+      "continue": "Continue",
+      "back": "Back",
+      "creating_account": "Creating Account...",
+      "create_account": "Create my account"
     },
     "validation": {
-      "select_account_type": "Please select an account type",
-      "enter_agency_name": "Please enter your agency name",
-      "select_agency_size": "Please select your agency size",
+      "select_account_type": "Please select account type",
+      "enter_agency_name": "Please enter agency name",
+      "select_agency_size": "Please select agency size",
       "enter_first_name": "Please enter your first name",
       "enter_last_name": "Please enter your last name",
-      "enter_email": "Please enter your email address",
+      "enter_email": "Please enter your email",
       "valid_email": "Please enter a valid email address",
       "enter_mobile": "Please enter your mobile number",
       "verify_mobile": "Please verify your mobile number",
-      "enter_city": "Please select a city",
-      "select_property_quantity": "Please select the number of properties",
-      "agree_terms": "You must agree to the terms and conditions",
-      "enter_otp": "Please enter the verification code",
-      "invalid_otp": "Invalid verification code. Please try again.",
-      "otp_failed": "Failed to send verification code. Please try again.",
-      "invalid_phone": "Invalid phone number format. Please use international format (+212XXXXXXXXX).",
-      "captcha_failed": "CAPTCHA verification failed. Please try again.",
-      "quota_exceeded": "Too many verification attempts. Please try again later.",
-      "too_many_requests": "Too many verification attempts. Please try again later or use a different phone number.",
-      "phone_already_linked": "This phone number is already linked to another account.",
-      "service_unavailable": "Firebase service is temporarily unavailable. Please try again later.",
-      "network_error": "Network connection issue detected. Please check your internet connection.",
-      "recaptcha_issue": "reCAPTCHA issue detected. Please refresh and try again."
+      "enter_city": "Please enter your city of operation",
+      "select_property_quantity": "Please select how many properties you could list",
+      "agree_terms": "You must agree to the Terms and Privacy Policy"
     },
     "toast": {
+      "otp_sent": "OTP code sent to your mobile number",
+      "otp_failed": "Failed to send OTP. Please try again.",
+      "email_in_use": "This email is already registered. Please sign in with that account instead.",
+      "registration_failed": "Registration Failed",
       "success": "Success",
-      "error": "Error",
-      "warning": "Warning",
-      "not_authenticated": "You must be logged in to verify your phone number.",
-      "otp_sent": "Verification code sent successfully.",
-      "otp_failed": "Failed to send verification code.",
-      "phone_verified": "Phone number verified successfully.",
-      "send_otp_first": "Please send a verification code first.",
-      "otp_expired": "Verification code has expired. Please request a new one.",
-      "session_expired": "Verification session has expired. Please try again.",
-      "recaptcha_expired": "CAPTCHA verification expired. Please try again.",
-      "registration_failed": "Registration failed",
-      "registration_success": "Registration successful",
-      "registration_incomplete": "Registration incomplete. Please try again.",
-      "email_in_use": "This email is already in use. Please try another one or login.",
-      "dev_mode_activated": "Development mode activated. Use code: 123456",
-      "recaptcha_unavailable": "reCAPTCHA service unavailable. Switching to development mode."
+      "registration_success": "Registration completed successfully",
+      "registration_incomplete": "Your account was created but we couldn't save your advertiser details. Please try again or contact support.",
+      "login_required": "You need to be logged in to become an advertiser. Please log in or create an account first."
     }
   },
   "coming_soon": {
