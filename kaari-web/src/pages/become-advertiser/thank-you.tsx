@@ -32,6 +32,11 @@ const ThankYouContainer = styled.div`
     box-sizing: border-box;
     text-align: center;
   }
+  
+  /* RTL support */
+  html[dir="rtl"] & {
+    text-align: right;
+  }
 `;
 
 const GradientOverlay = styled.div`
@@ -107,6 +112,15 @@ const ThankYouCard = styled.div`
     padding: 30px 15px;
     width: 100%;
     box-sizing: border-box;
+  }
+  
+  /* RTL support */
+  html[dir="rtl"] & {
+    text-align: right;
+    
+    @media (max-width: 768px) {
+      text-align: center;
+    }
   }
 `;
 
@@ -313,19 +327,20 @@ const EmailContact = styled(ContactInfo)`
 `;
 
 const ThankYouPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language && i18n.language.startsWith('ar');
   
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
     
     // Hide headers and footers
-    const cleanupHeadersFooters = hideHeadersAndFooters();
+    const cleanup = hideHeadersAndFooters();
     
-    // Mark signup as completed to clean up any remaining data
+    // Mark signup as completed
     completeSignup();
     
-    // Update user status in Firestore
+    // Update user status
     const updateUserStatus = async () => {
       const auth = getAuth();
       if (auth.currentUser) {
@@ -343,16 +358,16 @@ const ThankYouPage: React.FC = () => {
     
     updateUserStatus();
     
-    // Add event listener for beforeunload to ensure cleanup
+    // Add beforeunload handler
     const handleBeforeUnload = () => {
       completeSignup();
     };
     
     window.addEventListener('beforeunload', handleBeforeUnload);
     
-    // Cleanup function
+    // Clean up
     return () => {
-      cleanupHeadersFooters();
+      cleanup();
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, []);
@@ -362,14 +377,15 @@ const ThankYouPage: React.FC = () => {
       <GradientOverlay />
       <CircleDecoration1 />
       <CircleDecoration2 />
+      
       <ThankYouCard>
         <SuccessIcon>
           <FaCheckCircle />
         </SuccessIcon>
+        
         <Title>{t('advertiser_thank_you.title')}</Title>
-        <Message>
-          {t('advertiser_thank_you.main_message')}
-        </Message>
+        
+        <Message>{t('advertiser_thank_you.main_message')}</Message>
         
         <ContactSection>
           <ContactInfo>

@@ -107,7 +107,7 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     }
     
     &.step-4:before {
-      width: calc(100% - 48px);
+      width: calc(100% - 48px - 24px); /* Subtract extra 24px to stop before the last circle */
     }
     
     /* RTL Support for Arabic */
@@ -133,7 +133,7 @@ export const AdvertiserRegistrationPageStyle = styled.div`
       }
       
       &.step-4:before {
-        width: calc(100% - 48px);
+        width: calc(100% - 48px - 24px); /* Subtract extra 24px to stop before the last circle */
       }
     }
     
@@ -485,6 +485,64 @@ export const AdvertiserRegistrationPageStyle = styled.div`
         }
       }
     }
+    
+    /* RTL specific styles */
+    &.rtl-phone-container {
+      direction: rtl;
+      
+      .form-control {
+        text-align: right;
+        padding-left: 12px !important;
+        padding-right: 60px !important;
+      }
+      
+      .flag-dropdown {
+        left: auto !important;
+        right: 0 !important;
+        border-radius: 0 ${Theme.borders.radius.extreme} ${Theme.borders.radius.extreme} 0 !important;
+        border-left: none !important;
+        border-right: 1px solid #ccc !important;
+        
+        &.open {
+          border-radius: 0 ${Theme.borders.radius.extreme} 0 0 !important;
+        }
+        
+        .selected-flag {
+          padding: 0 11px 0 16px !important;
+          border-radius: 0 ${Theme.borders.radius.extreme} ${Theme.borders.radius.extreme} 0 !important;
+          
+          .arrow {
+            left: 5px;
+            right: auto;
+          }
+        }
+      }
+      
+      .country-list {
+        right: 0;
+        left: auto;
+        text-align: right;
+        
+        .search-box {
+          text-align: right;
+          direction: rtl;
+        }
+        
+        .country {
+          direction: rtl;
+          
+          .country-name {
+            margin-right: 6px;
+            margin-left: 0;
+          }
+          
+          .dial-code {
+            margin-right: auto;
+            margin-left: 6px;
+          }
+        }
+      }
+    }
   }
   
   /* Phone input custom classes */
@@ -799,6 +857,7 @@ export const AdvertiserRegistrationPageStyle = styled.div`
           border: 2px solid ${Theme.colors.gray};
           border-radius: 50%;
           margin-right: 12px;
+          margin-left: 12px;
           position: relative;
           transition: all 0.3s ease;
           cursor: pointer;
@@ -1336,6 +1395,11 @@ export const AdvertiserRegistrationPageStyle = styled.div`
         align-self: flex-start;
         max-width: 280px;
         width: 100%;
+        
+        /* RTL support for mobile */
+        html[dir="rtl"] & {
+          text-align: right;
+        }
       }
       
       .error-message {
@@ -1345,6 +1409,12 @@ export const AdvertiserRegistrationPageStyle = styled.div`
         color: ${Theme.colors.error};
         font-size: 12px;
         margin-top: 5px;
+        
+        /* RTL support for mobile */
+        html[dir="rtl"] & {
+          text-align: right;
+          align-self: flex-start;
+        }
       }
     }
     
@@ -1352,6 +1422,11 @@ export const AdvertiserRegistrationPageStyle = styled.div`
       width: 100%;
       max-width: 280px;
       text-align: left;
+      
+      /* RTL support for mobile */
+      html[dir="rtl"] & {
+        text-align: right;
+      }
     }
     
     .buttons-container {
@@ -1360,6 +1435,11 @@ export const AdvertiserRegistrationPageStyle = styled.div`
       display: flex;
       justify-content: space-between;
       margin-top: 20px;
+      
+      /* RTL support for mobile */
+      html[dir="rtl"] & {
+        flex-direction: row-reverse;
+      }
     }
     
     .mobile-radio-group {
@@ -1401,6 +1481,13 @@ export const AdvertiserRegistrationPageStyle = styled.div`
       label {
         font-size: 13px;
         margin-left: 8px;
+        
+        /* RTL support for mobile */
+        html[dir="rtl"] & {
+          margin-left: 0;
+          margin-right: 8px;
+          text-align: right;
+        }
       }
     }
     
@@ -1443,6 +1530,11 @@ export const AdvertiserRegistrationPageStyle = styled.div`
     .verification-message {
       font-size: 13px;
       margin-bottom: 16px;
+      
+      /* RTL support for mobile */
+      html[dir="rtl"] & {
+        text-align: right;
+      }
     }
     
     .resend-otp {

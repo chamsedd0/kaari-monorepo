@@ -411,7 +411,7 @@ const TopSection = styled.div<{ isMobile: boolean }>`
 
 const LogoContainer = styled.div`
   img {
-    height: 25px;
+    height: 30px;
   }
 `;
 

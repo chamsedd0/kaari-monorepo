@@ -1234,8 +1234,20 @@ const AdvertiserRegistrationPage: React.FC = () => {
               onChange={(value) => handleInputChange('mobileNumber', value)}
             inputProps={{
               required: true,
-                autoFocus: false
+                autoFocus: false,
+                style: isRTL ? {
+                  textAlign: 'right',
+                  direction: 'rtl',
+                  paddingLeft: '12px',
+                  paddingRight: '52px'
+                } : {}
               }}
+              containerClass={isRTL ? 'rtl-phone-container' : ''}
+              inputClass={isRTL ? 'rtl-phone-input' : ''}
+              buttonClass={isRTL ? 'rtl-flag-dropdown' : ''}
+              dropdownClass={isRTL ? 'rtl-country-dropdown' : ''}
+              searchClass={isRTL ? 'rtl-search-box' : ''}
+              enableSearch={true}
             />
           </div>
           {errors.mobileNumber && <div className="error-message">{errors.mobileNumber}</div>}
@@ -1576,7 +1588,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
   return (
     <AdvertiserRegistrationPageStyle>
       <LogoContainer isMobile={isMobile}>
-        <img src={Logo} alt={t('common.kaari_logo')} height={isMobile ? "32" : "40"} />
+        <img src={Logo} alt={t('common.kaari_logo')} height={isMobile ? "32" : "50"} />
       </LogoContainer>
       
       <div className="language-switcher-container">

@@ -132,8 +132,9 @@ const FoundingPartnersPage: React.FC = () => {
       // Parse the key to get the nested properties
       const keyParts = key.split('.');
       
-      // Get the current language
-      const lang = i18n.language && i18n.language.startsWith('fr') ? 'fr' : 'en';
+      // Get the current language - respect Arabic as well
+      const lang = i18n.language && i18n.language.startsWith('ar') ? 'en' : 
+                  (i18n.language && i18n.language.startsWith('fr') ? 'fr' : 'en');
       
       try {
         // Try to get from fallback translations
@@ -180,8 +181,9 @@ const FoundingPartnersPage: React.FC = () => {
     if (translation === fullKey) {
       console.warn(`Missing translation for key: ${fullKey}`);
       
-      // Get the current language
-      const lang = i18n.language && i18n.language.startsWith('fr') ? 'fr' : 'en';
+      // Get the current language - respect Arabic as well
+      const lang = i18n.language && i18n.language.startsWith('ar') ? 'en' : 
+                  (i18n.language && i18n.language.startsWith('fr') ? 'fr' : 'en');
       
       // Use fallback
       try {
@@ -214,11 +216,11 @@ const FoundingPartnersPage: React.FC = () => {
     };
   }, []);
 
-  // Ensure headers and footers are hidden and set default language to French
+  // Ensure headers and footers are hidden and respect language selection
   useEffect(() => {
-    // Set default language to French if not already set
+    // Don't override the language if it's already set
     const currentLang = i18n.language;
-    if (!currentLang || (!currentLang.startsWith('fr') && !currentLang.startsWith('en'))) {
+    if (!currentLang) {
       i18n.changeLanguage('fr');
       localStorage.setItem('i18nextLng', 'fr');
     }

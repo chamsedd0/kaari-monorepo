@@ -47,16 +47,23 @@ const MobilePhoneInput: React.FC<MobilePhoneInputProps> = ({
           onChange={onChange}
           disabled={disabled}
           preferredCountries={preferredCountries}
+          enableSearch={true}
           inputProps={{
             id,
             required,
-            style: isRTL ? { textAlign: 'right', direction: 'rtl' } : {}
+            // Always use LTR for the input itself to prevent number reversal
+            style: {
+              textAlign: isRTL ? 'right' : 'left',
+              direction: 'ltr', // Always LTR for numbers
+              paddingLeft: isRTL ? '12px' : '52px',
+              paddingRight: isRTL ? '52px' : '12px'
+            }
           }}
           containerClass={`phone-input-container ${isRTL ? 'rtl-phone-input' : ''}`}
-          inputClass="phone-input"
-          buttonClass="phone-dropdown-button"
-          dropdownClass="phone-dropdown"
-          enableSearch={true}
+          inputClass={`phone-input ${isRTL ? 'rtl-input' : ''}`}
+          buttonClass={`phone-dropdown-button ${isRTL ? 'rtl-button' : ''}`}
+          dropdownClass={`phone-dropdown ${isRTL ? 'rtl-dropdown' : ''}`}
+          searchClass={`search-box ${isRTL ? 'rtl-search' : ''}`}
         />
       </InputWrapper>
       {error && <ErrorMessage isRTL={isRTL}>{error}</ErrorMessage>}
@@ -106,14 +113,17 @@ const InputWrapper = styled.div<{ hasError: boolean; isRTL: boolean }>`
       border-radius: ${Theme.borders.radius.extreme} !important;
       border: 1.5px solid ${props => props.hasError ? Theme.colors.error : Theme.colors.gray} !important;
       background-color: ${Theme.colors.white} !important;
-      padding-left: ${props => props.isRTL ? '12px' : '52px'} !important;
-      padding-right: ${props => props.isRTL ? '52px' : '12px'} !important;
       transition: all 0.2s ease;
-      text-align: ${props => props.isRTL ? 'right' : 'left'};
+      /* Always use LTR for phone numbers to prevent reversal */
+      direction: ltr !important;
       
       &:focus {
         box-shadow: 0 0 0 2px ${props => props.hasError ? 'rgba(255, 59, 48, 0.15)' : 'rgba(143, 39, 206, 0.15)'} !important;
         border-color: ${props => props.hasError ? Theme.colors.error : Theme.colors.secondary} !important;
+      }
+      
+      &.rtl-input {
+        text-align: right;
       }
     }
     
@@ -123,10 +133,18 @@ const InputWrapper = styled.div<{ hasError: boolean; isRTL: boolean }>`
         `0 ${Theme.borders.radius.extreme} ${Theme.borders.radius.extreme} 0` : 
         `${Theme.borders.radius.extreme} 0 0 ${Theme.borders.radius.extreme}`} !important;
       border: 1.5px solid ${props => props.hasError ? Theme.colors.error : Theme.colors.gray} !important;
-      border-left: ${props => props.isRTL ? 'none' : ''} !important;
-      border-right: ${props => props.isRTL ? '' : 'none'} !important;
-      left: ${props => props.isRTL ? 'auto' : '0'};
-      right: ${props => props.isRTL ? '0' : 'auto'};
+      
+      ${props => props.isRTL ? `
+        border-left: none !important;
+        border-right: 1.5px solid ${props.hasError ? Theme.colors.error : Theme.colors.gray} !important;
+        left: auto !important;
+        right: 0 !important;
+      ` : `
+        border-right: none !important;
+        border-left: 1.5px solid ${props.hasError ? Theme.colors.error : Theme.colors.gray} !important;
+        right: auto !important;
+        left: 0 !important;
+      `}
       
       &.open {
         background-color: ${Theme.colors.white} !important;
@@ -148,6 +166,13 @@ const InputWrapper = styled.div<{ hasError: boolean; isRTL: boolean }>`
         .flag {
           transform: scale(1.1);
         }
+        
+        .arrow {
+          ${props => props.isRTL ? `
+            left: -15px !important;
+            right: auto !important;
+          ` : ''}
+        }
       }
     }
     
@@ -156,6 +181,27 @@ const InputWrapper = styled.div<{ hasError: boolean; isRTL: boolean }>`
       border-radius: 0 0 ${Theme.borders.radius.extreme} ${Theme.borders.radius.extreme} !important;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
       text-align: ${props => props.isRTL ? 'right' : 'left'};
+      
+      ${props => props.isRTL ? `
+        right: 0 !important;
+        left: auto !important;
+      ` : ''}
+      
+      .search-box {
+        margin: 0 auto !important;
+        margin-top: 10px !important;
+        margin-bottom: 10px !important;
+        width: 90% !important;
+        
+        &.rtl-search {
+          text-align: right;
+          /* Keep input LTR for search box */
+          input {
+            direction: ltr !important;
+            text-align: right;
+          }
+        }
+      }
       
       .country {
         padding: 10px !important;
@@ -172,23 +218,70 @@ const InputWrapper = styled.div<{ hasError: boolean; isRTL: boolean }>`
         &.highlight {
           background-color: ${Theme.colors.quaternary}20 !important;
         }
+        
+        ${props => props.isRTL ? `
+          .country-name {
+            margin-right: 6px;
+            margin-left: 0;
+          }
+          
+          .dial-code {
+            margin-right: auto;
+            margin-left: 6px;
+          }
+        ` : ''}
       }
     }
   }
   
   /* Additional RTL specific overrides */
   .rtl-phone-input {
+    /* Reverse the component layout for RTL but keep input LTR */
+    display: flex;
+    flex-direction: row-reverse;
+    
     .selected-flag {
       .arrow {
-        left: auto;
-        right: 20px;
+        left: -15px !important;
+        right: auto !important;
       }
+    }
+    
+    .country-list {
+      .country {
+        padding-right: 9px !important;
+        padding-left: 9px !important;
+        
+        .country-name {
+          margin-right: 6px;
+          margin-left: 0;
+        }
+        
+        .dial-code {
+          margin-right: auto;
+          margin-left: 6px;
+        }
+      }
+    }
+    
+    /* Force LTR for input to prevent number reversal */
+    input.form-control {
+      direction: ltr !important;
+      unicode-bidi: isolate !important;
     }
   }
 `;
 
 const StyledPhoneInput = styled(PhoneInput)`
   width: 100%;
+  
+  /* Additional styles for RTL layout */
+  &.rtl-phone-input {
+    .react-tel-input {
+      display: flex;
+      flex-direction: row-reverse;
+    }
+  }
 `;
 
 const ErrorMessage = styled.div<{ isRTL: boolean }>`
