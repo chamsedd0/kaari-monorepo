@@ -42,6 +42,7 @@ export const CardBaseModelStyleReferralPassred = styled.div`
 
     .right-container {
         display: flex;
+        flex-direction: column;
         align-items: start;
         justify-content: start;
         gap: 10px;

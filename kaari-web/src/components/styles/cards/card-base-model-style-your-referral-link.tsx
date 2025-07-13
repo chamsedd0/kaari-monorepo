@@ -18,7 +18,7 @@ export const CardBaseModelStyleYourReferralLink = styled.div`
         align-items: start;
         justify-content: start;
         gap: 20px;
-        width: 75%;
+        width: 73%;
 
         .title{
             font: ${Theme.typography.fonts.h3};
