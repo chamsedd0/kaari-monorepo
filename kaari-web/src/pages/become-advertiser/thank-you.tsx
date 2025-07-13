@@ -313,10 +313,7 @@ const EmailContact = styled(ContactInfo)`
 `;
 
 const ThankYouPage: React.FC = () => {
-  const { t, i18n } = useTranslation();
-  
-  // Check if current language is RTL (Arabic)
-  const isRTL = i18n.language && i18n.language.startsWith('ar');
+  const { t } = useTranslation();
   
   useEffect(() => {
     // Scroll to top when component mounts
@@ -361,7 +358,7 @@ const ThankYouPage: React.FC = () => {
   }, []);
   
   return (
-    <ThankYouContainer dir={isRTL ? 'rtl' : 'ltr'}>
+    <ThankYouContainer>
       <GradientOverlay />
       <CircleDecoration1 />
       <CircleDecoration2 />
@@ -390,7 +387,7 @@ const ThankYouPage: React.FC = () => {
         
         <LaunchInfo>
           <LaunchTitle>
-            <FaCamera style={{ marginRight: isRTL ? '0' : '10px', marginLeft: isRTL ? '10px' : '0' }} />
+            <FaCamera style={{ marginRight: '10px' }} />
             {t('advertiser_thank_you.dont_forget_us')}
           </LaunchTitle>
           <Message>

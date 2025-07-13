@@ -236,18 +236,18 @@ const AdvertiserRegistrationPage: React.FC = () => {
   
   // Step definitions
   const steps = [
-    t('become_advertiser.steps.account_type'),
-    t('become_advertiser.steps.user_info'),
-    t('become_advertiser.steps.verify_phone'),
-    t('become_advertiser.steps.listing_info')
+    t('advertiser_registration.step_labels.account_type'),
+    t('advertiser_registration.step_labels.user_info'),
+    t('advertiser_registration.step_labels.verify_phone'),
+    t('advertiser_registration.step_labels.listing_info')
   ];
   
   // Step labels for mobile step counter
   const stepLabels = [
-    t('become_advertiser.steps.account_type'),
-    t('become_advertiser.steps.user_info'),
-    t('become_advertiser.steps.verify_phone'),
-    t('become_advertiser.steps.listing_info')
+    t('advertiser_registration.step_labels.account_type'),
+    t('advertiser_registration.step_labels.user_info'),
+    t('advertiser_registration.step_labels.verify_phone'),
+    t('advertiser_registration.step_labels.listing_info')
   ];
 
   // If RTL, reverse the order of steps for display
@@ -917,7 +917,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
       // Mobile version
     return (
       <>
-          <h2 className="form-title">{t('become_advertiser.step1.title')}</h2>
+          <h2 className="form-title">{t('advertiser_registration.step1.title')}</h2>
         
         <div className="form-group required">
           <label>{t('become_advertiser.step1.label')}</label>
@@ -926,7 +926,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
               <MobileRadioOption
                 id="broker"
                 title={t('become_advertiser.step1.broker')}
-                description={t('become_advertiser.step1.broker_desc')}
+                description={t('become_advertiser.step1.broker_description')}
                 icon={<FaUserAlt />}
                 checked={formData.accountType === 'broker'}
                 onChange={() => handleAccountTypeSelect('broker')}
@@ -935,7 +935,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
               <MobileRadioOption
                 id="landlord"
                 title={t('become_advertiser.step1.landlord')}
-                description={t('become_advertiser.step1.landlord_desc')}
+                description={t('become_advertiser.step1.landlord_description')}
                 icon={<FaUserAlt />}
                 checked={formData.accountType === 'landlord'}
                 onChange={() => handleAccountTypeSelect('landlord')}
@@ -944,7 +944,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
               <MobileRadioOption
                 id="agency"
                 title={t('become_advertiser.step1.agency')}
-                description={t('become_advertiser.step1.agency_desc')}
+                description={t('become_advertiser.step1.agency_description')}
                 icon={<FaBuilding />}
                 checked={formData.accountType === 'agency'}
                 onChange={() => handleAccountTypeSelect('agency')}
@@ -999,7 +999,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
     // Original desktop version
     return (
       <>
-        <h2 className="form-title">{t('become_advertiser.step1.title')}</h2>
+        <h2 className="form-title">{t('advertiser_registration.step1.title')}</h2>
         
         <div className="form-group required">
           <label>{t('become_advertiser.step1.label')}</label>
@@ -1019,7 +1019,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
                   <span>{t('become_advertiser.step1.broker')}</span>
                 </div>
                 <div className="radio-description">
-                  {t('become_advertiser.step1.broker_desc')}
+                  {t('become_advertiser.step1.broker_description')}
                 </div>
                 <div className="option-icon">
                   <FaUserAlt />
@@ -1040,7 +1040,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
                   <span>{t('become_advertiser.step1.landlord')}</span>
                 </div>
                 <div className="radio-description">
-                  {t('become_advertiser.step1.landlord_desc')}
+                  {t('become_advertiser.step1.landlord_description')}
                 </div>
                 <div className="option-icon">
                   <FaUserAlt />
@@ -1061,7 +1061,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
                   <span>{t('become_advertiser.step1.agency')}</span>
                 </div>
                 <div className="radio-description">
-                  {t('become_advertiser.step1.agency_desc')}
+                  {t('become_advertiser.step1.agency_description')}
                 </div>
                 <div className="option-icon">
                   <FaBuilding />
@@ -1120,14 +1120,14 @@ const AdvertiserRegistrationPage: React.FC = () => {
       // Mobile version
     return (
         <div className="step-content">
-          <h2 className="form-title">{t('become_advertiser.step2.title')}</h2>
+          <h2 className="form-title">{t('advertiser_registration.step2.title')}</h2>
         
           <MobileInput
             type="text"
               value={formData.firstName}
               onChange={(e) => handleInputChange('firstName', e.target.value)}
-            placeholder={t('become_advertiser.step2.first_name_placeholder')}
-            label={t('become_advertiser.step2.first_name')}
+            placeholder={t('advertiser_registration.step2.first_name_placeholder')}
+            label={t('advertiser_registration.step2.first_name')}
             required
               error={errors.firstName}
             />
@@ -1136,8 +1136,8 @@ const AdvertiserRegistrationPage: React.FC = () => {
             type="text"
               value={formData.lastName}
               onChange={(e) => handleInputChange('lastName', e.target.value)}
-            placeholder={t('become_advertiser.step2.last_name_placeholder')}
-            label={t('become_advertiser.step2.last_name')}
+            placeholder={t('advertiser_registration.step2.last_name_placeholder')}
+            label={t('advertiser_registration.step2.last_name')}
             required
               error={errors.lastName}
             />
@@ -1146,8 +1146,8 @@ const AdvertiserRegistrationPage: React.FC = () => {
             type="email"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            placeholder={t('become_advertiser.step2.email_placeholder')}
-            label={t('become_advertiser.step2.email')}
+            placeholder={t('advertiser_registration.step2.email_placeholder')}
+            label={t('advertiser_registration.step2.email')}
             required
             error={errors.email}
           />
@@ -1155,17 +1155,17 @@ const AdvertiserRegistrationPage: React.FC = () => {
           <MobilePhoneInput
             value={formData.mobileNumber}
             onChange={(value) => handleInputChange('mobileNumber', value)}
-            label={t('become_advertiser.step2.mobile')}
+            label={t('advertiser_registration.step2.mobile_number')}
             required
             error={errors.mobileNumber}
           />
           
           <div className="buttons-container">
             <button className="back-button" onClick={prevStep}>
-              {t('become_advertiser.buttons.back')}
+              {t('common.back')}
             </button>
             <button className="next-button" onClick={nextStep}>
-              {t('become_advertiser.buttons.continue')}
+              {t('common.continue')}
             </button>
           </div>
         </div>
@@ -1175,18 +1175,18 @@ const AdvertiserRegistrationPage: React.FC = () => {
     // Original desktop version
     return (
       <div className="step-content">
-        <h2 className="form-title">{t('become_advertiser.step2.title')}</h2>
+        <h2 className="form-title">{t('advertiser_registration.step2.title')}</h2>
         
         <div className="form-group">
           <label>
-            {t('become_advertiser.step2.first_name')}
+            {t('advertiser_registration.step2.first_name')}
             <span className="required">*</span>
           </label>
           <input
             type="text"
             value={formData.firstName}
             onChange={(e) => handleInputChange('firstName', e.target.value)}
-            placeholder={t('become_advertiser.step2.first_name_placeholder')}
+            placeholder={t('advertiser_registration.step2.first_name_placeholder')}
             required
           />
           {errors.firstName && <div className="error-message">{errors.firstName}</div>}
@@ -1194,14 +1194,14 @@ const AdvertiserRegistrationPage: React.FC = () => {
         
         <div className="form-group">
           <label>
-            {t('become_advertiser.step2.last_name')}
+            {t('advertiser_registration.step2.last_name')}
             <span className="required">*</span>
           </label>
           <input
             type="text"
             value={formData.lastName}
             onChange={(e) => handleInputChange('lastName', e.target.value)}
-            placeholder={t('become_advertiser.step2.last_name_placeholder')}
+            placeholder={t('advertiser_registration.step2.last_name_placeholder')}
             required
           />
           {errors.lastName && <div className="error-message">{errors.lastName}</div>}
@@ -1209,14 +1209,14 @@ const AdvertiserRegistrationPage: React.FC = () => {
         
         <div className="form-group">
           <label>
-            {t('become_advertiser.step2.email')}
+            {t('advertiser_registration.step2.email')}
             <span className="required">*</span>
           </label>
           <input
             type="email"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            placeholder={t('become_advertiser.step2.email_placeholder')}
+            placeholder={t('advertiser_registration.step2.email_placeholder')}
             required
           />
           {errors.email && <div className="error-message">{errors.email}</div>}
@@ -1224,7 +1224,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
         
         <div className="form-group">
           <label>
-            {t('become_advertiser.step2.mobile')}
+            {t('advertiser_registration.step2.mobile_number')}
             <span className="required">*</span>
           </label>
           <div className="phone-input-container">
@@ -1280,10 +1280,10 @@ const AdvertiserRegistrationPage: React.FC = () => {
       // Mobile version
     return (
         <div className="step-content">
-          <h2 className="form-title">{t('become_advertiser.step3.title')}</h2>
+          <h2 className="form-title">{t('advertiser_registration.step3.title')}</h2>
         
           <p className="verification-message">
-            {t('become_advertiser.step3.verification_sent', { phone: formData.mobileNumber })}
+            {t('advertiser_registration.step3.verification_message', { phone: formData.mobileNumber })}
           </p>
           
           <div className="otp-container">
@@ -1292,7 +1292,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
                 value={formData.otpCode}
                 onChange={(value) => handleInputChange('otpCode', value)}
                 length={6}
-                label={t('become_advertiser.step3.verification_code')}
+                label={t('advertiser_registration.step3.otp_code')}
                 error={errors.otpCode}
               />
             </div>
@@ -1300,11 +1300,11 @@ const AdvertiserRegistrationPage: React.FC = () => {
             <div className="resend-otp">
               {canResendOtp ? (
                 <button onClick={handleResendOtp} className="resend-button">
-                  {t('become_advertiser.step3.resend_code')}
+                  {t('advertiser_registration.step3.resend_otp')}
               </button>
               ) : (
                 <span className="resend-timer">
-                  {t('become_advertiser.step3.resend_in')} {formatTime(otpResendTimer)} {t('become_advertiser.step3.seconds')}
+                  {t('advertiser_registration.step3.resend_in')} {formatTime(otpResendTimer)}
                 </span>
               )}
             </div>
@@ -1312,7 +1312,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
           
           <div className="buttons-container">
             <button className="back-button" onClick={prevStep}>
-              {t('become_advertiser.buttons.back')}
+              {t('common.back')}
             </button>
             <button className="next-button" onClick={nextStep}>
               {t('common.verify')}
@@ -1325,15 +1325,15 @@ const AdvertiserRegistrationPage: React.FC = () => {
     // Original desktop version
     return (
       <div className="step-content">
-        <h2 className="form-title">{t('become_advertiser.step3.title')}</h2>
+        <h2 className="form-title">{t('advertiser_registration.step3.title')}</h2>
         
         <p className="verification-message">
-          {t('become_advertiser.step3.verification_sent', { phone: formData.mobileNumber })}
+          {t('advertiser_registration.step3.verification_message', { phone: formData.mobileNumber })}
         </p>
         
         <div className="otp-container">
           <div className="form-group otp-input-group">
-            <label>{t('become_advertiser.step3.verification_code')}</label>
+            <label>{t('advertiser_registration.step3.otp_code')}</label>
             <OtpInput
               value={formData.otpCode}
               onChange={(value) => handleInputChange('otpCode', value)}
@@ -1347,11 +1347,11 @@ const AdvertiserRegistrationPage: React.FC = () => {
           <div className="resend-otp">
             {canResendOtp ? (
               <button onClick={handleResendOtp} className="resend-button">
-                {t('become_advertiser.step3.resend_code')}
+                {t('advertiser_registration.step3.resend_otp')}
               </button>
             ) : (
               <span className="resend-timer">
-                {t('become_advertiser.step3.resend_in')} {formatTime(otpResendTimer)} {t('become_advertiser.step3.seconds')}
+                {t('advertiser_registration.step3.resend_in')} {formatTime(otpResendTimer)}
               </span>
             )}
           </div>
@@ -1439,7 +1439,7 @@ const AdvertiserRegistrationPage: React.FC = () => {
           
           <div className="buttons-container">
             <button className="back-button" onClick={prevStep}>
-              {t('become_advertiser.buttons.back')}
+              {t('common.back')}
             </button>
             <button 
               className="next-button" 
