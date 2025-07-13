@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
 import PhoneInput from 'react-phone-input-2';
@@ -32,6 +32,40 @@ const MobilePhoneInput: React.FC<MobilePhoneInputProps> = ({
   // Check if the current language direction is RTL
   const isRTL = document.documentElement.dir === 'rtl';
 
+  // Add a specific style for RTL mode to the document head
+  useEffect(() => {
+    if (isRTL) {
+      const styleEl = document.createElement('style');
+      styleEl.innerHTML = `
+        .rtl-phone-input .react-tel-input {
+          direction: rtl !important;
+        }
+        .rtl-phone-input .react-tel-input .form-control {
+          direction: ltr !important;
+          text-align: right !important;
+          padding-left: 12px !important;
+          padding-right: 52px !important;
+        }
+        .rtl-phone-input .react-tel-input .flag-dropdown {
+          left: auto !important;
+          right: 0 !important;
+        }
+      `;
+      styleEl.id = 'rtl-phone-input-style';
+      
+      if (!document.getElementById('rtl-phone-input-style')) {
+        document.head.appendChild(styleEl);
+      }
+      
+      return () => {
+        const existingStyle = document.getElementById('rtl-phone-input-style');
+        if (existingStyle) {
+          existingStyle.remove();
+        }
+      };
+    }
+  }, [isRTL]);
+
   return (
     <MobilePhoneInputContainer className={className} isRTL={isRTL}>
       {label && (
@@ -51,10 +85,10 @@ const MobilePhoneInput: React.FC<MobilePhoneInputProps> = ({
           inputProps={{
             id,
             required,
-            // Always use LTR for the input itself to prevent number reversal
             style: {
+              // In RTL mode, align text right but keep direction LTR for phone numbers
               textAlign: isRTL ? 'right' : 'left',
-              direction: 'ltr', // Always LTR for numbers
+              direction: 'ltr', // Always LTR for phone numbers
               paddingLeft: isRTL ? '12px' : '52px',
               paddingRight: isRTL ? '52px' : '12px'
             }
@@ -237,8 +271,20 @@ const InputWrapper = styled.div<{ hasError: boolean; isRTL: boolean }>`
   /* Additional RTL specific overrides */
   .rtl-phone-input {
     /* Reverse the component layout for RTL but keep input LTR */
-    display: flex;
-    flex-direction: row-reverse;
+    display: flex !important;
+    flex-direction: row-reverse !important;
+    
+    .flag-dropdown {
+      left: auto !important;
+      right: 0 !important;
+    }
+    
+    .form-control {
+      text-align: right !important;
+      padding-left: 12px !important;
+      padding-right: 52px !important;
+      direction: ltr !important; /* Critical: keep numbers LTR */
+    }
     
     .selected-flag {
       .arrow {
@@ -248,6 +294,9 @@ const InputWrapper = styled.div<{ hasError: boolean; isRTL: boolean }>`
     }
     
     .country-list {
+      right: 0 !important;
+      left: auto !important;
+      
       .country {
         padding-right: 9px !important;
         padding-left: 9px !important;
@@ -260,6 +309,7 @@ const InputWrapper = styled.div<{ hasError: boolean; isRTL: boolean }>`
         .dial-code {
           margin-right: auto;
           margin-left: 6px;
+          direction: ltr !important; /* Always LTR for dial codes */
         }
       }
     }
@@ -278,8 +328,32 @@ const StyledPhoneInput = styled(PhoneInput)`
   /* Additional styles for RTL layout */
   &.rtl-phone-input {
     .react-tel-input {
-      display: flex;
-      flex-direction: row-reverse;
+      display: flex !important;
+      flex-direction: row-reverse !important;
+      
+      .flag-dropdown {
+        left: auto !important;
+        right: 0 !important;
+      }
+      
+      .form-control {
+        text-align: right !important;
+        padding-left: 12px !important;
+        padding-right: 52px !important;
+        direction: ltr !important; /* Critical: keep numbers LTR */
+      }
+      
+      .country-list {
+        right: 0 !important;
+        left: auto !important;
+        
+        .search-box {
+          input {
+            direction: ltr !important;
+            text-align: right !important;
+          }
+        }
+      }
     }
   }
 `;
