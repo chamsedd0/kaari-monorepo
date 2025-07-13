@@ -5,11 +5,13 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // Import translation files
 import enTranslation from './locales/en.json';
 import frTranslation from './locales/fr.json';
+import arTranslation from './locales/ar.json';
 
 // Log the translation files
 console.log('Translation files loaded:', {
   en: !!enTranslation,
-  fr: !!frTranslation
+  fr: !!frTranslation,
+  ar: !!arTranslation
 });
 
 // Function to determine the default language
@@ -19,23 +21,16 @@ const getDefaultLanguage = () => {
   if (storedLang) {
     if (storedLang.startsWith('fr')) return 'fr';
     if (storedLang.startsWith('en')) return 'en';
+    if (storedLang.startsWith('ar')) return 'ar';
   }
   
   // Default to French
   return 'fr';
 };
 
-// Set default language in localStorage
+// Get the default language
 const defaultLang = getDefaultLanguage();
-localStorage.setItem('i18nextLng', defaultLang);
-
-// Log the advertiser onboarding translations to verify they're loaded
-console.log('Advertiser onboarding translations:', {
-  en: enTranslation.advertiser_onboarding ? 'Loaded' : 'Missing',
-  fr: frTranslation.advertiser_onboarding ? 'Loaded' : 'Missing',
-  enWelcome: enTranslation.advertiser_onboarding?.welcome,
-  frWelcome: frTranslation.advertiser_onboarding?.welcome
-});
+console.log('Default language:', defaultLang);
 
 // Pre-load translations into memory
 const resources = {
@@ -44,6 +39,9 @@ const resources = {
   },
   fr: {
     translation: frTranslation
+  },
+  ar: {
+    translation: arTranslation
   }
 };
 
@@ -81,7 +79,7 @@ i18n
     initImmediate: false,
     
     // Add additional options to ensure translations are loaded
-    preload: ['en', 'fr'],
+    preload: ['en', 'fr', 'ar'],
     load: 'all',
     returnEmptyString: false,
     returnNull: false,
@@ -98,24 +96,22 @@ i18n.on('languageChanged', (lng) => {
   console.log(`Language changed to: ${lng}`);
   localStorage.setItem('i18nextLng', lng);
   
+  // Set RTL direction for Arabic
+  if (lng.startsWith('ar')) {
+    document.documentElement.dir = 'rtl';
+    document.documentElement.lang = 'ar';
+    document.body.classList.add('rtl-language');
+  } else {
+    document.documentElement.dir = 'ltr';
+    document.documentElement.lang = lng.substring(0, 2);
+    document.body.classList.remove('rtl-language');
+  }
+  
   // Force reload translations after language change
   i18n.reloadResources([lng]).then(() => {
     console.log(`Translations reloaded for ${lng}`);
     console.log('Translation for welcome:', i18n.t('advertiser_onboarding.welcome'));
   });
-});
-
-// Force reload translations
-i18n.reloadResources().then(() => {
-  console.log('Initial translations loaded');
-  console.log('Current language:', i18n.language);
-  console.log('Translation for welcome:', i18n.t('advertiser_onboarding.welcome'));
-  
-  // Add all translations to window for debugging
-  (window as any).translations = {
-    en: enTranslation,
-    fr: frTranslation
-  };
 });
 
 export default i18n; 

@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { FaCheckCircle, FaPhone, FaCalendarAlt, FaEnvelope } from 'react-icons/fa';
+import { FaCheckCircle, FaPhone, FaCalendarAlt, FaEnvelope, FaCamera } from 'react-icons/fa';
 import { Theme } from '../../theme/theme';
 import { completeSignup, hideHeadersAndFooters } from '../../utils/advertiser-signup';
 import { getAuth } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../backend/firebase/config';
+import { useTranslation } from 'react-i18next';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
@@ -312,6 +313,11 @@ const EmailContact = styled(ContactInfo)`
 `;
 
 const ThankYouPage: React.FC = () => {
+  const { t, i18n } = useTranslation();
+  
+  // Check if current language is RTL (Arabic)
+  const isRTL = i18n.language && i18n.language.startsWith('ar');
+  
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
@@ -355,7 +361,7 @@ const ThankYouPage: React.FC = () => {
   }, []);
   
   return (
-    <ThankYouContainer>
+    <ThankYouContainer dir={isRTL ? 'rtl' : 'ltr'}>
       <GradientOverlay />
       <CircleDecoration1 />
       <CircleDecoration2 />
@@ -363,9 +369,9 @@ const ThankYouPage: React.FC = () => {
         <SuccessIcon>
           <FaCheckCircle />
         </SuccessIcon>
-        <Title>Your Account Has Been Created!</Title>
+        <Title>{t('advertiser_thank_you.title')}</Title>
         <Message>
-          Thank you for registering as an advertiser with Kaari. We're excited to have you join our platform and look forward to helping you showcase your properties to potential clients.
+          {t('advertiser_thank_you.main_message')}
         </Message>
         
         <ContactSection>
@@ -383,14 +389,16 @@ const ThankYouPage: React.FC = () => {
         <Divider />
         
         <LaunchInfo>
-          <LaunchTitle>We're Getting Ready</LaunchTitle>
+          <LaunchTitle>
+            <FaCamera style={{ marginRight: isRTL ? '0' : '10px', marginLeft: isRTL ? '10px' : '0' }} />
+            {t('advertiser_thank_you.dont_forget_us')}
+          </LaunchTitle>
           <Message>
-            We're currently preparing to launch our full platform. At that time, you'll be able to access all features including photoshoot booking and the advertiser dashboard.
+            {t('advertiser_thank_you.photoshoot_message')}
           </Message>
-          <LaunchDate>
-            <FaCalendarAlt />
-            Official Launch Date: August 1st, 2023
-          </LaunchDate>
+          <Message style={{ fontStyle: 'italic', marginTop: '10px' }}>
+            {t('advertiser_thank_you.notification_message')}
+          </Message>
         </LaunchInfo>
       </ThankYouCard>
     </ThankYouContainer>

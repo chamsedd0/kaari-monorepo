@@ -148,3 +148,35 @@ footer {
     min-width: 44px;
   }
 }
+
+/* RTL Support for Arabic */
+html[dir="rtl"] {
+  text-align: right;
+}
+
+html[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+html[dir="rtl"] input,
+html[dir="rtl"] textarea {
+  text-align: right;
+}
+
+html[dir="rtl"] .form-group label {
+  text-align: right;
+}
+
+html[dir="rtl"] .buttons-container {
+  flex-direction: row-reverse;
+}
+
+html[dir="rtl"] .label-icon {
+  margin-right: 0;
+  margin-left: 8px;
+}
+
+html[dir="rtl"] .radio-circle {
+  margin-right: 0;
+  margin-left: 8px;
+}

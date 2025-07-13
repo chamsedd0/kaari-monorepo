@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { useTranslation } from 'react-i18next';
 import { Theme } from '../../../theme/theme';
 
 // Style for the language switcher
@@ -10,67 +10,85 @@ const LanguageSwitcherStyle = styled.div`
   
   .language-toggle {
     display: flex;
-    border-radius: 20px;
+    border-radius: 24px;
     overflow: hidden;
-    height: 36px;
+    height: 40px;
     position: relative;
-    background: ${Theme.colors.quaternary}50;
-    min-width: 80px; /* Ensure minimum width to prevent layout shift */
+    background: rgba(233, 225, 240, 0.8);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 10px rgba(143, 39, 206, 0.1);
+    padding: 3px;
     
     @media (max-width: 768px) {
-      border-radius: 16px;
-      height: 32px;
-      min-width: 70px;
-      background: rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      height: 36px;
+      background: rgba(233, 225, 240, 0.8);
       backdrop-filter: blur(4px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
     
     button {
       background: none;
       border: none;
-      padding: 0 13px;
+      padding: 0;
       cursor: pointer;
       font-size: 14px;
       position: relative;
       z-index: 1;
-      transition: color 0.3s ease;
-      min-width: 41px; /* Ensure minimum width */
-      color: ${Theme.colors.white};
-      font-weight: bold;
+      transition: all 0.3s ease;
+      min-width: 40px;
+      width: 40px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: ${Theme.colors.secondary};
+      font-weight: 600;
+      border-radius: 20px;
       
       @media (max-width: 768px) {
-        padding: 0 10px;
-        font-size: 12px;
-        min-width: 35px;
-        opacity: 0.8;
+        font-size: 13px;
+        min-width: 36px;
+        width: 36px;
       }
       
       &.active {
         color: white;
-        opacity: 1;
       }
       
       &:hover:not(.active) {
-        color: ${Theme.colors.white};
+        color: ${Theme.colors.secondary};
+        background-color: rgba(143, 39, 206, 0.05);
       }
     }
     
     .slider {
       position: absolute;
-      height: 100%;
-      width: 50%;
-      background-color: ${Theme.colors.quaternary}50;
-      transition: transform 0.3s ease;
+      top: 3px;
+      bottom: 3px;
+      width: 40px;
+      background-color: ${Theme.colors.secondary};
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(143, 39, 206, 0.3);
       
       @media (max-width: 768px) {
-        background-color: rgba(255, 255, 255, 0.3);
-        border-radius: 16px;
+        width: 36px;
       }
       
       &.fr {
-        transform: translateX(100%);
+        transform: translateX(40px);
+        
+        @media (max-width: 768px) {
+          transform: translateX(36px);
+        }
+      }
+      
+      &.ar {
+        transform: translateX(80px);
+        
+        @media (max-width: 768px) {
+          transform: translateX(72px);
+        }
       }
     }
   }
@@ -102,9 +120,10 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ className }) => {
     };
   }, []);
   
-  // Get current language - ensure it's normalized to 'en' or 'fr'
+  // Get current language - ensure it's normalized
   const currentLanguage = i18n.language ? 
-    (i18n.language.startsWith('fr') ? 'fr' : 'en') : 
+    (i18n.language.startsWith('fr') ? 'fr' : 
+     i18n.language.startsWith('ar') ? 'ar' : 'en') : 
     'fr'; // Default to French
   
   // Log the current language for debugging
@@ -153,6 +172,13 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ className }) => {
           aria-label="Switch to French"
         >
           FR
+        </button>
+        <button 
+          className={currentLanguage === 'ar' ? 'active' : ''}
+          onClick={() => toggleLanguage('ar')}
+          aria-label="Switch to Arabic"
+        >
+          AR
         </button>
       </div>
     </LanguageSwitcherStyle>
