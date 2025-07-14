@@ -8,8 +8,15 @@ export const ReferralProgramPageStyle = styled.div`
 
     * {
       transition: all 0.2s ease;
+
+      
     }
-  
+
+    button {
+        border-radius: ${Theme.borders.radius.extreme} !important;
+        height: 48px !important;
+      }
+   
   .page-header {
     display: flex;
     justify-content: space-between;
@@ -761,7 +768,6 @@ export const ReferralProgramPageStyle = styled.div`
     &.progress-card {
       background: #fff;
       border-radius: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
       padding: 24px 20px 20px 20px;
       display: flex;
       flex-direction: column;
@@ -849,10 +855,10 @@ export const ReferralProgramPageStyle = styled.div`
         gap: 12px;
         margin-top: 8px;
         align-items: center;
+        width: 100%;
         
         .request-payout-btn {
           width: 100%;
-          max-width: 250px;
           padding: 12px;
           background: ${Theme.colors.secondary};
           color: white;
@@ -868,11 +874,10 @@ export const ReferralProgramPageStyle = styled.div`
         
         .performance-details-btn {
             width: 100%;
-            max-width: 250px;
           padding: 12px;
           background: transparent;
           color: ${Theme.colors.secondary};
-          border: 1px solid ${Theme.colors.secondary};
+          border: 3px solid ${Theme.colors.secondary};
           border-radius: ${Theme.borders.radius.md};
             font: ${Theme.typography.fonts.mediumB};
           cursor: pointer;
