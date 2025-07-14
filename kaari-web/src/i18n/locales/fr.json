@@ -1247,5 +1247,61 @@
       "verificationEmailSent": "E-mail de Vérification Envoyé",
       "verificationEmailSentMessage": "Vérifiez votre e-mail pour le lien de vérification."
     }
+  },
+  "referral": {
+    "claim": {
+      "title": "Vous avez 200 MAD de RÉDUCTION",
+      "subtitle": "sur votre prochaine réservation sur Kaari!",
+      "importantTitle": "Important!",
+      "validityText": "Votre réduction est valable pendant 7 jours.",
+      "claimNow": "Réclamez-la maintenant et utilisez-la sur n'importe quelle propriété.",
+      "claimButton": "Réclamer ma Réduction",
+      "browseButton": "Parcourir les Propriétés",
+      "successTitle": "Réduction Réclamée avec Succès!",
+      "createAccountButton": "Créer un Compte",
+      "goHome": "Aller à l'Accueil",
+      "loading": "Chargement..."
+    },
+    "signup": {
+      "title": "Créer un Compte",
+      "subtitle": "Inscrivez-vous pour réclamer votre réduction",
+      "discount": "Réduction",
+      "full_name": "Nom Complet",
+      "email": "Email",
+      "password": "Mot de Passe",
+      "confirm_password": "Confirmer le Mot de Passe",
+      "name_placeholder": "Votre nom complet",
+      "email_placeholder": "Votre adresse email",
+      "password_placeholder": "Créer un mot de passe",
+      "confirm_password_placeholder": "Confirmer votre mot de passe",
+      "continue_with_google": "Continuer avec Google",
+      "create_account": "Créer un Compte & Réclamer la Réduction",
+      "terms": "En vous inscrivant, vous acceptez nos Conditions d'Utilisation et notre Politique de Confidentialité",
+      "discount_applied": "Réduction Appliquée!",
+      "discount_message": "Votre réduction de {{amount}} MAD a été appliquée à votre compte et est valable pendant 7 jours.",
+      "errors": {
+        "all_fields_required": "Tous les champs sont requis",
+        "passwords_dont_match": "Les mots de passe ne correspondent pas",
+        "password_too_short": "Le mot de passe doit comporter au moins 6 caractères",
+        "signup_error": "Une erreur s'est produite lors de l'inscription",
+        "google_error": "Une erreur s'est produite lors de l'inscription avec Google",
+        "missing_referral": "Code de parrainage manquant"
+      }
+    },
+    "discount": {
+      "banner": "Code promo {{code}} appliqué - {{amount}} MAD de réduction!",
+      "expires_in": "Expire dans: {{days}}j {{hours}}h {{minutes}}m"
+    },
+    "discount": {
+      "banner": "Code promo {{code}} appliqué - {{amount}} MAD de réduction !",
+      "expires_in": "Expire dans: {{days}}j {{hours}}h {{minutes}}m",
+      "error": "Erreur lors du chargement de la réduction: {{error}}",
+      "retry": "Réessayer",
+      "expired": "Votre réduction a expiré",
+      "applied": "Réduction appliquée avec succès !",
+      "loading": "Vérification des réductions disponibles...",
+      "expiring_soon": "Votre réduction expire bientôt ! Seulement {{hours}}h {{minutes}}m restantes.",
+      "browse_now": "Parcourir les propriétés maintenant"
+    }
   }
 } 

@@ -174,7 +174,7 @@ const InputWrapper = styled.div<{ hasError: boolean; isRTL: boolean }>`
         left: auto !important;
         right: 0 !important;
       ` : `
-        border-right: none !important;
+      border-right: none !important;
         border-left: 1.5px solid ${props.hasError ? Theme.colors.error : Theme.colors.gray} !important;
         right: auto !important;
         left: 0 !important;

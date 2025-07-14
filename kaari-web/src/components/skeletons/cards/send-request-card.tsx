@@ -9,6 +9,11 @@ import ShareButton from "../buttons/button-share";
 import { IoCalendarOutline, IoChevronDown, IoClose } from 'react-icons/io5';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
+import { useActiveReferralDiscount } from "../../../hooks/useActiveReferralDiscount";
+import ReferralDiscountBanner from "../banners/status/referral-discount-banner";
+import ReferralDiscountErrorBanner from "../banners/status/referral-discount-error-banner";
+import ReferralDiscountExpiryWarning from "../banners/status/referral-discount-expiry-warning";
+import { useToast } from "../../../contexts/ToastContext";
 
 // Date picker styles (from SearchFilterBar)
 const DatePickerDropdown = styled.div<{ isOpen: boolean }>`
@@ -91,32 +96,66 @@ const DayButton = styled.button<{ isToday?: boolean; isSelected?: boolean; isCur
   }
 `;
 
-interface PropertyRequestCardProps {
-    title: string;
-    isVerified: boolean;
-    advertiserName: string;
-    advertiserImage: string;
-    moveInDate: string;
-    priceFor30Days: number;
-    serviceFee: number;
-    totalPrice: number;
-    propertyId: string;
-    ownerId: string;
-  }
+// Loading spinner component
+const LoadingSpinner = styled.div`
+  width: 16px;
+  height: 16px;
+  border: 2px solid ${Theme.colors.primary}30;
+  border-top: 2px solid ${Theme.colors.primary};
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
   
-  const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({ 
-    title, 
-    isVerified, 
-    advertiserName, 
-    advertiserImage, 
-    moveInDate, 
-    priceFor30Days, 
-    serviceFee, 
-    totalPrice,
-    propertyId,
-    ownerId
-  }) => {
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+const DiscountLoadingContainer = styled.div`
+  display: flex;
+  align-items: center;
+  background-color: ${Theme.colors.primary}10;
+  border-radius: ${Theme.borders.radius.md};
+  padding: 12px 16px;
+  width: 100%;
+  margin-bottom: 16px;
+  font: ${Theme.typography.fonts.smallM};
+  color: ${Theme.colors.gray2};
+`;
+
+interface PropertyRequestCardProps {
+  title: string;
+  isVerified: boolean;
+  advertiserName: string;
+  advertiserImage: string;
+  moveInDate: string;
+  priceFor30Days: number;
+  serviceFee: number;
+  totalPrice: number;
+  propertyId: string;
+  ownerId: string;
+}
+
+const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({ 
+  title, 
+  isVerified, 
+  advertiserName, 
+  advertiserImage, 
+  moveInDate, 
+  priceFor30Days, 
+  serviceFee, 
+  totalPrice,
+  propertyId,
+  ownerId
+}) => {
   const navigate = useNavigate();
+  const { activeDiscount, loading, error, refreshDiscount } = useActiveReferralDiscount();
+  const { showToast } = useToast();
+
+  // Calculate price with discount applied
+  const discountAmount = activeDiscount ? activeDiscount.amount : 0;
+  const discountedTotalPrice = Math.max(0, totalPrice - discountAmount);
 
   // Calculate default date: tomorrow
   const tomorrowISO = getTomorrowISO();
@@ -219,20 +258,42 @@ interface PropertyRequestCardProps {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Show toast when discount is about to expire (less than 24 hours)
+  useEffect(() => {
+    if (activeDiscount && 
+        activeDiscount.timeLeft.days === 0 && 
+        activeDiscount.timeLeft.hours < 24) {
+      showToast({
+        type: 'warning',
+        title: 'Discount Expiring Soon',
+        message: `Your ${activeDiscount.amount} MAD discount will expire in ${activeDiscount.timeLeft.hours}h ${activeDiscount.timeLeft.minutes}m`,
+        duration: 10000
+      });
+    }
+  }, [activeDiscount, showToast]);
+
   const handleSendRequest = () => {
     if (!date) return;
     
-    // Store the selected date in localStorage immediately
+    // Store the selected date and discount info in localStorage immediately
     const rentalData = {
       scheduledDate: date,
       visitDate: '',
-      message: ''
+      message: '',
+      // Add discount information if available
+      discount: activeDiscount ? {
+        amount: activeDiscount.amount,
+        code: activeDiscount.code,
+        expiryDate: activeDiscount.expiryDate.toISOString()
+      } : null
     };
     localStorage.setItem('rentalApplicationData', JSON.stringify(rentalData));
     
     console.log(`Navigating to checkout with propertyId=${propertyId} and moveInDate=${date}`);
     // Navigate to the new checkout page with propertyId as a query parameter
-    navigate(`/checkout?propertyId=${propertyId}&moveInDate=${date}`);
+    // Include discount information in URL if available
+    const discountParam = activeDiscount ? `&discount=${activeDiscount.amount}&discountCode=${activeDiscount.code}` : '';
+    navigate(`/checkout?propertyId=${propertyId}&moveInDate=${date}${discountParam}`);
   };
 
   function getTomorrowISO() {
@@ -242,12 +303,45 @@ interface PropertyRequestCardProps {
     return tomorrow.toISOString().split('T')[0];
   }
 
+  // Navigate to property listings
+  const handleBrowseProperties = () => {
+    navigate('/property-list');
+  };
+
   return (
     <PropertyRequestCardStyle>
       <div className="title">
         {title}
         {isVerified && <CertificationBanner purple text="Kaari Verified" />}
       </div>
+      
+      {loading && (
+        <DiscountLoadingContainer>
+          <LoadingSpinner />
+          <span>Checking for available discounts...</span>
+        </DiscountLoadingContainer>
+      )}
+      
+      {error && (
+        <ReferralDiscountErrorBanner 
+          error={error}
+          onRetry={refreshDiscount}
+        />
+      )}
+      
+      {activeDiscount && (
+        <>
+          <ReferralDiscountExpiryWarning 
+            timeLeft={activeDiscount.timeLeft}
+            onBrowseProperties={handleBrowseProperties}
+          />
+          <ReferralDiscountBanner 
+            amount={activeDiscount.amount} 
+            timeLeft={activeDiscount.timeLeft}
+            code={activeDiscount.code}
+          />
+        </>
+      )}
       
       <div className="advertiser-information">
         <div className="info-title">The advertiser</div>
@@ -315,22 +409,39 @@ interface PropertyRequestCardProps {
         <div className="row first">Price <img src={InfoIcon} alt="info" /></div>
         <div className="row">
           <span>Price for 30 days</span>
-          <span>{priceFor30Days} $</span>
+          <span>{priceFor30Days} MAD</span>
         </div>
         <div className="row">
           <span>Service fee</span>
-          <span>{serviceFee} $</span>
+          <span>{serviceFee} MAD</span>
         </div>
+        {activeDiscount && (
+          <div className="row discount">
+            <span>Referral discount</span>
+            <span>-{activeDiscount.amount} MAD</span>
+          </div>
+        )}
         <div className="separation-line"></div>
         <div className="row total">
           <span>In Total</span>
-          <span className="total-price">{totalPrice} $</span>
+          <span className="total-price">
+            {activeDiscount ? (
+              <>
+                <span style={{ textDecoration: 'line-through', fontSize: '0.8em', marginRight: '8px', color: Theme.colors.gray2 }}>
+                  {totalPrice} MAD
+                </span>
+                {discountedTotalPrice} MAD
+              </>
+            ) : (
+              `${totalPrice} MAD`
+            )}
+          </span>
         </div>
       </div>
       
       <PurpleButtonLB60 text='Send A Request' onClick={handleSendRequest} disabled={!date} />
       <div className="disclaimer">
-            You will not pay anything yet
+        You will not pay anything yet
       </div>
     </PropertyRequestCardStyle>
   );

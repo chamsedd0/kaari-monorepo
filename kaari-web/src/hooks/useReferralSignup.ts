@@ -34,14 +34,8 @@ export const useReferralSignup = () => {
       return;
     }
     
-    // Emit an event to open the auth modal
-    eventBus.emit(EventType.OPEN_AUTH_MODAL, {
-      initialMode: 'register',
-      referralCode
-    });
-    
-    // Navigate back to home with the referral code
-    navigate(`/?ref=${referralCode}`);
+    // Navigate to the signup page with the referral code
+    navigate(`/referral/signup?ref=${referralCode}`);
   };
 
   // Apply referral code to a user

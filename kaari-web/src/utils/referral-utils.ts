@@ -98,5 +98,7 @@ export const getReferralCode = (url?: string): string | null => {
  */
 export const generateReferralLink = (code: string): string => {
   if (!code) return '';
-  return `https://www.kaari.ma/referral/claim-discount?ref=${code}`;
+  // Use window.location.origin to make it work in any environment
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.kaari.ma';
+  return `${origin}/referral/claim-discount?ref=${code}`;
 }; 

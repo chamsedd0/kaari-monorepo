@@ -7,7 +7,7 @@ import {
   updateDocument
 } from '../firebase/firestore';
 import { getCurrentUserProfile } from '../firebase/auth';
-import { advertiserNotifications, userNotifications } from '../../utils/notification-helpers';
+import { advertiserNotifications } from '../../utils/notification-helpers';
 import NotificationService from '../../services/NotificationService';
 
 // Collection names
@@ -219,7 +219,13 @@ export async function createCheckoutReservation(data: {
       hasPets = false,
       hasSmoking = false,
       aboutMe = currentUser.aboutMe || '',
-      message = ''
+      message = '',
+      // Payment information
+      price = 0,
+      serviceFee = 0,
+      totalPrice = 0,
+      // Discount information
+      discount = null
     } = data.rentalData;
     
     // Create the request data
@@ -252,90 +258,68 @@ export async function createCheckoutReservation(data: {
       hasPets,
       hasSmoking,
       aboutMe,
-      message
+      message,
+      
+      // Payment information
+      price,
+      serviceFee,
+      totalPrice,
+      
+      // Discount information (if available)
+      discount: discount ? {
+        amount: discount.amount,
+        code: discount.code,
+        appliedAt: new Date()
+      } : null
     };
     
-    // Create the request
-    const request = await createDocument<Request>(
-      REQUESTS_COLLECTION,
-      requestData as Omit<Request, 'id'>
-    );
+    // Create the request in the database
+    const request = await createDocument<Request>(REQUESTS_COLLECTION, requestData as Omit<Request, 'id'>);
     
-    // Add request to user's requests array
-    const userRequests = currentUser.requests || [];
-    await updateDocument<User>(USERS_COLLECTION, currentUser.id, {
-      requests: [...userRequests, request.id]
-    });
+    // Get property details to include in notifications
+    const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, data.propertyId);
     
-    // Update property status to 'occupied' immediately when reservation is created
-    await updateDocument<Property>(PROPERTIES_COLLECTION, data.propertyId, {
-      status: 'occupied',
-      updatedAt: new Date()
-    });
-
-    // Send a direct notification to the advertiser
-    try {
-      // Get property details for notification
-      const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, data.propertyId);
-      if (property) {
-        const clientName = currentUser.name && currentUser.surname 
-          ? `${currentUser.name} ${currentUser.surname}` 
-          : currentUser.email || 'A client';
-
-        // Send notification to the property owner
-        await NotificationService.createNotification(
+    if (property) {
+      try {
+        // Send notification to the advertiser using the reservationRequest function
+        await advertiserNotifications.reservationRequest(
           property.ownerId,
-          'advertiser',
-          'reservation_request',
-          'New Reservation Request',
-          `${clientName} has requested to rent your property: ${property.title || 'Property'}.`,
-          `/dashboard/advertiser/reservations`,
-          { 
-            requestId: request.id, 
-            propertyId: property.id,
-            clientId: currentUser.id,
-            status: 'pending'
-          }
-        );
-        
-        // Also use the advertiserNotifications helper for more structured notifications
-        try {
-          // Create a reservation object for structured notifications
-          const reservationForNotification = {
+          {
             id: request.id,
             propertyId: property.id,
             propertyTitle: property.title || 'Property',
             startDate: scheduledDate,
-            endDate: leavingDate,
+            endDate: leavingDate || scheduledDate,
             clientId: currentUser.id,
-            clientName: clientName,
-            clientEmail: currentUser.email || '',
-            clientPhone: currentUser.phoneNumber || '',
+            clientName: fullName || currentUser.name || 'Client',
             advertiserId: property.ownerId,
             status: 'pending'
-          };
-          
-          // Send using the helper
-          await advertiserNotifications.reservationRequest(
-            property.ownerId,
-            reservationForNotification
-          );
-          
-          console.log(`Reservation request notifications sent to advertiser: ${property.ownerId}`);
-        } catch (helperError) {
-          console.error('Error using notification helper:', helperError);
-          // The direct notification above should still work even if this fails
-        }
+          }
+        );
+        
+        // Create a direct notification for the user
+        await NotificationService.createNotification(
+          currentUser.id,
+          'user',
+          'reservation_request',
+          'Reservation Request Sent',
+          `Your request for "${property.title || 'Property'}" has been sent to the advertiser`,
+          `/dashboard/user/reservations`,
+          { 
+            reservationId: request.id, 
+            propertyId: property.id
+          }
+        );
+      } catch (notificationError) {
+        console.error('Error sending notifications:', notificationError);
+        // Don't fail the entire request if notifications fail
       }
-    } catch (notifError) {
-      console.error('Error sending reservation request notification:', notifError);
-      // Don't throw error here so the main action can still succeed
     }
     
     return request;
   } catch (error) {
-    console.error('Error creating checkout reservation:', error);
-    throw new Error('Failed to create checkout reservation');
+    console.error('Error creating reservation:', error);
+    throw new Error('Failed to create reservation');
   }
 }
 

@@ -213,7 +213,11 @@ export const signInWithEmail = async (email: string, password: string): Promise<
 /**
  * Sign in with Google
  */
-export const signInWithGoogle = async (role: 'client' | 'advertiser' = 'client', isNewAdvertiser: boolean = false): Promise<User> => {
+export const signInWithGoogle = async (
+  role: 'client' | 'advertiser' = 'client', 
+  isNewAdvertiser: boolean = false,
+  referralCode?: string | null
+): Promise<User> => {
   try {
     const provider = new GoogleAuthProvider();
     const userCredential = await signInWithPopup(auth, provider);
@@ -242,6 +246,18 @@ export const signInWithGoogle = async (role: 'client' | 'advertiser' = 'client',
       // User exists, update last login
       await setDoc(userDocRef, { updatedAt: serverTimestamp() }, { merge: true });
       
+      // Apply referral code if provided
+      if (referralCode) {
+        try {
+          // Import referral service here to avoid circular dependencies
+          const { default: referralService } = await import('../../services/ReferralService');
+          await referralService.applyReferralCode(firebaseUser.uid, referralCode);
+        } catch (referralError) {
+          console.error('Error applying referral code:', referralError);
+          // Don't fail the signin if referral application fails
+        }
+      }
+      
       return {
         id: firebaseUser.uid,
         ...userData
@@ -259,11 +275,29 @@ export const signInWithGoogle = async (role: 'client' | 'advertiser' = 'client',
         requests: []
       };
       
+      // Add referral code if provided
+      if (referralCode) {
+        // @ts-ignore - Add referralCode to user document
+        newUser.referralCode = referralCode;
+      }
+      
       await setDoc(userDocRef, {
         ...newUser,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+      
+      // Apply referral code if provided
+      if (referralCode) {
+        try {
+          // Import referral service here to avoid circular dependencies
+          const { default: referralService } = await import('../../services/ReferralService');
+          await referralService.applyReferralCode(firebaseUser.uid, referralCode);
+        } catch (referralError) {
+          console.error('Error applying referral code:', referralError);
+          // Don't fail the signup if referral application fails
+        }
+      }
       
       return {
         id: firebaseUser.uid,

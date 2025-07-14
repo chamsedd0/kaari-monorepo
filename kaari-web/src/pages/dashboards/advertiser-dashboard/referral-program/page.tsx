@@ -102,10 +102,7 @@ const ReferralProgramPage: React.FC = () => {
     navigate('/dashboard/advertiser/referral-program/performance');
   };
 
-  // Function to navigate to the booking simulator
-  const handleGoToSimulator = () => {
-    navigate('/dashboard/advertiser/referral-program/simulator');
-  };
+  
 
   // Function to handle payout request
   const handleRequestPayout = async () => {
@@ -167,14 +164,14 @@ const ReferralProgramPage: React.FC = () => {
     };
     
     return (
-      <button className="copy-button" onClick={handleCopy}>
+        <button className="copy-button" onClick={handleCopy}>
         {copied ? 'Copied!' : 'Copy link'} 
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="24" height="24" fill="none"/>
-          <path d="M8 4V16H20V4H8Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M16 16V20H4V8H8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="24" height="24" fill="none"/>
+            <path d="M8 4V16H20V4H8Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M16 16V20H4V8H8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
     );
   };
 
@@ -368,7 +365,7 @@ const ReferralProgramPage: React.FC = () => {
                   </div>
                   
                   <div className="onboarding-illustration">
-                    <img src="/public/referral-illustration.svg" alt="Referral Illustration" />
+                    <img src="/referral-illustration.svg" alt="Referral Illustration" />
                   </div>
                 </>
               )}

@@ -19,6 +19,9 @@ import * as admin from 'firebase-admin';
 // Import storage functions
 import * as storageModule from "./storage";
 
+// Import discount finalization functions
+import * as discountFinalization from "./discount-finalization";
+
 // Initialize Firebase Admin
 initializeApp();
 
@@ -170,6 +173,9 @@ export const helloWorld = onRequest({
 
 // Export storage functions
 export const storage = storageModule;
+
+// Export discount finalization functions
+export const discounts = discountFinalization;
 
 // Scheduled function to check property refresh notifications
 export const checkPropertyRefreshNotifications = onSchedule({
@@ -330,3 +336,24 @@ async function sendPropertyRefreshNotifications(
     }
   }
 }
+
+// Scheduled function to finalize referral discounts after refund window passes
+export const finalizeReferralDiscounts = functions.pubsub
+  .schedule('every 24 hours')
+  .onRun(async (context) => {
+    try {
+      console.log('Starting scheduled referral discount finalization job');
+      
+      // Import the discount finalization service
+      const { default: discountFinalizationService } = await import('../../kaari-web/src/services/DiscountFinalizationService');
+      
+      // Run the job to check all pending discounts
+      const results = await discountFinalizationService.checkAllPendingDiscounts();
+      
+      console.log('Referral discount finalization job completed:', results);
+      return null;
+    } catch (error) {
+      console.error('Error running referral discount finalization job:', error);
+      return null;
+    }
+  });

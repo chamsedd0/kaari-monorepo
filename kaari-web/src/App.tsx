@@ -13,7 +13,6 @@ import PhotoshootBookingPage from './pages/photoshoot-booking/page';
 import ThankYouPage from './pages/photoshoot-booking/thank-you';
 import BecomeAdvertiserPage from './pages/become-advertiser/page';
 import AdvertiserThankYouPage from './pages/become-advertiser/thank-you';
-import ClaimDiscountPage from './pages/referral/claim-discount';
 import { 
   EmailVerificationHandler,
   EmailVerificationSuccessPage,
@@ -40,7 +39,6 @@ import {
 } from './utils/advertiser-signup';
 import { ToastProvider } from './contexts/ToastContext';
 import ScrollToTop from './components/ScrollToTop';
-import { useProfileCompletionReminder } from './hooks/useProfileCompletionReminder';
 import { NotificationProvider } from './contexts/notifications/NotificationContext';
 import { ChecklistProvider } from './contexts/checklist/ChecklistContext';
 import NotificationsPage from './pages/notifications';
@@ -66,6 +64,7 @@ import {
 import ExpirationService from './services/ExpirationService';
 import { AdvertiserOnboardingPage, AdvertiserSignupForm, FoundingPartnersPage } from './pages/advertiser-signup';
 import i18n from './i18n';
+import { ClaimDiscountPage, ReferralSignupPage } from './pages/referral';
 
 // Function to ensure French is the default language
 const ensureFrenchAsDefault = () => {
@@ -691,6 +690,7 @@ function App() {
       
       {/* Claim Discount Page */}
       <Route path="/referral/claim-discount" element={<ClaimDiscountPage />} />
+      <Route path="/referral/signup" element={<ReferralSignupPage />} />
       
       {/* Redirects for old claim URLs */}
       <Route path="/claim-discount" element={<Navigate to="/referral/claim-discount" replace />} />

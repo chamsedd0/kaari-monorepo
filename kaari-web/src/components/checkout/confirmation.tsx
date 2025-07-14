@@ -5,6 +5,7 @@ import { User, Property } from '../../backend/entities';
 import { useCheckoutContext } from '../../contexts/checkout-process';
 import { createCheckoutReservation } from '../../backend/server-actions/CheckoutServerActions';
 import BookingSummary from './BookingSummary';
+import referralService from '../../services/ReferralService';
 
 const ConfirmationContainer = styled.div`
   display: flex;
@@ -187,7 +188,10 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
         // Payment information
         price: pricePerMonth,
         serviceFee: serviceFee,
-        totalPrice: totalPrice
+        totalPrice: totalPrice,
+        
+        // Discount information
+        discount: rentalData.discount
       };
       
       // Create the reservation
@@ -199,6 +203,24 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
       });
       
       console.log('Reservation created:', reservation);
+      
+      // Apply discount to booking if available
+      if (rentalData.discount) {
+        try {
+          const discountApplied = await referralService.applyDiscountToBooking(
+            userData.id,
+            reservation.id,
+            propertyData.id,
+            propertyData.title || 'Property',
+            pricePerMonth // Use the property price as booking amount
+          );
+          
+          console.log(`Discount applied to booking: ${discountApplied} MAD`);
+        } catch (discountErr) {
+          console.error('Error applying discount to booking:', discountErr);
+          // Don't fail the whole process if discount application fails
+        }
+      }
       
       // Navigate to success page
       navigateToSuccess();
@@ -235,7 +257,14 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
   // Calculate fees
   const pricePerMonth = propertyData.price;
   const serviceFee = Math.round(pricePerMonth * 0.2);
-  const totalPrice = pricePerMonth + serviceFee;
+  
+  // Apply discount if available
+  const discount = rentalData.discount ? {
+    amount: rentalData.discount.amount,
+    code: rentalData.discount.code
+  } : null;
+  const discountAmount = discount ? discount.amount : 0;
+  const totalPrice = pricePerMonth + serviceFee - discountAmount;
   
   return (
     <ConfirmationContainer>
@@ -370,11 +399,10 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
           </div>
         </div>
         
-        <div className="confirmation-summary">
+        <div className="booking-summary">
           <BookingSummary
             propertyData={propertyData}
             moveInDate={rentalData.scheduledDate}
-            lengthOfStay={rentalData.leavingDate ? `Until ${formatDate(rentalData.leavingDate)}` : "Indefinite"}
             price={pricePerMonth}
             serviceFee={serviceFee}
             total={totalPrice}
@@ -382,21 +410,22 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
             onTermsChange={handleTermsChange}
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
-            buttonText="Confirm Booking"
+            buttonText="Confirm Reservation"
+            discount={discount}
           />
+          
           {error && (
-            <div style={{ 
-              marginTop: '1rem', 
-              color: Theme.colors.error, 
-              backgroundColor: 'rgba(255, 0, 0, 0.1)', 
-              padding: '0.75rem', 
-              borderRadius: '0.5rem',
-              fontSize: '0.875rem' 
-            }}>
+            <div style={{ color: 'red', textAlign: 'center', marginTop: '1rem' }}>
               {error}
             </div>
           )}
         </div>
+      </div>
+      
+      <div className="navigation-buttons">
+        <button className="back-button" onClick={handleBack}>
+          Back
+        </button>
       </div>
     </ConfirmationContainer>
   );

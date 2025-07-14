@@ -15,7 +15,7 @@ export const PropertyRequestCardStyle = styled.div`
 
     gap: 28px;
     z-index: 2;
-    padding-top: 80px;
+    padding-top: 30px;
 
 
     .title {
@@ -133,7 +133,7 @@ export const PropertyRequestCardStyle = styled.div`
         flex-direction: column;
         align-items: start;
         justify-content: start;
-        gap: 16px;
+        gap: 8px;
 
         .row {
             width: 100%;
@@ -155,6 +155,11 @@ export const PropertyRequestCardStyle = styled.div`
                 height: 20px;
                 cursor: pointer;
             }
+        }
+
+        .discount {
+            color: ${Theme.colors.secondary};
+            font: ${Theme.typography.fonts.mediumB};
         }
 
         .separation-line {

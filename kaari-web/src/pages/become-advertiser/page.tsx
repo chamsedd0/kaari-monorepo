@@ -1610,13 +1610,13 @@ const AdvertiserRegistrationPage: React.FC = () => {
                 <div 
                   key={logicalIndex} 
                   className={`step ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
-                >
+              >
                   <div className={`step-number ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}>
                     {isCompleted ? <FaCheckCircle /> : stepNumber}
-                  </div>
+            </div>
                   <div className={`step-label ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}>
                     {step}
-                  </div>
+          </div>
                 </div>
               );
             })}

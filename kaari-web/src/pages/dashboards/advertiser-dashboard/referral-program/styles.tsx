@@ -245,7 +245,7 @@ export const ReferralProgramPageStyle = styled.div`
         flex-direction: column;
         gap: 20px;
       }
-      
+
       .link-input-group {
         display: flex;
         
@@ -262,15 +262,15 @@ export const ReferralProgramPageStyle = styled.div`
         }
         
         .copy-icon {
-          width: 48px;
-          height: 48px;
+            width: 48px;
+            height: 48px;
           background: ${Theme.colors.secondary};
-          border: none;
+            border: none;
           border-radius: 0 ${Theme.borders.radius.md} ${Theme.borders.radius.md} 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
           
           &:hover {
             background: ${Theme.colors.primary};
@@ -421,8 +421,8 @@ export const ReferralProgramPageStyle = styled.div`
                 
                 &::-webkit-slider-thumb {
                   -webkit-appearance: none;
-                  width: 20px;
-                  height: 20px;
+              width: 20px;
+              height: 20px;
                   border-radius: 50%;
                   background: ${Theme.colors.secondary};
                   cursor: pointer;
@@ -604,8 +604,8 @@ export const ReferralProgramPageStyle = styled.div`
         }
         
         .performance-details-btn {
-          width: 100%;
-          max-width: 250px;
+            width: 100%;
+            max-width: 250px;
           padding: 12px;
           background: transparent;
           color: ${Theme.colors.secondary};
@@ -622,11 +622,11 @@ export const ReferralProgramPageStyle = styled.div`
     }
     
     &.help-card {
-      .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
         .help-icon {
           width: 24px;
           height: 24px;
@@ -654,8 +654,8 @@ export const ReferralProgramPageStyle = styled.div`
           font: ${Theme.typography.fonts.mediumM};
           color: ${Theme.colors.black};
           cursor: pointer;
-          
-          &:hover {
+      
+      &:hover {
             background: #F9F9F9;
           }
         }

@@ -16,6 +16,10 @@ interface BookingSummaryProps {
   isSubmitting?: boolean;
   buttonText?: string;
   showTerms?: boolean;
+  discount?: {
+    amount: number;
+    code: string;
+  };
 }
 
 const BookingSummary: React.FC<BookingSummaryProps> = ({
@@ -29,8 +33,9 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   onTermsChange,
   onSubmit,
   isSubmitting = false,
-  buttonText = 'Proceed',
-  showTerms = true
+  buttonText = 'Confirm Booking',
+  showTerms = true,
+  discount
 }) => {
   // Format date for display
   const formatDate = (dateString?: string) => {
@@ -91,9 +96,27 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
           <span className="value">{formatCurrency(serviceFee)}</span>
         </div>
 
+        {discount && discount.amount > 0 && (
+          <div className="info-row discount">
+            <span className="label">Referral discount ({discount.code})</span>
+            <span className="value" style={{ color: Theme.colors.success }}>-{formatCurrency(discount.amount)}</span>
+          </div>
+        )}
+
         <div className="info-row total">
           <span className="label">In Total</span>
-          <span className="value">{formatCurrency(total)}</span>
+          <span className="value">
+            {discount && discount.amount > 0 ? (
+              <>
+                <span style={{ textDecoration: 'line-through', fontSize: '0.8em', marginRight: '8px', color: Theme.colors.gray2 }}>
+                  {formatCurrency(price + serviceFee)}
+                </span>
+                {formatCurrency(total)}
+              </>
+            ) : (
+              formatCurrency(total)
+            )}
+          </span>
         </div>
 
         {showTerms && (

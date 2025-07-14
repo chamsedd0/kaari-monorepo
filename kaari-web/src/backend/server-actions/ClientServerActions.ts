@@ -161,12 +161,23 @@ export async function completeReservation(reservationId: string): Promise<void> 
     }
     
     // Update the reservation status to "movedIn" with "moved_in" flag and timestamp
+    const moveInDate = new Date();
     await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
       status: 'movedIn',
       movedIn: true,
-      movedInAt: new Date(),
+      movedInAt: moveInDate,
       updatedAt: new Date()
     });
+    
+    // Schedule discount finalization after refund window passes
+    try {
+      // Import discount finalization service dynamically to avoid circular dependencies
+      const discountFinalizationService = (await import('../../services/DiscountFinalizationService')).default;
+      discountFinalizationService.scheduleDiscountFinalization(reservationId, moveInDate);
+    } catch (discountErr) {
+      console.error('Error scheduling discount finalization:', discountErr);
+      // Non-blocking - doesn't affect the main workflow
+    }
     
     // Schedule a review prompt for 3 hours after moving in
     // This is done asynchronously to avoid blocking the main workflow

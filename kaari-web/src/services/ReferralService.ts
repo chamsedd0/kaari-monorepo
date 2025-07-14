@@ -397,7 +397,7 @@ class ReferralService {
         return 0; // No discount to apply
       }
       
-      // Mark discount as used
+      // Find the discount document
       const discountsRef = collection(db, 'referralDiscounts');
       const q = query(
         discountsRef, 
@@ -414,15 +414,56 @@ class ReferralService {
       
       const discountDoc = querySnapshot.docs[0];
       
-      // Update the discount document
+      // Associate the discount with the booking but don't mark as used yet
+      // This allows the discount to still be valid if booking is cancelled
+      await updateDoc(discountDoc.ref, {
+        bookingId: bookingId,
+        bookingPropertyId: propertyId,
+        bookingPropertyName: propertyName,
+        bookingAmount: bookingAmount,
+        bookingAppliedAt: Timestamp.now()
+      });
+      
+      return discount.amount;
+    } catch (error) {
+      console.error('Error applying discount to booking:', error);
+      return 0;
+    }
+  }
+
+  // Finalize discount usage after move-in and refund window passes
+  async finalizeDiscountUsage(bookingId: string): Promise<boolean> {
+    try {
+      // Find the discount associated with this booking
+      const discountsRef = collection(db, 'referralDiscounts');
+      const q = query(
+        discountsRef, 
+        where('bookingId', '==', bookingId),
+        where('isUsed', '==', false)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        console.log('No pending discount found for booking:', bookingId);
+        return false;
+      }
+      
+      const discountDoc = querySnapshot.docs[0];
+      const discountData = discountDoc.data();
+      const userId = discountData.userId;
+      const advertiserId = discountData.advertiserId;
+      const propertyId = discountData.bookingPropertyId;
+      const propertyName = discountData.bookingPropertyName;
+      const bookingAmount = discountData.bookingAmount || 0;
+      
+      // Mark discount as used
       await updateDoc(discountDoc.ref, {
         isUsed: true,
-        usedAt: Timestamp.now(),
-        bookingId: bookingId
+        usedAt: Timestamp.now()
       });
       
       // Update the advertiser's referral stats
-      const advertiserId = discount.advertiserId;
       const referralDocRef = doc(db, 'referrals', advertiserId);
       const referralDoc = await getDoc(referralDocRef);
       
@@ -463,10 +504,10 @@ class ReferralService {
         });
       }
       
-      return discount.amount;
+      return true;
     } catch (error) {
-      console.error('Error applying discount to booking:', error);
-      return 0;
+      console.error('Error finalizing discount usage:', error);
+      return false;
     }
   }
 

@@ -6,11 +6,13 @@ import { useNavigate } from 'react-router-dom';
 import { getReferralCode } from '../../utils/referral-utils';
 import { useReferralSignup } from '../../hooks/useReferralSignup';
 import MainLayout from '../../layouts/MainLayout';
+import { getAuth, signOut } from 'firebase/auth';
 
 const ClaimDiscountPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [isClaimed, setIsClaimed] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { 
     referralCode, 
     discount, 
@@ -19,22 +21,43 @@ const ClaimDiscountPage: React.FC = () => {
   } = useReferralSignup();
 
   useEffect(() => {
-    // Extract referral code from URL
-    const code = getReferralCode(window.location.href);
+    // Function to handle initialization
+    const initPage = async () => {
+      setIsLoading(true);
+      
+      // Sign out any existing user before the page loads
+      const auth = getAuth();
+      if (auth.currentUser) {
+        try {
+          await signOut(auth);
+          console.log("User signed out successfully");
+        } catch (error) {
+          console.error("Error signing out:", error);
+        }
+      }
+
+      // Extract referral code from URL
+      const code = getReferralCode(window.location.href);
+      
+      if (!code) {
+        // If no code in URL, redirect to home
+        navigate('/');
+        return;
+      }
+      
+      setIsLoading(false);
+    };
     
-    if (!code) {
-      // If no code in URL, redirect to home
-      navigate('/');
-    }
+    initPage();
   }, [navigate]);
 
   const handleClaimDiscount = () => {
-    // Mark as claimed and navigate to login/signup
+    // Mark as claimed and navigate to signup page with referral code
     setIsClaimed(true);
     
-    // Use the hook's claim function
+    // Navigate to the signup page with the referral code
     setTimeout(() => {
-      claimDiscount();
+      navigate(`/referral/signup?ref=${referralCode}`);
     }, 1500);
   };
 
@@ -43,7 +66,7 @@ const ClaimDiscountPage: React.FC = () => {
     navigate('/properties');
   };
 
-  if (!referralCode) {
+  if (isLoading || !referralCode) {
     return (
       <MainLayout>
         <Container>
@@ -108,7 +131,7 @@ const ClaimDiscountPage: React.FC = () => {
                 </ButtonsContainer>
               ) : (
                 <ButtonsContainer>
-                  <PrimaryButton onClick={() => navigate(`/signup?ref=${referralCode}`)}>
+                  <PrimaryButton onClick={() => navigate(`/referral/signup?ref=${referralCode}`)}>
                     {t('referral.claim.createAccountButton', 'Create Account')}
                   </PrimaryButton>
                   <SecondaryButton onClick={handleBrowseProperties}>
@@ -118,7 +141,7 @@ const ClaimDiscountPage: React.FC = () => {
               )}
             </LeftContent>
             <RightContent>
-              <img src="/public/referral-illustration.svg" alt="Referral Illustration" />
+              <img src="/referral-illustration.svg" alt="Referral Illustration" />
             </RightContent>
           </ContentBox>
         </ContentWrapper>

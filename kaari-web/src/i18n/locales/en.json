@@ -1218,6 +1218,58 @@
     "you_are_eligible": "You are eligible",
     "pending_payout": "Pending payout: {{amount}} MAD"
   },
+  "referral": {
+    "claim": {
+      "title": "You've got 200 MAD OFF",
+      "subtitle": "your next booking on Kaari!",
+      "importantTitle": "Important!",
+      "validityText": "Your discount is valid for 7 days.",
+      "claimNow": "Claim it now and use it on any property.",
+      "claimButton": "Claim my Discount",
+      "browseButton": "Browse Properties",
+      "successTitle": "Discount Successfully Claimed!",
+      "createAccountButton": "Create Account",
+      "goHome": "Go to Homepage",
+      "loading": "Loading..."
+    },
+    "signup": {
+      "title": "Create an Account",
+      "subtitle": "Sign up to claim your discount",
+      "discount": "Discount",
+      "full_name": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "confirm_password": "Confirm Password",
+      "name_placeholder": "Your full name",
+      "email_placeholder": "Your email address",
+      "password_placeholder": "Create a password",
+      "confirm_password_placeholder": "Confirm your password",
+      "continue_with_google": "Continue with Google",
+      "create_account": "Create Account & Claim Discount",
+      "terms": "By signing up, you agree to our Terms of Service and Privacy Policy",
+      "discount_applied": "Discount Applied!",
+      "discount_message": "Your {{amount}} MAD discount has been applied to your account and is valid for 7 days.",
+      "errors": {
+        "all_fields_required": "All fields are required",
+        "passwords_dont_match": "Passwords don't match",
+        "password_too_short": "Password must be at least 6 characters",
+        "signup_error": "An error occurred during signup",
+        "google_error": "An error occurred during Google signup",
+        "missing_referral": "Missing referral code"
+      }
+    },
+    "discount": {
+      "banner": "Promo code {{code}} applied - {{amount}} MAD discount!",
+      "expires_in": "Expires in: {{days}}d {{hours}}h {{minutes}}m",
+      "error": "Error loading discount: {{error}}",
+      "retry": "Try again",
+      "expired": "Your discount has expired",
+      "applied": "Discount successfully applied!",
+      "loading": "Checking for available discounts...",
+      "expiring_soon": "Your discount is expiring soon! Only {{hours}}h {{minutes}}m left.",
+      "browse_now": "Browse properties now"
+    }
+  },
   "advertiser_registration": {
     "title": "Advertiser Registration",
     "subtitle": "Let's get your properties listed on Kaari",

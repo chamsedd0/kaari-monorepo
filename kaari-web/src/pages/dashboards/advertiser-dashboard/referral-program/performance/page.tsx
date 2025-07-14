@@ -52,16 +52,7 @@ const PerformancePage = () => {
     }
   };
 
-  // Calculate bonus rate based on listings count
-  const calculateBonusRate = (listingsCount: number): string => {
-    if (listingsCount >= 11) {
-      return "10%";
-    } else if (listingsCount >= 3) {
-      return "8%";
-    } else {
-      return "5%";
-    }
-  };
+  
 
   // Render loading state
   if (loading) {
@@ -163,24 +154,7 @@ const PerformancePage = () => {
             </div>
           </div>
           
-          {/* Bonus Progress Bar - Highlight the appropriate segment based on the current bonus rate */}
-          <div className="progress-container">
-            <div className="percentage-labels">
-              <span>5%</span>
-              <span>8%</span>
-              <span>10%</span>
-            </div>
-            <div className="progress-bar">
-              <div className={`segment ${referralData.referralStats.firstRentBonus === "5%" ? "active" : ""}`}></div>
-              <div className={`segment ${referralData.referralStats.firstRentBonus === "8%" ? "active" : ""}`}></div>
-              <div className={`segment ${referralData.referralStats.firstRentBonus === "10%" ? "active" : ""}`}></div>
-            </div>
-            <div className="range-labels">
-              <span>1-2 listings</span>
-              <span>3-10 listings</span>
-              <span>11+ listings</span>
-            </div>
-          </div>
+          
           
           {/* Payout Request Button */}
           <div className="payout-button-container">
