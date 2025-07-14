@@ -65,6 +65,7 @@ import ExpirationService from './services/ExpirationService';
 import { AdvertiserOnboardingPage, AdvertiserSignupForm, FoundingPartnersPage } from './pages/advertiser-signup';
 import i18n from './i18n';
 import { ClaimDiscountPage, ReferralSignupPage } from './pages/referral';
+import { checkAndFixLanguage } from './utils/language-utils';
 
 // Function to ensure French is the default language
 const ensureFrenchAsDefault = () => {
@@ -79,60 +80,44 @@ const ensureFrenchAsDefault = () => {
 };
 
 function App() {
-  // Use the global store for authentication
+  const [renderKey, setRenderKey] = useState(0);
   const isAuthenticated = useStore(state => state.isAuthenticated);
   const user = useStore(state => state.user);
   const initAuth = useStore(state => state.initAuth);
-  const [renderKey, setRenderKey] = useState(0);
   
-  // Set French as default language on app load
+  // Initialize auth on mount
   useEffect(() => {
-    ensureFrenchAsDefault();
-  }, []);
-  
-  // Initialize authentication on app load
-  useEffect(() => {
-    // Initialize auth once
     initAuth();
-    
-    // Listen for auth state changes through event bus instead of DOM events
-    const unsubscribe = eventBus.on(EventType.AUTH_STATE_CHANGED, () => {
-      // This forces a controlled re-render without page refresh
-      setRenderKey(prev => prev + 1);
-    });
-    
-    // Also listen for specific sign in/out events
-    const signInUnsubscribe = eventBus.on(EventType.AUTH_SIGNED_IN, () => {
-      setRenderKey(prev => prev + 1);
-    });
-    
-    const signOutUnsubscribe = eventBus.on(EventType.AUTH_SIGNED_OUT, () => {
-      setRenderKey(prev => prev + 1);
-    });
-    
-    return () => {
-      unsubscribe();
-      signInUnsubscribe();
-      signOutUnsubscribe();
-    };
   }, [initAuth]);
   
-  // Register advertiser signup listener
+  // Register signup listener
   useEffect(() => {
-    // Register the listener to check for incomplete signups
-    const unsubscribeSignup = registerSignupListener();
+    registerSignupListener();
     
-    // Register the listener to clear signup progress on sign out
-    const unsubscribeAuth = registerAuthListener();
+    // Check for incomplete signup
+    checkIncompleteSignup();
     
-    // Only check for incomplete signup on initial load if we're not in the signup flow
-    if (!isInSignupFlow()) {
-      checkIncompleteSignup();
-    }
+    // Register auth listener
+    registerAuthListener();
+    
+    // Initialize expiration service
+    ExpirationService.startExpirationCheck();
+    
+    // Ensure French as default language
+    ensureFrenchAsDefault();
+    
+    // Check and fix language if needed (e.g., if Arabic is selected but not in onboarding flow)
+    checkAndFixLanguage();
+    
+    // Force a re-render when language changes
+    const handleLanguageChanged = () => {
+      setRenderKey(prev => prev + 1);
+    };
+    
+    i18n.on('languageChanged', handleLanguageChanged);
     
     return () => {
-      unsubscribeSignup();
-      unsubscribeAuth();
+      i18n.off('languageChanged', handleLanguageChanged);
     };
   }, []);
   

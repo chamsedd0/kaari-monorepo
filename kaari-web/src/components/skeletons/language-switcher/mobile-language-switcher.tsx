@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
+import { shouldShowArabicOption, getAvailableLanguages } from '../../../utils/language-utils';
 
 // Style for the mobile language switcher
 const MobileLanguageSwitcherStyle = styled.div`
@@ -66,6 +67,14 @@ const MobileLanguageSwitcherStyle = styled.div`
         transform: translateX(72px);
       }
     }
+    
+    &.no-arabic {
+      .slider {
+        &.fr {
+          transform: translateX(36px);
+        }
+      }
+    }
   }
 `;
 
@@ -81,6 +90,24 @@ const MobileLanguageSwitcher: React.FC<MobileLanguageSwitcherProps> = ({
   lightBackground = false
 }) => {
   const { i18n } = useTranslation();
+  const [showArabic, setShowArabic] = useState(false);
+  
+  // Check if Arabic should be shown
+  useEffect(() => {
+    setShowArabic(shouldShowArabicOption());
+    
+    // Add event listener for route changes
+    const handleRouteChange = () => {
+      setShowArabic(shouldShowArabicOption());
+    };
+    
+    window.addEventListener('popstate', handleRouteChange);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+    };
+  }, []);
   
   // Get current language - ensure it's normalized
   const currentLanguage = i18n.language ? 
@@ -135,7 +162,7 @@ const MobileLanguageSwitcher: React.FC<MobileLanguageSwitcherProps> = ({
   
   return (
     <MobileLanguageSwitcherStyle className={className}>
-      <div className="language-toggle" style={{ background: styles.background }}>
+      <div className={`language-toggle ${!showArabic ? 'no-arabic' : ''}`} style={{ background: styles.background }}>
         <div 
           className={`slider ${currentLanguage}`} 
           style={{ backgroundColor: styles.sliderBg }}
@@ -156,14 +183,16 @@ const MobileLanguageSwitcher: React.FC<MobileLanguageSwitcherProps> = ({
         >
           FR
         </button>
-        <button 
-          className={currentLanguage === 'ar' ? 'active' : ''}
-          onClick={() => toggleLanguage('ar')}
-          aria-label="Switch to Arabic"
-          style={{ color: currentLanguage === 'ar' ? 'white' : styles.textColor }}
-        >
-          AR
-        </button>
+        {showArabic && (
+          <button 
+            className={currentLanguage === 'ar' ? 'active' : ''}
+            onClick={() => toggleLanguage('ar')}
+            aria-label="Switch to Arabic"
+            style={{ color: currentLanguage === 'ar' ? 'white' : styles.textColor }}
+          >
+            AR
+          </button>
+        )}
       </div>
     </MobileLanguageSwitcherStyle>
   );

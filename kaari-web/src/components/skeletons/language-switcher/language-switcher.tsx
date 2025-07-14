@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { Theme } from '../../../theme/theme';
+import { shouldShowArabicOption, getAvailableLanguages } from '../../../utils/language-utils';
 
 // Style for the language switcher
 const LanguageSwitcherStyle = styled.div`
@@ -91,6 +92,18 @@ const LanguageSwitcherStyle = styled.div`
         }
       }
     }
+    
+    &.no-arabic {
+      .slider {
+        &.fr {
+          transform: translateX(40px);
+          
+          @media (max-width: 768px) {
+            transform: translateX(36px);
+          }
+        }
+      }
+    }
   }
 `;
 
@@ -101,8 +114,10 @@ interface LanguageSwitcherProps {
 const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ className }) => {
   const { i18n } = useTranslation();
   const [isMobile, setIsMobile] = useState(false);
+  const [showArabic, setShowArabic] = useState(false);
+  const [availableLanguages, setAvailableLanguages] = useState<string[]>(['en', 'fr']);
   
-  // Check if device is mobile
+  // Check if device is mobile and if Arabic should be shown
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -111,12 +126,25 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ className }) => {
     // Initial check
     checkMobile();
     
+    // Check if Arabic should be shown
+    setShowArabic(shouldShowArabicOption());
+    setAvailableLanguages(getAvailableLanguages());
+    
     // Add event listener for window resize
     window.addEventListener('resize', checkMobile);
+    
+    // Add event listener for route changes
+    const handleRouteChange = () => {
+      setShowArabic(shouldShowArabicOption());
+      setAvailableLanguages(getAvailableLanguages());
+    };
+    
+    window.addEventListener('popstate', handleRouteChange);
     
     // Cleanup
     return () => {
       window.removeEventListener('resize', checkMobile);
+      window.removeEventListener('popstate', handleRouteChange);
     };
   }, []);
   
@@ -157,7 +185,7 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ className }) => {
   
   return (
     <LanguageSwitcherStyle className={`${className || ''} ${isMobile ? 'mobile' : ''}`}>
-      <div className="language-toggle">
+      <div className={`language-toggle ${!showArabic ? 'no-arabic' : ''}`}>
         <div className={`slider ${currentLanguage}`}></div>
         <button 
           className={currentLanguage === 'en' ? 'active' : ''}
@@ -173,13 +201,15 @@ const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ className }) => {
         >
           FR
         </button>
-        <button 
-          className={currentLanguage === 'ar' ? 'active' : ''}
-          onClick={() => toggleLanguage('ar')}
-          aria-label="Switch to Arabic"
-        >
-          AR
-        </button>
+        {showArabic && (
+          <button 
+            className={currentLanguage === 'ar' ? 'active' : ''}
+            onClick={() => toggleLanguage('ar')}
+            aria-label="Switch to Arabic"
+          >
+            AR
+          </button>
+        )}
       </div>
     </LanguageSwitcherStyle>
   );

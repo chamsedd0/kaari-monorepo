@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import { shouldShowArabicOption } from '../utils/language-utils';
 
 // Import translation files
 import enTranslation from './locales/en.json';
@@ -21,7 +22,8 @@ const getDefaultLanguage = () => {
   if (storedLang) {
     if (storedLang.startsWith('fr')) return 'fr';
     if (storedLang.startsWith('en')) return 'en';
-    if (storedLang.startsWith('ar')) return 'ar';
+    // Only return Arabic if we're in a path where it's allowed
+    if (storedLang.startsWith('ar') && shouldShowArabicOption()) return 'ar';
   }
   
   // Default to French
@@ -112,6 +114,16 @@ i18n.on('languageChanged', (lng) => {
     console.log(`Translations reloaded for ${lng}`);
     console.log('Translation for welcome:', i18n.t('advertiser_onboarding.welcome'));
   });
+});
+
+// Add event listener for route changes to handle Arabic language
+window.addEventListener('popstate', () => {
+  // Check if current language is Arabic but we're not in an Arabic-enabled path
+  const currentLang = i18n.language;
+  if (currentLang && currentLang.startsWith('ar') && !shouldShowArabicOption()) {
+    // Switch to French
+    i18n.changeLanguage('fr');
+  }
 });
 
 export default i18n; 
