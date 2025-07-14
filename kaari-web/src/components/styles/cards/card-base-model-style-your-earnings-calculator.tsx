@@ -160,6 +160,8 @@ export const CardBaseModelStyleYourEarningsCalculator = styled.div<EarningsCalcu
             border-radius: ${Theme.borders.radius.lg};
             border:${Theme.borders.primary};
             padding: 38px 12px;
+            width: 380px;
+            height: 100%;
 
             .text-container{
                 display: flex;
@@ -207,7 +209,10 @@ export const CardBaseModelStyleYourEarningsCalculator = styled.div<EarningsCalcu
         .stat-value.mad {
             font: ${Theme.typography.fonts.h3};
             color: ${Theme.colors.black};
-
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
         }
     }
     .slider-wrapper {
@@ -244,6 +249,13 @@ export const CardBaseModelStyleYourEarningsCalculator = styled.div<EarningsCalcu
         transform: translateX(-50%);
         opacity: ${props => (props.showRentValue ? 1 : 0)};
         display: ${props => (props.showRentValue ? 'block' : 'none')};
+    }
+    .stats-grid .stat-block:last-child {
+        width: 180px;
+        min-width: 120px;
+        max-width: 220px;
+        align-items: center;
+        justify-content: center;
     }
 }
 

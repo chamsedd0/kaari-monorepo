@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { PerformancePageStyle } from './styles';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { PurpleButtonLB40 } from '../../../../../components/skeletons/buttons/purple_LB40';
 import dwonarrow from '../../../../../components/skeletons/icons/Icon_arrow_Down.svg'
 import uparrow from '../../../../../components/skeletons/icons/Icon_arrow_Up.svg'
 import IconVerified from '../../../../../components/skeletons/icons/Icon_Verified.svg'
 import iconinfo from '../../../../../components/skeletons/icons/Icon_Info2.svg'
 import { PurpleButtonMB48 } from "../../../../../components/skeletons/buttons/purple_MB48";
+import { ReferralHistoryTable } from './styles';
 
 // Mock data for the referral program performance (replace with actual API calls later)
 const mockPerformanceData = {
@@ -164,31 +164,28 @@ const PerformancePage = () => {
             </div>
           </div>
         </div>
-
-        {/* Eligibility Card */}
-        <div className="card eligibility-card">
-          <h2>Eligibility</h2>
-          
-          <div className="eligibility-status">
-            <CheckIcon />
-            <span className="status-text">You are eligible</span>
-            <div className="info-icon-wrapper">
-              <InfoIcon />
-            </div>
-          </div>
-          
-          <p className="eligibility-note">
-            You need to have at least 1 listing in the last 60 days to be eligible for the payout request
-          </p>
-          
-          <div className="request-payout">
-            <PurpleButtonMB48 
-              text="Request Payout" 
-              onClick={handleRequestPayout}
-            />
-          </div>
-        </div>
       </div>
+      <div className="RH-text">
+        Referral History
+      </div>
+      <ReferralHistoryTable>
+        <thead>
+          <tr>
+            <th>Tenant</th>
+            <th>Status</th>
+            <th>Property</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.history.map((item) => (
+            <tr key={item.id}>
+              <td>{item.tenant}</td>
+              <td>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</td>
+              <td>{item.property}</td>
+            </tr>
+          ))}
+        </tbody>
+      </ReferralHistoryTable>
     </PerformancePageStyle>
   );
 };

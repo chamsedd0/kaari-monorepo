@@ -202,4 +202,82 @@ export const PerformancePageStyle = styled.div`
       padding: 16px;
     }
   }
+
+  .RH-text{
+    margin-top: 20px;
+    font: ${Theme.typography.fonts.extraLargeB};
+    color: ${Theme.colors.black};
+  }
+`; 
+
+export const ReferralHistoryTable = styled.table`
+  width: 100%;
+  margin-top: 24px;
+  border-radius: ${Theme.borders.radius.lg};
+  border: ${Theme.borders.primary};
+  background: #fff;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  font: ${Theme.typography.fonts.mediumM};
+
+  th, td {
+    padding: 22px 20px;
+    text-align: left;
+    font: ${Theme.typography.fonts.mediumM};
+    color: ${Theme.colors.gray2};
+  }
+
+  th {
+    background: #fff;
+    color: ${Theme.colors.black};
+    font: ${Theme.typography.fonts.mediumB};
+    border-bottom: none;
+  }
+
+  thead tr {
+    position: relative;
+  }
+  thead tr::after {
+    content: '';
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    bottom: 0;
+    border: ${Theme.borders.primary};
+    background: ${Theme.colors.sixth};
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  tr:not(:last-child) td {
+    position: relative;
+    border-bottom: none;
+  }
+
+  tr:not(:last-child) {
+    position: relative;
+  }
+  tr:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    bottom: 0;
+    border: ${Theme.borders.primary};
+    background: ${Theme.colors.sixth};
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  td {
+    background: #fff;
+  }
+
+  @media (max-width: 600px) {
+    th, td {
+      padding: 12px 8px;
+      font-size: 13px;
+    }
+  }
 `; 
