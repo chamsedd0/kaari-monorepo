@@ -6,6 +6,7 @@ import { PurpleButtonLB60 } from '../../../../../components/skeletons/buttons/pu
 import {BpurpleButtonLB40} from '../../../../../components/skeletons/buttons/border_purple_LB40'
 import Iconinfo  from '../../../../../components/skeletons/icons/Icon_Info2.svg';
 import {PurpleButtonMB48} from '../../../../../components/skeletons/buttons/purple_MB48'
+import { useReferralProgram } from '../../../../../hooks/useReferralProgram';
 
 const PlusIcon = () => (
   <svg width="24" height="24" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -35,27 +36,39 @@ const CommissionInfoIcon = () => (
 const SimulatorPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { 
+    referralData, 
+    loading, 
+    error, 
+    calculateBonusRate
+  } = useReferralProgram();
+  
   const [numberOfListings, setNumberOfListings] = useState(1);
   const [monthlyReferrals, setMonthlyReferrals] = useState(10);
   const [tenantRent, setTenantRent] = useState(300);
   const [bonusRate, setBonusRate] = useState("5%");
   const [successfulBookings, setSuccessfulBookings] = useState(10);
   
+  // Initialize simulator with actual data when available
+  useEffect(() => {
+    if (referralData) {
+      // Set initial values based on real data if available
+      setMonthlyReferrals(referralData.referralStats.totalReferrals || 10);
+      setSuccessfulBookings(referralData.referralStats.successfulBookings || 10);
+      setBonusRate(referralData.referralStats.firstRentBonus || "5%");
+    }
+  }, [referralData]);
+  
   // Calculate results based on inputs
   useEffect(() => {
     // Update bonus rate based on number of listings
-    if (numberOfListings >= 11) {
-      setBonusRate("10%");
-    } else if (numberOfListings >= 3) {
-      setBonusRate("8%");
-    } else {
-      setBonusRate("5%");
-    }
+    const newBonusRate = calculateBonusRate(numberOfListings);
+    setBonusRate(newBonusRate);
     
     // Set successful bookings based on monthly referrals
     // In a real app, this would be calculated with a conversion rate
     setSuccessfulBookings(monthlyReferrals);
-  }, [numberOfListings, monthlyReferrals]);
+  }, [numberOfListings, monthlyReferrals, calculateBonusRate]);
   
   // Calculate monthly and annual earnings
   const calculateEarnings = () => {
@@ -91,6 +104,47 @@ const SimulatorPage: React.FC = () => {
   const handleBookPhotoshoot = () => {
     navigate('/photoshoot-booking');
   };
+
+  // Get the next bonus level message
+  const getNextBonusMessage = () => {
+    if (bonusRate === "5%") {
+      return "List 1 more property to get 8% bonus";
+    } else if (bonusRate === "8%") {
+      return "List 3 more properties to get 10% bonus";
+    } else {
+      return "You've reached the maximum bonus level!";
+    }
+  };
+
+  // Render loading state
+  if (loading) {
+    return (
+      <SimulatorPageStyle>
+        <div className="page-header">
+          <div className="back-link" onClick={handleBackClick}>
+            Back
+          </div>
+          <h1>Boost Your Referral Bonus</h1>
+        </div>
+        <div className="loading">Loading simulator data...</div>
+      </SimulatorPageStyle>
+    );
+  }
+
+  // Render error state
+  if (error) {
+    return (
+      <SimulatorPageStyle>
+        <div className="page-header">
+          <div className="back-link" onClick={handleBackClick}>
+            Back
+          </div>
+          <h1>Boost Your Referral Bonus</h1>
+        </div>
+        <div className="error">Error: {error}</div>
+      </SimulatorPageStyle>
+    );
+  }
 
   return (
     <SimulatorPageStyle>
@@ -133,7 +187,7 @@ const SimulatorPage: React.FC = () => {
             </div>
             <div className="info-text">
             <img src={Iconinfo} alt="Info" />
-            <span>List 1 more property to get 8% bonus</span>
+            <span>{getNextBonusMessage()}</span>
           </div>
           </div>
           
@@ -146,9 +200,9 @@ const SimulatorPage: React.FC = () => {
               <span>10%</span>
             </div>
             <div className="progress-bar">
-              <div className="segment active"></div>
-              <div className="segment"></div>
-              <div className="segment"></div>
+              <div className={`segment ${bonusRate === "5%" ? "active" : ""}`}></div>
+              <div className={`segment ${bonusRate === "8%" ? "active" : ""}`}></div>
+              <div className={`segment ${bonusRate === "10%" ? "active" : ""}`}></div>
             </div>
             <div className="range-labels">
               <span>1-2 listings</span>

@@ -34,7 +34,7 @@ interface AuthContextType {
   user: User | null;
   status: AuthStatus;
   error: AuthError | null;
-  signUp: (email: string, password: string, name: string, role?: 'client' | 'advertiser') => Promise<void>;
+  signUp: (email: string, password: string, name: string, role?: 'client' | 'advertiser', referralCode?: string | null) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGooglePopup: (role?: 'client' | 'advertiser', isNewAdvertiser?: boolean) => Promise<User | void>;
   signOutUser: () => Promise<void>;
@@ -183,11 +183,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Sign up with email, password and name
-  const signUp = async (email: string, password: string, name: string, role?: 'client' | 'advertiser') => {
+  const signUp = async (email: string, password: string, name: string, role?: 'client' | 'advertiser', referralCode?: string | null) => {
     try {
       setStatus('loading');
       setError(null);
-      await signup(email, password, name, role);
+      await signup(email, password, name, role, referralCode);
       setStatus('authenticated');
       
       // Emit auth state changed

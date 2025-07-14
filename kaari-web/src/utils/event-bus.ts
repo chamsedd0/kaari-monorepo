@@ -6,6 +6,7 @@ export enum EventType {
   AUTH_STATE_CHANGED = 'auth:stateChanged',
   AUTH_ERROR = 'auth:error',
   AUTH_PASSWORD_RESET = 'auth:passwordReset',
+  OPEN_AUTH_MODAL = 'auth:openModal',
   
   // User related events
   USER_PROFILE_UPDATED = 'user:profileUpdated',
@@ -47,6 +48,7 @@ export interface EventPayloads {
   [EventType.AUTH_STATE_CHANGED]: { isAuthenticated: boolean; user: any | null };
   [EventType.AUTH_ERROR]: { code: string; message: string };
   [EventType.AUTH_PASSWORD_RESET]: { email: string; success: boolean };
+  [EventType.OPEN_AUTH_MODAL]: { initialMode?: 'signin' | 'register'; referralCode?: string | null };
   
   [EventType.USER_PROFILE_UPDATED]: { userId: string; fields: string[] };
   [EventType.USER_PREFERENCES_CHANGED]: { userId: string; preferences: Record<string, any> };

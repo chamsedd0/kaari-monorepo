@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ReferralProgramPageStyle } from './styles';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -8,22 +8,8 @@ import { PurpleButtonMB48 } from "../../../../components/skeletons/buttons/purpl
 import arowdown from '../../../../components/skeletons/icons/Icon_arrow_Down.svg'
 import arowup from '../../../../components/skeletons/icons/Icon_arrow_Up.svg'
 import IconVerified from '../../../../components/skeletons/icons/Icon_Verified.svg'
-import ReferralPassGreenSkeleton from '../../../../components/skeletons/cards/referral-pass-green';
-import YourReferralLinkCard from '../../../../components/skeletons/cards/your-referral-link';
-import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-help-card';
-import YourEarningsCalculatorCard from '../../../../components/skeletons/cards/your-earnings-calculator-card';
-
-// Mock data for the referral program (replace with actual API calls later)
-const mockReferralData = {
-  code: "ABC1234",
-  totalReferrals: 10,
-  successfulBookings: 7,
-  monthlyEarnings: 1200,
-  annualEarnings: 14400,
-  currentBonus: "5%",
-  nextBonus: "8%",
-  nextBonusRequirement: "List 1 more property"
-};
+import { useReferralProgram } from '../../../../hooks/useReferralProgram';
+import { QRCodeSVG } from 'qrcode.react';
 
 // Icons
 const InfoIcon = () => (
@@ -52,63 +38,61 @@ const ArrowRightIcon = () => (
 
 // Up and Down arrow indicators
 const UpArrowIndicator = () => (
-  <img src={arowup} alt="Down Arrow"  />
+  <img src={arowup} alt="Up Arrow"  />
 );
 
 const DownArrowIndicator = () => (
   <img src={arowdown} alt="Down Arrow"  />
 );
 
-// Performance Button Component with arrow
-const PerformanceButton = ({ text, onClick }: { text: string, onClick: () => void }) => {
-  return (
-    <div className="performance-button-wrapper" onClick={onClick}>
-      <PurpleButtonSM32 text={`${text} →`} />
-    </div>
-  );
-};
-
-// View More Button Component with arrow
-const ViewMoreButton = ({ text, onClick }: { text: string, onClick: () => void }) => {
-  return (
-    <div className="view-more-button-wrapper" onClick={onClick}>
-      <PurpleButtonSM32 text={`${text} →`} />
-    </div>
-  );
-};
-
-// Let's create a referral illustration component
-const ReferralIllustration = () => (
-  <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <g>
-      <path d="M90 10C45.8 10 10 45.8 10 90c0 44.2 35.8 80 80 80s80-35.8 80-80c0-44.2-35.8-80-80-80z" fill="#F5F0FA"/>
-      <g>
-        <path d="M61 65c0-3.3 2.7-6 6-6h46c3.3 0 6 2.7 6 6v50c0 3.3-2.7 6-6 6H67c-3.3 0-6-2.7-6-6V65z" fill="#8F27CE"/>
-        <text x="90" y="95" font-family="Arial" font-size="24" font-weight="bold" fill="white" text-anchor="middle">200</text>
-      </g>
-      <g>
-        <circle cx="50" cy="85" r="25" fill="#FFD6C2"/>
-        <path d="M50 70c-8.3 0-15 6.7-15 15s6.7 15 15 15c4.1 0 7.8-1.6 10.6-4.3l-5.3-5.3c-1.4 1.4-3.2 2.1-5.3 2.1-4.1 0-7.5-3.4-7.5-7.5s3.4-7.5 7.5-7.5 7.5 3.4 7.5 7.5c0 1-.2 2-.6 2.9l5.7 5.7c1.7-2.7 2.7-5.9 2.7-9.4 0-8.3-6.7-15-15-15z" fill="#FF7F50"/>
-      </g>
-      <g>
-        <circle cx="130" cy="85" r="25" fill="#FFD6C2"/>
-        <path d="M130 70c8.3 0 15 6.7 15 15s-6.7 15-15 15c-4.1 0-7.8-1.6-10.6-4.3l5.3-5.3c1.4 1.4 3.2 2.1 5.3 2.1 4.1 0 7.5-3.4 7.5-7.5s-3.4-7.5-7.5-7.5-7.5 3.4-7.5 7.5c0 1 .2 2 .6 2.9l-5.7 5.7c-1.7-2.7-2.7-5.9-2.7-9.4 0-8.3 6.7-15 15-15z" fill="#FF7F50"/>
-      </g>
-      <path d="M60 85h60" stroke="#8F27CE" strokeWidth="2" strokeDasharray="4 4"/>
-    </g>
+// Lock icons
+const LockIcon = ({ locked }: { locked: boolean }) => (
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M36 16h-2v-4c0-5.52-4.48-10-10-10S14 6.48 14 12v4h-2c-2.2 0-4 1.8-4 4v20c0 2.2 1.8 4 4 4h24c2.2 0 4-1.8 4-4V20c0-2.2-1.8-4-4-4zm-12 18c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4zm6.2-18H17.8v-4c0-3.42 2.78-6.2 6.2-6.2 3.42 0 6.2 2.78 6.2 6.2v4z" fill={locked ? "#FFD700" : "#FFD700"}/>
   </svg>
 );
 
 const ReferralProgramPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [data, setData] = useState(mockReferralData);
-  const [currentBonus, setCurrentBonus] = useState("5%");
   const [isCopied, setIsCopied] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const { 
+    referralData, 
+    loading, 
+    error, 
+    getReferralLink, 
+    requestPayout,
+    isReferralPassActive,
+    getReferralPassTimeRemaining
+  } = useReferralProgram();
+
+  // Timer state for countdown
+  const [timeRemaining, setTimeRemaining] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+  } | null>(null);
+
+  // Update the timer every second
+  useEffect(() => {
+    if (!referralData) return;
+
+    const timer = setInterval(() => {
+      const remaining = getReferralPassTimeRemaining();
+      setTimeRemaining(remaining);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [referralData, getReferralPassTimeRemaining]);
 
   // Function to copy referral code to clipboard
   const copyReferralCode = () => {
-    navigator.clipboard.writeText(data.code);
+    if (!referralData) return;
+    
+    const referralLink = getReferralLink();
+    navigator.clipboard.writeText(referralLink);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
@@ -124,9 +108,12 @@ const ReferralProgramPage: React.FC = () => {
   };
 
   // Function to handle payout request
-  const handleRequestPayout = () => {
-    // This would make an API call to request a payout
-    console.log('Requesting payout');
+  const handleRequestPayout = async () => {
+    const success = await requestPayout();
+    if (success) {
+      // Show success message
+      console.log('Payout requested successfully');
+    }
   };
 
   // Function to book a photoshoot
@@ -134,29 +121,103 @@ const ReferralProgramPage: React.FC = () => {
     navigate('/photoshoot-booking');
   };
 
+  // Function to open share modal
+  const handleOpenShareModal = () => {
+    setShowShareModal(true);
+  };
+
+  // Function to share on social media
+  const handleShare = (platform: 'facebook' | 'whatsapp' | 'twitter' | 'instagram') => {
+    const referralLink = getReferralLink();
+    const message = `Download Kaari and get 200 MAD off your next booking using code ${referralData?.referralCode}!`;
+    
+    let shareUrl = '';
+    
+    switch (platform) {
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}&quote=${encodeURIComponent(message)}`;
+        break;
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(message + ' ' + referralLink)}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}&url=${encodeURIComponent(referralLink)}`;
+        break;
+      case 'instagram':
+        // Instagram doesn't have a direct sharing API, but we can open Instagram
+        shareUrl = 'https://www.instagram.com/';
+        alert('Copy your referral link and share it on Instagram!');
+        break;
+    }
+    
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   // Component for the copy button with custom styling
   const CopyButton = () => {
     const [copied, setCopied] = useState(false);
     
     const handleCopy = () => {
-      navigator.clipboard.writeText("ABC1234");
+      const referralLink = getReferralLink();
+      navigator.clipboard.writeText(referralLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     };
     
     return (
-      <div className="copy-button-wrapper">
-        <button className="copy-button" onClick={handleCopy}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="24" height="24" fill="none"/>
-            <path d="M8 4V16H20V4H8Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M16 16V20H4V8H8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          {copied && <div className="tooltip">Copied!</div>}
-        </button>
-      </div>
+      <button className="copy-button" onClick={handleCopy}>
+        {copied ? 'Copied!' : 'Copy link'} 
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="24" height="24" fill="none"/>
+          <path d="M8 4V16H20V4H8Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M16 16V20H4V8H8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
     );
   };
+
+  // Render loading state
+  if (loading) {
+    return (
+      <ReferralProgramPageStyle>
+        <div className="page-header">
+          <h2>Kaari's Referral Program</h2>
+        </div>
+        <div className="loading">Loading referral program data...</div>
+      </ReferralProgramPageStyle>
+    );
+  }
+
+  // Render error state
+  if (error) {
+    return (
+      <ReferralProgramPageStyle>
+        <div className="page-header">
+          <h2>Kaari's Referral Program</h2>
+        </div>
+        <div className="error">Error: {error}</div>
+      </ReferralProgramPageStyle>
+    );
+  }
+
+  // If no referral data, show a message
+  if (!referralData) {
+    return (
+      <ReferralProgramPageStyle>
+        <div className="page-header">
+          <h2>Kaari's Referral Program</h2>
+        </div>
+        <div className="no-data">No referral program data available.</div>
+      </ReferralProgramPageStyle>
+    );
+  }
+
+  // Determine if the user has met requirements to activate the referral pass
+  const hasMetRequirements = 
+    referralData.referralPass.listingsSincePass >= referralData.referralPass.listingRequirement ||
+    referralData.referralPass.bookingsSincePass >= referralData.referralPass.bookingRequirement;
 
   return (
     <ReferralProgramPageStyle>
@@ -166,11 +227,285 @@ const ReferralProgramPage: React.FC = () => {
 
       <div className="cards-layout">
         <div className="main-column">
-        <ReferralPassGreenSkeleton />
-        <YourReferralLinkCard />
+          {/* Referral Pass Card - Show different UI based on active state */}
+          <div className={`card referral-pass-card ${isReferralPassActive() ? 'active' : hasMetRequirements ? 'expired' : 'onboarding'}`}>
+            <div className="card-header">
+              <h2>Referral Pass</h2>
+            </div>
 
-          {/* Current Performance Card */}
-          <YourEarningsCalculatorCard />
+            <div className="referral-pass-content">
+              {isReferralPassActive() ? (
+                <>
+                  {/* Active Pass UI */}
+                  <div className="countdown-timer">
+                    <div className="timer-block days">
+                      <span className="time">{timeRemaining?.days || 0}</span>
+                      <span className="label">Days</span>
+                    </div>
+                    <span className="separator">:</span>
+                    <div className="timer-block hours">
+                      <span className="time">{String(timeRemaining?.hours || 0).padStart(2, '0')}</span>
+                      <span className="label">Hours</span>
+                    </div>
+                    <span className="separator">:</span>
+                    <div className="timer-block minutes">
+                      <span className="time">{String(timeRemaining?.minutes || 0).padStart(2, '0')}</span>
+                      <span className="label">Minutes</span>
+                    </div>
+                    <span className="separator">:</span>
+                    <div className="timer-block seconds">
+                      <span className="time">{String(timeRemaining?.seconds || 0).padStart(2, '0')}</span>
+                      <span className="label">Seconds</span>
+                    </div>
+                  </div>
+                  <div className="until-renewal">Until Renewal</div>
+
+                  <div className="pass-status active">
+                    <div className="lock-icon">
+                      <LockIcon locked={false} />
+                    </div>
+                    <div className="status-text">
+                      <h3>Your Pass is Active!</h3>
+                      <p>Valid until: {referralData.referralPass.expiryDate.toLocaleDateString()}</p>
+                    </div>
+                  </div>
+
+                  <div className="progress-metrics">
+                    <div className="metric-box">
+                      <h4>Listings Since Pass</h4>
+                      <div className="metric-value">
+                        {referralData.referralPass.listingsSincePass}/{referralData.referralPass.listingRequirement}
+                      </div>
+                    </div>
+                    <div className="metric-box">
+                      <h4>Bookings Since Pass</h4>
+                      <div className="metric-value">
+                        {referralData.referralPass.bookingsSincePass}/{referralData.referralPass.bookingRequirement}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pass-info">
+                    <InfoIcon /> List {referralData.referralPass.listingRequirement} properties or get {referralData.referralPass.bookingRequirement} bookings to keep your Pass!
+                  </div>
+                </>
+              ) : hasMetRequirements ? (
+                <>
+                  {/* Expired Pass UI */}
+                  <div className="countdown-timer expired">
+                    <div className="timer-block days">
+                      <span className="time">0</span>
+                      <span className="label">Days</span>
+                    </div>
+                    <span className="separator">:</span>
+                    <div className="timer-block hours">
+                      <span className="time">00</span>
+                      <span className="label">Hours</span>
+                    </div>
+                    <span className="separator">:</span>
+                    <div className="timer-block minutes">
+                      <span className="time">00</span>
+                      <span className="label">Minutes</span>
+                    </div>
+                    <span className="separator">:</span>
+                    <div className="timer-block seconds">
+                      <span className="time">00</span>
+                      <span className="label">Seconds</span>
+                    </div>
+                  </div>
+                  <div className="until-renewal">Until Renewal</div>
+
+                  <div className="pass-status expired">
+                    <div className="lock-icon">
+                      <LockIcon locked={true} />
+                    </div>
+                    <div className="status-text">
+                      <h3>Your Pass Expired!</h3>
+                      <p>Valid until: {referralData.referralPass.expiryDate.toLocaleDateString()}</p>
+                    </div>
+                  </div>
+
+                  <div className="progress-metrics">
+                    <div className="metric-box">
+                      <h4>Listings Since Pass</h4>
+                      <div className="metric-value">
+                        {referralData.referralPass.listingsSincePass}/{referralData.referralPass.listingRequirement}
+                      </div>
+                    </div>
+                    <div className="metric-box">
+                      <h4>Bookings Since Pass</h4>
+                      <div className="metric-value">
+                        {referralData.referralPass.bookingsSincePass}/{referralData.referralPass.bookingRequirement}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pass-info">
+                    <InfoIcon /> List {referralData.referralPass.listingRequirement} properties or get {referralData.referralPass.bookingRequirement} bookings to keep your Pass!
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Onboarding/Welcome UI */}
+                  <div className="welcome-message">
+                    <h3>Welcome to Kaari's Referral Program!</h3>
+                    <p>To get access to your Referral Link, You need to fit the requirements shown below.</p>
+                  </div>
+
+                  <div className="progress-metrics onboarding">
+                    <div className="metric-box">
+                      <h4>Listings Required</h4>
+                      <div className="metric-value">
+                        {referralData.referralPass.listingsSincePass}/{referralData.referralPass.listingRequirement}
+                      </div>
+                    </div>
+                    <div className="metric-box">
+                      <h4>Bookings Required</h4>
+                      <div className="metric-value">
+                        {referralData.referralPass.bookingsSincePass}/{referralData.referralPass.bookingRequirement}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="onboarding-illustration">
+                    <img src="/public/referral-illustration.svg" alt="Referral Illustration" />
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Your Referral Link Card - Only show if pass is active */}
+          {isReferralPassActive() && (
+            <div className="card referral-link-card">
+              <div className="card-header">
+                <h2>Your Referral Link</h2>
+              </div>
+
+              <div className="referral-link-content">
+                <div className="link-input-group">
+                  <input 
+                    type="text" 
+                    value={getReferralLink()} 
+                    readOnly 
+                    className="referral-link-input" 
+                  />
+                  <button className="copy-icon" onClick={copyReferralCode}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="white"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <div className="referral-actions">
+                  <button className="share-button" onClick={handleOpenShareModal}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 5.12548 15.0077 5.24917 15.0227 5.37061L8.08261 9.12833C7.54305 8.43386 6.7914 8 5.94737 8C4.32343 8 3 9.34315 3 11C3 12.6569 4.32343 14 5.94737 14C6.7914 14 7.54305 13.5661 8.08261 12.8717L15.0227 16.6294C15.0077 16.7508 15 16.8745 15 17C15 18.6569 16.3431 20 18 20C19.6569 20 21 18.6569 21 17C21 15.3431 19.6569 14 18 14C17.1559 14 16.4043 14.4338 15.8647 15.1282L8.92465 11.3706C8.93965 11.2492 8.94737 11.1255 8.94737 11C8.94737 10.8745 8.93965 10.7508 8.92465 10.6294L15.8647 6.87175C16.4043 7.56618 17.1559 8 18 8Z" fill="white"/>
+                    </svg>
+                    Share
+                  </button>
+                </div>
+
+                <div className="referral-info">
+                  <p>Give tenants your unique promocode. They get 200 MAD off, and you earn a bonus! You can scan the QR code to use the referral link fast.</p>
+                </div>
+
+                <div className="qr-code-container">
+                  <QRCodeSVG 
+                    value={getReferralLink()}
+                    size={120}
+                    bgColor={"#ffffff"}
+                    fgColor={"#8F27CE"}
+                    level={"H"}
+                    includeMargin={true}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Free Photoshoot Banner */}
+          <div className="card photoshoot-banner">
+            <div className="photoshoot-content">
+              <div className="photoshoot-text">
+                <h3>List your property with our</h3>
+                <h2>Free Photoshoot!</h2>
+              </div>
+              <button className="book-photoshoot-btn" onClick={handleBookPhotoshoot}>
+                Book a Photoshoot
+              </button>
+            </div>
+            <div className="photoshoot-image">
+              <img src="/assets/images/camera-girl.svg" alt="Photographer" />
+            </div>
+          </div>
+
+          {/* Earnings Calculator Card */}
+          <div className="card earnings-calculator">
+            <div className="card-header">
+              <h2>Your Earnings Calculator</h2>
+            </div>
+            
+            <div className="calculator-content">
+              <div className="sliders">
+                <div className="slider-group">
+                  <div className="slider-label">
+                    <span>Average Monthly Referrals</span>
+                    <span className="slider-value">3</span>
+                  </div>
+                  <div className="slider-container">
+                    <span className="min-value">0</span>
+                    <input type="range" min="0" max="50" value="3" className="slider" />
+                    <span className="max-value">50</span>
+                  </div>
+                </div>
+                
+                <div className="slider-group">
+                  <div className="slider-label">
+                    <span>Average Tenant Rent</span>
+                    <span className="slider-value">300</span>
+                  </div>
+                  <div className="slider-container">
+                    <span className="min-value">0</span>
+                    <input type="range" min="0" max="500" value="300" className="slider" />
+                    <span className="max-value">500</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="calculator-results">
+                <div className="monthly-earnings">
+                  <h3>Monthly earnings</h3>
+                  <div className="earnings-amount">1200 MAD</div>
+                  
+                  <div className="earnings-details">
+                    <div className="detail-row">
+                      <span>First rent's bonus</span>
+                      <span>10%</span>
+                    </div>
+                    <div className="detail-row">
+                      <span>Successful Bookings</span>
+                      <span>10</span>
+                    </div>
+                    <div className="detail-row">
+                      <span>Total Referrals</span>
+                      <span>10</span>
+                    </div>
+                    <div className="detail-row">
+                      <span>Annual earnings</span>
+                      <span>14400 MAD</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="calculator-footer">
+              <button className="book-photoshoot-btn" onClick={handleBookPhotoshoot}>
+                Book a Photoshoot
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="sidebar">
@@ -180,8 +515,6 @@ const ReferralProgramPage: React.FC = () => {
               <h2>Your Progress</h2>
             </div>
 
-            <div className="progress-divider"></div>
-
             <div className="progress-stats-row">
               <div className="stat-col">
                 <span className="stat-label">Total Referrals</span>
@@ -189,7 +522,7 @@ const ReferralProgramPage: React.FC = () => {
                   <span className="trend-indicator up">
                     <UpArrowIndicator />
                   </span>
-                  10
+                  {referralData.referralStats.totalReferrals}
                 </span>
               </div>
               <div className="stat-col">
@@ -198,7 +531,7 @@ const ReferralProgramPage: React.FC = () => {
                   <span className="trend-indicator down">
                     <DownArrowIndicator />
                   </span>
-                  7
+                  {referralData.referralStats.successfulBookings}
                 </span>
               </div>
             </div>
@@ -206,32 +539,96 @@ const ReferralProgramPage: React.FC = () => {
             <div className="earnings-row">
               <div className="earning-col">
                 <span className="stat-label">Monthly earnings</span>
-                <span className="stat-value">1200 MAD</span>
+                <span className="stat-value">{referralData.referralStats.monthlyEarnings} MAD</span>
               </div>
               <div className="earning-col">
                 <span className="stat-label">Annual earnings</span>
-                <span className="stat-value">14400 MAD</span>
+                <span className="stat-value">{referralData.referralStats.annualEarnings} MAD</span>
               </div>
             </div>
 
             <div className="progress-card-buttons">
-              <div className="button-wrapper">
-                <PurpleButtonMB48 
-                  text="Request Payout" 
-                  onClick={handleRequestPayout}
-                />
+              <button className="request-payout-btn" onClick={handleRequestPayout}>
+                Request Payout
+              </button>
+              <button className="performance-details-btn" onClick={handleViewPerformance}>
+                Performance Details
+              </button>
+            </div>
+          </div>
+          
+          {/* Need Help Card */}
+          <div className="card help-card">
+            <div className="card-header">
+              <h2>Need Help?</h2>
+              <div className="help-icon">?</div>
+            </div>
+            
+            <div className="help-links">
+              <div className="help-link">
+                <span>When will I get my payout?</span>
+                <ArrowRightIcon />
               </div>
-              <div className="button-wrapper">
-                <BpurpleButtonMB48 
-                  text="Performance Details" 
-                  onClick={handleViewPerformance}
-                />
+              <div className="help-link">
+                <span>How payouts work?</span>
+                <ArrowRightIcon />
+              </div>
+              <div className="help-link">
+                <span>My Transaction history</span>
+                <ArrowRightIcon />
               </div>
             </div>
           </div>
-          <NeedHelpCardComponent />
         </div>
       </div>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="share-modal-overlay">
+          <div className="share-modal">
+            <div className="share-modal-header">
+              <h2>Share Your Code</h2>
+              <button className="close-btn" onClick={() => setShowShareModal(false)}>×</button>
+            </div>
+            
+            <div className="share-modal-content">
+              <div className="share-text">
+                <p>Download Kaari and get 200 MAD off your next booking using code {referralData.referralCode}!</p>
+                <p className="share-link">{getReferralLink()}</p>
+              </div>
+              
+              <div className="share-options">
+                <div className="share-option" onClick={() => handleShare('facebook')}>
+                  <div className="share-icon facebook">f</div>
+                  <span>Facebook</span>
+                </div>
+                <div className="share-option" onClick={() => handleShare('whatsapp')}>
+                  <div className="share-icon whatsapp">w</div>
+                  <span>WhatsApp</span>
+                </div>
+                <div className="share-option" onClick={() => handleShare('instagram')}>
+                  <div className="share-icon instagram">i</div>
+                  <span>Instagram</span>
+                </div>
+                <div className="share-option" onClick={() => handleShare('twitter')}>
+                  <div className="share-icon twitter">x</div>
+                  <span>X</span>
+                </div>
+              </div>
+              
+              <div className="promo-code-banner">
+                <div className="promo-icon">%</div>
+                <p>Promo code <strong>{referralData.referralCode}</strong> will be applied - 200 MAD discount!</p>
+              </div>
+              
+              <div className="share-modal-buttons">
+                <button className="close-button" onClick={() => setShowShareModal(false)}>Close</button>
+                <CopyButton />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </ReferralProgramPageStyle>
   );
 };

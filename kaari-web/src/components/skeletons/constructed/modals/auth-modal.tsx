@@ -313,6 +313,7 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: 'signin' | 'register';
+  referralCode?: string | null;
   onSuccess?: () => void;
 }
 
@@ -320,6 +321,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   isOpen,
   onClose,
   initialMode = 'signin',
+  referralCode = null,
   onSuccess
 }) => {
   const navigate = useNavigate();
@@ -333,6 +335,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAdvertiserMode, setIsAdvertiserMode] = useState(false);
   const [showNameField, setShowNameField] = useState(false);
+  const [currentReferralCode, setCurrentReferralCode] = useState<string | null>(null);
   
   // Use auth context
   const { signIn, signUp, signInWithGooglePopup, error, clearError, forceUpdate } = useAuth();
@@ -343,6 +346,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   // Track if a blocked user message has already been shown
   const [hasShownBlockedMessage, setHasShownBlockedMessage] = useState(false);
+
+  // Update referral code when prop changes
+  useEffect(() => {
+    if (referralCode) {
+      setCurrentReferralCode(referralCode);
+    }
+  }, [referralCode]);
 
   // Listen for successful auth events to close modal
   useEffect(() => {
@@ -559,7 +569,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       setErrorMessage(null);
       
       try {
-        await signIn(email, password);
+        // If we have a referral code and this is a new registration, sign up instead of signing in
+        if (currentReferralCode && initialMode === 'register') {
+          // We need to collect the name first
+          if (!showNameField) {
+            setShowNameField(true);
+            setIsSubmitting(false);
+            return;
+          }
+          
+          // If we have the name, proceed with registration
+          if (name.trim()) {
+            await signUp(email, password, name, 'client', currentReferralCode);
+            toast.auth.registrationSuccess();
+            toast.custom('200 MAD discount applied to your account!', { type: 'success' });
+          } else {
+            setErrorMessage('Please enter your full name');
+            setIsSubmitting(false);
+            return;
+          }
+        } else {
+          // Regular sign in
+          await signIn(email, password);
+        }
         
         // If we get here, it means the sign in was successful
         if (onSuccess) onSuccess();
@@ -567,7 +599,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         // Clear fields for security
         setEmail('');
         setPassword('');
+        setName('');
         setShowPassword(false);
+        setShowNameField(false);
         
       } catch (error: any) {
         console.error('Auth error:', error);

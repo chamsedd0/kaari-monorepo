@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PerformancePageStyle } from './styles';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -8,59 +8,7 @@ import IconVerified from '../../../../../components/skeletons/icons/Icon_Verifie
 import iconinfo from '../../../../../components/skeletons/icons/Icon_Info2.svg'
 import { PurpleButtonMB48 } from "../../../../../components/skeletons/buttons/purple_MB48";
 import { ReferralHistoryTable } from './styles';
-
-// Mock data for the referral program performance (replace with actual API calls later)
-const mockPerformanceData = {
-  totalReferrals: 10,
-  successfulBookings: 7,
-  totalEarnings: 1200,
-  pendingPayouts: 600,
-  currentBonus: '5%',
-  listings: 1,
-  isEligible: true,
-  history: [
-    { 
-      id: 1, 
-      tenant: 'John Price', 
-      status: 'pending', 
-      property: 'Apartment - flat in the center of Agadir',
-      amount: 200,
-      date: new Date(2023, 5, 15)
-    },
-    { 
-      id: 2, 
-      tenant: 'John Price', 
-      status: 'success', 
-      property: 'Apartment - flat in the center of Agadir',
-      amount: 200,
-      date: new Date(2023, 5, 10)
-    },
-    { 
-      id: 3, 
-      tenant: 'John Price', 
-      status: 'pending', 
-      property: 'Apartment - flat in the center of Agadir',
-      amount: 200,
-      date: new Date(2023, 5, 5)
-    },
-    { 
-      id: 4, 
-      tenant: 'John Price', 
-      status: 'success', 
-      property: 'Apartment - flat in the center of Agadir',
-      amount: 200,
-      date: new Date(2023, 4, 28)
-    },
-    { 
-      id: 5, 
-      tenant: 'John Price', 
-      status: 'success', 
-      property: 'Apartment - flat in the center of Agadir',
-      amount: 200,
-      date: new Date(2023, 4, 20)
-    }
-  ]
-};
+import { useReferralProgram } from '../../../../../hooks/useReferralProgram';
 
 // Icons
 const CheckIcon = () => (
@@ -83,7 +31,12 @@ const DownArrowIndicator = () => (
 const PerformancePage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [data, setData] = useState(mockPerformanceData);
+  const { 
+    referralData, 
+    loading, 
+    error, 
+    requestPayout
+  } = useReferralProgram();
 
   // Function to handle going back to the main referral program page
   const handleBackClick = () => {
@@ -91,10 +44,75 @@ const PerformancePage = () => {
   };
 
   // Function to handle payout request
-  const handleRequestPayout = () => {
-    // This would make an API call to request a payout
-    console.log('Requesting payout');
+  const handleRequestPayout = async () => {
+    const success = await requestPayout();
+    if (success) {
+      // Show success message
+      console.log('Payout requested successfully');
+    }
   };
+
+  // Calculate bonus rate based on listings count
+  const calculateBonusRate = (listingsCount: number): string => {
+    if (listingsCount >= 11) {
+      return "10%";
+    } else if (listingsCount >= 3) {
+      return "8%";
+    } else {
+      return "5%";
+    }
+  };
+
+  // Render loading state
+  if (loading) {
+    return (
+      <PerformancePageStyle>
+        <div className="page-header">
+          <div>
+            <div className="back-link" onClick={handleBackClick}>
+              Back
+            </div>
+            <h1>Your Referral Performance</h1>
+          </div>
+        </div>
+        <div className="loading">Loading performance data...</div>
+      </PerformancePageStyle>
+    );
+  }
+
+  // Render error state
+  if (error) {
+    return (
+      <PerformancePageStyle>
+        <div className="page-header">
+          <div>
+            <div className="back-link" onClick={handleBackClick}>
+              Back
+            </div>
+            <h1>Your Referral Performance</h1>
+          </div>
+        </div>
+        <div className="error">Error: {error}</div>
+      </PerformancePageStyle>
+    );
+  }
+
+  // If no referral data, show a message
+  if (!referralData) {
+    return (
+      <PerformancePageStyle>
+        <div className="page-header">
+          <div>
+            <div className="back-link" onClick={handleBackClick}>
+              Back
+            </div>
+            <h1>Your Referral Performance</h1>
+          </div>
+        </div>
+        <div className="no-data">No performance data available.</div>
+      </PerformancePageStyle>
+    );
+  }
 
   return (
     <PerformancePageStyle>
@@ -117,7 +135,7 @@ const PerformancePage = () => {
               <div className="metric-name">Referrals</div>
               <div className="metric-value">
                 <UpArrowIndicator />
-                <span className="number">10</span>
+                <span className="number">{referralData.referralStats.totalReferrals}</span>
               </div>
             </div>
             
@@ -125,27 +143,27 @@ const PerformancePage = () => {
               <div className="metric-name">Bookings</div>
               <div className="metric-value">
                 <DownArrowIndicator />
-                <span className="number">7</span>
+                <span className="number">{referralData.referralStats.successfulBookings}</span>
               </div>
             </div>
             
             <div className="metric">
               <div className="metric-name">Bonus</div>
               <div className="metric-value">
-                <span className="number purple">5%</span>
+                <span className="number purple">{referralData.referralStats.firstRentBonus}</span>
               </div>
             </div>
             
             <div className="metric">
               <div className="metric-name">Monthly Earnings</div>
               <div className="metric-value">
-                <span className="number purple">1200</span>
+                <span className="number purple">{referralData.referralStats.monthlyEarnings}</span>
                 <span className="currency">MAD</span>
               </div>
             </div>
           </div>
           
-          {/* Bonus Progress Bar */}
+          {/* Bonus Progress Bar - Highlight the appropriate segment based on the current bonus rate */}
           <div className="progress-container">
             <div className="percentage-labels">
               <span>5%</span>
@@ -153,15 +171,23 @@ const PerformancePage = () => {
               <span>10%</span>
             </div>
             <div className="progress-bar">
-              <div className="segment active"></div>
-              <div className="segment"></div>
-              <div className="segment"></div>
+              <div className={`segment ${referralData.referralStats.firstRentBonus === "5%" ? "active" : ""}`}></div>
+              <div className={`segment ${referralData.referralStats.firstRentBonus === "8%" ? "active" : ""}`}></div>
+              <div className={`segment ${referralData.referralStats.firstRentBonus === "10%" ? "active" : ""}`}></div>
             </div>
             <div className="range-labels">
               <span>1-2 listings</span>
               <span>3-10 listings</span>
               <span>11+ listings</span>
             </div>
+          </div>
+          
+          {/* Payout Request Button */}
+          <div className="payout-button-container">
+            <PurpleButtonMB48 
+              text="Request Payout" 
+              onClick={handleRequestPayout}
+            />
           </div>
         </div>
       </div>
@@ -177,13 +203,19 @@ const PerformancePage = () => {
           </tr>
         </thead>
         <tbody>
-          {data.history.map((item) => (
-            <tr key={item.id}>
-              <td>{item.tenant}</td>
-              <td>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</td>
-              <td>{item.property}</td>
+          {referralData.referralHistory.length > 0 ? (
+            referralData.referralHistory.map((item) => (
+              <tr key={item.id}>
+                <td>{item.tenantName}</td>
+                <td>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</td>
+                <td>{item.propertyName || "Not assigned yet"}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={3} className="no-history">No referral history yet</td>
             </tr>
-          ))}
+          )}
         </tbody>
       </ReferralHistoryTable>
     </PerformancePageStyle>

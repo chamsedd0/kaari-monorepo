@@ -118,7 +118,8 @@ export const signUpWithEmail = async (
   email: string, 
   password: string, 
   name: string,
-  role: 'client' | 'advertiser' = 'client'
+  role: 'client' | 'advertiser' = 'client',
+  referralCode?: string | null
 ): Promise<User> => {
   try {
     // Create the user in Firebase Auth
@@ -140,11 +141,29 @@ export const signUpWithEmail = async (
       requests: []
     };
     
+    // Add referral code if provided
+    if (referralCode) {
+      // @ts-ignore - Add referralCode to user document
+      newUser.referralCode = referralCode;
+    }
+    
     await setDoc(doc(db, 'users', firebaseUser.uid), {
       ...newUser,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
+    
+    // Apply referral code if provided
+    if (referralCode) {
+      try {
+        // Import referral service here to avoid circular dependencies
+        const { default: referralService } = await import('../../services/ReferralService');
+        await referralService.applyReferralCode(firebaseUser.uid, referralCode);
+      } catch (referralError) {
+        console.error('Error applying referral code:', referralError);
+        // Don't fail the signup if referral application fails
+      }
+    }
     
     // Return the user data
     return {

@@ -13,6 +13,7 @@ import PhotoshootBookingPage from './pages/photoshoot-booking/page';
 import ThankYouPage from './pages/photoshoot-booking/thank-you';
 import BecomeAdvertiserPage from './pages/become-advertiser/page';
 import AdvertiserThankYouPage from './pages/become-advertiser/thank-you';
+import ClaimDiscountPage from './pages/referral/claim-discount';
 import { 
   EmailVerificationHandler,
   EmailVerificationSuccessPage,
@@ -43,7 +44,6 @@ import { useProfileCompletionReminder } from './hooks/useProfileCompletionRemind
 import { NotificationProvider } from './contexts/notifications/NotificationContext';
 import { ChecklistProvider } from './contexts/checklist/ChecklistContext';
 import NotificationsPage from './pages/notifications';
-import NotificationDebug from './components/skeletons/notifications/NotificationDebug';
 import ProtectedRoute from './components/ProtectedRoute';
 // Import static pages
 import {
@@ -688,6 +688,13 @@ function App() {
             })()
         } 
       />
+      
+      {/* Claim Discount Page */}
+      <Route path="/referral/claim-discount" element={<ClaimDiscountPage />} />
+      
+      {/* Redirects for old claim URLs */}
+      <Route path="/claim-discount" element={<Navigate to="/referral/claim-discount" replace />} />
+      <Route path="/claim" element={<Navigate to="/referral/claim-discount" replace />} />
       
       {/* Default route - redirect to home if no path matched */}
       <Route path="*" element={<Navigate to="/" replace />} />

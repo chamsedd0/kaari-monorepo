@@ -44,7 +44,7 @@ interface StoreState {
   setSelectedRequest: (request: Request | null) => void;
   
   // User actions
-  signUp: (email: string, password: string, name: string, role?: 'client' | 'advertiser') => Promise<User>;
+  signUp: (email: string, password: string, name: string, role?: 'client' | 'advertiser', referralCode?: string | null) => Promise<User>;
   login: (email: string, password: string) => Promise<User>;
   loginWithGoogle: (role?: 'client' | 'advertiser', isNewAdvertiser?: boolean) => Promise<User>;
   logout: () => Promise<void>;
@@ -88,10 +88,10 @@ export const useStore = create<StoreState>()(
         setSelectedRequest: (request) => set({ selectedRequest: request }),
         
         // User actions
-        signUp: async (email, password, name, role) => {
+        signUp: async (email, password, name, role, referralCode) => {
           try {
             set({ authLoading: true });
-            const user = await signUpWithEmail(email, password, name, role);
+            const user = await signUpWithEmail(email, password, name, role, referralCode);
             
             // Ensure userType is set based on role for notification system
             if (user && user.role) {

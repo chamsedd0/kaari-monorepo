@@ -16,7 +16,7 @@ import { AuthModal } from '../modals/auth-modal';
 import { SignOutConfirmationModal } from '../modals/signout-confirmation-modal';
 import { ProfileDropdown } from '../profile-dropdown/profile-dropdown';
 import { signOut } from '../../../../backend/firebase/auth';
-import eventBus, { AUTH_EVENTS } from '../../../../utils/event-bus';
+import eventBus, { AUTH_EVENTS, EventType } from '../../../../utils/event-bus';
 import LanguageSwitcher from '../../language-switcher/language-switcher';
 import { useTranslation } from 'react-i18next';
 import NotificationBell from '../../notifications/NotificationBell';
@@ -267,6 +267,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  const [authModalMode, setAuthModalMode] = useState<'signin' | 'register'>('signin');
+  const [referralCode, setReferralCode] = useState<string | null>(null);
 
   // Handle scroll events for transparent headers
   useEffect(() => {
@@ -284,6 +286,19 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       };
     }
   }, [scrolled, isTransparent]);
+
+  // Listen for OPEN_AUTH_MODAL events
+  useEffect(() => {
+    const unsubscribe = eventBus.on(EventType.OPEN_AUTH_MODAL, (payload) => {
+      setAuthModalMode(payload.initialMode || 'signin');
+      setReferralCode(payload.referralCode || null);
+      setShowAuthModal(true);
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   // Add event listener to document body for auth changes
   useEffect(() => {
@@ -596,7 +611,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       <AuthModal 
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 
-        initialMode="signin"
+        initialMode={authModalMode}
+        referralCode={referralCode}
         onSuccess={handleAuthSuccess}
       />
 
