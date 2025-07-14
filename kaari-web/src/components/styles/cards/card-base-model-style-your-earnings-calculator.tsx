@@ -1,13 +1,22 @@
 import styled from "styled-components";
 import { Theme } from "../../../theme/theme";
 
-export const CardBaseModelStyleYourEarningsCalculator = styled.div`
+interface EarningsCalculatorProps {
+  referralsThumbPos?: number;
+  showReferralsValue?: boolean;
+  referralsValue?: number;
+  rentThumbPos?: number;
+  showRentValue?: boolean;
+  rentValue?: number;
+}
+
+export const CardBaseModelStyleYourEarningsCalculator = styled.div<EarningsCalculatorProps>`
     display: flex;
     flex-direction: column;
     align-items: start;
     justify-content: start;
     width: 100%;
-    padding: 20px;
+    padding: 18px;
     border-radius: ${Theme.borders.radius.lg};
     border:${Theme.borders.primary};
     background: ${Theme.colors.white};
@@ -22,7 +31,7 @@ export const CardBaseModelStyleYourEarningsCalculator = styled.div`
         align-items: center;
         justify-content: space-between;
         width: 100%;
-        gap: 35px;
+
 
         .left-container{
             display: flex;
@@ -31,29 +40,31 @@ export const CardBaseModelStyleYourEarningsCalculator = styled.div`
             justify-content: start;
             margin-top: 50px;
             gap: 20px;
-            width: 60%;
+            width: 50%;
 
             .label-slider-container{
                 display: flex;
                 flex-direction: column;
-                align-items: center;
+                align-items: start;
                 justify-content: start;
                 width: 100%;
-                gap: 16px;
+                gap: 18px;
 
                 .label-text{
-                    font: ${Theme.typography.fonts.text14};
+                    font: ${Theme.typography.fonts.mediumB};
                     color: ${Theme.colors.black};
                 }
 
                 .slider {
                     width: 100%;
-                    height: 8px;
-                    background: ${Theme.colors.secondary};
+                    height: 24px; /* Make the slider height equal to the thumb for easier centering */
+                    background: transparent;
                     border-radius: 4px;
                     outline: none;
                     appearance: none;
                     margin: 0;
+                    position: relative;
+                    z-index: 1;
 
                     &::-webkit-slider-thumb {
                         appearance: none;
@@ -64,52 +75,74 @@ export const CardBaseModelStyleYourEarningsCalculator = styled.div`
                         box-shadow: 0 0 4px rgba(0,0,0,0.1);
                         cursor: pointer;
                         transition: background 0.3s;
+                        margin-top: -8px; /* Center the thumb on an 8px track */
+                        &:active {
+                            background: rgba(207, 171, 229, 1);
+                        }
                     }
 
                     &::-webkit-slider-runnable-track {
                         height: 8px;
                         background: linear-gradient(
                             to right,
-                            ${Theme.colors.primary} 0%,
-                            ${Theme.colors.primary} var(--progress, 50%),
+                            ${Theme.colors.secondary} 0%,
                             ${Theme.colors.secondary} var(--progress, 50%),
-                            ${Theme.colors.secondary} 100%
+                            rgba(245, 228, 255, 1) var(--progress, 50%),
+                            rgba(245, 228, 255, 1) 100%
                         );
                         border-radius: 4px;
                     }
 
                     &::-moz-range-thumb {
-                        width: 32px;
-                        height: 32px;
-                        background: ${Theme.colors.secondary};
-                        border: 4px solid ${Theme.colors.primary};
+                        width: 24px;
+                        height: 24px;
+                        background: ${Theme.colors.white};
                         border-radius: 50%;
+                        box-shadow: 0 0 4px rgba(0,0,0,0.1);
                         cursor: pointer;
+                        border: none;
+                        /* Firefox centers by default, but ensure no border offset */
+                        &:active {
+                            background: rgba(207, 171, 229, 1);
+                        }
                     }
 
                     &::-moz-range-track {
                         height: 8px;
-                        background: ${Theme.colors.secondary};
+                        background: linear-gradient(
+                            to right,
+                            ${Theme.colors.secondary} 0%,
+                            ${Theme.colors.secondary} var(--progress, 50%),
+                            rgba(245, 228, 255, 1) var(--progress, 50%),
+                            rgba(245, 228, 255, 1) 100%
+                        );
                         border-radius: 4px;
                     }
 
                     &::-ms-thumb {
-                        width: 32px;
-                        height: 32px;
-                        background: ${Theme.colors.secondary};
-                        border: 4px solid ${Theme.colors.primary};
+                        width: 24px;
+                        height: 24px;
+                        background: ${Theme.colors.white};
                         border-radius: 50%;
+                        box-shadow: 0 0 4px rgba(0,0,0,0.1);
                         cursor: pointer;
+                        border: none;
+                        margin-top: 0; /* For IE/Edge, may need adjustment */
+                        &:active {
+                            background: rgba(207, 171, 229, 1);
+                        }
                     }
 
                     &::-ms-fill-lower {
-                        background: ${Theme.colors.primary};
+                        background: ${Theme.colors.secondary};
                         border-radius: 4px;
+                        height: 8px;
                     }
 
                     &::-ms-fill-upper {
-                        background: ${Theme.colors.secondary};
+                        background: rgba(245, 228, 255, 1);
                         border-radius: 4px;
+                        height: 8px;
                     }
                 }
             }
@@ -176,6 +209,41 @@ export const CardBaseModelStyleYourEarningsCalculator = styled.div`
             color: ${Theme.colors.black};
 
         }
+    }
+    .slider-wrapper {
+        position: relative;
+        width: 100%;
+        display: flex;
+        align-items: center;
+    }
+    .slider-thumb-value {
+        position: absolute;
+        top: -36px;
+        left: 0;
+        background: #fff;
+        border:${Theme.borders.primary};
+        border-radius: ${Theme.borders.radius.lg};
+        padding: 2px 18px;
+        font: ${Theme.typography.fonts.text14};
+        color: ${Theme.colors.black};
+        pointer-events: none;
+        transition: ease-in;
+        z-index: 2;
+        opacity: 1;
+        display: block;
+        text-align: center;
+    }
+    .slider-thumb-value.referrals-value {
+        left: ${props => props.referralsThumbPos || 0}%;
+        transform: translateX(-50%);
+        opacity: ${props => (props.showReferralsValue ? 1 : 0)};
+        display: ${props => (props.showReferralsValue ? 'block' : 'none')};
+    }
+    .slider-thumb-value.rent-value {
+        left: ${props => props.rentThumbPos || 0}%;
+        transform: translateX(-50%);
+        opacity: ${props => (props.showRentValue ? 1 : 0)};
+        display: ${props => (props.showRentValue ? 'block' : 'none')};
     }
 }
 

@@ -1,15 +1,31 @@
 import React, { useState } from "react";
-import { CardBaseModelStyleYourEarningsCalculator } from "../../styles/cards/card-base-model-style-your-earnings-calculator";
+import { CardBaseModelStyleYourEarningsCalculator as RawCardBaseModelStyleYourEarningsCalculator } from "../../styles/cards/card-base-model-style-your-earnings-calculator";
 import { PurpleButtonMB48 } from "../buttons/purple_MB48";
+
+interface EarningsCalculatorProps {
+  referralsThumbPos?: number;
+  showReferralsValue?: boolean;
+  referralsValue?: number;
+  rentThumbPos?: number;
+  showRentValue?: boolean;
+  rentValue?: number;
+}
+
+const CardBaseModelStyleYourEarningsCalculator = RawCardBaseModelStyleYourEarningsCalculator as React.ComponentType<React.PropsWithChildren<EarningsCalculatorProps>>;
 
 const MIN_REFERRALS = 0;
 const MAX_REFERRALS = 50;
 const MIN_RENT = 0;
 const MAX_RENT = 500;
 
+// Helper to calculate thumb position in percent
+const getThumbPosition = (value: number, min: number, max: number) => ((value - min) / (max - min)) * 100;
+
 export const YourEarningsCalculatorCard = () => {
   const [monthlyReferrals, setMonthlyReferrals] = useState(10);
   const [tenantRent, setTenantRent] = useState(300);
+  const [showReferralsValue, setShowReferralsValue] = useState(false);
+  const [showRentValue, setShowRentValue] = useState(false);
 
   // Example calculation logic (replace with real logic as needed)
   const firstRentBonus = 0.1; // 10%
@@ -19,7 +35,14 @@ export const YourEarningsCalculatorCard = () => {
   const annualEarnings = monthlyEarnings * 12;
 
   return (
-    <CardBaseModelStyleYourEarningsCalculator>
+    <CardBaseModelStyleYourEarningsCalculator
+      referralsThumbPos={getThumbPosition(monthlyReferrals, MIN_REFERRALS, MAX_REFERRALS)}
+      showReferralsValue={showReferralsValue}
+      referralsValue={monthlyReferrals}
+      rentThumbPos={getThumbPosition(tenantRent, MIN_RENT, MAX_RENT)}
+      showRentValue={showRentValue}
+      rentValue={tenantRent}
+    >
       <div className="title">Your Earnings Calculator</div>
       <div className="right-left-container">
         {/* Left Container */}
@@ -27,7 +50,8 @@ export const YourEarningsCalculatorCard = () => {
           {/* Referrals Slider */}
           <div className="label-slider-container">
             <div className="label-text">Average Monthly Referrals</div>
-            <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+            <div className="slider-wrapper">
+              <span className="slider-thumb-value referrals-value">{monthlyReferrals}</span>
               <span>0</span>
               <input
                 className="slider"
@@ -36,29 +60,24 @@ export const YourEarningsCalculatorCard = () => {
                 max={MAX_REFERRALS}
                 value={monthlyReferrals}
                 onChange={e => setMonthlyReferrals(Number(e.target.value))}
-                style={{ margin: "0 12px", flex: 1 }}
+                onMouseDown={() => setShowReferralsValue(true)}
+                onMouseUp={() => setShowReferralsValue(false)}
+                onTouchStart={() => setShowReferralsValue(true)}
+                onTouchEnd={() => setShowReferralsValue(false)}
+                onBlur={() => setShowReferralsValue(false)}
+                onFocus={() => setShowReferralsValue(true)}
+                style={{
+                  '--progress': `${((monthlyReferrals - MIN_REFERRALS) / (MAX_REFERRALS - MIN_REFERRALS)) * 100}%`
+                } as React.CSSProperties}
               />
               <span>{MAX_REFERRALS}</span>
-            </div>
-            <div style={{ marginTop: -32, marginBottom: 8 }}>
-              <span style={{
-                background: "#fff",
-                border: "1px solid #E0E0E0",
-                borderRadius: 20,
-                padding: "2px 18px",
-                fontWeight: 500,
-                fontSize: 18,
-                position: "relative",
-                top: 0,
-                left: 0,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-              }}>{monthlyReferrals}</span>
             </div>
           </div>
           {/* Rent Slider */}
           <div className="label-slider-container">
             <div className="label-text">Average Tenant Rent</div>
-            <div style={{ display: "flex", alignItems: "center", width: "100%" }}>
+            <div className="slider-wrapper">
+              <span className="slider-thumb-value rent-value">{tenantRent}</span>
               <span>0</span>
               <input
                 className="slider"
@@ -67,23 +86,17 @@ export const YourEarningsCalculatorCard = () => {
                 max={MAX_RENT}
                 value={tenantRent}
                 onChange={e => setTenantRent(Number(e.target.value))}
-                style={{ margin: "0 12px", flex: 1 }}
+                onMouseDown={() => setShowRentValue(true)}
+                onMouseUp={() => setShowRentValue(false)}
+                onTouchStart={() => setShowRentValue(true)}
+                onTouchEnd={() => setShowRentValue(false)}
+                onBlur={() => setShowRentValue(false)}
+                onFocus={() => setShowRentValue(true)}
+                style={{
+                  '--progress': `${((tenantRent - MIN_RENT) / (MAX_RENT - MIN_RENT)) * 100}%`
+                } as React.CSSProperties}
               />
               <span>{MAX_RENT}</span>
-            </div>
-            <div style={{ marginTop: -32, marginBottom: 8 }}>
-              <span style={{
-                background: "#fff",
-                border: "1px solid #E0E0E0",
-                borderRadius: 20,
-                padding: "2px 18px",
-                fontWeight: 500,
-                fontSize: 18,
-                position: "relative",
-                top: 0,
-                left: 0,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-              }}>{tenantRent}</span>
             </div>
           </div>
           <div className="button-container">
