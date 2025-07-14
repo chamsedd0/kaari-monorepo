@@ -35,6 +35,9 @@ import {
   MobileStepCounter 
 } from '../../components/checkout/input-fields';
 import Logo from '../../assets/images/purpleLogo.svg';
+import referralService from '../../services/ReferralService';
+import { db } from '../../backend/firebase/config';
+import { doc, updateDoc } from 'firebase/firestore';
 
 // New mobile radio option component
 interface MobileRadioOptionProps {
@@ -845,6 +848,20 @@ const AdvertiserRegistrationPage: React.FC = () => {
         
         // Mark signup as completed
         completeSignup();
+        
+        // Check if the user is a founding partner (signed up before August 1st, 2024)
+        const foundingPartnerEndDate = new Date('2024-08-01');
+        const now = new Date();
+        if (now < foundingPartnerEndDate) {
+          // Set the founding partner flag
+          const userDocRef = doc(db, 'users', userId);
+          await updateDoc(userDocRef, {
+            foundingPartner: true
+          });
+          
+          // Activate the founding partner referral pass
+          await referralService.activateFoundingPartnerPass(userId);
+        }
         
         // Display success message
         toast.showToast('success', t('become_advertiser.toast.success'), t('become_advertiser.toast.registration_success'));

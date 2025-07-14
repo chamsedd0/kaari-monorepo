@@ -8,6 +8,7 @@ import arowup from '../../../../components/skeletons/icons/Icon_arrow_Up.svg'
 import IconVerified from '../../../../components/skeletons/icons/Icon_Verified.svg'
 import { useReferralProgram } from '../../../../hooks/useReferralProgram';
 import { QRCodeSVG } from 'qrcode.react';
+import { useAuth } from '../../../../contexts/auth/AuthContext';
 
 // Icons
 const InfoIcon = () => (
@@ -54,8 +55,10 @@ const ReferralProgramPage: React.FC = () => {
     getReferralLink, 
     requestPayout,
     isReferralPassActive,
-    getReferralPassTimeRemaining
+    getReferralPassTimeRemaining,
+    hasMetReferralPassRequirements
   } = useReferralProgram();
+  const { user } = useAuth();
 
   // Timer state for countdown
   const [timeRemaining, setTimeRemaining] = useState<{
@@ -77,7 +80,15 @@ const ReferralProgramPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [referralData, getReferralPassTimeRemaining]);
 
-  
+  // Function to copy referral code to clipboard
+  const copyReferralCode = () => {
+    if (!referralData) return;
+    
+    const referralLink = getReferralLink();
+    navigator.clipboard.writeText(referralLink);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
 
   // Function to navigate to the performance details
   const handleViewPerformance = () => {
@@ -194,14 +205,19 @@ const ReferralProgramPage: React.FC = () => {
   }
 
   // Determine if the user has met requirements to activate the referral pass
-  const hasMetRequirements = 
-    referralData.referralPass.listingsSincePass >= referralData.referralPass.listingRequirement ||
-    referralData.referralPass.bookingsSincePass >= referralData.referralPass.bookingRequirement;
+  const hasMetRequirements = hasMetReferralPassRequirements();
+  const isFoundingPartner = user?.foundingPartner === true;
 
   return (
     <ReferralProgramPageStyle>
       <div className="page-header">
         <h2>Kaari's Referral Program</h2>
+        {isFoundingPartner && (
+          <div className="founding-partner-badge">
+            Founding Partner
+            <span className="tooltip">As a founding partner, you have access to the referral program for 90 days with no conditions and 0% commission on profits.</span>
+          </div>
+        )}
       </div>
 
       <div className="cards-layout">
@@ -210,37 +226,51 @@ const ReferralProgramPage: React.FC = () => {
           <div className={`card referral-pass-card ${isReferralPassActive() ? 'active' : hasMetRequirements ? 'expired' : 'onboarding'}`}>
             <div className="card-header">
               <h2>Referral Pass</h2>
+              {isFoundingPartner && (
+                <div className="founding-partner-tag">
+                  Founding Partner Access
+                </div>
+              )}
             </div>
 
             <div className="referral-pass-content">
               {isReferralPassActive() ? (
-                <div className="referral-pass-content-container">
+                <>
                   {/* Active Pass UI */}
-                  <div className="countdown-timer-container">
-                    <div className="countdown-timer">
-                      <div className="timer-block days">
-                        <span className="time">{timeRemaining?.days || 0}</span>
-                        <span className="label">Days</span>
-                      </div>
-                      <span className="separator">:</span>
-                      <div className="timer-block hours">
-                        <span className="time">{String(timeRemaining?.hours || 0).padStart(2, '0')}</span>
-                        <span className="label">Hours</span>
-                      </div>
-                      <span className="separator">:</span>
-                      <div className="timer-block minutes">
-                        <span className="time">{String(timeRemaining?.minutes || 0).padStart(2, '0')}</span>
-                        <span className="label">Minutes</span>
-                      </div>
-                      <span className="separator">:</span>
-                      <div className="timer-block seconds">
-                        <span className="time">{String(timeRemaining?.seconds || 0).padStart(2, '0')}</span>
-                        <span className="label">Seconds</span>
-                      </div>
+                  <div className="countdown-timer">
+                    <div className="timer-block days">
+                      <span className="time">{timeRemaining?.days || 0}</span>
+                      <span className="label">Days</span>
                     </div>
-                    <div className="until-renewal">Until Renewal</div>
+                    <span className="separator">·</span>
+                    <div className="timer-block hours">
+                      <span className="time">{String(timeRemaining?.hours || 0).padStart(2, '0')}</span>
+                      <span className="label">Hours</span>
+                    </div>
+                    <span className="separator">·</span>
+                    <div className="timer-block minutes">
+                      <span className="time">{String(timeRemaining?.minutes || 0).padStart(2, '0')}</span>
+                      <span className="label">Minutes</span>
+                    </div>
+                    <span className="separator">·</span>
+                    <div className="timer-block seconds">
+                      <span className="time">{String(timeRemaining?.seconds || 0).padStart(2, '0')}</span>
+                      <span className="label">Seconds</span>
+                    </div>
+                  </div>
+                  <div className="until-renewal">Until Renewal</div>
 
-                    <div className="progress-metrics">
+                  <div className="pass-status active">
+                    <div className="lock-icon">
+                      <LockIcon locked={false} />
+                    </div>
+                    <div className="status-text">
+                      <h3>Your Pass is Active!</h3>
+                      <p>Valid until: {referralData.referralPass.expiryDate.toLocaleDateString()}</p>
+                    </div>
+                  </div>
+
+                  <div className="progress-metrics">
                     <div className="metric-box">
                       <h4>Listings Since Pass</h4>
                       <div className="metric-value">
@@ -255,26 +285,18 @@ const ReferralProgramPage: React.FC = () => {
                     </div>
                   </div>
 
-                  
-
+                  <div className="pass-info">
+                    {isFoundingPartner ? (
+                      <>
+                        <InfoIcon /> As a founding partner, your pass is active for 90 days with no conditions.
+                      </>
+                    ) : (
+                      <>
+                        <InfoIcon /> List {referralData.referralPass.listingRequirement} properties or get {referralData.referralPass.bookingRequirement} bookings to keep your Pass!
+                      </>
+                    )}
                   </div>
-                  
-                  <div className="referral-pass-status-container">
-                    <div className="pass-status active">
-                      <div className="lock-icon">
-                        <LockIcon locked={false} />
-                      </div>
-                      <div className="status-text">
-                        <h3>Your Pass is Active!</h3>
-                        <p>Valid until: {referralData.referralPass.expiryDate.toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                    <div className="pass-info">
-                    <InfoIcon /> List {referralData.referralPass.listingRequirement} properties or get {referralData.referralPass.bookingRequirement} bookings to keep your Pass!
-                  </div>
-                  </div>
-                  
-                </div>
+                </>
               ) : hasMetRequirements ? (
                 <>
                   {/* Expired Pass UI */}

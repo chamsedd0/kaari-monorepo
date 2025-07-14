@@ -61,6 +61,14 @@ export const useReferralProgram = () => {
   const isReferralPassActive = (): boolean => {
     if (!referralData?.referralPass) return false;
     
+    // For founding partners, the pass is active for 90 days without checking conditions
+    if (user?.foundingPartner) {
+      const { expiryDate } = referralData.referralPass;
+      const now = new Date();
+      return expiryDate > now;
+    }
+    
+    // For regular advertisers, check the active flag and expiry date
     const { active, expiryDate } = referralData.referralPass;
     const now = new Date();
     
@@ -94,6 +102,18 @@ export const useReferralProgram = () => {
     };
   };
 
+  // Check if the user has met requirements to activate the referral pass
+  const hasMetReferralPassRequirements = (): boolean => {
+    if (!referralData?.referralPass) return false;
+    
+    // Founding partners automatically meet the requirements
+    if (user?.foundingPartner) return true;
+    
+    const { listingsSincePass, bookingsSincePass, listingRequirement, bookingRequirement } = referralData.referralPass;
+    
+    return listingsSincePass >= listingRequirement || bookingsSincePass >= bookingRequirement;
+  };
+
   return {
     referralData,
     loading,
@@ -102,7 +122,8 @@ export const useReferralProgram = () => {
     requestPayout,
     calculateBonusRate,
     isReferralPassActive,
-    getReferralPassTimeRemaining
+    getReferralPassTimeRemaining,
+    hasMetReferralPassRequirements
   };
 };
 

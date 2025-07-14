@@ -30,6 +30,50 @@ export const ReferralProgramPageStyle = styled.div`
     .header-buttons{
       max-width: 200px;
     }
+    
+    .founding-partner-badge {
+      background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
+      color: #000;
+      padding: 8px 16px;
+      border-radius: ${Theme.borders.radius.md};
+      font: ${Theme.typography.fonts.mediumB};
+      position: relative;
+      cursor: pointer;
+      
+      &:hover .tooltip {
+        visibility: visible;
+        opacity: 1;
+      }
+      
+      .tooltip {
+        visibility: hidden;
+        width: 300px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 10px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        font: ${Theme.typography.fonts.smallM};
+        
+        &::after {
+          content: "";
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          margin-left: -5px;
+          border-width: 5px;
+          border-style: solid;
+          border-color: #333 transparent transparent transparent;
+        }
+      }
+    }
   }
   
   .cards-layout {
@@ -73,6 +117,22 @@ export const ReferralProgramPageStyle = styled.div`
     &.referral-pass-card {
       padding: 0;
       overflow: hidden;
+      position: relative;
+      
+      .card-header {
+        padding: 20px 20px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
+        .founding-partner-tag {
+          background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
+          color: #000;
+          padding: 4px 10px;
+          border-radius: ${Theme.borders.radius.sm};
+          font: ${Theme.typography.fonts.smallB};
+        }
+      }
       
       .referral-pass-content-container {
         display: flex;
@@ -81,10 +141,6 @@ export const ReferralProgramPageStyle = styled.div`
         gap: 20px;
     }
       
-      .card-header {
-        padding: 20px 20px 0;
-      }
-
       .countdown-timer-container {
         display: flex;
         flex-direction: column;

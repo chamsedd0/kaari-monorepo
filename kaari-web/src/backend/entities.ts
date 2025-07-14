@@ -30,6 +30,7 @@ export interface User {
   googleConnected?: boolean;
   googleId?: string;
   googleEmail?: string;
+  foundingPartner?: boolean; // Flag for advertisers who signed up before August 1st, 2024
   identificationDocuments?: {
     frontId?: string;
     backId?: string;

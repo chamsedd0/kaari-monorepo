@@ -170,16 +170,44 @@ class ReferralService {
         const userDoc = await getDoc(userDocRef);
         const userData = userDoc.exists() ? userDoc.data() as User : null;
         
+        // Check if the user is a founding partner
+        const isFoundingPartner = userData?.foundingPartner === true;
+        
+        // For founding partners, ensure their pass is active and set for 90 days
+        let referralPass = {
+          active: data.referralPass?.active || false,
+          expiryDate: data.referralPass?.expiryDate?.toDate() || new Date(),
+          listingsSincePass: data.referralPass?.listingsSincePass || 0,
+          bookingsSincePass: data.referralPass?.bookingsSincePass || 0,
+          listingRequirement: data.referralPass?.listingRequirement || 10,
+          bookingRequirement: data.referralPass?.bookingRequirement || 3
+        };
+        
+        // If founding partner and pass is not active or is about to expire, set it for 90 days
+        if (isFoundingPartner) {
+          const now = new Date();
+          const ninetyDaysFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+          
+          // If pass doesn't exist, is not active, or has less than 80 days remaining, set it for 90 days
+          if (!data.referralPass || 
+              !data.referralPass.active || 
+              (referralPass.expiryDate.getTime() - now.getTime() < 80 * 24 * 60 * 60 * 1000)) {
+            
+            // Update the referral pass in Firestore
+            await updateDoc(referralDocRef, {
+              'referralPass.active': true,
+              'referralPass.expiryDate': Timestamp.fromDate(ninetyDaysFromNow)
+            });
+            
+            // Update our local copy
+            referralPass.active = true;
+            referralPass.expiryDate = ninetyDaysFromNow;
+          }
+        }
+        
         const referralData: ReferralData = {
           referralCode: data.referralCode || this.generateReferralCode(userData?.name || '', userId),
-          referralPass: {
-            active: data.referralPass?.active || false,
-            expiryDate: data.referralPass?.expiryDate?.toDate() || new Date(),
-            listingsSincePass: data.referralPass?.listingsSincePass || 0,
-            bookingsSincePass: data.referralPass?.bookingsSincePass || 0,
-            listingRequirement: data.referralPass?.listingRequirement || 10,
-            bookingRequirement: data.referralPass?.bookingRequirement || 3
-          },
+          referralPass: referralPass,
           referralStats: {
             totalReferrals: data.referralStats?.totalReferrals || 0,
             successfulBookings: data.referralStats?.successfulBookings || 0,
@@ -207,11 +235,18 @@ class ReferralService {
         
         if (userDoc.exists()) {
           const userData = userDoc.data() as User;
+          const isFoundingPartner = userData.foundingPartner === true;
+          
+          // Create default expiry date (30 days for regular users, 90 days for founding partners)
+          const now = new Date();
+          const expiryDays = isFoundingPartner ? 90 : 30;
+          const expiryDate = new Date(now.getTime() + expiryDays * 24 * 60 * 60 * 1000);
+          
           const defaultReferralData: ReferralData = {
             referralCode: this.generateReferralCode(userData.name || '', userId),
             referralPass: {
-              active: false,
-              expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+              active: isFoundingPartner, // Auto-activate for founding partners
+              expiryDate: expiryDate,
               listingsSincePass: 0,
               bookingsSincePass: 0,
               listingRequirement: 10,
@@ -222,7 +257,7 @@ class ReferralService {
               successfulBookings: 0,
               monthlyEarnings: 0,
               annualEarnings: 0,
-              firstRentBonus: "5%"
+              firstRentBonus: "10%"
             },
             referralHistory: []
           };
@@ -248,6 +283,71 @@ class ReferralService {
     });
     
     return unsubscribe;
+  }
+
+  // Activate referral pass for founding partners
+  async activateFoundingPartnerPass(userId: string): Promise<boolean> {
+    try {
+      const userDocRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (!userDoc.exists()) {
+        console.error('User not found');
+        return false;
+      }
+      
+      const userData = userDoc.data() as User;
+      
+      // Check if the user is a founding partner
+      if (!userData.foundingPartner) {
+        console.error('User is not a founding partner');
+        return false;
+      }
+      
+      // Get or create referral data
+      const referralDocRef = doc(db, 'referrals', userId);
+      const referralDoc = await getDoc(referralDocRef);
+      
+      // Set expiry date to 90 days from now
+      const now = new Date();
+      const expiryDate = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+      
+      if (referralDoc.exists()) {
+        // Update existing referral data
+        await updateDoc(referralDocRef, {
+          'referralPass.active': true,
+          'referralPass.expiryDate': Timestamp.fromDate(expiryDate)
+        });
+      } else {
+        // Create new referral data
+        const defaultReferralData = {
+          referralCode: this.generateReferralCode(userData.name || '', userId),
+          referralPass: {
+            active: true,
+            expiryDate: Timestamp.fromDate(expiryDate),
+            listingsSincePass: 0,
+            bookingsSincePass: 0,
+            listingRequirement: 10,
+            bookingRequirement: 3
+          },
+          referralStats: {
+            totalReferrals: 0,
+            successfulBookings: 0,
+            monthlyEarnings: 0,
+            annualEarnings: 0,
+            firstRentBonus: "5%"
+          },
+          referralHistory: []
+        };
+        
+        await setDoc(referralDocRef, defaultReferralData);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error activating founding partner pass:', error);
+      return false;
+    }
   }
 
   // Apply referral code when a user signs up
