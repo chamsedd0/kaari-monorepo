@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ReferralProgramPageStyle } from './styles';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { PurpleButtonSM32 } from '../../../../components/skeletons/buttons/purple_SM32';
-import { BpurpleButtonMB48 } from '../../../../components/skeletons/buttons/border_purple_MB48'
-import { PurpleButtonMB48 } from "../../../../components/skeletons/buttons/purple_MB48";
+
 import arowdown from '../../../../components/skeletons/icons/Icon_arrow_Down.svg'
 import arowup from '../../../../components/skeletons/icons/Icon_arrow_Up.svg'
 import IconVerified from '../../../../components/skeletons/icons/Icon_Verified.svg'
@@ -14,21 +12,13 @@ import { QRCodeSVG } from 'qrcode.react';
 // Icons
 const InfoIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="10" cy="10" r="9.5" stroke="#D1D1D1" />
-    <path d="M10 6V7" stroke="#D1D1D1" strokeWidth="2" strokeLinecap="round" />
-    <path d="M10 10V14" stroke="#D1D1D1" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="10" cy="10" r="9.5" stroke="white" />
+    <path d="M10 6V7" stroke="white" strokeWidth="2" strokeLinecap="round" />
+    <path d="M10 10V14" stroke="white" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
 
-const CheckIcon = () => (
-  <img src={IconVerified} alt="Verified" />
-);
 
-const CopyIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="white"/>
-  </svg>
-);
 
 const ArrowRightIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -87,15 +77,7 @@ const ReferralProgramPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [referralData, getReferralPassTimeRemaining]);
 
-  // Function to copy referral code to clipboard
-  const copyReferralCode = () => {
-    if (!referralData) return;
-    
-    const referralLink = getReferralLink();
-    navigator.clipboard.writeText(referralLink);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
-  };
+  
 
   // Function to navigate to the performance details
   const handleViewPerformance = () => {
@@ -232,42 +214,33 @@ const ReferralProgramPage: React.FC = () => {
 
             <div className="referral-pass-content">
               {isReferralPassActive() ? (
-                <>
+                <div className="referral-pass-content-container">
                   {/* Active Pass UI */}
-                  <div className="countdown-timer">
-                    <div className="timer-block days">
-                      <span className="time">{timeRemaining?.days || 0}</span>
-                      <span className="label">Days</span>
+                  <div className="countdown-timer-container">
+                    <div className="countdown-timer">
+                      <div className="timer-block days">
+                        <span className="time">{timeRemaining?.days || 0}</span>
+                        <span className="label">Days</span>
+                      </div>
+                      <span className="separator">:</span>
+                      <div className="timer-block hours">
+                        <span className="time">{String(timeRemaining?.hours || 0).padStart(2, '0')}</span>
+                        <span className="label">Hours</span>
+                      </div>
+                      <span className="separator">:</span>
+                      <div className="timer-block minutes">
+                        <span className="time">{String(timeRemaining?.minutes || 0).padStart(2, '0')}</span>
+                        <span className="label">Minutes</span>
+                      </div>
+                      <span className="separator">:</span>
+                      <div className="timer-block seconds">
+                        <span className="time">{String(timeRemaining?.seconds || 0).padStart(2, '0')}</span>
+                        <span className="label">Seconds</span>
+                      </div>
                     </div>
-                    <span className="separator">:</span>
-                    <div className="timer-block hours">
-                      <span className="time">{String(timeRemaining?.hours || 0).padStart(2, '0')}</span>
-                      <span className="label">Hours</span>
-                    </div>
-                    <span className="separator">:</span>
-                    <div className="timer-block minutes">
-                      <span className="time">{String(timeRemaining?.minutes || 0).padStart(2, '0')}</span>
-                      <span className="label">Minutes</span>
-                    </div>
-                    <span className="separator">:</span>
-                    <div className="timer-block seconds">
-                      <span className="time">{String(timeRemaining?.seconds || 0).padStart(2, '0')}</span>
-                      <span className="label">Seconds</span>
-                    </div>
-                  </div>
-                  <div className="until-renewal">Until Renewal</div>
+                    <div className="until-renewal">Until Renewal</div>
 
-                  <div className="pass-status active">
-                    <div className="lock-icon">
-                      <LockIcon locked={false} />
-                    </div>
-                    <div className="status-text">
-                      <h3>Your Pass is Active!</h3>
-                      <p>Valid until: {referralData.referralPass.expiryDate.toLocaleDateString()}</p>
-                    </div>
-                  </div>
-
-                  <div className="progress-metrics">
+                    <div className="progress-metrics">
                     <div className="metric-box">
                       <h4>Listings Since Pass</h4>
                       <div className="metric-value">
@@ -282,10 +255,26 @@ const ReferralProgramPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pass-info">
+                  
+
+                  </div>
+                  
+                  <div className="referral-pass-status-container">
+                    <div className="pass-status active">
+                      <div className="lock-icon">
+                        <LockIcon locked={false} />
+                      </div>
+                      <div className="status-text">
+                        <h3>Your Pass is Active!</h3>
+                        <p>Valid until: {referralData.referralPass.expiryDate.toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <div className="pass-info">
                     <InfoIcon /> List {referralData.referralPass.listingRequirement} properties or get {referralData.referralPass.bookingRequirement} bookings to keep your Pass!
                   </div>
-                </>
+                  </div>
+                  
+                </div>
               ) : hasMetRequirements ? (
                 <>
                   {/* Expired Pass UI */}
@@ -294,17 +283,17 @@ const ReferralProgramPage: React.FC = () => {
                       <span className="time">0</span>
                       <span className="label">Days</span>
                     </div>
-                    <span className="separator">:</span>
+                    <span className="separator">·</span>
                     <div className="timer-block hours">
                       <span className="time">00</span>
                       <span className="label">Hours</span>
                     </div>
-                    <span className="separator">:</span>
+                    <span className="separator">·</span>
                     <div className="timer-block minutes">
                       <span className="time">00</span>
                       <span className="label">Minutes</span>
                     </div>
-                    <span className="separator">:</span>
+                    <span className="separator">·</span>
                     <div className="timer-block seconds">
                       <span className="time">00</span>
                       <span className="label">Seconds</span>
@@ -375,49 +364,50 @@ const ReferralProgramPage: React.FC = () => {
           {/* Your Referral Link Card - Only show if pass is active */}
           {isReferralPassActive() && (
             <div className="card referral-link-card">
-              <div className="card-header">
-                <h2>Your Referral Link</h2>
+
+              <div className="referral-link-card-content">
+                <div className="card-header">
+                  <h2>Your Referral Link</h2>
+                </div>
+
+                <div className="referral-link-content">
+                  <div className="link-input-group">
+                    <input 
+                      type="text" 
+                      value={getReferralLink()} 
+                      readOnly 
+                      className="referral-link-input" 
+                    />
+                    <div className="referral-actions">
+                    <button className="share-button" onClick={handleOpenShareModal}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 5.12548 15.0077 5.24917 15.0227 5.37061L8.08261 9.12833C7.54305 8.43386 6.7914 8 5.94737 8C4.32343 8 3 9.34315 3 11C3 12.6569 4.32343 14 5.94737 14C6.7914 14 7.54305 13.5661 8.08261 12.8717L15.0227 16.6294C15.0077 16.7508 15 16.8745 15 17C15 18.6569 16.3431 20 18 20C19.6569 20 21 18.6569 21 17C21 15.3431 19.6569 14 18 14C17.1559 14 16.4043 14.4338 15.8647 15.1282L8.92465 11.3706C8.93965 11.2492 8.94737 11.1255 8.94737 11C8.94737 10.8745 8.93965 10.7508 8.92465 10.6294L15.8647 6.87175C16.4043 7.56618 17.1559 8 18 8Z" fill="white"/>
+                      </svg>
+                      Share
+                    </button>
+                  </div>
+                  </div>
+
+                  
+
+                  <div className="referral-info">
+                    <p>Give tenants your unique promocode. They get 200 MAD off, and you earn a bonus! You can scan the QR code to use the referral link fast.</p>
+                  </div>
+
+                  
+                </div>
+                
               </div>
-
-              <div className="referral-link-content">
-                <div className="link-input-group">
-                  <input 
-                    type="text" 
-                    value={getReferralLink()} 
-                    readOnly 
-                    className="referral-link-input" 
-                  />
-                  <button className="copy-icon" onClick={copyReferralCode}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="white"/>
-                    </svg>
-                  </button>
-                </div>
-
-                <div className="referral-actions">
-                  <button className="share-button" onClick={handleOpenShareModal}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 5.12548 15.0077 5.24917 15.0227 5.37061L8.08261 9.12833C7.54305 8.43386 6.7914 8 5.94737 8C4.32343 8 3 9.34315 3 11C3 12.6569 4.32343 14 5.94737 14C6.7914 14 7.54305 13.5661 8.08261 12.8717L15.0227 16.6294C15.0077 16.7508 15 16.8745 15 17C15 18.6569 16.3431 20 18 20C19.6569 20 21 18.6569 21 17C21 15.3431 19.6569 14 18 14C17.1559 14 16.4043 14.4338 15.8647 15.1282L8.92465 11.3706C8.93965 11.2492 8.94737 11.1255 8.94737 11C8.94737 10.8745 8.93965 10.7508 8.92465 10.6294L15.8647 6.87175C16.4043 7.56618 17.1559 8 18 8Z" fill="white"/>
-                    </svg>
-                    Share
-                  </button>
-                </div>
-
-                <div className="referral-info">
-                  <p>Give tenants your unique promocode. They get 200 MAD off, and you earn a bonus! You can scan the QR code to use the referral link fast.</p>
-                </div>
-
-                <div className="qr-code-container">
-                  <QRCodeSVG 
-                    value={getReferralLink()}
-                    size={120}
-                    bgColor={"#ffffff"}
-                    fgColor={"#8F27CE"}
-                    level={"H"}
-                    includeMargin={true}
-                  />
-                </div>
-              </div>
+              <div className="qr-code-container">
+                    <QRCodeSVG 
+                      value={getReferralLink()}
+                      size={120}
+                      bgColor={"#ffffff"}
+                      fgColor={"#8F27CE"}
+                      level={"H"}
+                      includeMargin={true}
+                    />
+                  </div>
             </div>
           )}
 
@@ -433,7 +423,7 @@ const ReferralProgramPage: React.FC = () => {
               </button>
             </div>
             <div className="photoshoot-image">
-              <img src="/assets/images/camera-girl.svg" alt="Photographer" />
+              <img src="/images/camera-girl.svg" alt="Photographer" />
             </div>
           </div>
 

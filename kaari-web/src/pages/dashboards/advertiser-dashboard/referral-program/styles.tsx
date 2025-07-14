@@ -5,6 +5,10 @@ export const ReferralProgramPageStyle = styled.div`
     display: flex;
     flex-direction: column;
     gap: 24px;
+
+    * {
+      transition: all 0.2s ease;
+    }
   
   .page-header {
     display: flex;
@@ -52,7 +56,6 @@ export const ReferralProgramPageStyle = styled.div`
     border-radius: ${Theme.borders.radius.lg};
     padding: 20px;
     background: #FFFFFF;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     
     h2 {
       font: ${Theme.typography.fonts.extraLargeB};
@@ -64,175 +67,434 @@ export const ReferralProgramPageStyle = styled.div`
       padding: 0;
       overflow: hidden;
       
+      .referral-pass-content-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+    }
+      
       .card-header {
         padding: 20px 20px 0;
       }
+
+      .countdown-timer-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        flex: 1;
+      }
       
       .referral-pass-content {
-        padding: 0 20px 20px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        flex: 1;
       }
       
       &.active {
+        border: none;
+        background: linear-gradient(90deg, #00C2FF 0%, #00E15B 100%);
+
+        h2 {
+          color: white !important;
+          margin-bottom: 0 !important;
+        }
+        
         .countdown-timer {
-          background: linear-gradient(90deg, #00C2FF 0%, #00E15B 100%);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          color: white;
+          flex: 1;
+          background-color: rgba(255, 255, 255, 0.2);
+          border-radius: ${Theme.borders.radius.md};
+          padding: 10px;
+          width: 100%;
+          
+          .timer-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: ${Theme.borders.radius.md};
+            min-width: 60px;
+            flex: 1;
+            
+            .time {
+              font: ${Theme.typography.fonts.extraLargeB};
+              font-size: 32px;
+              line-height: 1;
+            }
+            
+            .label {
+              font: ${Theme.typography.fonts.mediumM};
+              opacity: 0.9;
+              font-size: 12px;
+            }
+          }
+          
+          .separator {
+            font: ${Theme.typography.fonts.extraLargeB};
+            font-size: 32px;
+            margin: 0 5px;
+            line-height: 1;
+          }
         }
         
         .pass-status {
-          background: linear-gradient(90deg, #00C2FF 0%, #00E15B 100%);
+          
+          background-color: rgba(255, 255, 255, 0.2);
+          border-radius: ${Theme.borders.radius.md};
+          padding: 20px;
+          width: 100%;
+          height: 100%;
+          flex: 1;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          
+        }
+
+        .referral-pass-status-container {
+          flex: 1;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-direction: column;
+          gap: 10px;
+        }
+        
+        .progress-metrics {
+          display: flex;
+          background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.2) 100%);
+          border-radius: ${Theme.borders.radius.md};
+          width: 100%;
+          height: 100%;
+          flex: 1;
+          
+          .metric-box {
+            flex: 1;
+            text-align: center;
+            color: white;
+            height: 100%;
+            padding: 20px;
+            
+            h4 {
+              font: ${Theme.typography.fonts.mediumM};
+              color: white;
+              margin: 0 0 5px 0;
+              font-size: 12px;
+            }
+            
+            .metric-value {
+              font: ${Theme.typography.fonts.largeB};
+              color: white;
+            }
+          }
         }
       }
       
       &.expired {
-        .countdown-timer {
-          background: linear-gradient(90deg, #FF5733 0%, #C70039 100%);
+        border: none;
+        background: linear-gradient(90deg, #9C27B0 0%, #E91E63 100%);
+        color: white;
+        position: relative;
+
+        h2 {
+          color: white !important;
         }
-        
+
+        .referral-pass-content-container {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: flex-start;
+          width: 100%;
+          height: 100%;
+        }
+
+        .countdown-timer {
+          display: flex;
+          justify-content: flex-start;
+          align-items: center;
+          padding: 10px;
+          color: white;
+          margin-bottom: 5px;
+
+          .timer-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: ${Theme.borders.radius.md};
+            min-width: 60px;
+
+            .time {
+              font: ${Theme.typography.fonts.extraLargeB};
+              font-size: 32px;
+              line-height: 1;
+            }
+
+            .label {
+              font: ${Theme.typography.fonts.mediumM};
+              opacity: 0.9;
+              font-size: 12px;
+            }
+          }
+
+          .separator {
+            font: ${Theme.typography.fonts.extraLargeB};
+            font-size: 32px;
+            margin: 0 5px;
+            line-height: 1;
+          }
+        }
+
+        .until-renewal {
+          text-align: left;
+          margin: 5px 0 15px 10px;
+          font: ${Theme.typography.fonts.mediumM};
+          color: ${Theme.colors.white};
+          font-size: 12px;
+        }
+
+        .referral-pass-status-container {
+          flex: 1;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-direction: column;
+          gap: 10px;
+        }
+
         .pass-status {
-          background: linear-gradient(90deg, #FF5733 0%, #C70039 100%);
+          display: flex;
+          align-items: center;
+          padding: 15px;
+          color: white;
+          border-radius: ${Theme.borders.radius.md};
+          background-color: rgba(255, 255, 255, 0.2);
+          position: static;
+          max-width: 100%;
+
+          .lock-icon {
+            margin-right: 15px;
+          }
+
+          .status-text {
+            h3 {
+              font: ${Theme.typography.fonts.largeB};
+              margin: 0 0 5px 0;
+            }
+
+            p {
+              font: ${Theme.typography.fonts.mediumM};
+              margin: 0;
+              opacity: 0.9;
+              font-size: 12px;
+            }
+          }
+        }
+
+        .pass-info {
+          display: flex;
+          align-items: center;
+          font: ${Theme.typography.fonts.mediumM};
+          color: white;
+          margin-top: 10px;
+          padding: 0 10px;
+
+          svg {
+            margin-right: 10px;
+          }
+        }
+
+        .progress-metrics {
+          display: flex;
+          background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.2) 100%);
+          border-radius: ${Theme.borders.radius.md};
+          width: 100%;
+          height: 100%;
+          flex: 1;
+          margin-top: 20px;
+          padding: 10px;
+
+          .metric-box {
+            flex: 1;
+            text-align: center;
+            color: white;
+            height: 100%;
+            padding: 20px;
+
+            h4 {
+              font: ${Theme.typography.fonts.mediumM};
+              color: white;
+              margin: 0 0 5px 0;
+              font-size: 12px;
+            }
+
+            .metric-value {
+              font: ${Theme.typography.fonts.largeB};
+              color: white;
+            }
+          }
         }
       }
-      
+
       &.onboarding {
+        border: none;
+        background: linear-gradient(90deg, #8F27CE 0%, #C427CE 100%);
+        color: white;
+
+        h2 {
+          color: white !important;
+        }
+
+        .referral-pass-content-container {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          justify-content: flex-start;
+          width: 100%;
+          height: 100%;
+        }
+
         .welcome-message {
           background: linear-gradient(90deg, #8F27CE 0%, #C427CE 100%);
           color: white;
           padding: 20px;
           border-radius: ${Theme.borders.radius.md};
           margin-bottom: 20px;
-          
+
           h3 {
             font: ${Theme.typography.fonts.largeB};
             margin: 0 0 10px 0;
           }
-          
+
           p {
             font: ${Theme.typography.fonts.mediumM};
             margin: 0;
           }
         }
-        
-        .progress-metrics {
-          background: linear-gradient(90deg, #8F27CE20 0%, #C427CE20 100%);
+
+        .referral-pass-status-container {
+          flex: 1;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-direction: column;
+          gap: 10px;
         }
-        
+
+        .progress-metrics {
+          display: flex;
+          background: linear-gradient(90deg, #8F27CE20 0%, #C427CE20 100%);
+          border-radius: ${Theme.borders.radius.md};
+          width: 100%;
+          height: 100%;
+          flex: 1;
+
+          .metric-box {
+            flex: 1;
+            text-align: center;
+            color: white;
+            height: 100%;
+            padding: 20px;
+
+            h4 {
+              font: ${Theme.typography.fonts.mediumM};
+              color: white;
+              margin: 0 0 5px 0;
+              font-size: 12px;
+            }
+
+            .metric-value {
+              font: ${Theme.typography.fonts.largeB};
+              color: white;
+            }
+          }
+        }
+
         .onboarding-illustration {
           display: flex;
           justify-content: center;
           margin: 20px 0;
-          
+
           img {
             max-width: 200px;
             height: auto;
           }
         }
       }
-      
+
       .countdown-timer {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 20px;
+        padding: 10px;
         color: white;
-        
+
         &.expired {
           opacity: 0.8;
         }
-        
-        .timer-block {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          background: rgba(255, 255, 255, 0.2);
-          padding: 10px;
-          border-radius: ${Theme.borders.radius.md};
-          min-width: 60px;
-          
-          .time {
-            font: ${Theme.typography.fonts.extraLargeB};
-            font-size: 32px;
-          }
-          
-          .label {
-            font: ${Theme.typography.fonts.mediumM};
-            opacity: 0.9;
-          }
-        }
-        
-        .separator {
-          font: ${Theme.typography.fonts.extraLargeB};
-          font-size: 32px;
-          margin: 0 5px;
-        }
       }
-      
+
       .until-renewal {
-        text-align: center;
-        margin: 10px 0;
+        text-align: left;
+        margin: 5px 0 15px 10px;
         font: ${Theme.typography.fonts.mediumM};
-        color: ${Theme.colors.gray2};
+        color: ${Theme.colors.white};
+        font-size: 12px;
       }
-      
+
       .pass-status {
         display: flex;
         align-items: center;
-        padding: 20px;
+        padding: 15px;
         color: white;
         border-radius: ${Theme.borders.radius.md};
-        margin: 20px 0;
-        
+
         .lock-icon {
           margin-right: 15px;
         }
-        
+
         .status-text {
           h3 {
             font: ${Theme.typography.fonts.largeB};
             margin: 0 0 5px 0;
           }
-          
+
           p {
             font: ${Theme.typography.fonts.mediumM};
             margin: 0;
             opacity: 0.9;
+            font-size: 12px;
           }
         }
       }
-      
-      .progress-metrics {
-        display: flex;
-        justify-content: space-between;
-        background: #F9F9F9;
-        padding: 15px;
-        border-radius: ${Theme.borders.radius.md};
-        margin: 20px 0;
-        
-        &.onboarding {
-          background: linear-gradient(90deg, #8F27CE20 0%, #C427CE20 100%);
-        }
-        
-        .metric-box {
-          flex: 1;
-          text-align: center;
-          
-          h4 {
-            font: ${Theme.typography.fonts.mediumM};
-            color: ${Theme.colors.gray2};
-            margin: 0 0 5px 0;
-          }
-          
-          .metric-value {
-            font: ${Theme.typography.fonts.largeB};
-            color: ${Theme.colors.black};
-          }
-        }
-      }
-      
+
       .pass-info {
         display: flex;
         align-items: center;
         font: ${Theme.typography.fonts.mediumM};
-        color: ${Theme.colors.gray2};
-        
+        color: white;
+        margin-top: 10px;
+        padding: 0 10px;
+
         svg {
           margin-right: 10px;
         }
@@ -240,10 +502,22 @@ export const ReferralProgramPageStyle = styled.div`
     }
     
     &.referral-link-card {
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+
+      .referral-link-card-content {
+        flex: 1;
+      }
+      
+
       .referral-link-content {
         display: flex;
         flex-direction: column;
         gap: 20px;
+        width: 100%;
       }
 
       .link-input-group {
@@ -253,34 +527,19 @@ export const ReferralProgramPageStyle = styled.div`
           flex: 1;
           height: 48px;
           padding: 0 15px;
-          border: 1px solid #E0E0E0;
-          border-right: none;
-          border-radius: ${Theme.borders.radius.md} 0 0 ${Theme.borders.radius.md};
+          border: ${Theme.borders.primary};
+          border-radius: ${Theme.borders.radius.extreme};
           font: ${Theme.typography.fonts.mediumM};
           color: ${Theme.colors.gray2};
           background: #F9F9F9;
         }
         
-        .copy-icon {
-            width: 48px;
-            height: 48px;
-          background: ${Theme.colors.secondary};
-            border: none;
-          border-radius: 0 ${Theme.borders.radius.md} ${Theme.borders.radius.md} 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-          
-          &:hover {
-            background: ${Theme.colors.primary};
-          }
-        }
+        
       }
       
       .referral-actions {
         display: flex;
-        margin-top: 16px;
+        margin-left: 10px;
         
         .share-button {
           display: flex;
@@ -289,7 +548,7 @@ export const ReferralProgramPageStyle = styled.div`
           background: ${Theme.colors.secondary};
           color: white;
           border: none;
-          border-radius: ${Theme.borders.radius.md};
+          border-radius: ${Theme.borders.radius.extreme};
           padding: 10px 16px;
           font: ${Theme.typography.fonts.mediumB};
           cursor: pointer;
@@ -309,17 +568,21 @@ export const ReferralProgramPageStyle = styled.div`
       .referral-info {
         font: ${Theme.typography.fonts.mediumM};
         color: ${Theme.colors.gray2};
-        margin-top: 16px;
+
         
         p {
           margin: 0;
+          max-width: 80%;
         }
       }
       
       .qr-code-container {
         display: flex;
         justify-content: center;
-        margin: 10px 0;
+        padding: 4px;
+        border: ${Theme.borders.primary};
+        border-radius: ${Theme.borders.radius.md};
+        
       }
     }
     
