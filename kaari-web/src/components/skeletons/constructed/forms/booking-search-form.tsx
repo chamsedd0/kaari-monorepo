@@ -44,7 +44,33 @@ const BookingSearchForm: React.FC<BookingSearchFormProps> = ({ onSubmit }) => {
     }
     
     if (selectedDate) {
-      params.append("date", selectedDate);
+      // Ensure the date is in the correct format (YYYY-MM-DD)
+      // This ensures consistency with the property list page date format
+      let formattedDate = selectedDate;
+      
+      // If the date includes time part (T), remove it
+      if (selectedDate.includes('T')) {
+        formattedDate = selectedDate.split('T')[0];
+      }
+      
+      // Validate that the date is in YYYY-MM-DD format
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (dateRegex.test(formattedDate)) {
+        console.log(`Using formatted date: ${formattedDate}`);
+        params.append("date", formattedDate);
+      } else {
+        console.error(`Invalid date format: ${selectedDate}, using default`);
+        // Try to parse and reformat the date
+        try {
+          const dateObj = new Date(selectedDate);
+          if (!isNaN(dateObj.getTime())) {
+            formattedDate = dateObj.toISOString().split('T')[0];
+            params.append("date", formattedDate);
+          }
+        } catch (e) {
+          console.error("Error parsing date:", e);
+        }
+      }
     }
     
     // Navigate to properties page with search parameters

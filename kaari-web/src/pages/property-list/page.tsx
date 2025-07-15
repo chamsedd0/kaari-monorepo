@@ -851,27 +851,40 @@ export default function PropertyListPage() {
         return;
       }
       
+      // Normalize date format to ensure consistency
+      let normalizedDate = date;
+      
+      // If date includes time part (T), remove it
+      if (date.includes('T')) {
+        normalizedDate = date.split('T')[0];
+      }
+      
       // Format date for display in filter
-      const dateObj = new Date(date);
+      const dateObj = new Date(normalizedDate);
+      
       // Check if date is valid
       if (isNaN(dateObj.getTime())) {
         console.error('Invalid date string:', date);
         return;
       }
       
-      // Use the ISO format for the date filter
-      const isoDate = date.includes('T') ? date : date + 'T00:00:00';
+      // Re-format to ensure YYYY-MM-DD format
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+      
+      console.log(`Original date: ${date}, Normalized: ${normalizedDate}, Formatted: ${formattedDate}`);
       
       // Prepare date filter to be added when search is executed
       setPendingFilters(prev => {
         // Remove existing date filter if any
         const filtersWithoutDate = prev.filter(filter => filter.type !== 'Date');
-        // Add the new filter to pending filters - use the original date string
-        // This will be converted properly during filtering
-        return [...filtersWithoutDate, { type: 'Date', value: date }];
+        // Add the new filter to pending filters - use the formatted date string
+        return [...filtersWithoutDate, { type: 'Date', value: formattedDate }];
       });
       
-      console.log('Date input changed to:', date);
+      console.log('Date input changed to:', formattedDate);
     } catch (error) {
       console.error('Error processing date:', error);
     }
@@ -1165,27 +1178,39 @@ export default function PropertyListPage() {
         }
         
         // Handle date filter - check if property is available from the selected date
-        if ((filter.includes('-') || filter.includes('/')) && 
+        if ((filter.includes(':') && filter.split(':')[0].trim() === 'Date') || 
+            ((filter.includes('-') || filter.includes('/')) && 
             // Make sure it's not an amenity with a dash
-            ![...arrayBasedFilters.amenities, ...arrayBasedFilters.features].includes(filter)) {
+            ![...arrayBasedFilters.amenities, ...arrayBasedFilters.features].includes(filter))) {
           try {
+            // Extract the actual date value if it's in the format "Date: YYYY-MM-DD"
+            let dateValue = filter;
+            if (filter.includes(':') && filter.split(':')[0].trim() === 'Date') {
+              dateValue = filter.split(':')[1].trim();
+            }
+            
             // Standardize date format from either MM/DD/YYYY or YYYY-MM-DD
             let selectedDate: Date;
             
-            if (filter.includes('/')) {
+            if (dateValue.includes('/')) {
               // Handle MM/DD/YYYY format
-              const [month, day, year] = filter.split('/').map(num => parseInt(num, 10));
+              const [month, day, year] = dateValue.split('/').map(num => parseInt(num, 10));
               selectedDate = new Date(year, month - 1, day);
             } else {
               // Handle YYYY-MM-DD format (possibly with time)
-              selectedDate = new Date(filter.split('T')[0]);
+              selectedDate = new Date(dateValue.split('T')[0]);
             }
+            
+            console.log(`Processing date filter: ${filter}, parsed as: ${selectedDate.toISOString().split('T')[0]}`);
             
             // Skip this filter if the date is invalid
             if (isNaN(selectedDate.getTime())) {
               console.log(`Invalid date filter: ${filter}, skipping`);
               continue;
             }
+            
+            // Reset time portion to midnight to compare dates only
+            selectedDate.setHours(0, 0, 0, 0);
              
             // If the property doesn't have an availableFrom date, we exclude it to be safe
             if (!property.availableFrom) {
@@ -1228,32 +1253,26 @@ export default function PropertyListPage() {
               return false;
             }
             
-            // Check if the date is valid
-            if (isNaN(availableFromDate.getTime())) {
-              console.log(`Property ${property.id} has invalid availableFrom date, filtering out`);
-              return false;
-            }
-            
-            // Reset time components for accurate day comparison
-            selectedDate.setHours(0, 0, 0, 0);
+            // Reset time portion to midnight for fair comparison
             availableFromDate.setHours(0, 0, 0, 0);
             
-            console.log(`Date comparison for property ${property.id}:`, {
-              selectedDate: selectedDate.toISOString(),
-              availableFromDate: availableFromDate.toISOString(),
-              isAvailable: availableFromDate <= selectedDate
-            });
+            // Debug logs
+            console.log(`Property ${property.id} availableFrom: ${availableFromDate.toISOString().split('T')[0]}`);
+            console.log(`Selected date: ${selectedDate.toISOString().split('T')[0]}`);
+            console.log(`Comparison result: ${availableFromDate <= selectedDate ? 'Available' : 'Not available'}`);
             
-            // Property must be available on or before the selected date
+            // Check if the property is available from the selected date
+            // Property is available if its availableFrom date is on or before the selected date
             if (availableFromDate > selectedDate) {
-              console.log(`Property ${property.id} not available from ${selectedDate.toISOString()}, filtering out. Available from: ${availableFromDate.toISOString()}`);
+              console.log(`Property ${property.id} is not available from ${selectedDate.toISOString().split('T')[0]}, filtering out`);
               return false;
             }
             
-            console.log(`Property ${property.id} is available from selected date ${selectedDate.toISOString()}`);
-          } catch (err) {
-            console.error(`Error processing date filter "${filter}"`, err);
-            // Skip this filter rather than excluding all properties due to error
+            console.log(`Property ${property.id} is available from ${selectedDate.toISOString().split('T')[0]}`);
+            continue;
+          } catch (error) {
+            console.error(`Error processing date filter for property ${property.id}:`, error);
+            // Skip this filter if there's an error
             continue;
           }
         }

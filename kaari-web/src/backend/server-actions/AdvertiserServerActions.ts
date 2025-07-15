@@ -172,8 +172,110 @@ export async function getAdvertiserReservationRequests(): Promise<{
   property?: any;
   client?: any;
 }[]> {
-  console.warn('Using placeholder getAdvertiserReservationRequests - implement this properly');
-  return [];
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    
+    if (!user) {
+      console.warn('User not authenticated, cannot fetch reservation requests');
+      return [];
+    }
+    
+    // First, get all properties owned by this advertiser
+    const properties = await getAdvertiserProperties();
+    
+    if (properties.length === 0) {
+      console.log('No properties found for this advertiser');
+      return [];
+    }
+    
+    const propertyIds = properties.map(property => property.id);
+    console.log(`Found ${propertyIds.length} properties for advertiser ${user.uid}:`, propertyIds);
+    
+    // Create a map of properties by ID for easy lookup
+    const propertyMap = properties.reduce((map, property) => {
+      map[property.id] = property;
+      return map;
+    }, {} as Record<string, Property>);
+    
+    // Query requests collection for reservations related to these properties
+    const requestsRef = collection(db, 'requests');
+    const reservationRequests: {
+      reservation: Request;
+      listing?: any;
+      property?: any;
+      client?: any;
+    }[] = [];
+    
+    // We need to use Promise.all to handle multiple queries since Firestore doesn't support OR conditions
+    // across different fields in a single query
+    const queryPromises = propertyIds.map(async (propertyId) => {
+      const q = query(requestsRef, where('propertyId', '==', propertyId));
+      const querySnapshot = await getDocs(q);
+      
+      console.log(`Found ${querySnapshot.size} requests for property ${propertyId}`);
+      
+      // Process each reservation
+      const reservationPromises = querySnapshot.docs.map(async (doc) => {
+        const reservationData = doc.data() as Request;
+        
+        // Add the document ID to the reservation data
+        reservationData.id = doc.id;
+        
+        // Convert Firestore timestamps to JavaScript Date objects
+        if (reservationData.createdAt instanceof Timestamp) {
+          reservationData.createdAt = reservationData.createdAt.toDate();
+        } else if (reservationData.createdAt) {
+          reservationData.createdAt = new Date(reservationData.createdAt);
+        }
+        
+        if (reservationData.updatedAt instanceof Timestamp) {
+          reservationData.updatedAt = reservationData.updatedAt.toDate();
+        } else if (reservationData.updatedAt) {
+          reservationData.updatedAt = new Date(reservationData.updatedAt);
+        }
+        
+        // Get the property data
+        const property = propertyMap[reservationData.propertyId];
+        
+        // Get the client data
+        let client = null;
+        if (reservationData.userId) {
+          try {
+            const userDocRef = doc(db, 'users', reservationData.userId);
+            const userDoc = await getDoc(userDocRef);
+            
+            if (userDoc.exists()) {
+              client = {
+                id: userDoc.id,
+                ...userDoc.data(),
+              };
+            }
+          } catch (error) {
+            console.error(`Error fetching client data for user ${reservationData.userId}:`, error);
+          }
+        }
+        
+        // Add to results
+        reservationRequests.push({
+          reservation: reservationData,
+          property: property || null,
+          client: client,
+        });
+      });
+      
+      await Promise.all(reservationPromises);
+    });
+    
+    // Wait for all property queries to complete
+    await Promise.all(queryPromises);
+    
+    console.log(`Found ${reservationRequests.length} reservation requests for advertiser ${user.uid}`);
+    return reservationRequests;
+  } catch (error) {
+    console.error('Error fetching advertiser reservation requests:', error);
+    return [];
+  }
 }
 
 export async function getAdvertiserPhotoshoots(): Promise<Photoshoot[]> {
@@ -256,8 +358,8 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
 }> {
   try {
     // Query reservations collection for active reservations for this property
-    const reservationsRef = collection(db, 'reservations');
-    const q = query(reservationsRef, where('propertyId', '==', propertyId));
+    const requestsRef = collection(db, 'requests');
+    const q = query(requestsRef, where('propertyId', '==', propertyId));
     const querySnapshot = await getDocs(q);
     
     // Check each reservation status
@@ -301,16 +403,152 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
  * Approve a reservation request
  */
 export async function approveReservationRequest(requestId: string): Promise<boolean> {
-  console.warn('Using placeholder approveReservationRequest - implement this properly');
-  return true;
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    
+    if (!user) {
+      console.warn('User not authenticated, cannot approve reservation request');
+      return false;
+    }
+    
+    // Get the reservation document
+    const reservationRef = doc(db, 'requests', requestId);
+    const reservationDoc = await getDoc(reservationRef);
+    
+    if (!reservationDoc.exists()) {
+      console.error(`Reservation ${requestId} not found`);
+      return false;
+    }
+    
+    const reservationData = reservationDoc.data();
+    
+    // Get the property document to check if the current user is the owner
+    const propertyRef = doc(db, 'properties', reservationData.propertyId);
+    const propertyDoc = await getDoc(propertyRef);
+    
+    if (!propertyDoc.exists()) {
+      console.error(`Property ${reservationData.propertyId} not found`);
+      return false;
+    }
+    
+    const propertyData = propertyDoc.data();
+    
+    // Check if the current user is the property owner
+    // This could be either by advertiserId field or by checking user's properties array
+    let isOwner = false;
+    
+    // Check by advertiserId field
+    if (propertyData.advertiserId === user.uid) {
+      isOwner = true;
+    }
+    
+    // If not found by advertiserId, check user's properties array
+    if (!isOwner) {
+      const userRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists() && userDoc.data().properties) {
+        isOwner = userDoc.data().properties.includes(reservationData.propertyId);
+      }
+    }
+    
+    if (!isOwner) {
+      console.error(`User ${user.uid} is not the owner of property ${reservationData.propertyId}`);
+      return false;
+    }
+    
+    // Update the reservation status to 'accepted'
+    await updateDoc(reservationRef, {
+      status: 'accepted',
+      updatedAt: new Date()
+    });
+    
+    // Notify the user (this would be implemented in a separate service)
+    // For now, just log the action
+    console.log(`Reservation ${requestId} approved by advertiser ${user.uid}`);
+    
+    return true;
+  } catch (error) {
+    console.error('Error approving reservation request:', error);
+    return false;
+  }
 }
 
 /**
  * Reject a reservation request
  */
 export async function rejectReservationRequest(requestId: string): Promise<boolean> {
-  console.warn('Using placeholder rejectReservationRequest - implement this properly');
-  return true;
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    
+    if (!user) {
+      console.warn('User not authenticated, cannot reject reservation request');
+      return false;
+    }
+    
+    // Get the reservation document
+    const reservationRef = doc(db, 'requests', requestId);
+    const reservationDoc = await getDoc(reservationRef);
+    
+    if (!reservationDoc.exists()) {
+      console.error(`Reservation ${requestId} not found`);
+      return false;
+    }
+    
+    const reservationData = reservationDoc.data();
+    
+    // Get the property document to check if the current user is the owner
+    const propertyRef = doc(db, 'properties', reservationData.propertyId);
+    const propertyDoc = await getDoc(propertyRef);
+    
+    if (!propertyDoc.exists()) {
+      console.error(`Property ${reservationData.propertyId} not found`);
+      return false;
+    }
+    
+    const propertyData = propertyDoc.data();
+    
+    // Check if the current user is the property owner
+    // This could be either by advertiserId field or by checking user's properties array
+    let isOwner = false;
+    
+    // Check by advertiserId field
+    if (propertyData.advertiserId === user.uid) {
+      isOwner = true;
+    }
+    
+    // If not found by advertiserId, check user's properties array
+    if (!isOwner) {
+      const userRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists() && userDoc.data().properties) {
+        isOwner = userDoc.data().properties.includes(reservationData.propertyId);
+      }
+    }
+    
+    if (!isOwner) {
+      console.error(`User ${user.uid} is not the owner of property ${reservationData.propertyId}`);
+      return false;
+    }
+    
+    // Update the reservation status to 'rejected'
+    await updateDoc(reservationRef, {
+      status: 'rejected',
+      updatedAt: new Date()
+    });
+    
+    // Notify the user (this would be implemented in a separate service)
+    // For now, just log the action
+    console.log(`Reservation ${requestId} rejected by advertiser ${user.uid}`);
+    
+    return true;
+  } catch (error) {
+    console.error('Error rejecting reservation request:', error);
+    return false;
+  }
 }
 
 /**
