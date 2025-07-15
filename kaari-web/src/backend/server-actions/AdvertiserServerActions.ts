@@ -75,8 +75,56 @@ export async function getAdvertiserStatistics(): Promise<{
 }
 
 export async function getAdvertiserProperties(): Promise<Property[]> {
-  console.warn('Using placeholder getAdvertiserProperties - implement this properly');
-  return [];
+  try {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    
+    if (!user) {
+      console.warn('User not authenticated, cannot fetch properties');
+      return [];
+    }
+    
+    // Query properties collection for properties where advertiserId matches the current user's ID
+    const propertiesRef = collection(db, 'properties');
+    const q = query(propertiesRef, where('advertiserId', '==', user.uid));
+    const querySnapshot = await getDocs(q);
+    
+    // Convert query results to Property objects
+    const properties: Property[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      
+      // Convert Firestore timestamps to JavaScript Date objects
+      const createdAt = data.createdAt instanceof Timestamp 
+        ? data.createdAt.toDate() 
+        : new Date(data.createdAt);
+        
+      const updatedAt = data.updatedAt instanceof Timestamp 
+        ? data.updatedAt.toDate() 
+        : new Date(data.updatedAt);
+        
+      const lastAvailabilityRefresh = data.lastAvailabilityRefresh instanceof Timestamp 
+        ? data.lastAvailabilityRefresh.toDate() 
+        : data.lastAvailabilityRefresh 
+          ? new Date(data.lastAvailabilityRefresh) 
+          : undefined;
+      
+      // Add the property to our array
+      properties.push({
+        id: doc.id,
+        ...data,
+        createdAt,
+        updatedAt,
+        lastAvailabilityRefresh
+      } as Property);
+    });
+    
+    console.log(`Found ${properties.length} properties for advertiser ${user.uid}`);
+    return properties;
+  } catch (error) {
+    console.error('Error fetching advertiser properties:', error);
+    return [];
+  }
 }
 
 export async function getAdvertiserRequests(): Promise<Request[]> {
@@ -172,8 +220,47 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
   hasActiveReservations: boolean;
   reason: 'none' | 'completed' | 'pending' | 'accepted' | 'paid' | 'movedIn';
 }> {
-  console.warn('Using placeholder checkPropertyHasActiveReservations - implement this properly');
-  return { hasActiveReservations: false, reason: 'none' };
+  try {
+    // Query reservations collection for active reservations for this property
+    const reservationsRef = collection(db, 'reservations');
+    const q = query(reservationsRef, where('propertyId', '==', propertyId));
+    const querySnapshot = await getDocs(q);
+    
+    // Check each reservation status
+    let hasActiveReservations = false;
+    let reason: 'none' | 'completed' | 'pending' | 'accepted' | 'paid' | 'movedIn' = 'none';
+    
+    // Priority order for reasons (most restrictive first)
+    const reasonPriority = ['movedIn', 'paid', 'completed', 'accepted', 'pending'] as const;
+    
+    querySnapshot.forEach((doc) => {
+      const reservation = doc.data();
+      
+      // Check for various active statuses
+      if (reservation.status === 'movedIn') {
+        hasActiveReservations = true;
+        reason = 'movedIn';
+        return; // Exit the forEach early since we found the highest priority reason
+      } else if (reservation.status === 'paid' && reason !== 'movedIn') {
+        hasActiveReservations = true;
+        reason = 'paid';
+      } else if (reservation.status === 'completed' && !reasonPriority.slice(0, 2).includes(reason)) {
+        hasActiveReservations = true;
+        reason = 'completed';
+      } else if (reservation.status === 'accepted' && !reasonPriority.slice(0, 3).includes(reason)) {
+        hasActiveReservations = true;
+        reason = 'accepted';
+      } else if (reservation.status === 'pending' && !reasonPriority.slice(0, 4).includes(reason)) {
+        hasActiveReservations = true;
+        reason = 'pending';
+      }
+    });
+    
+    return { hasActiveReservations, reason };
+  } catch (error) {
+    console.error('Error checking property reservations:', error);
+    return { hasActiveReservations: false, reason: 'none' };
+  }
 }
 
 /**
@@ -199,8 +286,27 @@ export async function updatePropertyAvailability(
   propertyId: string,
   isAvailable: boolean
 ): Promise<boolean> {
-  console.warn('Using placeholder updatePropertyAvailability - implement this properly');
-  return true;
+  try {
+    const propertyRef = doc(db, 'properties', propertyId);
+    const propertyDoc = await getDoc(propertyRef);
+    
+    if (!propertyDoc.exists()) {
+      console.error(`Property ${propertyId} not found`);
+      return false;
+    }
+    
+    // Update the property status and record when availability was last refreshed
+    await updateDoc(propertyRef, {
+      status: isAvailable ? 'available' : 'occupied',
+      lastAvailabilityRefresh: new Date(),
+      updatedAt: new Date()
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating property availability:', error);
+    return false;
+  }
 }
 
 /**
