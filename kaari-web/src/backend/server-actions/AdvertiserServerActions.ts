@@ -4,6 +4,7 @@ import { User, Property, Request, ChecklistItem, Review, PhotoshootBooking } fro
 import { getAuth } from 'firebase/auth';
 import { PhotoshootBookingServerActions } from './PhotoshootBookingServerActions';
 import { TeamServerActions } from './TeamServerActions';
+import { getDocumentById } from '../firebase/firestore';
 
 // Define Photoshoot interface
 export interface Photoshoot {
@@ -84,42 +85,75 @@ export async function getAdvertiserProperties(): Promise<Property[]> {
       return [];
     }
     
-    // Query properties collection for properties where advertiserId matches the current user's ID
+    // First get the user document to check if it has a properties array
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userDocRef);
+    
+    if (!userDoc.exists()) {
+      console.warn('User document not found');
+      return [];
+    }
+    
+    const userData = userDoc.data();
+    console.log(`User object:`, userData);
+    
+    const properties: Property[] = [];
+    
+    // If user has a properties array, fetch those properties
+    if (userData.properties && Array.isArray(userData.properties) && userData.properties.length > 0) {
+      console.log(`Found ${userData.properties.length} property IDs in user document`);
+      
+      // Fetch each property by ID
+      for (const propertyId of userData.properties) {
+        try {
+          const propertyDoc = await getDocumentById<Property>('properties', propertyId);
+          if (propertyDoc) {
+            properties.push(propertyDoc);
+          }
+        } catch (err) {
+          console.error(`Error fetching property ${propertyId}:`, err);
+        }
+      }
+    }
+    
+    // Also check for properties where advertiserId matches user.uid
+    // This handles both data models (properties array in user doc OR advertiserId in property doc)
     const propertiesRef = collection(db, 'properties');
     const q = query(propertiesRef, where('advertiserId', '==', user.uid));
     const querySnapshot = await getDocs(q);
     
-    // Convert query results to Property objects
-    const properties: Property[] = [];
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       
-      // Convert Firestore timestamps to JavaScript Date objects
-      const createdAt = data.createdAt instanceof Timestamp 
-        ? data.createdAt.toDate() 
-        : new Date(data.createdAt);
+      // Check if we already have this property from the user's properties array
+      if (!properties.some(p => p.id === doc.id)) {
+        // Convert Firestore timestamps to JavaScript Date objects
+        const createdAt = data.createdAt instanceof Timestamp 
+          ? data.createdAt.toDate() 
+          : new Date(data.createdAt);
+          
+        const updatedAt = data.updatedAt instanceof Timestamp 
+          ? data.updatedAt.toDate() 
+          : new Date(data.updatedAt);
+          
+        const lastAvailabilityRefresh = data.lastAvailabilityRefresh instanceof Timestamp 
+          ? data.lastAvailabilityRefresh.toDate() 
+          : data.lastAvailabilityRefresh 
+            ? new Date(data.lastAvailabilityRefresh) 
+            : undefined;
         
-      const updatedAt = data.updatedAt instanceof Timestamp 
-        ? data.updatedAt.toDate() 
-        : new Date(data.updatedAt);
-        
-      const lastAvailabilityRefresh = data.lastAvailabilityRefresh instanceof Timestamp 
-        ? data.lastAvailabilityRefresh.toDate() 
-        : data.lastAvailabilityRefresh 
-          ? new Date(data.lastAvailabilityRefresh) 
-          : undefined;
-      
-      // Add the property to our array
-      properties.push({
-        id: doc.id,
-        ...data,
-        createdAt,
-        updatedAt,
-        lastAvailabilityRefresh
-      } as Property);
+        // Add the property to our array
+        properties.push({
+          id: doc.id,
+          ...data,
+          createdAt,
+          updatedAt,
+          lastAvailabilityRefresh
+        } as Property);
+      }
     });
     
-    console.log(`Found ${properties.length} properties for advertiser ${user.uid}`);
+    console.log(`Found ${properties.length} total properties for advertiser ${user.uid}`);
     return properties;
   } catch (error) {
     console.error('Error fetching advertiser properties:', error);

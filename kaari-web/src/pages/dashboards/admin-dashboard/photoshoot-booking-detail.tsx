@@ -1341,24 +1341,55 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     }
     
     try {
-    setLoading(true);
+      setLoading(true);
     
-      // Collect all images from various sources to ensure none are missed
-      const allImages = [
-        ...(booking.images || []),
-        ...(propertyData.images || []),
-        ...(images || [])  // Include any images from the local images state
-      ].filter(Boolean); // Remove any null/undefined values
+      // Create a Set to ensure uniqueness of images
+      const imageSet = new Set<string>();
       
-      // Collect all videos from various sources
-      const allVideos = [
-        ...(booking.videos || []),
-        ...(propertyData.videos || [])
-      ].filter(Boolean); // Remove any null/undefined values
+      // Add images from all sources to the Set
+      // Only valid URLs will be added (filter out blob: URLs and other temporary preview URLs)
+      const addValidImages = (imgArray: string[] | undefined) => {
+        if (!imgArray) return;
+        imgArray.forEach(img => {
+          // Only add images that are valid URLs (not blob: URLs) and not already in the set
+          if (img && !img.startsWith('blob:') && img.startsWith('http')) {
+            imageSet.add(img);
+          }
+        });
+      };
       
-      console.log(`Total images collected: ${allImages.length}`);
+      // Add images from all sources
+      addValidImages(booking.images);
+      addValidImages(propertyData.images);
+      addValidImages(images);
+      
+      // Convert Set back to array
+      const allImages = Array.from(imageSet);
+      
+      console.log(`Total unique images collected: ${allImages.length}`);
       console.log('Images:', allImages);
-      console.log(`Total videos collected: ${allVideos.length}`);
+      
+      // Create a Set for videos to ensure uniqueness
+      const videoSet = new Set<string>();
+      
+      // Add videos from all sources
+      const addValidVideos = (vidArray: string[] | undefined) => {
+        if (!vidArray) return;
+        vidArray.forEach(vid => {
+          // Only add videos that are valid URLs (not blob: URLs)
+          if (vid && !vid.startsWith('blob:') && vid.startsWith('http')) {
+            videoSet.add(vid);
+          }
+        });
+      };
+      
+      addValidVideos(booking.videos);
+      addValidVideos(propertyData.videos);
+      
+      // Convert Set back to array
+      const allVideos = Array.from(videoSet);
+      
+      console.log(`Total unique videos collected: ${allVideos.length}`);
       console.log('Videos:', allVideos);
       
       if (allImages.length === 0) {

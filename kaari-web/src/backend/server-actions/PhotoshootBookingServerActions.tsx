@@ -466,7 +466,7 @@ export class PhotoshootBookingServerActions {
   }
 
   /**
-   * Complete a booking and create a property
+   * Mark a booking as completed and link it to a property
    */
   static async completeBooking(
     bookingId: string, 
@@ -487,12 +487,19 @@ export class PhotoshootBookingServerActions {
       const bookingData = bookingDoc.data();
       const advertiserId = bookingData.advertiserId || bookingData.userId;
       
+      // Ensure we have unique images by using a Set
+      const uniqueImages = Array.from(new Set(images.filter(img => 
+        img && typeof img === 'string' && img.startsWith('http')
+      )));
+      
+      console.log(`Saving ${uniqueImages.length} unique images to booking ${bookingId}`);
+      
       // Update the booking
       await updateDoc(bookingRef, {
         status: 'completed',
         completedAt: serverTimestamp(),
         propertyId,
-        images,
+        images: uniqueImages,
         updatedAt: serverTimestamp()
       });
       
@@ -505,7 +512,7 @@ export class PhotoshootBookingServerActions {
           'Photoshoot Completed and Property Created',
           `Your photoshoot has been completed and a property listing has been created.`,
           `/dashboard/advertiser/properties`,
-          { bookingId, propertyId, imageCount: images.length }
+          { bookingId, propertyId, imageCount: uniqueImages.length }
         );
         console.log(`Notification sent to advertiser ${advertiserId} about photoshoot completion and property creation`);
       }
@@ -524,7 +531,7 @@ export class PhotoshootBookingServerActions {
           bookingId,
           propertyId,
           propertyLocation,
-          images.length
+          uniqueImages.length
         );
       } catch (adminNotifError) {
         // Don't fail the whole operation if admin notification fails
