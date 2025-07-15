@@ -10,13 +10,9 @@ const ADMIN_EMAILS = [
 
 // User IDs that should have admin access
 const ADMIN_IDS = [
-  'Yw2FKw9Fdwe0wZ7wEROn1tuH8273',
-  '9ue4Lfd70eWgLwQOHQ8avVKlhr42',
-  'ar1zXIkJxYN3TjAE802cm8lwWs22',
-  'T8Vyhbk9KfdKOGf0eAEXZixucpQ2',
-  '6A0LLKFmBIX7TiSnyWTGXsoblLc2',
-  'VbyG1m1hFyZXDiF5M935vgH8BHb2',
-
+  'bVctXP6Vi7U0P11zeJ2cKAfFU713',
+  'MZoeT2UiX5UFziKbuZcmUqMZ6KM2',
+  'Nvci3tULcRRjqxCgCysFqLTIXTZ2',
   // Add any other user IDs that should have access
 ];
 
