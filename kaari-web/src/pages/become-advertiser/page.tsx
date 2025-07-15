@@ -892,25 +892,17 @@ const AdvertiserRegistrationPage: React.FC = () => {
     try {
       setIsSubmitting(true);
       
-      const auth = getAuth();
-      const provider = new GoogleAuthProvider();
+      // Use the store's loginWithGoogle function with advertiser role and isNewAdvertiser flag
+      const loginWithGoogle = useStore(state => state.loginWithGoogle);
+      const user = await loginWithGoogle('advertiser', true);
       
-      // Add advertiser role hint to the authentication
-      provider.setCustomParameters({
-        prompt: 'select_account',
-        // This allows us to identify this as an advertiser sign-up
-        login_hint: 'advertiser_registration'
-      });
-      
-      const result = await signInWithPopup(auth, provider);
-      
-      if (result.user) {
+      if (user) {
         // Pre-fill user information
         setFormData(prev => ({
           ...prev,
-          email: result.user.email || '',
-          firstName: result.user.displayName?.split(' ')[0] || '',
-          lastName: result.user.displayName?.split(' ').slice(1).join(' ') || ''
+          email: user.email || '',
+          firstName: user.name?.split(' ')[0] || '',
+          lastName: user.name?.split(' ').slice(1).join(' ') || ''
         }));
         
         // Show success message

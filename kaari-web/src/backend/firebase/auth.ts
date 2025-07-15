@@ -291,6 +291,16 @@ export const signInWithGoogle = async (
         newUser.referralCode = referralCode;
       }
       
+      // Set foundingPartner flag for advertisers who sign up before August 1st, 2025
+      if (role === 'advertiser') {
+        const foundingPartnerEndDate = new Date('2025-08-01');
+        const now = new Date();
+        if (now < foundingPartnerEndDate) {
+          // @ts-ignore - Add foundingPartner flag
+          newUser.foundingPartner = true;
+        }
+      }
+      
       await setDoc(userDocRef, {
         ...newUser,
         createdAt: serverTimestamp(),

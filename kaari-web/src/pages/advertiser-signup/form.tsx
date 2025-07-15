@@ -193,63 +193,15 @@ const AdvertiserSignupForm: React.FC = () => {
     setError(null);
     
     try {
-      const auth = getAuth();
-      const provider = new GoogleAuthProvider();
+      // Use the store's loginWithGoogle function with advertiser role and isNewAdvertiser flag
+      const loginWithGoogle = useStore(state => state.loginWithGoogle);
+      const user = await loginWithGoogle('advertiser', true);
       
-      // Add advertiser role hint
-      provider.setCustomParameters({
-        prompt: 'select_account',
-        login_hint: 'advertiser_registration'
-      });
+      // Start the signup process
+      startSignup();
       
-      // Sign in with Google
-      const result = await signInWithPopup(auth, provider);
-      
-      if (result.user) {
-        // First check if this user has already completed the signup process
-        const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-        
-        if (userDoc.exists() && userDoc.data().signupStatus === 'completed') {
-          // User has already completed the signup process, show error and sign out
-          setError(t('advertiser_signup.errors.already_registered'));
-          await auth.signOut();
-          setIsLoading(false);
-          return;
-        }
-        
-        // Check if email is verified (should be for Google accounts)
-        if (!result.user.emailVerified) {
-          // Send verification email if not verified
-          await sendEmailVerification(result.user, {
-            url: window.location.origin + '/email-verification/success',
-            handleCodeInApp: true
-          });
-          toast.auth.verificationEmailSent();
-          
-          // Redirect to waiting page
-          navigate('/email-verification/waiting', { 
-            replace: true,
-            state: { email: result.user.email }
-          });
-        } else {
-          // Email already verified, continue to onboarding
-          
-          // Check if user document exists and mark signup status
-          await setDoc(doc(db, 'users', result.user.uid), {
-            signupStatus: 'email_verified',
-            emailVerified: true,
-            email: result.user.email,
-            displayName: result.user.displayName,
-            createdAt: serverTimestamp()
-          }, { merge: true });
-          
-          // Start the signup process
-          startSignup();
-          
-          // Redirect to advertiser onboarding
-          navigate('/become-advertiser?fromAuth=true', { replace: true });
-        }
-      }
+      // Redirect to advertiser onboarding
+      navigate('/become-advertiser?fromAuth=true', { replace: true });
     } catch (err: any) {
       console.error('Google signup error:', err);
       setError(err.message || t('advertiser_signup.errors.google_error'));
