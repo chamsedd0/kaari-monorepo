@@ -80,6 +80,7 @@ interface Property {
   capacity?: number;
   isFurnished?: boolean;
   nearbyPlaces?: { name: string; timeDistance: string }[];
+  videos?: string[]; // Added videos property
 }
 
 interface User {
@@ -317,8 +318,11 @@ const PropertyPageComponent = () => {
       <UnifiedHeader variant="white" userType="user" />
       <div className="main-content">
         <div className="photo-slider">
-          {property.images.length > 0 ? (
-            <PhotoSlider images={property.images}></PhotoSlider>
+          {property.images.length > 0 || (property.videos && property.videos.length > 0) ? (
+            <PhotoSlider 
+              images={property.images} 
+              videos={property.videos || []}
+            />
           ) : (
             <div className="fallback-image">
               <img src={pictures} alt="Fallback" />
