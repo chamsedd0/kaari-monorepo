@@ -325,7 +325,7 @@ export async function createCheckoutReservation(data: {
 
 /**
  * Process payment after reservation is accepted
- * This would normally integrate with a payment processor like Stripe
+ * This integrates with our Express payment gateway service
  */
 export async function processPayment(reservationId: string): Promise<boolean> {
   try {
@@ -351,68 +351,52 @@ export async function processPayment(reservationId: string): Promise<boolean> {
       throw new Error('Cannot process payment for a reservation that is not accepted');
     }
     
-    // In a real application, you would:
-    // 1. Retrieve the payment method details
-    // 2. Make a call to your payment processor to charge the card
-    // 3. Update the reservation status based on payment success/failure
+    // Get property details for payment
+    const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
+    if (!property) {
+      throw new Error('Property not found');
+    }
     
-    // For this implementation, we'll simulate a successful payment
+    // Import the payment gateway service
+    const PaymentGatewayService = (await import('../../services/PaymentGatewayService')).default;
     
-    // Update the reservation status to "paid"
+    // Generate a unique order ID
+    const orderID = `res_${reservationId}_${Date.now()}`;
+    
+    // Prepare payment data
+    const paymentData = {
+      amount: reservation.totalPrice || 0,
+      currency: 'MAD', // Update with your currency
+      orderID,
+      customerEmail: currentUser.email,
+      customerName: currentUser.name && currentUser.surname 
+        ? `${currentUser.name} ${currentUser.surname}` 
+        : currentUser.name || 'Client',
+      redirectURL: `${window.location.origin}/payment-success?reservationId=${reservationId}`,
+      callbackURL: `${window.location.origin}/api/payment-callback`,
+      customData: {
+        reservationId,
+        propertyId: property.id,
+        userId: currentUser.id
+      }
+    };
+    
+    // Initiate payment with our payment gateway
+    const paymentResponse = await PaymentGatewayService.initiatePayment(paymentData);
+    
+    if (!paymentResponse.success || !paymentResponse.paymentUrl) {
+      throw new Error(paymentResponse.error || 'Failed to initiate payment');
+    }
+    
+    // Update the reservation with payment information
     await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
-      status: 'paid',
+      paymentOrderId: orderID,
+      paymentStatus: 'pending',
       updatedAt: new Date()
     });
     
-    // Get property details for notification
-    if (reservation.propertyId) {
-      const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
-      if (property) {
-        const clientName = currentUser.name && currentUser.surname 
-          ? `${currentUser.name} ${currentUser.surname}` 
-          : currentUser.email || 'A client';
-          
-        // Send notification to the advertiser about the payment
-        try {
-          // Import NotificationService dynamically to avoid circular dependencies
-          const NotificationService = (await import('../../services/NotificationService')).default;
-          
-          // Send a direct notification to the advertiser
-          await NotificationService.createNotification(
-            property.ownerId,
-            'advertiser',
-            'payment_confirmed',
-            'Reservation Payment Received',
-            `${clientName} has completed payment for their reservation at ${property.title || 'Property'}.`,
-            `/dashboard/advertiser/reservations`,
-            { 
-              reservationId: reservationId, 
-              propertyId: property.id,
-              status: 'paid'
-            }
-          );
-          
-          // Also send a confirmation to the client
-          await NotificationService.createNotification(
-            currentUser.id,
-            'user',
-            'payment_confirmation',
-            'Payment Confirmed',
-            `Your payment for ${property.title || 'Property'} has been successfully processed.`,
-            `/dashboard/user/reservations`,
-            { 
-              reservationId: reservationId, 
-              propertyId: property.id,
-              status: 'paid'
-            }
-          );
-          
-          console.log(`Direct payment notifications sent to advertiser and client`);
-        } catch (notifError) {
-          console.error('Error sending payment notification:', notifError);
-        }
-      }
-    }
+    // Redirect the user to the payment gateway page
+    window.location.href = paymentResponse.paymentUrl;
     
     return true;
   } catch (error) {

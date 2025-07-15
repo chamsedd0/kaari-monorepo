@@ -66,6 +66,8 @@ import { AdvertiserOnboardingPage, AdvertiserSignupForm, FoundingPartnersPage } 
 import i18n from './i18n';
 import { ClaimDiscountPage, ReferralSignupPage } from './pages/referral';
 import { checkAndFixLanguage } from './utils/language-utils';
+import PaymentCallback from './pages/payment-callback';
+import PaymentSuccess from './pages/payment-success';
 
 // Function to ensure French is the default language
 const ensureFrenchAsDefault = () => {
@@ -236,6 +238,10 @@ function App() {
       {/* Public Routes */}
       <Route path="/" element={<UsersLanding key={renderKey} />} />
       <Route path="/for-advertisers" element={<AdvertisersLanding key={renderKey} />} />
+      
+      {/* Payment Routes */}
+      <Route path="/payment-callback" element={<PaymentCallback />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
       
       {/* Isolated Advertiser Signup Flow - No MainLayout */}
       <Route path="/advertiser-signup" element={<AdvertiserOnboardingPage />} />
