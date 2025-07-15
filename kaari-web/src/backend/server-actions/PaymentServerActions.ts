@@ -83,7 +83,7 @@ export async function processPayment(reservationId: string): Promise<{
     // Prepare payment data
     const paymentData = {
       amount: reservation.totalPrice || 0,
-      currency: 'MAD', // Update with your currency
+      currency: 'MAD', // Moroccan Dirham
       orderID,
       customerEmail: userDoc.email || user.email || '',
       customerName: userDoc.name && userDoc.surname 

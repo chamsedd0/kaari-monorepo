@@ -68,7 +68,7 @@ const PaymentsPage = () => {
         <div className="payment-stat border-container">
           <div className="payment-stat-title">{t('advertiser_dashboard.payments.total_collected', 'Total collected')}</div>
           <div className="payment-stat-value">
-            {loading ? '...' : `${paymentStats.totalCollected}€`}
+            {loading ? '...' : `${paymentStats.totalCollected} MAD`}
           </div>
         </div>
         <div className="payment-stat border-container">
@@ -80,7 +80,7 @@ const PaymentsPage = () => {
         <div className="payment-stat border-container">
           <div className="payment-stat-title">{t('advertiser_dashboard.payments.pending_amount', 'Pending amount')}</div>
           <div className="payment-pending">
-            {loading ? '...' : `${paymentStats.pendingAmount}€`}
+            {loading ? '...' : `${paymentStats.pendingAmount} MAD`}
           </div>
         </div>
       </div>
