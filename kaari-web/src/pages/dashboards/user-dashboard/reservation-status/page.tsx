@@ -8,7 +8,7 @@ import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purpl
 import { BpurpleButtonMB48 } from '../../../../components/skeletons/buttons/border_purple_MB48';
 import { CheckoutCard } from '../../../../components/skeletons/cards/checkout-card';
 import { getClientReservations, cancelReservation, completeReservation, requestRefund } from '../../../../backend/server-actions/ClientServerActions';
-import { processPayment } from '../../../../backend/server-actions/CheckoutServerActions';
+import { processPayment } from '../../../../backend/server-actions/PaymentServerActions';
 import { useToastService } from '../../../../services/ToastService';
 import BookingDetailsComponent from '../../../../components/reservations/BookingDetails';
 import TimerComponent from '../../../../components/skeletons/constructed/status-cards/TimerComponent';
@@ -231,8 +231,13 @@ const ReservationStatusPage: React.FC = () => {
     try {
       setProcessing(true);
       setModalOpen(false);
-      await processPayment(reservation.reservation.id);
-      toast.showToast('success', 'Payment Processed', 'Your payment has been successfully processed');
+      const result = await processPayment(reservation.reservation.id);
+      
+      if (result.success) {
+        toast.showToast('success', 'Payment Processed', 'Your payment has been successfully processed');
+      } else {
+        toast.showToast('error', 'Payment Failed', result.error || 'Failed to process payment');
+      }
       
       // Reload data
       await loadReservationDetails();

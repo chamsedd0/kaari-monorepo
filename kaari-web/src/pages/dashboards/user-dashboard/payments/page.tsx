@@ -1,12 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PaymentsPageStyle } from './styles';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import SecureIcon from '../../../../components/skeletons/icons/secure-payments.svg';
 import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-help-card';
 import Mastercard from '../../../../components/skeletons/cards/mastercard';
 import { CompletedPaymentCard } from '../../../../components/skeletons/cards/completed-payment-card';
+import { getUserPayments } from '../../../../backend/server-actions/PaymentServerActions';
+import { formatDate } from '../../../../utils/date-utils';
+
 const PaymentsPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'payments' | 'completed'>('payments');
+    const [payments, setPayments] = useState<any[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // Load user payments
+    useEffect(() => {
+        const fetchPayments = async () => {
+            try {
+                setLoading(true);
+                const paymentData = await getUserPayments();
+                setPayments(paymentData);
+                setError(null);
+            } catch (err: any) {
+                console.error('Error loading payments:', err);
+                setError(err.message || 'Failed to load payment data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPayments();
+    }, []);
+
+    // Format payment date for display
+    const formatPaymentDate = (date: Date) => {
+        const month = date.toLocaleString('default', { month: 'short' });
+        const year = date.getFullYear();
+        return `${month} ${year}`;
+    };
 
     return (
         <PaymentsPageStyle>
@@ -49,28 +81,27 @@ const PaymentsPage: React.FC = () => {
                     )}
                     {activeTab === 'completed' && (
                         <>
-                            <h2 className="title">Completed</h2>
-                            <CompletedPaymentCard
-                                paymentDate="Sep 2024"
-                                cardType="Master Card"
-                                cardNumber="1234"
-                                propertyLocation="Agadir"
-                                moveInDate="05.09.2024"
-                            />
-                            <CompletedPaymentCard
-                                paymentDate="Sep 2024"
-                                cardType="Master Card"
-                                cardNumber="1234"
-                                propertyLocation="Agadir"
-                                moveInDate="05.09.2024"
-                            />
-                            <CompletedPaymentCard
-                                paymentDate="Sep 2024"
-                                cardType="Master Card"
-                                cardNumber="1234"
-                                propertyLocation="Agadir"
-                                moveInDate="05.09.2024"
-                            />
+                            <h2 className="title">Completed Payments</h2>
+                            
+                            {loading ? (
+                                <p>Loading payment history...</p>
+                            ) : error ? (
+                                <p className="error-message">{error}</p>
+                            ) : payments.length === 0 ? (
+                                <p>No payment history found.</p>
+                            ) : (
+                                payments.map((paymentItem) => (
+                                    <CompletedPaymentCard
+                                        key={paymentItem.payment.id}
+                                        paymentDate={formatPaymentDate(paymentItem.payment.paymentDate)}
+                                        cardType={paymentItem.payment.paymentMethod === 'card' ? "Master Card" : paymentItem.payment.paymentMethod}
+                                        cardNumber={paymentItem.payment.transactionId?.slice(-4) || '****'}
+                                        propertyLocation={paymentItem.property?.location?.city || 'Unknown Location'}
+                                        moveInDate={paymentItem.payment.createdAt ? formatDate(paymentItem.payment.createdAt) : 'Unknown Date'}
+                                        amount={`${paymentItem.payment.amount} ${paymentItem.payment.currency || 'MAD'}`}
+                                    />
+                                ))
+                            )}
                         </>
                     )}
                 </div>

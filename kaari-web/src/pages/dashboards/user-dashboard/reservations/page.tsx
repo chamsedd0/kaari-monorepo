@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
 import { getClientReservations, cancelReservation, completeReservation, requestRefund } from '../../../../backend/server-actions/ClientServerActions';
-import { processPayment } from '../../../../backend/server-actions/CheckoutServerActions';
+import { processPayment } from '../../../../backend/server-actions/PaymentServerActions';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import { BpurpleButtonMB48 } from '../../../../components/skeletons/buttons/border_purple_MB48';
 import { CardBaseModelStyleLatestRequest } from '../../../../components/styles/cards/card-base-model-style-latest-request';
@@ -895,6 +895,7 @@ const ReservationsPage: React.FC = () => {
   const [selectedReservation, setSelectedReservation] = useState<string | null>(null);
   const [cancellingReservation, setCancellingReservation] = useState<string | null>(null);
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+  const toast = useToastService();
 
   const getTimeRemaining = (updatedAt: Date | FirestoreTimestamp | string | undefined) => {
     if (!updatedAt) return { hours: 0, minutes: 0, expired: true };
@@ -1023,7 +1024,14 @@ const ReservationsPage: React.FC = () => {
     
     try {
       setProcessingPayment(selectedReservation);
-      await processPayment(selectedReservation);
+      const result = await processPayment(selectedReservation);
+      
+      if (result.success) {
+        toast.showToast('success', 'Payment Processed', 'Your payment has been successfully processed');
+      } else {
+        toast.showToast('error', 'Payment Failed', result.error || 'Failed to process payment');
+      }
+      
       await loadReservations();
       setShowPaymentModal(false);
     } catch (err: any) {
