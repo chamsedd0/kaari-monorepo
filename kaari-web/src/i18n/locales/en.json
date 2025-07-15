@@ -503,7 +503,10 @@
       "no_stats_hint": "After you get your first property listed, your stats will appear here",
       "no_performance_data": "No performance data yet",
       "no_performance_data_hint": "List your property to start seeing performance metrics",
-      "views_of_properties": "Views of Properties"
+      "views_of_properties": "Views of Properties",
+      "upcoming_photoshoot": "Upcoming Photoshoot",
+      "no_upcoming_photoshoot": "No upcoming photoshoot",
+      "no_upcoming_photoshoot_hint": "Book a photoshoot to start getting views"
     },
     "profile": {
       "profile_section": "profile",
@@ -833,7 +836,29 @@
       "no_photoshoots_hint": "Book a free photoshoot to get professional photos of your property",
       "invalid_date": "Invalid date",
       "banner_reset": "Banner will be shown again when you visit the dashboard",
-      "show_banner_again": "Show photoshoot banner again"
+      "show_banner_again": "Show photoshoot banner again",
+      "prepare_property_title": "Prepare your property",
+      "prepare_deep_clean_title": "Deep Clean",
+      "prepare_deep_clean_desc": "Thoroughly clean every corner, window, and surface to ensure the property looks immaculate.",
+      "prepare_declutter_title": "Declutter",
+      "prepare_declutter_desc": "Remove personal items and excess decor to make the space look tidy and spacious.",
+      "prepare_stage_title": "Stage the Rooms",
+      "prepare_stage_desc": "Arrange furniture thoughtfully to highlight the space's functionality and appeal.",
+      "prepare_light_title": "Maximize the light",
+      "prepare_light_desc": "Open curtains to let in natural light and ensure all light fixtures are working to enhance the ambiance.",
+      "prepare_features_title": "Accentuate Features",
+      "prepare_features_desc": "Clean and display unique features such as fireplaces or scenic views prominently.",
+      "prepare_outdoors_title": "Prepare Outdoors",
+      "prepare_outdoors_desc": "Tidy up lawns, pathways, and patios to enhance external appeal.",
+      "prepare_decorations_title": "Simple Decorations",
+      "prepare_decorations_desc": "Add neutral decorations like fresh flowers to inject vibrancy without distraction.",
+      "prepare_entrance_title": "Welcoming Entrance",
+      "prepare_entrance_desc": "Ensure the entrance is inviting with a clean doormat and decorative plants.",
+      "prepare_icon_alt": "Preparation icon",
+      "need_help_title": "Need Help?",
+      "faq_payout_timing": "When will I get my payout?",
+      "faq_payout_process": "How payouts work?",
+      "faq_transaction_history": "My Transaction history"
     },
     "properties": {
       "title": "Properties",

@@ -380,8 +380,7 @@ const PhotoshootPage: React.FC = () => {
         )}
       </div>
       <div className="right">
-      <PreparePropertyComponent />
-        <NeedHelpCardComponent />
+        <PreparePropertyComponent />
       </div>
       
       {/* Cancel Photoshoot Modal */}
@@ -406,12 +405,7 @@ const PhotoshootPage: React.FC = () => {
         </>
       )}
       
-      {/* Banner reset button at the bottom */}
-      <BannerResetContainer>
-        <BannerResetButton onClick={handleResetBanner}>
-          {t('advertiser_dashboard.photoshoot.show_banner_again', 'Show photoshoot banner again')}
-        </BannerResetButton>
-      </BannerResetContainer>
+      
     </PhotoshootsPageStyle>
   );
 };
