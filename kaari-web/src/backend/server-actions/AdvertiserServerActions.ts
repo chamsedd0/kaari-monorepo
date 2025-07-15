@@ -91,7 +91,7 @@ export async function getAdvertiserProperties(): Promise<Property[]> {
     
     if (!userDoc.exists()) {
       console.warn('User document not found');
-      return [];
+  return [];
     }
     
     const userData = userDoc.data();
@@ -186,7 +186,7 @@ export async function getAdvertiserReservationRequests(): Promise<{
     
     if (properties.length === 0) {
       console.log('No properties found for this advertiser');
-      return [];
+  return [];
     }
     
     const propertyIds = properties.map(property => property.id);
@@ -216,11 +216,11 @@ export async function getAdvertiserReservationRequests(): Promise<{
       console.log(`Found ${querySnapshot.size} requests for property ${propertyId}`);
       
       // Process each reservation
-      const reservationPromises = querySnapshot.docs.map(async (doc) => {
-        const reservationData = doc.data() as Request;
+      const reservationPromises = querySnapshot.docs.map(async (docSnapshot) => {
+        const reservationData = docSnapshot.data() as Request;
         
         // Add the document ID to the reservation data
-        reservationData.id = doc.id;
+        reservationData.id = docSnapshot.id;
         
         // Convert Firestore timestamps to JavaScript Date objects
         if (reservationData.createdAt instanceof Timestamp) {
@@ -243,12 +243,12 @@ export async function getAdvertiserReservationRequests(): Promise<{
         if (reservationData.userId) {
           try {
             const userDocRef = doc(db, 'users', reservationData.userId);
-            const userDoc = await getDoc(userDocRef);
+            const userDocSnapshot = await getDoc(userDocRef);
             
-            if (userDoc.exists()) {
+            if (userDocSnapshot.exists()) {
               client = {
-                id: userDoc.id,
-                ...userDoc.data(),
+                id: userDocSnapshot.id,
+                ...userDocSnapshot.data(),
               };
             }
           } catch (error) {
@@ -395,7 +395,7 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
     return { hasActiveReservations, reason };
   } catch (error) {
     console.error('Error checking property reservations:', error);
-    return { hasActiveReservations: false, reason: 'none' };
+  return { hasActiveReservations: false, reason: 'none' };
   }
 }
 
@@ -468,7 +468,7 @@ export async function approveReservationRequest(requestId: string): Promise<bool
     // For now, just log the action
     console.log(`Reservation ${requestId} approved by advertiser ${user.uid}`);
     
-    return true;
+  return true;
   } catch (error) {
     console.error('Error approving reservation request:', error);
     return false;
@@ -544,7 +544,7 @@ export async function rejectReservationRequest(requestId: string): Promise<boole
     // For now, just log the action
     console.log(`Reservation ${requestId} rejected by advertiser ${user.uid}`);
     
-    return true;
+  return true;
   } catch (error) {
     console.error('Error rejecting reservation request:', error);
     return false;
@@ -574,7 +574,7 @@ export async function updatePropertyAvailability(
       updatedAt: new Date()
     });
     
-    return true;
+  return true;
   } catch (error) {
     console.error('Error updating property availability:', error);
     return false;
