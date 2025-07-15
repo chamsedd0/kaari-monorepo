@@ -7,8 +7,8 @@ import { MdBed, MdKitchen, MdChair, MdBathtub } from 'react-icons/md';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import { BpurpleButtonMB48 } from '../../../../components/skeletons/buttons/border_purple_MB48';
 import { CheckoutCard } from '../../../../components/skeletons/cards/checkout-card';
-import { getClientReservations, cancelReservation, completeReservation, requestRefund } from '../../../../backend/server-actions/ClientServerActions';
-import { processPayment } from '../../../../backend/server-actions/PaymentServerActions';
+import { getClientReservations, cancelReservation } from '../../../../backend/server-actions/ClientServerActions';
+import { processPayment, handleMoveIn } from '../../../../backend/server-actions/PaymentServerActions';
 import { useToastService } from '../../../../services/ToastService';
 import BookingDetailsComponent from '../../../../components/reservations/BookingDetails';
 import TimerComponent from '../../../../components/skeletons/constructed/status-cards/TimerComponent';
@@ -267,8 +267,15 @@ const ReservationStatusPage: React.FC = () => {
     try {
       setProcessing(true);
       setModalOpen(false);
-      await completeReservation(reservation.reservation.id);
-      toast.showToast('success', 'Move-In Confirmed', 'Your move-in has been successfully confirmed');
+      
+      // Use the new handleMoveIn function from PaymentServerActions
+      const result = await handleMoveIn(reservation.reservation.id);
+      
+      if (result.success) {
+        toast.showToast('success', 'Move-In Confirmed', 'Your move-in has been successfully confirmed. The advertiser will receive payment in 24 hours.');
+      } else {
+        toast.showToast('error', 'Confirmation Failed', result.error || 'Failed to confirm move-in');
+      }
       
       // Reload data
       await loadReservationDetails();
