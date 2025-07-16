@@ -5,7 +5,7 @@
 
 // Configuration
 const PAYMENT_API_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://api.kaari.ma/api/payments'  // Updated production URL
+  ? 'https://kaari-monorepo-1ou9.vercel.app/api/payments'  // Updated Vercel deployment URL
   : 'http://localhost:3001/api/payments';  // Local development API URL
 
 /**
