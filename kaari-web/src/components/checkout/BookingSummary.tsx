@@ -20,6 +20,7 @@ interface BookingSummaryProps {
     amount: number;
     code: string;
   };
+  haaniMaxFee?: number;
 }
 
 const BookingSummary: React.FC<BookingSummaryProps> = ({
@@ -35,7 +36,8 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   isSubmitting = false,
   buttonText = 'Confirm Booking',
   showTerms = true,
-  discount
+  discount,
+  haaniMaxFee = 0
 }) => {
   // Format date for display
   const formatDate = (dateString?: string) => {
@@ -96,6 +98,13 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
           <span className="value">{formatCurrency(serviceFee)}</span>
         </div>
 
+        {haaniMaxFee > 0 && (
+          <div className="info-row">
+            <span className="label">Haani Max Protection</span>
+            <span className="value">{formatCurrency(haaniMaxFee)}</span>
+          </div>
+        )}
+
         {discount && discount.amount > 0 && (
           <div className="info-row discount">
             <span className="label">Referral discount ({discount.code})</span>
@@ -109,7 +118,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
             {discount && discount.amount > 0 ? (
               <>
                 <span style={{ textDecoration: 'line-through', fontSize: '0.8em', marginRight: '8px', color: Theme.colors.gray2 }}>
-                  {formatCurrency(price + serviceFee)}
+                  {formatCurrency(price + serviceFee + haaniMaxFee)}
                 </span>
                 {formatCurrency(total)}
               </>

@@ -1,9 +1,11 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 interface PaymentMethodDetails {
   id: string;
   type: string;
   details: any;
+  protectionOption?: 'haani' | 'haaniMax';
+  additionalCost?: number;
 }
 
 interface CheckoutContextType {
@@ -15,18 +17,19 @@ interface CheckoutContextType {
   selectedPaymentMethod: PaymentMethodDetails | null;
 }
 
-const CheckoutContext = createContext<CheckoutContextType | undefined>(undefined);
+const CheckoutContext = createContext<CheckoutContextType>({
+  navigateToRentalApplication: () => {},
+  navigateToPaymentMethod: () => {},
+  navigateToConfirmation: () => {},
+  navigateToSuccess: () => {},
+  savePaymentMethod: () => {},
+  selectedPaymentMethod: null,
+});
 
-export const useCheckoutContext = () => {
-  const context = useContext(CheckoutContext);
-  if (context === undefined) {
-    throw new Error('useCheckoutContext must be used within a CheckoutProvider');
-  }
-  return context;
-};
+export const useCheckoutContext = () => useContext(CheckoutContext);
 
 interface CheckoutProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
   onNavigate?: (step: number) => void;
 }
 
@@ -63,6 +66,4 @@ export const CheckoutProvider = ({ children, onNavigate }: CheckoutProviderProps
   };
 
   return <CheckoutContext.Provider value={value}>{children}</CheckoutContext.Provider>;
-};
-
-export default CheckoutContext; 
+}; 

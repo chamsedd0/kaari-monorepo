@@ -107,7 +107,7 @@ interface CheckoutStepperProps {
 const CheckoutStepper: React.FC<CheckoutStepperProps> = ({ activeStep }) => {
   const steps = [
     { number: 1, label: 'Rental Application' },
-    { number: 2, label: 'Payment Method' },
+    { number: 2, label: 'Protection Options' },
     { number: 3, label: 'Confirmation' },
     { number: 4, label: 'Success' }
   ];

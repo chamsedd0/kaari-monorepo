@@ -1,16 +1,15 @@
 const express = require('express');
-const axios = require('axios');
+const crypto = require('crypto');
 const router = express.Router();
-const { decryptPayzoneCallback } = require('../utils/crypto');
 
-// Payzone API credentials
-const PAYZONE_API_URL = process.env.PAYZONE_API_URL;
-const ORIGINATOR_ID = process.env.PAYZONE_ORIGINATOR_ID;
-const PASSWORD = process.env.PAYZONE_PASSWORD;
-const MERCHANT_TOKEN = process.env.PAYZONE_MERCHANT_TOKEN;
+// Payzone credentials from environment variables
+const MERCHANT_ACCOUNT = process.env.PAYZONE_MERCHANT_ACCOUNT || 'kaari_monorepo_vercel_Test';
+const PAYWALL_SECRET_KEY = process.env.PAYZONE_PAYWALL_SECRET_KEY || '5Wkxa8VkO6LzREMk';
+const PAYWALL_URL = process.env.PAYZONE_PAYWALL_URL || 'https://payment-sandbox.payzone.ma/pwthree/launch';
+const NOTIFICATION_KEY = process.env.PAYZONE_NOTIFICATION_KEY || 'yw06hJBzkheD3ARA';
 
 /**
- * Initiate a payment and get a redirect URL
+ * Initiate a payment and return HTML form for redirect
  * POST /api/payments/initiate
  */
 router.post('/initiate', async (req, res) => {
@@ -33,44 +32,75 @@ router.post('/initiate', async (req, res) => {
       });
     }
 
-    const paymentData = {
-      amount: String(amount), // Payzone expects amount as string
-      currency,
-      orderID,
-      ctrlCustomData: JSON.stringify(customData),
-      customer: {
-        email: customerEmail,
-        name: customerName
-      },
-      ctrlRedirectURL: redirectURL,
-      ctrlCallbackURL: callbackURL
+    // Generate timestamp for unique IDs
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    // Create the payload according to Payzone specifications
+    const payload = {
+      // Authentication parameters
+      merchantAccount: MERCHANT_ACCOUNT,
+      timestamp: timestamp,
+      skin: 'vps-1-vue', // fixed value
+
+      // Customer parameters
+      customerId: `customer_${timestamp}`, // must be unique for each customer
+      customerCountry: 'MA', // fixed value for Morocco
+      customerLocale: 'en_US', // or fr_FR if preferred
+      
+      // Charge parameters
+      chargeId: `charge_${timestamp}`, // unique charge ID
+      orderId: orderID,
+      price: String(amount), // Payzone expects amount as string
+      currency: currency,
+      description: customData.description || 'Kaari Reservation Payment',
+      
+      // Deep linking
+      mode: 'DEEP_LINK', // fixed value
+      paymentMethod: 'CREDIT_CARD', // fixed value
+      showPaymentProfiles: 'false',
+      
+      // URLs
+      callbackUrl: callbackURL,
+      successUrl: redirectURL,
+      failureUrl: `${redirectURL.split('?')[0]}?status=failed`,
+      cancelUrl: `${redirectURL.split('?')[0]}?status=cancelled`,
     };
 
-    const response = await axios.post(
-      `${PAYZONE_API_URL}/paymentPageInit`,
-      paymentData,
-      {
-        auth: {
-          username: ORIGINATOR_ID,
-          password: PASSWORD
-        }
-      }
-    );
+    // Convert payload to JSON string
+    const jsonPayload = JSON.stringify(payload);
+    
+    // Generate signature using SHA-256
+    const signature = crypto.createHash('sha256')
+      .update(PAYWALL_SECRET_KEY + jsonPayload)
+      .digest('hex');
 
-    if (response.data && response.data.redirectUrl) {
-      return res.json({
-        success: true,
-        paymentUrl: response.data.redirectUrl
-      });
-    } else {
-      throw new Error('Invalid response from Payzone');
-    }
+    // Create HTML form for auto-submission
+    const formHtml = `
+      <html>
+        <head>
+          <title>Redirecting to payment...</title>
+        </head>
+        <body>
+          <form id="paymentForm" action="${PAYWALL_URL}" method="POST">
+            <input type="hidden" name="payload" value='${jsonPayload}' />
+            <input type="hidden" name="signature" value="${signature}" />
+          </form>
+          <script>
+            document.getElementById("paymentForm").submit();
+          </script>
+        </body>
+      </html>
+    `;
+
+    // Return the form HTML
+    res.setHeader('Content-Type', 'text/html');
+    return res.send(formHtml);
   } catch (error) {
-    console.error('Payment initiation error:', error.response?.data || error.message);
+    console.error('Payment initiation error:', error.message);
     return res.status(500).json({
       success: false,
       message: 'Failed to initiate payment',
-      error: error.response?.data || error.message
+      error: error.message
     });
   }
 });
@@ -81,32 +111,87 @@ router.post('/initiate', async (req, res) => {
  */
 router.post('/callback', (req, res) => {
   try {
-    const encryptedData = req.body.data;
+    // Get the raw request body
+    const input = JSON.stringify(req.body);
     
-    if (!encryptedData) {
-      return res.status(400).json({
-        success: false,
-        message: 'No encrypted data received'
+    // Calculate signature using HMAC-SHA256
+    const signature = crypto
+      .createHmac('sha256', NOTIFICATION_KEY)
+      .update(input)
+      .digest('hex');
+    
+    // Get the signature from headers
+    const receivedSignature = req.get('X-Callback-Signature');
+    
+    // Verify signature
+    if (signature !== receivedSignature) {
+      console.error('Invalid callback signature');
+      return res.status(200).json({
+        status: 'KO',
+        message: 'Error signature'
       });
     }
 
-    // Use the utility function to decrypt the data
-    const result = decryptPayzoneCallback(encryptedData, MERCHANT_TOKEN);
-
     // Process the payment result
-    // TODO: Update order status in your database based on result
-    console.log('Payment callback received:', result);
-
-    // Always return 200 OK to Payzone to acknowledge receipt
+    const paymentData = req.body;
+    
+    if (paymentData.status === 'CHARGED') {
+      let transactionData = null;
+      
+      // Find the approved transaction
+      for (const transaction of paymentData.transactions || []) {
+        if (transaction.state === 'APPROVED') {
+          transactionData = transaction;
+          break;
+        }
+      }
+      
+      if (transactionData && transactionData.resultCode === 0) {
+        // Successful payment
+        console.log('Payment successful:', transactionData);
+        
+        // TODO: Update order status in your database
+        
+        return res.status(200).json({
+          status: 'OK',
+          message: 'Status recorded successfully'
+        });
+      } else {
+        console.log('Payment not approved:', paymentData);
+        return res.status(200).json({
+          status: 'KO',
+          message: 'Status not recorded successfully'
+        });
+      }
+    } else if (paymentData.status === 'DECLINED') {
+      let transactionData = null;
+      
+      // Find the declined transaction
+      for (const transaction of paymentData.transactions || []) {
+        if (transaction.state === 'DECLINED') {
+          transactionData = transaction;
+          break;
+        }
+      }
+      
+      console.log('Payment declined:', transactionData);
+      
+      return res.status(200).json({
+        status: 'KO',
+        message: 'Status not recorded successfully'
+      });
+    }
+    
+    // Default response for other statuses
     return res.status(200).json({
-      success: true,
-      message: 'Callback received and processed'
+      status: 'OK',
+      message: 'Callback received'
     });
   } catch (error) {
     console.error('Payment callback error:', error);
-    // Still return 200 to acknowledge receipt
+    // Always return 200 to acknowledge receipt
     return res.status(200).json({
-      success: false,
+      status: 'KO',
       message: 'Error processing callback',
       error: error.message
     });
@@ -114,8 +199,8 @@ router.post('/callback', (req, res) => {
 });
 
 /**
- * Check payment status
- * GET /api/payments/status/:orderID
+ * Check payment status - This endpoint is not part of the new integration
+ * but kept for backward compatibility
  */
 router.get('/status/:orderID', async (req, res) => {
   try {
@@ -128,73 +213,19 @@ router.get('/status/:orderID', async (req, res) => {
       });
     }
 
-    const response = await axios.get(
-      `${PAYZONE_API_URL}/transaction/query`,
-      {
-        params: { orderID },
-        auth: {
-          username: ORIGINATOR_ID,
-          password: PASSWORD
-        }
-      }
-    );
-
+    // Since the new integration doesn't provide a status check API,
+    // we'll return a message indicating that status must be tracked via callbacks
     return res.json({
       success: true,
-      status: response.data
+      message: 'Payment status should be tracked via callbacks in the new integration',
+      orderID: orderID
     });
   } catch (error) {
-    console.error('Payment status check error:', error.response?.data || error.message);
+    console.error('Payment status check error:', error.message);
     return res.status(500).json({
       success: false,
       message: 'Failed to check payment status',
-      error: error.response?.data || error.message
-    });
-  }
-});
-
-/**
- * Refund a transaction
- * POST /api/payments/refund
- */
-router.post('/refund', async (req, res) => {
-  try {
-    const { transactionID, amount, reason } = req.body;
-    
-    if (!transactionID || !amount) {
-      return res.status(400).json({
-        success: false,
-        message: 'Transaction ID and amount are required'
-      });
-    }
-
-    const refundData = {
-      transactionID,
-      amount: String(amount),
-      reason: reason || 'Customer request'
-    };
-
-    const response = await axios.post(
-      `${PAYZONE_API_URL}/transaction/refund`,
-      refundData,
-      {
-        auth: {
-          username: ORIGINATOR_ID,
-          password: PASSWORD
-        }
-      }
-    );
-
-    return res.json({
-      success: true,
-      refund: response.data
-    });
-  } catch (error) {
-    console.error('Refund error:', error.response?.data || error.message);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to process refund',
-      error: error.response?.data || error.message
+      error: error.message
     });
   }
 });

@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckoutProvider } from '../../contexts/checkout-process';
 import CheckoutStepper from '../../components/checkout/checkout-stepper';
 import RentalApplication from '../../components/checkout/rental-application';
-import PaymentMethod from '../../components/skeletons/checkoutprocess/sections/payment-method';
+import ProtectionOptions from '../../components/skeletons/checkoutprocess/sections/payment-method';
 import Confirmation from '../../components/checkout/confirmation';
 import SuccessPage from '../../components/checkout/success';
 import { initiateCheckout, CheckoutData } from '../../backend/server-actions/CheckoutServerActions';
@@ -171,7 +171,7 @@ const CheckoutPage: React.FC = () => {
       case 1:
         return <RentalApplication userData={checkoutData.user} propertyData={checkoutData.property} />;
       case 2:
-        return <PaymentMethod />;
+        return <ProtectionOptions />;
       case 3:
         return <Confirmation propertyData={checkoutData.property} userData={checkoutData.user} />;
       case 4:

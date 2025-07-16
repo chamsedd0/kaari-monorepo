@@ -13,6 +13,7 @@ export interface ActiveDiscount {
     minutes: number;
   };
   code: string;
+  isInUse?: boolean; // Add this field to track if discount is associated with a booking
 }
 
 export const useActiveReferralDiscount = () => {
@@ -94,13 +95,17 @@ export const useActiveReferralDiscount = () => {
     try {
       const discount = await referralService.getUserDiscount(currentUser.id);
       
+      // Check if discount is already associated with a booking
+      const isDiscountInUse = await referralService.isDiscountInUse(currentUser.id);
+      
       if (discount && !discount.isUsed && discount.expiryDate > new Date()) {
         const timeLeft = calculateTimeLeft(discount.expiryDate);
         const newDiscount = {
           amount: discount.amount,
           expiryDate: discount.expiryDate,
           timeLeft,
-          code: discount.code || 'KAARI'
+          code: discount.code || 'KAARI',
+          isInUse: isDiscountInUse // Add this field
         };
         
         setActiveDiscount(newDiscount);
@@ -121,6 +126,24 @@ export const useActiveReferralDiscount = () => {
         
         // Update the previous discount ref
         prevDiscountRef.current = newDiscount;
+      } else if (isDiscountInUse) {
+        // If discount exists but is already in use with a booking
+        setActiveDiscount(null);
+        setError(null);
+        
+        // Only show toast if we previously had a discount
+        if (prevDiscountRef.current) {
+          showToast({
+            type: 'info',
+            title: t('referral.discount.inUse'),
+            message: t('referral.discount.inUseMessage', { 
+              amount: prevDiscountRef.current.amount 
+            }),
+            duration: 5000
+          });
+        }
+        
+        prevDiscountRef.current = null;
       } else {
         // If we had a discount before but not now, it might have expired
         if (prevDiscountRef.current) {

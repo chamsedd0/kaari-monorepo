@@ -7,7 +7,7 @@ import PropertyImage from '../../../assets/images/livingRoomExample.png';
 import ProfileImage from '../../../assets/images/ProfilePicture.png';
 import { 
   RentalApplication, 
-  PaymentMethod, 
+  ProtectionOptions, 
   Confirmation, 
   Success 
 } from './sections';
@@ -91,7 +91,7 @@ const CheckoutProcessContainer: React.FC<CheckoutProcessContainerProps> = ({
       case 1:
         return <RentalApplication onContinue={handleNext} />;
       case 2:
-        return <PaymentMethod />;
+        return <ProtectionOptions />;
       case 3:
         return <Confirmation onContinue={handleNext} onBack={handleBack} />;
       case 4:

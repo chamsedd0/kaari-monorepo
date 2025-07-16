@@ -6,6 +6,7 @@ import { useCheckoutContext } from '../../contexts/checkout-process';
 import { createCheckoutReservation } from '../../backend/server-actions/CheckoutServerActions';
 import BookingSummary from './BookingSummary';
 import referralService from '../../services/ReferralService';
+import PaymentGatewayService from '../../services/PaymentGatewayService';
 
 const ConfirmationContainer = styled.div`
   display: flex;
@@ -191,48 +192,80 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
         totalPrice: totalPrice,
         
         // Discount information
-        discount: rentalData.discount
+        discount: rentalData.discount,
+        
+        // Add-ons information (if any)
+        addOns: rentalData.addOns || [],
+        
+        // Protection option
+        protectionOption: selectedPaymentMethod?.protectionOption || 'haani',
+        haaniMaxFee: haaniMaxFee
       };
+
+      // Calculate the final payment amount including any add-ons
+      let finalPaymentAmount = totalPrice;
       
-      // Create the reservation
-      const reservation = await createCheckoutReservation({
+      // Add the cost of any add-ons to the final payment amount
+      if (rentalData.addOns && Array.isArray(rentalData.addOns)) {
+        const addOnsTotal = rentalData.addOns.reduce((sum, addon) => {
+          return sum + (addon.price || 0);
+        }, 0);
+        
+        finalPaymentAmount += addOnsTotal;
+        
+        // Update the total price in the formatted data
+        formattedRentalData.totalPrice = finalPaymentAmount;
+        
+        console.log(`Add-ons total: ${addOnsTotal} MAD, Final payment amount: ${finalPaymentAmount} MAD`);
+      }
+
+      // Store the reservation data temporarily for after payment
+      const pendingReservation = {
         propertyId: propertyData.id,
+        propertyTitle: propertyData.title,
         userId: userData.id,
         rentalData: formattedRentalData,
         paymentMethodId: selectedPaymentMethod.id
-      });
+      };
       
-      console.log('Reservation created:', reservation);
+      // Save the pending reservation to localStorage
+      localStorage.setItem('pendingReservation', JSON.stringify(pendingReservation));
       
-      // Apply discount to booking if available
-      if (rentalData.discount) {
-        try {
-          const discountApplied = await referralService.applyDiscountToBooking(
-            userData.id,
-            reservation.id,
-            propertyData.id,
-            propertyData.title || 'Property',
-            pricePerMonth // Use the property price as booking amount
-          );
-          
-          console.log(`Discount applied to booking: ${discountApplied} MAD`);
-        } catch (discountErr) {
-          console.error('Error applying discount to booking:', discountErr);
-          // Don't fail the whole process if discount application fails
+      // Generate a unique order ID
+      const orderID = `res_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      
+      // Prepare payment data
+      const paymentData = {
+        amount: finalPaymentAmount,
+        currency: 'MAD', // Moroccan Dirham
+        orderID,
+        customerEmail: userData.email || rentalData.email,
+        customerName: userData.name || rentalData.fullName,
+        redirectURL: `${window.location.origin}/payment-callback?status=success`,
+        callbackURL: `${window.location.origin}/api/payment-callback`,
+        customData: {
+          userId: userData.id,
+          propertyId: propertyData.id,
+          reservationType: 'rental',
+          addOns: rentalData.addOns || [],
+          protectionOption: selectedPaymentMethod?.protectionOption || 'haani'
         }
+      };
+      
+      // Initiate payment
+      const paymentResponse = await PaymentGatewayService.initiatePayment(paymentData);
+      
+      if (!paymentResponse.success || !paymentResponse.htmlForm) {
+        throw new Error(paymentResponse.error || 'Failed to initiate payment');
       }
       
-      // Navigate to success page
-      navigateToSuccess();
+      // Redirect to payment page
+      PaymentGatewayService.redirectToPaymentPage(paymentResponse.htmlForm);
       
-      // Emit event for scroll to top component
-      import('../../utils/event-bus').then(({ default: eventBus, EventType }) => {
-        eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
-      });
+      // The rest of the process will be handled by the payment callback page
     } catch (err) {
-      console.error('Error creating reservation:', err);
-      setError('Failed to create reservation. Please try again.');
-    } finally {
+      console.error('Error initiating payment:', err);
+      setError('Failed to initiate payment. Please try again.');
       setIsSubmitting(false);
     }
   };
@@ -257,14 +290,19 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
   // Calculate fees
   const pricePerMonth = propertyData.price;
   const serviceFee = Math.round(pricePerMonth * 0.2);
-  
+
   // Apply discount if available
   const discount = rentalData.discount ? {
     amount: rentalData.discount.amount,
     code: rentalData.discount.code
   } : null;
   const discountAmount = discount ? discount.amount : 0;
-  const totalPrice = pricePerMonth + serviceFee - discountAmount;
+
+  // Add Haani Max fee if selected
+  const haaniMaxFee = selectedPaymentMethod?.protectionOption === 'haaniMax' ? 250 : 0;
+
+  // Calculate total price
+  const totalPrice = pricePerMonth + serviceFee - discountAmount + haaniMaxFee;
   
   return (
     <ConfirmationContainer>
@@ -412,6 +450,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
             isSubmitting={isSubmitting}
             buttonText="Confirm Reservation"
             discount={discount}
+            haaniMaxFee={haaniMaxFee}
           />
           
           {error && (

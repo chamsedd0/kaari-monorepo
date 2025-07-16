@@ -472,6 +472,12 @@ class ReferralService {
       const discountDoc = querySnapshot.docs[0];
       const data = discountDoc.data();
       
+      // If the discount is already associated with a booking, it can't be used for another booking
+      // This prevents users from using the same discount on multiple bookings before it's marked as used
+      if (data.bookingId) {
+        return null;
+      }
+      
       return {
         code: data.code,
         advertiserId: data.advertiserId,
@@ -655,6 +661,35 @@ class ReferralService {
       return true;
     } catch (error) {
       console.error('Error requesting payout:', error);
+      return false;
+    }
+  }
+
+  // Check if a discount is already associated with a booking (even if not marked as used yet)
+  async isDiscountInUse(userId: string): Promise<boolean> {
+    try {
+      const discountsRef = collection(db, 'referralDiscounts');
+      const q = query(
+        discountsRef, 
+        where('userId', '==', userId),
+        where('isUsed', '==', false),
+        where('expiryDate', '>', Timestamp.now())
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        return false; // No discount found
+      }
+      
+      // Get the first valid discount
+      const discountDoc = querySnapshot.docs[0];
+      const data = discountDoc.data();
+      
+      // If bookingId exists, the discount is already in use
+      return Boolean(data.bookingId);
+    } catch (error) {
+      console.error('Error checking if discount is in use:', error);
       return false;
     }
   }

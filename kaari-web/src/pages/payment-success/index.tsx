@@ -6,6 +6,7 @@ import LoadingScreen from '../../components/loading/LoadingScreen';
 import { getDocumentById } from '../../backend/firebase/firestore';
 import { User, Request, Property } from '../../backend/entities';
 import { getCurrentUserProfile } from '../../backend/firebase/auth';
+import { FaCheckCircle, FaCalendarAlt, FaClock, FaUser, FaHome, FaCreditCard } from 'react-icons/fa';
 
 // Collection names - these are defined in multiple server action files
 const REQUESTS_COLLECTION = 'requests';
@@ -17,6 +18,8 @@ const PaymentSuccess: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [propertyTitle, setPropertyTitle] = useState('');
   const [reservationId, setReservationId] = useState('');
+  const [moveInDate, setMoveInDate] = useState<Date | null>(null);
+  const [amount, setAmount] = useState<number>(0);
   
   useEffect(() => {
     const fetchReservationDetails = async () => {
@@ -57,6 +60,15 @@ const PaymentSuccess: React.FC = () => {
             setPropertyTitle(property.title || 'Property');
           }
         }
+
+        // Set move-in date and amount if available
+        if (reservation.scheduledDate) {
+          setMoveInDate(new Date(reservation.scheduledDate));
+        }
+        
+        if (reservation.totalPrice) {
+          setAmount(reservation.totalPrice);
+        }
         
         setIsLoading(false);
       } catch (error) {
@@ -68,135 +80,296 @@ const PaymentSuccess: React.FC = () => {
     fetchReservationDetails();
   }, [searchParams, navigate]);
   
+  // Format date
+  const formatDate = (date: Date | null) => {
+    if (!date) return 'Not specified';
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+  
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fr-MA', {
+      style: 'currency',
+      currency: 'MAD',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+  
   if (isLoading) {
     return <LoadingScreen isLoading={true} />;
   }
   
   return (
     <SuccessContainer>
-      <SuccessContent>
-        <SuccessIcon>✓</SuccessIcon>
-        <h1>Payment Successful!</h1>
+      <FaCheckCircle className="success-icon" />
+      
+      <h2 className="success-title">Payment Successful!</h2>
+      
+      <p className="success-message">
+        Your payment for <strong>{propertyTitle}</strong> has been successfully processed.
+        We've sent you a confirmation email with all the details.
+      </p>
+      
+      <div className="reservation-details">
+        <h3 className="details-title">Payment Details</h3>
         
-        <p>
-          Your payment for <strong>{propertyTitle}</strong> has been processed successfully.
-          We've sent you a confirmation email with all the details.
-        </p>
-        
-        <p className="reservation-id">
-          Reservation ID: <strong>{reservationId}</strong>
-        </p>
-        
-        <p>
-          The property owner has been notified of your payment. You can view the status
-          of your reservation in your dashboard.
-        </p>
-        
-        <ButtonGroup>
-          <PrimaryButton onClick={() => navigate(`/dashboard/user/reservations/${reservationId}`)}>
-            View Reservation
-          </PrimaryButton>
+        <div className="details-container">
+          <div className="detail-card">
+            <div className="detail-icon">
+              <FaHome />
+            </div>
+            <div className="detail-content">
+              <h4>Property</h4>
+              <p>{propertyTitle}</p>
+            </div>
+          </div>
           
-          <SecondaryButton onClick={() => navigate('/dashboard/user/reservations')}>
-            All Reservations
-          </SecondaryButton>
-        </ButtonGroup>
-      </SuccessContent>
+          <div className="detail-card">
+            <div className="detail-icon">
+              <FaCalendarAlt />
+            </div>
+            <div className="detail-content">
+              <h4>Move-In Date</h4>
+              <p>{formatDate(moveInDate)}</p>
+            </div>
+          </div>
+          
+          <div className="detail-card">
+            <div className="detail-icon">
+              <FaCreditCard />
+            </div>
+            <div className="detail-content">
+              <h4>Amount Paid</h4>
+              <p>{formatCurrency(amount)}</p>
+            </div>
+          </div>
+          
+          <div className="detail-card">
+            <div className="detail-icon">
+              <FaClock />
+            </div>
+            <div className="detail-content">
+              <h4>Reference Number</h4>
+              <p>{reservationId}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="next-steps">
+        <h3 className="next-steps-title">What Happens Next?</h3>
+        
+        <ul className="steps-list">
+          <li>
+            <strong>Confirmation:</strong> The property owner has been notified of your payment.
+          </li>
+          <li>
+            <strong>Move-In Preparation:</strong> Get ready for your scheduled move-in date.
+          </li>
+          <li>
+            <strong>Contact Owner:</strong> Coordinate with the property owner for key handover and other details.
+          </li>
+          <li>
+            <strong>Move In:</strong> On your move-in day, confirm your arrival through your dashboard.
+          </li>
+        </ul>
+      </div>
+      
+      <div className="action-buttons">
+        <button 
+          className="action-button primary"
+          onClick={() => navigate(`/dashboard/user/reservations/${reservationId}`)}
+        >
+          View Reservation Details
+        </button>
+        
+        <button 
+          className="action-button secondary"
+          onClick={() => navigate('/dashboard/user/reservations')}
+        >
+          All Reservations
+        </button>
+      </div>
     </SuccessContainer>
   );
 };
 
 const SuccessContainer = styled.div`
   display: flex;
-  justify-content: center;
+  min-height: 100vh;
+  margin: 0 auto;
+  margin-top: 80px;
+  flex-direction: column;
   align-items: center;
-  min-height: 80vh;
-  padding: 2rem;
-`;
-
-const SuccessContent = styled.div`
-  background-color: white;
-  border-radius: ${Theme.borders.radius.lg};
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  padding: 3rem;
-  max-width: 600px;
   width: 100%;
+  max-width: 800px;
+  padding: 3rem 1.5rem;
   text-align: center;
   
-  h1 {
-    color: ${Theme.colors.success};
+  .success-icon {
+    color: ${Theme.colors.secondary};
+    font-size: 5rem;
     margin-bottom: 1.5rem;
-    font: ${Theme.typography.fonts.h2};
   }
   
-  p {
+  .success-title {
+    font: ${Theme.typography.fonts.h3};
+    color: ${Theme.colors.black};
+    margin-bottom: 1rem;
+  }
+  
+  .success-message {
+    font: ${Theme.typography.fonts.largeM};
     color: ${Theme.colors.gray2};
-    margin-bottom: 1.5rem;
-    font: ${Theme.typography.fonts.mediumM};
-    line-height: 1.6;
+    max-width: 600px;
+    margin-bottom: 2.5rem;
   }
   
-  .reservation-id {
-    font: ${Theme.typography.fonts.smallB};
+  .reservation-details {
     background-color: ${Theme.colors.tertiary};
-    padding: 0.75rem;
     border-radius: ${Theme.borders.radius.md};
-    display: inline-block;
+    padding: 2rem;
+    width: 100%;
+    margin-bottom: 2.5rem;
+    
+    .details-title {
+      font: ${Theme.typography.fonts.largeB};
+      color: ${Theme.colors.black};
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid ${Theme.colors.gray};
+      padding-bottom: 0.75rem;
+      text-align: left;
+    }
+    
+    .details-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      
+      .detail-card {
+        display: flex;
+        align-items: flex-start;
+        text-align: left;
+        
+        .detail-icon {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background-color: rgba(143, 39, 206, 0.1);
+          color: ${Theme.colors.secondary};
+          margin-right: 1rem;
+          
+          svg {
+            font-size: 1.25rem;
+          }
+        }
+        
+        .detail-content {
+          h4 {
+            font: ${Theme.typography.fonts.mediumB};
+            color: ${Theme.colors.black};
+            margin: 0 0 0.5rem;
+          }
+          
+          p {
+            font: ${Theme.typography.fonts.mediumM};
+            color: ${Theme.colors.gray2};
+            margin: 0;
+          }
+        }
+      }
+    }
   }
-`;
-
-const SuccessIcon = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
-  background-color: ${Theme.colors.success};
-  color: white;
-  border-radius: 50%;
-  font-size: 40px;
-  margin: 0 auto 2rem;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 2rem;
   
-  @media (max-width: 600px) {
-    flex-direction: column;
-    gap: 0.75rem;
+  .next-steps {
+    width: 100%;
+    margin-bottom: 2.5rem;
+    
+    .next-steps-title {
+      font: ${Theme.typography.fonts.largeB};
+      color: ${Theme.colors.black};
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+    
+    .steps-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      text-align: left;
+      
+      li {
+        font: ${Theme.typography.fonts.mediumM};
+        color: ${Theme.colors.gray2};
+        margin-bottom: 1rem;
+        padding-left: 1.5rem;
+        position: relative;
+        
+        &:before {
+          content: "•";
+          color: ${Theme.colors.secondary};
+          font-size: 1.5rem;
+          position: absolute;
+          left: 0;
+          top: -0.25rem;
+        }
+        
+        strong {
+          font: ${Theme.typography.fonts.mediumB};
+          color: ${Theme.colors.black};
+        }
+      }
+    }
   }
-`;
-
-const PrimaryButton = styled.button`
-  padding: 0.75rem 1.5rem;
-  background-color: ${Theme.colors.primary};
-  color: white;
-  border: none;
-  border-radius: ${Theme.borders.radius.md};
-  cursor: pointer;
-  font: ${Theme.typography.fonts.mediumB};
-  transition: background-color 0.2s;
   
-  &:hover {
-    background-color: ${Theme.colors.primary};
-  }
-`;
-
-const SecondaryButton = styled.button`
-  padding: 0.75rem 1.5rem;
-  background-color: white;
-  color: ${Theme.colors.primary};
-  border: 1px solid ${Theme.colors.primary};
-  border-radius: ${Theme.borders.radius.md};
-  cursor: pointer;
-  font: ${Theme.typography.fonts.mediumB};
-  transition: all 0.2s;
-  
-  &:hover {
-    background-color: ${Theme.colors.tertiary};
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    
+    @media (max-width: 600px) {
+      flex-direction: column;
+      width: 100%;
+    }
+    
+    .action-button {
+      padding: 16px 32px;
+      border-radius: 100px;
+      font: ${Theme.typography.fonts.mediumB};
+      cursor: pointer;
+      transition: all 0.3s ease;
+      
+      &.primary {
+        background-color: ${Theme.colors.secondary};
+        color: white;
+        border: none;
+        
+        &:hover {
+          background-color: ${Theme.colors.primary};
+        }
+      }
+      
+      &.secondary {
+        background-color: white;
+        color: ${Theme.colors.secondary};
+        border: 1px solid ${Theme.colors.secondary};
+        
+        &:hover {
+          background-color: ${Theme.colors.tertiary};
+        }
+      }
+      
+      @media (max-width: 600px) {
+        width: 100%;
+      }
+    }
   }
 `;
 

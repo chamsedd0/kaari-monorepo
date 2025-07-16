@@ -280,6 +280,12 @@ export async function createCheckoutReservation(data: {
     const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, data.propertyId);
     
     if (property) {
+      // Update the property status to 'occupied' since payment is already made
+      await updateDocument<Property>(PROPERTIES_COLLECTION, data.propertyId, {
+        status: 'occupied',
+        updatedAt: new Date()
+      });
+      
       try {
         // Send notification to the advertiser using the reservationRequest function
         await advertiserNotifications.reservationRequest(
