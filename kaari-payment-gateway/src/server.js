@@ -11,6 +11,18 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Root endpoint for testing
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    message: 'Kaari Payment Gateway API is running',
+    endpoints: {
+      health: '/health',
+      payments: '/api/payments/initiate'
+    }
+  });
+});
+
 // Import routes
 const paymentRoutes = require('./routes/payment');
 
