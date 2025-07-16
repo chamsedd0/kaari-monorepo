@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useStore } from '../backend/store';
 
@@ -11,6 +11,7 @@ const ADMIN_EMAILS = [
 // User IDs that should have admin access
 const ADMIN_IDS = [
   'Je9GyJ0ZL8N8QoSALZaBvzy5Erf1',
+  'bVctXP6Vi7U0P11zeJ2cKAfFU713',
   // Add any other user IDs that should have access
 ];
 
@@ -21,28 +22,11 @@ const ADMIN_IDS = [
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const user = useStore(state => state.user);
-  const isAuthenticated = useStore(state => state.isAuthenticated);
   
-  // Add detailed console logs for debugging
-  useEffect(() => {
-    console.log('=== Protected Route Check ===');
-    console.log('Path:', location.pathname);
-    console.log('User authenticated:', isAuthenticated ? 'Yes' : 'No');
-    console.log('User email:', user?.email || 'No email');
-    console.log('User ID:', user?.id || 'No ID');
-    console.log('User object:', user);
-    
-    // Check if user is in the admin list (by email or ID)
-    const hasEmailAccess = user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
-    const hasIdAccess = user?.id && ADMIN_IDS.includes(user.id);
-    console.log('Has access by email:', hasEmailAccess ? 'Yes' : 'No');
-    console.log('Has access by ID:', hasIdAccess ? 'Yes' : 'No');
-    console.log('==========================');
-  }, [location.pathname, user, isAuthenticated]);
+  
   
   // If no user, redirect to coming soon page
   if (!user) {
-    console.log('ACCESS DENIED: No user');
     return <Navigate to="/static/coming-soon" replace state={{ from: location }} />;
   }
   
@@ -52,12 +36,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   
   // If not in admin list, redirect to coming soon page
   if (!hasEmailAccess && !hasIdAccess) {
-    console.log(`ACCESS DENIED for ${user.email || user.id}: Not in admin list`);
     return <Navigate to="/static/coming-soon" replace state={{ from: location }} />;
   }
   
   // If user has access, render the children
-  console.log(`ACCESS GRANTED for ${user.email || user.id}`);
   return <>{children}</>;
 };
 

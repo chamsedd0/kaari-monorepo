@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PhotoshootsPageStyle } from './styles';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
-import NeedHelpCardComponent from '../../../../components/skeletons/cards/need-help-card';
 import PreparePropertyComponent from '../../../../components/skeletons/cards/prepare-your-property';
 import PhotoshootStatusCard from '../../../../components/skeletons/cards/photoshoot-status-card';
 import CancelPhotoshootModal from '../../../../components/skeletons/modals/cancel-photoshoot-modal';
@@ -13,34 +12,8 @@ import { PhotoshootBooking, Team } from '../../../../backend/entities';
 import { useStore } from '../../../../backend/store';
 import { TeamServerActions } from '../../../../backend/server-actions/TeamServerActions';
 import { useTranslation } from 'react-i18next';
-import styled from 'styled-components';
 
-// Styled components for the banner reset button
-const BannerResetContainer = styled.div`
-  margin-top: 16px;
-  display: flex;
-  justify-content: center;
-`;
 
-const BannerResetButton = styled.button`
-  background-color: transparent;
-  color: #8F27CE;
-  border: 1px solid #8F27CE;
-  border-radius: 24px;
-  padding: 8px 16px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: rgba(143, 39, 206, 0.05);
-  }
-`;
-
-// Interface for booking with team data
-interface BookingWithTeam extends PhotoshootBooking {
-  team?: Team | null;
-}
 
 // Add the team leader info
 interface TeamWithLeaderInfo extends Team {
@@ -62,24 +35,18 @@ const PhotoshootPage: React.FC = () => {
   const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<BookingWithTeamInfo | null>(null);
   
-  // Debug loading state
-  useEffect(() => {
-    console.log('Loading state changed:', loading);
-  }, [loading]);
+
   
   // Helper function to fetch bookings with team data
   const fetchBookingsWithTeamData = async () => {
-    console.log('Fetching bookings with team data for user:', user?.id);
     
     if (!user?.id) {
-      console.warn('No user ID available, cannot fetch bookings');
       return [];
     }
     
     try {
       // Get bookings for the current user only
       const userBookings = await PhotoshootBookingServerActions.getBookingsByAdvertiserId(user.id);
-      console.log('User bookings:', userBookings.length);
       
       // Fetch team data for each booking that has a teamId
       const bookingsWithTeam: BookingWithTeamInfo[] = [];
@@ -119,10 +86,8 @@ const PhotoshootPage: React.FC = () => {
   
   useEffect(() => {
     const fetchBookings = async () => {
-      console.log('Fetching bookings, user:', user?.id);
       
       if (!user?.id) {
-        console.warn('User ID is missing, cannot fetch bookings');
         setBookings([]);
         setLoading(false);
         return;
@@ -148,11 +113,7 @@ const PhotoshootPage: React.FC = () => {
     navigate('/photoshoot-booking');
   };
   
-  // Function to reset the banner visibility
-  const handleResetBanner = () => {
-    localStorage.setItem('showPhotoshootBanner', 'true');
-    alert(t('advertiser_dashboard.photoshoot.banner_reset', 'Banner will be shown again when you visit the dashboard'));
-  };
+  
   
   const handleOpenRescheduleModal = (booking: BookingWithTeamInfo) => {
     setSelectedBooking(booking);
@@ -219,10 +180,8 @@ const PhotoshootPage: React.FC = () => {
       setSelectedBooking(null);
       
       // Show success message
-      alert(t('advertiser_dashboard.photoshoot.cancel_success', 'Photoshoot cancelled successfully'));
     } catch (error) {
       console.error('Error cancelling photoshoot:', error);
-      alert(t('advertiser_dashboard.photoshoot.cancel_error', 'Failed to cancel photoshoot. Please try again.'));
     }
   };
   
@@ -283,18 +242,12 @@ const PhotoshootPage: React.FC = () => {
   const activeBookings = sortedBookings.filter(b => b && (b.status === 'pending' || b.status === 'assigned'));
   const completedBookings = sortedBookings.filter(b => b && (b.status === 'completed' || b.status === 'cancelled'));
   
-  console.log('Rendering with states:', { 
-    loading, 
-    bookingsLength: bookings.length,
-    activeLength: activeBookings.length, 
-    completedLength: completedBookings.length 
-  });
+  
   
   // Temporary function to force end loading if it's stuck
   useEffect(() => {
     const timer = setTimeout(() => {
       if (loading) {
-        console.log('Loading was stuck, forcing to false');
         setLoading(false);
       }
     }, 5000); // Force end loading after 5 seconds
