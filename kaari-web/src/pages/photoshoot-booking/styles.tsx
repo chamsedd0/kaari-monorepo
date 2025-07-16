@@ -28,9 +28,7 @@ export const PhotoshootBookingPageStyle = styled.div`
   .section-title {
     font: ${Theme.typography.fonts.h4B};
     color: ${Theme.colors.black};
-
     margin-bottom: 40px;
-    
   }
   
   .form-section {
@@ -83,28 +81,28 @@ export const PhotoshootBookingPageStyle = styled.div`
     
     .address-search-wrapper {
       width: 100%;
-    }
-    
-    .address-search-input {
-      width: 100%;
       
-      input {
+      .address-search-input {
         width: 100%;
-        padding: 22px 24px;
-        border: ${Theme.borders.primary};
-        border-radius: ${Theme.borders.radius.extreme};
-        font: ${Theme.typography.fonts.largeM};
-        color: ${Theme.colors.primary};
-        background-color: ${Theme.colors.white};
-        transition: all 0.3s ease;
         
-        &::placeholder {
-          color: ${Theme.colors.tertiary};
-        }
-        
-        &:focus {
-          outline: none;
-          border-color: ${Theme.colors.primary};
+        input {
+          width: 100%;
+          padding: 22px 24px;
+          border: ${Theme.borders.primary};
+          border-radius: ${Theme.borders.radius.extreme};
+          font: ${Theme.typography.fonts.largeM};
+          color: ${Theme.colors.primary};
+          background-color: ${Theme.colors.white};
+          transition: all 0.3s ease;
+          
+          &::placeholder {
+            color: ${Theme.colors.tertiary};
+          }
+          
+          &:focus {
+            outline: none;
+            border-color: ${Theme.colors.primary};
+          }
         }
       }
     }
@@ -115,30 +113,30 @@ export const PhotoshootBookingPageStyle = styled.div`
     margin-top: 30px;
     width: 100%;
   }
-
+  
   .map-title {
     font: ${Theme.typography.fonts.mediumB};
     color: ${Theme.colors.black};
     margin-bottom: 10px;
   }
-
+  
   .map-description {
     font: ${Theme.typography.fonts.mediumM};
     color: ${Theme.colors.gray2};
     margin-bottom: 20px;
   }
-
+  
   .search-box-container {
     margin-bottom: 15px;
     width: 100%;
   }
-
+  
   .search-input-container {
     position: relative;
     display: flex;
     align-items: center;
   }
-
+  
   .search-icon {
     position: absolute;
     left: 15px;
@@ -146,7 +144,7 @@ export const PhotoshootBookingPageStyle = styled.div`
     font-size: 16px;
     z-index: 1;
   }
-
+  
   .map-search-input {
     width: 100%;
     padding: 22px 24px;
@@ -156,17 +154,17 @@ export const PhotoshootBookingPageStyle = styled.div`
     color: ${Theme.colors.primary};
     background-color: ${Theme.colors.white};
     transition: all 0.3s ease;
-
+    
     &::placeholder {
       color: ${Theme.colors.tertiary};
     }
-
+    
     &:focus {
       outline: none;
       border-color: ${Theme.colors.primary};
     }
   }
-
+  
   .map-container {
     margin: 20px 0;
     width: 100%;
@@ -192,21 +190,21 @@ export const PhotoshootBookingPageStyle = styled.div`
       z-index: 1000 !important;
     }
   }
-
+  
   .map-hint {
     display: flex;
     align-items: center;
     font: ${Theme.typography.fonts.smallM};
     color: ${Theme.colors.gray2};
     margin: 10px 0 20px;
-
+    
     .map-hint-icon {
       color: ${Theme.colors.primary};
       margin-right: 8px;
       font-size: 14px;
     }
   }
-
+  
   .map-loading {
     display: flex;
     flex-direction: column;
@@ -216,14 +214,14 @@ export const PhotoshootBookingPageStyle = styled.div`
     border: ${Theme.borders.primary};
     border-radius: 12px;
     background-color: ${Theme.colors.gray}30;
-
+    
     .spinner {
       animation: ${spin} 1s linear infinite;
       color: ${Theme.colors.primary};
       font-size: 24px;
       margin-bottom: 12px;
     }
-
+    
     p {
       color: ${Theme.colors.gray2};
       font: ${Theme.typography.fonts.mediumM};
@@ -302,7 +300,7 @@ export const PhotoshootBookingPageStyle = styled.div`
     &:hover {
       background-color: ${Theme.colors.primary}40;
     }
-
+    
     &:disabled {
       background-color: ${Theme.colors.gray}30;
       color: ${Theme.colors.gray};
@@ -318,71 +316,71 @@ export const PhotoshootBookingPageStyle = styled.div`
   
   .time-picker {
     flex: 1;
+  }
+  
+  .time-slots-wrapper {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
     
-    .time-slots-wrapper {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-      
-      @media (max-width: 500px) {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 500px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .time-slot {
+    background-color: ${Theme.colors.secondary};
+    color: ${Theme.colors.white};
+    font: ${Theme.typography.fonts.mediumB};
+    padding: 20px 24px;
+    max-height: 60px;
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background-color: ${Theme.colors.secondary}DD;
+      transform: translateY(-2px);
     }
     
-    .time-slot {
-      background-color: ${Theme.colors.secondary};
-      color: ${Theme.colors.white};
-      font: ${Theme.typography.fonts.mediumB};
-      padding: 20px 24px;
-      max-height: 60px;
-      border-radius: 16px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      
-      &:hover {
-        background-color: ${Theme.colors.secondary}DD;
-        transform: translateY(-2px);
-      }
-      
-      &.selected {
-        background-color: ${Theme.colors.secondary}CC;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      }
+    &.selected {
+      background-color: ${Theme.colors.secondary}CC;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+  }
+  
+  .loading-slots {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    
+    .spinner {
+      animation: ${spin} 1s linear infinite;
+      color: ${Theme.colors.primary};
+      font-size: 24px;
+      margin-bottom: 12px;
     }
     
-    .loading-slots {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 200px;
-      
-      .spinner {
-        animation: ${spin} 1s linear infinite;
-        color: ${Theme.colors.primary};
-        font-size: 24px;
-        margin-bottom: 12px;
-      }
-      
-      p {
-        color: ${Theme.colors.gray2};
-        font: ${Theme.typography.fonts.mediumM};
-      }
+    p {
+      color: ${Theme.colors.gray2};
+      font: ${Theme.typography.fonts.mediumM};
     }
+  }
+  
+  .no-slots-message {
+    border: 1px dashed ${Theme.colors.gray};
+    border-radius: 8px;
+    padding: 24px;
+    margin: 20px 0;
+    text-align: center;
+    background-color: #f9f9f9;
     
-    .no-slots-message {
-      border: 1px dashed ${Theme.colors.gray};
-      border-radius: 8px;
-      padding: 24px;
-      margin: 20px 0;
-      text-align: center;
-      background-color: #f9f9f9;
-      
-      p {
-        color: ${Theme.colors.gray2};
-        font: ${Theme.typography.fonts.mediumM};
-      }
+    p {
+      color: ${Theme.colors.gray2};
+      font: ${Theme.typography.fonts.mediumM};
     }
   }
   
@@ -458,7 +456,7 @@ export const PhotoshootBookingPageStyle = styled.div`
       color: white;
     }
   }
-
+  
   .contact-section {
     margin-bottom: 48px;
     
@@ -484,7 +482,7 @@ export const PhotoshootBookingPageStyle = styled.div`
       margin-bottom: 0;
     }
   }
-
+  
   /* Custom fallback marker for maps */
   .custom-map-marker {
     position: absolute;
@@ -518,5 +516,52 @@ export const PhotoshootBookingPageStyle = styled.div`
       background-color: white;
       border-radius: 50%;
     }
+  }
+  
+  /* Enhanced marker visibility */
+  .gm-style-iw + div {
+    display: none;
+  }
+  
+  /* Make the Google Maps marker more visible */
+  .gm-style img[src*="maps.google.com/mapfiles/ms/icons/red-dot.png"] {
+    transform: scale(2) !important;
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.7)) !important;
+  }
+  
+  /* Add a pulsating effect to the marker */
+  @keyframes pulse {
+    0% {
+      transform: scale(1.8);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(2.2);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(1.8);
+      opacity: 1;
+    }
+  }
+  
+  .gm-style img[src*="maps.google.com/mapfiles/ms/icons/red-dot.png"] {
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+  
+  /* Add a highlight around the marker */
+  .map-container::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid red;
+    transform: translate(-50%, -100%);
+    pointer-events: none;
+    z-index: 9998;
+    animation: pulse 1.5s infinite ease-in-out;
   }
 `;

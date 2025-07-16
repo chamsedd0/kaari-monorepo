@@ -494,6 +494,14 @@ const Subheading = styled.p<{ isMobile: boolean }>`
     margin-left: auto;
     margin-right: auto;
   }
+  
+  /* Reduce Arabic text size on mobile */
+  html[lang="ar"] & {
+    @media (max-width: 768px) {
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+  }
 `;
 
 const FeatureList = styled.div<{ isVisible: boolean }>`
@@ -578,6 +586,14 @@ const FeatureDescription = styled.p<{ isMobile: boolean }>`
   @media (max-width: 768px) {
     font-size: 0.85rem;
   }
+  
+  /* Reduce Arabic text size on mobile */
+  html[lang="ar"] & {
+    @media (max-width: 768px) {
+      font-size: 0.75rem;
+      line-height: 1.4;
+    }
+  }
 `;
 
 const CTASection = styled.div<{ isVisible: boolean }>`
@@ -626,7 +642,14 @@ const StartButton = styled.button<{ isMobile: boolean }>`
     justify-content: center;
     padding: 0.8rem 2rem;
     font-size: 1rem;
-    margin-bottom: 50px;
+    margin-bottom: 80px; /* Increased from 50px to 80px for better spacing */
+  }
+  
+  /* Reduce Arabic text size on mobile */
+  html[lang="ar"] & {
+    @media (max-width: 768px) {
+      font-size: 0.9rem;
+    }
   }
 `;
 

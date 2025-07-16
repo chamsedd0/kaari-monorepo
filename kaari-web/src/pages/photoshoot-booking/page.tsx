@@ -95,14 +95,12 @@ const PhotoshootBookingPage: React.FC = () => {
   const searchBoxRef = useRef<google.maps.places.SearchBox>();
   const geocoderRef = useRef<google.maps.Geocoder>();
 
-  // Property type options
+  // Property type options - remove penthouse and townhouse
   const propertyTypeOptions = [
     t('photoshoot_booking.property_types.apartment'),
     t('photoshoot_booking.property_types.house'),
     t('photoshoot_booking.property_types.villa'),
-    t('photoshoot_booking.property_types.penthouse'),
-    t('photoshoot_booking.property_types.studio'),
-    t('photoshoot_booking.property_types.townhouse')
+    t('photoshoot_booking.property_types.studio')
   ];
 
   // Add a new state to track if form update is coming from map
@@ -352,10 +350,10 @@ const PhotoshootBookingPage: React.FC = () => {
               streetName, streetNumber, city, state, postalCode, country
             });
             
-            // Update form data with extracted address components
+            // Update form data with extracted address components and use formatted_address for streetName
             setFormData(prev => ({
               ...prev,
-              streetName: streetName || prev.streetName,
+              streetName: place.formatted_address || streetName || prev.streetName,
               streetNumber: streetNumber || prev.streetNumber,
               city: city || prev.city,
               stateRegion: state || prev.stateRegion,
@@ -365,7 +363,7 @@ const PhotoshootBookingPage: React.FC = () => {
             }));
           } else {
             // Fallback to reverse geocoding if address_components not available
-          updateAddressFromLocation(location);
+            updateAddressFromLocation(location);
           }
         }
       }
@@ -468,8 +466,12 @@ const PhotoshootBookingPage: React.FC = () => {
     }));
   };
 
-  // Handle date change
+  // Handle date change - Only proceed with validation if a date was actually selected
   const handleDateChange = async (date: Date) => {
+    // Only proceed with validation if a date was actually selected
+    // (not just navigating through months/year view)
+    if (!date) return;
+    
     setSelectedDate(date);
     
     // Format the date for display
@@ -523,6 +525,10 @@ const PhotoshootBookingPage: React.FC = () => {
       propertyType: value
     }));
   };
+
+  // Check if the property type is apartment or studio (needs more fields)
+  const isApartmentOrStudio = formData.propertyType === t('photoshoot_booking.property_types.apartment') || 
+                              formData.propertyType === t('photoshoot_booking.property_types.studio');
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent | React.MouseEvent<HTMLButtonElement> | any) => {
@@ -721,20 +727,23 @@ const PhotoshootBookingPage: React.FC = () => {
             }
           }}
         >
-          {/* Always render the marker at the center */}
+          {/* Always render the marker at the center with enhanced visibility */}
               <Marker
                 position={markerPosition}
-            draggable={true}
-            onDragEnd={onMarkerDragEnd}
-            animation={google.maps.Animation.DROP}
+                draggable={true}
+                onDragEnd={onMarkerDragEnd}
+                animation={google.maps.Animation.BOUNCE}
+                // Make marker much more visible with a custom icon
+                options={{
+                  zIndex: 9999, // Ensure it's on top of everything
+                }}
                 icon={{
-              url: '/images/map-pin.png',
-              scaledSize: new google.maps.Size(40, 40),
-              origin: new google.maps.Point(0, 0),
-              anchor: new google.maps.Point(20, 40)
+                  // Use a bright red pin that's much more visible
+                  url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                  scaledSize: new google.maps.Size(60, 60), // Make it much larger
+                  anchor: new google.maps.Point(30, 60), // Center the icon at the bottom tip
                 }}
               />
-
           {/* Fallback marker for debugging */}
           {showFallbackMarker && <FallbackMarker />}
           </GoogleMap>
@@ -742,6 +751,9 @@ const PhotoshootBookingPage: React.FC = () => {
         <div className="map-instructions">
           <FaMapMarkerAlt className="instruction-icon" />
           <p>{t('photoshoot_booking.map_instructions', 'Click on the map or drag the marker to set the exact location')}</p>
+          <div style={{color: 'red', fontWeight: 'bold', marginTop: '5px'}}>
+            {t('photoshoot_booking.map_pin_notice', 'Look for the RED PIN on the map to set your location')}
+          </div>
         </div>
       </div>
     );
@@ -804,23 +816,27 @@ const PhotoshootBookingPage: React.FC = () => {
                   />
                 </div>
                 
-                <div className="form-group">
-                  <label htmlFor="floor">{t('photoshoot_booking.floor', 'Floor')}</label>
-                  <InputBaseModel
-                    value={formData.floor}
-                    onChange={(e) => handleCustomInputChange('floor', e.target.value)}
-                    placeholder={t('photoshoot_booking.floor_placeholder', '1')}
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="flat">{t('photoshoot_booking.flat', 'Flat')}</label>
-                  <InputBaseModel
-                    value={formData.flat}
-                    onChange={(e) => handleCustomInputChange('flat', e.target.value)}
-                    placeholder={t('photoshoot_booking.flat_placeholder', '2')}
-                  />
-                </div>
+                {isApartmentOrStudio && (
+                  <>
+                    <div className="form-group">
+                      <label htmlFor="floor">{t('photoshoot_booking.floor', 'Floor')}</label>
+                      <InputBaseModel
+                        value={formData.floor}
+                        onChange={(e) => handleCustomInputChange('floor', e.target.value)}
+                        placeholder={t('photoshoot_booking.floor_placeholder', '1')}
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="flat">{t('photoshoot_booking.flat', 'Flat')}</label>
+                      <InputBaseModel
+                        value={formData.flat}
+                        onChange={(e) => handleCustomInputChange('flat', e.target.value)}
+                        placeholder={t('photoshoot_booking.flat_placeholder', '2')}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
               
               <div className="form-row">

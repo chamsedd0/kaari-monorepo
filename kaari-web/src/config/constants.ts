@@ -4,7 +4,7 @@ export const API_URL = import.meta.env.VITE_API_URL || 'https://api.kaari.com';
 // Photoshoot booking constants
 export const MAX_BOOKINGS_PER_DAY = 6;
 export const DEFAULT_TIME_SLOTS = [
-  '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '1:00 PM', '2:00 PM'
+  '10:00', '12:00', '14:00', '16:00'
 ];
 
 // Local storage keys

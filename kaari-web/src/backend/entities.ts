@@ -202,6 +202,7 @@ export interface PhotoshootBooking {
   advertiserId?: string; // Reference to the User ID (advertiser) who requested the photoshoot
   userId?: string; // Alternative to advertiserId for backward compatibility
   phoneNumber?: string; // Contact phone number for the photoshoot
+  name?: string; // Name of the person requesting the photoshoot
   propertyAddress?: {
     street: string;
     city: string;

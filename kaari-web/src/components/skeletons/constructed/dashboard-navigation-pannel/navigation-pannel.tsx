@@ -63,14 +63,6 @@ export const NavigationPannel: React.FC<NavigationPannelProps> = ({ activeSectio
                 <span className="nav-link-text">Payments</span>
             </button>
             <button 
-                onClick={() => onSectionChange('perks')} 
-                className={`nav-link ${activeSection === 'perks' ? 'active' : ''}`}
-                aria-current={activeSection === 'perks' ? 'page' : undefined}
-            >
-                <img src={PerksIcon} alt="Perks" className="nav-link-icon" />
-                <span className="nav-link-text">Perks program</span>
-            </button>
-            <button 
                 onClick={() => onSectionChange('settings')} 
                 className={`nav-link ${activeSection === 'settings' ? 'active' : ''}`}
                 aria-current={activeSection === 'settings' ? 'page' : undefined}

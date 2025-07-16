@@ -125,6 +125,7 @@ const CalendarComponent: React.FC<CalendarProps> = ({
       }
       return prev + 1;
     });
+    // Don't call onDateSelect here
   };
 
   const decrementMonth = () => {
@@ -135,14 +136,17 @@ const CalendarComponent: React.FC<CalendarProps> = ({
       }
       return prev - 1;
     });
+    // Don't call onDateSelect here
   };
 
   const incrementYear = () => {
     setCurrentYear(y => y + 1);
+    // Don't call onDateSelect here
   };
 
   const decrementYear = () => {
     setCurrentYear(y => y - 1);
+    // Don't call onDateSelect here
   };
 
   // Date selection handler

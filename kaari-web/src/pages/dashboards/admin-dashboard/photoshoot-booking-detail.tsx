@@ -659,6 +659,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedTeam, setSelectedTeam] = useState('');
   const [teamDebugInfo, setTeamDebugInfo] = useState<string>('');
+  const [statusMessage, setStatusMessage] = useState<string>('');
   
   // Add missing state variables
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -1290,14 +1291,25 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      setImageFiles(prev => [...prev, ...files]); // Remove 10 image limit
+      console.log(`Selected ${files.length} image files:`, files);
       
-      // Create preview URLs
-      const newImageUrls = files.map(file => URL.createObjectURL(file));
+      // Store the actual files for upload
+      setImageFiles(prev => [...prev, ...files]);
+      
+      // Create preview URLs and add to property data
+      const newImageUrls = files.map(file => {
+        const url = URL.createObjectURL(file);
+        console.log(`Created blob URL for ${file.name}:`, url);
+        return url;
+      });
+      
       setPropertyData(prev => ({
         ...prev,
         images: [...prev.images, ...newImageUrls]
       }));
+      
+      // Reset the file input so the same file can be selected again if needed
+      e.target.value = '';
     }
   };
 
@@ -1327,9 +1339,11 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
   const handleCompleteBooking = async () => {
     console.clear();
     console.log('=== STARTING PROPERTY CREATION ===');
+    setStatusMessage('Starting property creation process...');
     
     if (!booking || !bookingId) {
       alert('No booking data available');
+      setStatusMessage('Error: No booking data available');
       return;
     }
     
@@ -1337,6 +1351,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     const ownerId = booking.advertiserId || booking.userId;
     if (!ownerId) {
       alert('No owner ID found in booking');
+      setStatusMessage('Error: No owner ID found in booking');
       return;
     }
     
@@ -1345,14 +1360,18 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
     
       // Create a Set to ensure uniqueness of images
       const imageSet = new Set<string>();
+      // Track blob URLs separately
+      const blobUrls = new Set<string>();
       
       // Add images from all sources to the Set
       // Only valid URLs will be added (filter out blob: URLs and other temporary preview URLs)
       const addValidImages = (imgArray: string[] | undefined) => {
         if (!imgArray) return;
         imgArray.forEach(img => {
-          // Only add images that are valid URLs (not blob: URLs) and not already in the set
-          if (img && !img.startsWith('blob:') && img.startsWith('http')) {
+          if (img && img.startsWith('blob:')) {
+            // Track blob URLs separately
+            blobUrls.add(img);
+          } else if (img && img.startsWith('http')) {
             imageSet.add(img);
           }
         });
@@ -1368,16 +1387,22 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       
       console.log(`Total unique images collected: ${allImages.length}`);
       console.log('Images:', allImages);
+      console.log(`Total blob URLs (to be uploaded): ${blobUrls.size}`);
+      setStatusMessage(`Found ${allImages.length} existing images and ${imageFiles.length} new images to upload`);
       
       // Create a Set for videos to ensure uniqueness
       const videoSet = new Set<string>();
+      // Track blob URLs for videos separately
+      const videoBlobUrls = new Set<string>();
       
       // Add videos from all sources
       const addValidVideos = (vidArray: string[] | undefined) => {
         if (!vidArray) return;
         vidArray.forEach(vid => {
-          // Only add videos that are valid URLs (not blob: URLs)
-          if (vid && !vid.startsWith('blob:') && vid.startsWith('http')) {
+          if (vid && vid.startsWith('blob:')) {
+            // Track blob URLs separately
+            videoBlobUrls.add(vid);
+          } else if (vid && vid.startsWith('http')) {
             videoSet.add(vid);
           }
         });
@@ -1391,9 +1416,12 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       
       console.log(`Total unique videos collected: ${allVideos.length}`);
       console.log('Videos:', allVideos);
+      console.log(`Total video blob URLs (to be uploaded): ${videoBlobUrls.size}`);
       
-      if (allImages.length === 0) {
+      // Check if we have any images (either already uploaded or files to upload)
+      if (allImages.length === 0 && imageFiles.length === 0) {
         alert('Please add at least one image to the property');
+        setStatusMessage('Error: No images available');
         setLoading(false);
         return;
       }
@@ -1401,6 +1429,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
       // Upload any pending image files if needed
       if (imageFiles.length > 0) {
         console.log(`Uploading ${imageFiles.length} image files...`);
+        setStatusMessage(`Uploading ${imageFiles.length} image files...`);
         try {
           const tempPropertyId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
           const basePath = `public/properties/${tempPropertyId}/images`;
@@ -1412,6 +1441,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
           );
           
           console.log(`Successfully uploaded ${uploadedUrls.length} files:`, uploadedUrls);
+          setStatusMessage(`Successfully uploaded ${uploadedUrls.length} image files`);
           
           // Add the newly uploaded images to our collection
           allImages.push(...uploadedUrls);
@@ -1420,8 +1450,10 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
           setImageFiles([]);
         } catch (uploadError) {
           console.error('Error uploading image files:', uploadError);
+          setStatusMessage(`Error uploading images: ${uploadError instanceof Error ? uploadError.message : String(uploadError)}`);
           alert(`Error uploading images: ${uploadError instanceof Error ? uploadError.message : String(uploadError)}`);
-          // Continue with existing images
+          setLoading(false);
+          return; // Stop the process if image upload fails
         }
       }
       
@@ -1450,6 +1482,14 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
           alert(`Error uploading videos: ${uploadError instanceof Error ? uploadError.message : String(uploadError)}`);
           // Continue with existing videos
         }
+      }
+      
+      // Final check if we have any images after uploads
+      if (allImages.length === 0) {
+        alert('Failed to upload images. Please try again.');
+        setStatusMessage('Error: Failed to upload images');
+        setLoading(false);
+        return;
       }
       
       // Create the property in Firestore
@@ -1789,6 +1829,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
               {booking.phoneNumber && (
                 <div style={{ marginTop: '1rem' }}>
                   <h4>Contact Information</h4>
+                  {booking.name && <p><strong>Name:</strong> {booking.name}</p>}
                   <p><strong>Phone Number:</strong> {booking.phoneNumber}</p>
                 </div>
               )}
@@ -1797,7 +1838,12 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                 <p><strong>Created:</strong> {booking.createdAt ? formatDate(booking.createdAt) : 'N/A'}</p>
                 <p><strong>Last Updated:</strong> {booking.updatedAt ? formatDate(booking.updatedAt) : 'N/A'}</p>
                 {booking.completedAt && <p><strong>Completed:</strong> {formatDate(booking.completedAt)}</p>}
-                {booking.comments && <p><strong>Comments:</strong> {booking.comments}</p>}
+                {booking.comments && (
+                  <div>
+                    <h4>Additional Comments</h4>
+                    <p>{booking.comments}</p>
+                  </div>
+                )}
                 {booking.propertyId && <p><strong>Property ID:</strong> {booking.propertyId}</p>}
               </div>
           </div>
@@ -2644,13 +2690,22 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                 {/* Images */}
                 <div className="section-title">Images</div>
                 <StyledFormGroup>
-                    <Input 
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleFileSelect}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileSelect}
                   />
-                  <p className="helper-text">Upload property images (no limit)</p>
+                  <p className="helper-text">Upload property images</p>
+                  
+                  {/* Image upload status */}
+                  <div className="upload-status">
+                    <p>Selected images: {imageFiles.length}</p>
+                    <p>Total images: {propertyData.images.length}</p>
+                    {loading && <p className="uploading">Uploading images...</p>}
+                    {statusMessage && <p className="status-message">{statusMessage}</p>}
+                  </div>
+                  
                   {propertyData.images.length > 0 && (
                     <ImagePreviewContainer>
                       {propertyData.images.map((image, index) => (
@@ -2664,7 +2719,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                           }}>
                             <FaTrash />
                           </button>
-                    </div>
+                        </div>
                       ))}
                     </ImagePreviewContainer>
                   )}

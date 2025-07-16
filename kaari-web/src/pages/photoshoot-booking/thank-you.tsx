@@ -86,6 +86,11 @@ const ThankYouPageStyle = styled.div`
   min-height: calc(100vh - 300px);
   overflow: hidden;
   
+  @media (max-width: 768px) {
+    padding: 80px 16px 60px;
+    margin-top: 40px;
+  }
+  
   .celebration-confetti {
     position: absolute;
     top: 0;
@@ -107,12 +112,22 @@ const ThankYouPageStyle = styled.div`
     &.right {
       right: 0;
     }
+    
+    @media (max-width: 768px) {
+      width: 20%;
+      opacity: 0.7;
+    }
   }
   
   .content-container {
     max-width: 800px;
     margin: 0 auto;
     text-align: center;
+    
+    @media (max-width: 768px) {
+      max-width: 100%;
+      padding: 0 10px;
+    }
   }
   
   .photographer-illustration {
@@ -127,16 +142,32 @@ const ThankYouPageStyle = styled.div`
       width: 100%;
       height: auto;
     }
+    
+    @media (max-width: 768px) {
+      width: 140px;
+      height: 140px;
+      margin-bottom: 16px;
+    }
   }
   
   .main-title {
     font: ${Theme.typography.fonts.h3};
     color: ${Theme.colors.black};
     margin-bottom: 12px;
+    
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
+      line-height: 1.3;
+      margin-bottom: 10px;
+    }
   }
   
   .message-container {
     margin-bottom: 24px;
+    
+    @media (max-width: 768px) {
+      margin-bottom: 16px;
+    }
   }
   
   .main-message {
@@ -145,6 +176,13 @@ const ThankYouPageStyle = styled.div`
     max-width: 600px;
     margin: 0 auto 20px;
     line-height: 1.6;
+    
+    @media (max-width: 768px) {
+      font-size: 0.9rem;
+      line-height: 1.4;
+      max-width: 100%;
+      margin-bottom: 16px;
+    }
   }
   
   .divider {
@@ -152,21 +190,38 @@ const ThankYouPageStyle = styled.div`
     height: 1px;
     background-color: ${Theme.colors.quaternary};
     margin: 24px 0;
+    
+    @media (max-width: 768px) {
+      margin: 16px 0;
+    }
   }
   
   .next-steps, .preparation {
-    
     margin-bottom: 12px;
     
     h2 {
       font: ${Theme.typography.fonts.largeB};
       color: ${Theme.colors.black};
       margin-bottom: 24px;
+      
+      @media (max-width: 768px) {
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+      }
     }
     
     p {
       font: ${Theme.typography.fonts.text14};
       color: ${Theme.colors.gray2};
+      
+      @media (max-width: 768px) {
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      margin-bottom: 16px;
     }
   }
   
@@ -176,6 +231,18 @@ const ThankYouPageStyle = styled.div`
     justify-content: center;
     margin-top: 24px;
     margin-bottom: 160px;
+    
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 20px;
+      margin-bottom: 80px;
+      padding: 0 20px;
+      
+      button {
+        width: 100%;
+      }
+    }
   }
 `;
 

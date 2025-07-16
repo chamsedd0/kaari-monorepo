@@ -25,11 +25,14 @@ const CompactInput = ({ title, ...props }: { title: string, [key: string]: any }
 };
 
 const AdvertiserSignupForm: React.FC = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const toast = useToastService();
-  const signUp = useStore(state => state.signUp);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Move the useStore hook to the top level of the component
+  const signUp = useStore(state => state.signUp);
+  const loginWithGoogle = useStore(state => state.loginWithGoogle);
   
   // Check if device is mobile and hide headers/footers
   useEffect(() => {
@@ -77,10 +80,10 @@ const AdvertiserSignupForm: React.FC = () => {
   }, []);
   
   // Form state
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -193,8 +196,7 @@ const AdvertiserSignupForm: React.FC = () => {
     setError(null);
     
     try {
-      // Use the store's loginWithGoogle function with advertiser role and isNewAdvertiser flag
-      const loginWithGoogle = useStore(state => state.loginWithGoogle);
+      // Use the loginWithGoogle function that's now defined at the top level
       const user = await loginWithGoogle('advertiser', true);
       
       // Start the signup process

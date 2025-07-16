@@ -13,13 +13,12 @@ import ReviewsPage from './reviews/page';
 import WriteReviewPage from './reviews/write/page';
 import MyReviewsPage from './reviews/my-reviews/page';
 import PaymentsPage from './payments/page';
-import PerksPage from './perks/page';
 import SettingsPage from './settings/page';
 import ContactsPage from './contacts/page';
 import FAQsPage from './FAQs/page';
 import ReservationStatusPage from './reservation-status/page';
 
-type Section = 'profile' | 'messages' | 'reservations' | 'reviews' | 'payments' | 'perks' | 'settings' | 'contacts' | 'faq' | 'reservation-status';
+type Section = 'profile' | 'messages' | 'reservations' | 'reviews' | 'payments' | 'settings' | 'contacts' | 'faq' | 'reservation-status';
 
 // Map URL segments to section names for better readability in the URL
 const URL_TO_SECTION: Record<string, Section> = {
@@ -29,7 +28,6 @@ const URL_TO_SECTION: Record<string, Section> = {
     'reservations': 'reservations',
     'reviews': 'reviews',
     'payments': 'payments',
-    'perks': 'perks',
     'settings': 'settings',
     'contacts': 'contacts',
     'faq': 'faq',
@@ -142,8 +140,6 @@ const UserDashboard: React.FC = () => {
                 return <ReviewsPage />;
             case 'payments':
                 return <PaymentsPage />;
-            case 'perks':
-                return <PerksPage />;
             case 'settings':
                 return <SettingsPage />;
             case 'contacts':

@@ -34,12 +34,34 @@ export async function uploadFile(
   metadata?: { contentType?: string; customMetadata?: Record<string, string> }
 ): Promise<string> {
   try {
+    console.log(`uploadFile: Uploading file to ${path} (${file.size} bytes)`);
+    
+    // Ensure we have content type metadata
+    const fileMetadata = {
+      contentType: file.type,
+      ...metadata
+    };
+    
     const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file, metadata);
+    console.log(`uploadFile: Storage reference created for ${path}`);
+    
+    // Upload the file
+    const snapshot = await uploadBytes(storageRef, file, fileMetadata);
+    console.log(`uploadFile: Upload completed for ${path}, size: ${snapshot.metadata.size} bytes`);
+    
+    // Get the download URL
     const downloadURL = await getDownloadURL(storageRef);
+    console.log(`uploadFile: Download URL obtained: ${downloadURL}`);
+    
     return downloadURL;
   } catch (error) {
-    console.error('Error uploading file:', error);
+    console.error(`uploadFile: Error uploading file to ${path}:`, error);
+    if (error instanceof Error) {
+      console.error(`uploadFile: Error details: ${error.message}`);
+      if (error.stack) {
+        console.error(`uploadFile: Stack trace: ${error.stack}`);
+      }
+    }
     throw error;
   }
 }
@@ -171,16 +193,29 @@ export async function uploadMultipleFiles(
   prefix?: string
 ): Promise<string[]> {
   try {
+    console.log(`uploadMultipleFiles: Starting direct upload of ${files.length} files to ${basePath}`);
+    
     const uploadPromises = files.map((file, index) => {
       const timestamp = Date.now();
       const fileName = `${prefix || ''}${timestamp}_${index}_${file.name}`;
       const filePath = `${basePath}/${fileName}`;
-      return uploadFile(filePath, file);
+      console.log(`uploadMultipleFiles: Uploading file ${index + 1}/${files.length}: ${fileName} (${file.size} bytes)`);
+      return uploadFile(filePath, file)
+        .then(url => {
+          console.log(`uploadMultipleFiles: Successfully uploaded file ${index + 1}: ${url}`);
+          return url;
+        })
+        .catch(error => {
+          console.error(`uploadMultipleFiles: Error uploading file ${index + 1}:`, error);
+          throw error;
+        });
     });
     
-    return await Promise.all(uploadPromises);
+    const results = await Promise.all(uploadPromises);
+    console.log(`uploadMultipleFiles: All ${results.length} files uploaded successfully`);
+    return results;
   } catch (error) {
-    console.error('Error uploading multiple files:', error);
+    console.error('uploadMultipleFiles: Error uploading multiple files:', error);
     throw error;
   }
 }
@@ -194,21 +229,27 @@ export async function secureUploadMultipleFiles(
   prefix?: string
 ): Promise<string[]> {
   try {
+    console.log(`secureUploadMultipleFiles: Starting upload of ${files.length} files to ${basePath}`);
+    
     // Get authentication state
     const auth = getAuth();
     const user = auth.currentUser;
     
     if (!user) {
+      console.error('secureUploadMultipleFiles: No authenticated user found');
       throw new Error('User must be authenticated to use secure upload');
     }
     
     // Either the basePath must include the user's ID or be in a public folder
     if (!basePath.includes(user.uid) && !basePath.startsWith('public/')) {
+      console.error(`secureUploadMultipleFiles: Unauthorized path: ${basePath}`);
       throw new Error('Unauthorized path. Path must include user ID or be in public folder');
     }
     
     try {
       // Try secure upload first
+      console.log('secureUploadMultipleFiles: Attempting secure upload with cloud functions...');
+      
       // Upload files using the cloud function implementation
       const paths = await uploadMultipleUserFiles(
         user.uid,
@@ -217,16 +258,25 @@ export async function secureUploadMultipleFiles(
           basePath.includes('documents') ? 'document' : 'other'
       );
       
+      console.log(`secureUploadMultipleFiles: Successfully uploaded ${paths.length} files to paths:`, paths);
+      
       // Get download URLs for all files
-      return await Promise.all(paths.map(path => getFileUrl(path)));
+      console.log('secureUploadMultipleFiles: Getting download URLs...');
+      const urls = await Promise.all(paths.map(path => getFileUrl(path)));
+      
+      console.log(`secureUploadMultipleFiles: Got ${urls.length} download URLs:`, urls);
+      return urls;
     } catch (error) {
-      console.warn('Secure multiple upload failed, falling back to direct upload:', error);
+      console.warn('secureUploadMultipleFiles: Secure multiple upload failed, falling back to direct upload:', error);
       
       // Fallback to direct upload if cloud function fails (like CORS issues)
-      return await uploadMultipleFiles(files, basePath, prefix);
+      console.log('secureUploadMultipleFiles: Attempting direct upload fallback...');
+      const urls = await uploadMultipleFiles(files, basePath, prefix);
+      console.log(`secureUploadMultipleFiles: Direct upload fallback succeeded with ${urls.length} URLs:`, urls);
+      return urls;
     }
   } catch (error) {
-    console.error('Error in secure multiple file upload:', error);
+    console.error('secureUploadMultipleFiles: Error in secure multiple file upload:', error);
     throw error;
   }
 }

@@ -116,14 +116,25 @@ export const getAvailableTimeSlots = async (date: Date, allTimeSlots: string[]):
     
     const querySnapshot = await getDocs(q);
     
-    // Extract booked time slots
-    const bookedTimeSlots = querySnapshot.docs.map(doc => {
-      const data = doc.data();
-      return data.timeSlot;
+    // Count bookings for each time slot
+    const timeSlotCounts: Record<string, number> = {};
+    
+    // Initialize counts for all time slots
+    allTimeSlots.forEach(slot => {
+      timeSlotCounts[slot] = 0;
     });
     
-    // Return only time slots that are not already booked
-    return allTimeSlots.filter(slot => !bookedTimeSlots.includes(slot));
+    // Count bookings for each time slot
+    querySnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const slot = data.timeSlot;
+      if (slot && timeSlotCounts[slot] !== undefined) {
+        timeSlotCounts[slot]++;
+      }
+    });
+    
+    // Return only time slots that have fewer than 4 bookings
+    return allTimeSlots.filter(slot => timeSlotCounts[slot] < 4);
   } catch (error) {
     console.error('Error getting available time slots:', error);
     throw error;

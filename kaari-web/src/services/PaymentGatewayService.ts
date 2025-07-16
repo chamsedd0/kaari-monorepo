@@ -5,7 +5,7 @@
 
 // Configuration
 const PAYMENT_API_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://api.yourproduction.com/api/payments'  // Replace with your production API URL
+  ? 'https://api.kaari.ma/api/payments'  // Updated production URL
   : 'http://localhost:3001/api/payments';  // Local development API URL
 
 /**
