@@ -10,7 +10,10 @@ import {
   FaClipboardList,
   FaUsers,
   FaStore,
-  FaCalendarAlt
+  FaCalendarAlt,
+  FaHome,
+  FaHandshake,
+  FaComments
 } from 'react-icons/fa';
 import { 
   MdDashboard, 
@@ -21,8 +24,6 @@ import {
 import {
   AdminDashboardContainer,
   Sidebar,
-  SidebarHeader,
-  Logo,
   NavItem,
   MainContent,
   Header,
@@ -51,6 +52,12 @@ import UserManagementDetailPage from './user-management-detail';
 import AdvertiserModerationPage from './advertiser-moderation';
 import BookingsPage from './bookings/page';
 import BookingDetail from './bookings/booking-detail';
+import MoveInPage from './move-in/page';
+import MoveInDetailPage from './move-in/detail';
+import ReferralsPage from './referrals/page';
+import ReferralDetailPage from './referrals/detail';
+import MessagesPage from './messages/page';
+import ConversationPage from './messages/conversation';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -90,10 +97,6 @@ const AdminDashboard: React.FC = () => {
   return (
     <AdminDashboardContainer>
       <Sidebar>
-        <SidebarHeader>
-          <Logo>Kaari</Logo>
-        </SidebarHeader>
-
         <NavItem 
           $active={activePage === 'overview'} 
           onClick={() => handleNavigation('overview')}
@@ -127,6 +130,27 @@ const AdminDashboard: React.FC = () => {
           onClick={() => handleNavigation('bookings')}
         >
           <FaCalendarAlt /> Bookings
+        </NavItem>
+        
+        <NavItem 
+          $active={activePage === 'move-in'} 
+          onClick={() => handleNavigation('move-in')}
+        >
+          <FaHome /> Move-in
+        </NavItem>
+        
+        <NavItem 
+          $active={activePage === 'referrals'} 
+          onClick={() => handleNavigation('referrals')}
+        >
+          <FaHandshake /> Referrals
+        </NavItem>
+        
+        <NavItem 
+          $active={activePage === 'messages'} 
+          onClick={() => handleNavigation('messages')}
+        >
+          <FaComments /> Messages
         </NavItem>
         
         <NavItem 
@@ -177,10 +201,6 @@ const AdminDashboard: React.FC = () => {
         >
           <FaClipboardList /> Activity Logs
         </NavItem>
-        
-        <NavItem onClick={handleLogout}>
-          <FaSignOutAlt /> Logout
-        </NavItem>
       </Sidebar>
 
       <MainContent>
@@ -209,6 +229,12 @@ const AdminDashboard: React.FC = () => {
           <Route path="advertiser-moderation/:id" element={<AdvertiserModerationPage />} />
           <Route path="bookings" element={<BookingsPage />} />
           <Route path="bookings/:id" element={<BookingDetail />} />
+          <Route path="move-in" element={<MoveInPage />} />
+          <Route path="move-in/:id" element={<MoveInDetailPage />} />
+          <Route path="referrals" element={<ReferralsPage />} />
+          <Route path="referrals/:id" element={<ReferralDetailPage />} />
+          <Route path="messages" element={<MessagesPage />} />
+          <Route path="messages/:id" element={<ConversationPage />} />
           <Route path="photoshoot-bookings" element={<PhotoshootBookings />} />
           <Route path="photoshoot-bookings/view/:id" element={<PhotoshootBookingDetail onUpdateBooking={() => {}} />} />
           <Route path="teams" element={<TeamsPage />} />
