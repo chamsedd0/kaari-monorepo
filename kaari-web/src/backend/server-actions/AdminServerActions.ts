@@ -17,6 +17,68 @@ import {
 } from 'firebase/firestore';
 import { userNotifications } from '../../utils/notification-helpers';
 
+/**
+ * Helper function to create a payout entry for an approved refund
+ */
+async function createRefundPayout(
+  refundData: any, 
+  refundAmount: number, 
+  refundRequestId: string
+): Promise<void> {
+  try {
+    // Get user details to determine payment method
+    const userRef = doc(db, 'users', refundData.userId);
+    const userDoc = await getDoc(userRef);
+    
+    if (!userDoc.exists()) {
+      console.error(`User ${refundData.userId} not found for refund payout`);
+      return;
+    }
+    
+    const userData = userDoc.data();
+    
+    // Check if user has payment method
+    if (!userData.paymentMethod) {
+      console.error(`User ${refundData.userId} has no payment method for refund payout`);
+      return;
+    }
+    
+    // Create a new payout document
+    const payoutsRef = collection(db, 'payouts');
+    const newPayoutRef = doc(payoutsRef);
+    
+    await setDoc(newPayoutRef, {
+      payeeId: refundData.userId,
+      payeeType: 'tenant', // Refunds are always to tenants
+      paymentMethod: {
+        bankName: userData.paymentMethod.bankName || 'Unknown Bank',
+        accountLast4: userData.paymentMethod.accountLast4 || '****',
+        type: userData.paymentMethod.type || 'IBAN'
+      },
+      reason: 'Tenant Refund',
+      amount: refundAmount,
+      status: 'pending',
+      createdAt: serverTimestamp(),
+      sourceId: refundRequestId,
+      sourceType: 'refund',
+      createdBy: auth.currentUser?.uid || 'system'
+    });
+    
+    console.log(`Created payout entry ${newPayoutRef.id} for refund ${refundRequestId} with amount ${refundAmount}`);
+    
+    // Update the refund request with the payout ID
+    const refundRequestRef = doc(db, 'refundRequests', refundRequestId);
+    await updateDoc(refundRequestRef, {
+      payoutId: newPayoutRef.id,
+      payoutCreatedAt: serverTimestamp()
+    });
+    
+  } catch (error) {
+    console.error('Error creating refund payout:', error);
+    // Don't throw the error, just log it to avoid breaking the refund approval flow
+  }
+}
+
 // Interface for refund request
 export interface RefundRequest {
   id: string;
@@ -392,6 +454,9 @@ export const approveRefundRequest = async (refundRequestId: string): Promise<voi
             processedBy: auth.currentUser?.uid
           });
           
+          // Create a payout entry for the refund
+          await createRefundPayout(refundData, refundAmount, refundRequestId);
+          
           console.log(`Updated reservation in 'reservations' collection and created refund record with ID: ${newRefundRef.id} for amount: ${refundAmount}`);
         } else {
           console.log(`Reservation ${refundData.reservationId} not found in either collection. Only the refund request status has been updated.`);
@@ -428,6 +493,9 @@ export const approveRefundRequest = async (refundRequestId: string): Promise<voi
           processedBy: auth.currentUser?.uid
         });
         
+        // Create a payout entry for the refund
+        await createRefundPayout(refundData, refundAmount, refundRequestId);
+        
         console.log(`Updated reservation in 'requests' collection and created refund record with ID: ${newRefundRef.id} for amount: ${refundAmount}`);
       }
       
@@ -460,6 +528,16 @@ export const approveRefundRequest = async (refundRequestId: string): Promise<voi
           // Don't throw error, just log it (non-critical)
         }
       }
+    } else {
+      // Even if there's no reservation, we still want to create a payout for the refund
+      const refundAmount = 
+        (typeof refundData.amount === 'number' && !isNaN(refundData.amount)) ? refundData.amount : 
+        (typeof refundData.requestedRefundAmount === 'number' && !isNaN(refundData.requestedRefundAmount)) ? refundData.requestedRefundAmount : 
+        (typeof refundData.originalAmount === 'number' && !isNaN(refundData.originalAmount)) ? refundData.originalAmount * 0.5 : 
+        0;
+        
+      // Create a payout entry for the refund
+      await createRefundPayout(refundData, refundAmount, refundRequestId);
     }
     
     // If this refund was generated from a cancellation request, update the cancellation request too
@@ -700,6 +778,24 @@ export const approveCancellationRequest = async (cancellationRequestId: string):
             createdBy: auth.currentUser?.uid
           });
           
+          // Create a cancellation payout for the advertiser (cushion payment)
+          try {
+            // Import PayoutsServerActions dynamically to avoid circular dependencies
+            const { createCancellationPayout } = await import('./PayoutsServerActions');
+            
+            // Determine the type of cancellation based on days to move-in
+            const daysToMoveIn = typeof cancellationData.daysToMoveIn === 'number' ? cancellationData.daysToMoveIn : 0;
+            const payoutReason = daysToMoveIn <= 3 ? 'Cushion – Pre-move Cancel' : 'Cushion – Haani Max Cancel';
+            
+            // Create the payout
+            await createCancellationPayout(cancellationData.reservationId, payoutReason);
+            
+            console.log(`Created ${payoutReason} payout for booking ${cancellationData.reservationId}`);
+          } catch (payoutError) {
+            console.error('Error creating cancellation payout:', payoutError);
+            // Don't throw error, just log it (non-critical)
+          }
+          
           console.log(`Updated reservation in 'reservations' collection and created refund request ${newRefundRequestRef.id} for amount: ${refundAmount}`);
         } else {
           console.log(`Reservation ${cancellationData.reservationId} not found in either collection. Only the cancellation request status has been updated.`);
@@ -748,6 +844,24 @@ export const approveCancellationRequest = async (cancellationRequestId: string):
           updatedAt: serverTimestamp(),
           createdBy: auth.currentUser?.uid
         });
+        
+        // Create a cancellation payout for the advertiser (cushion payment)
+        try {
+          // Import PayoutsServerActions dynamically to avoid circular dependencies
+          const { createCancellationPayout } = await import('./PayoutsServerActions');
+          
+          // Determine the type of cancellation based on days to move-in
+          const daysToMoveIn = typeof cancellationData.daysToMoveIn === 'number' ? cancellationData.daysToMoveIn : 0;
+          const payoutReason = daysToMoveIn <= 3 ? 'Cushion – Pre-move Cancel' : 'Cushion – Haani Max Cancel';
+          
+          // Create the payout
+          await createCancellationPayout(cancellationData.reservationId, payoutReason);
+          
+          console.log(`Created ${payoutReason} payout for booking ${cancellationData.reservationId}`);
+        } catch (payoutError) {
+          console.error('Error creating cancellation payout:', payoutError);
+          // Don't throw error, just log it (non-critical)
+        }
         
         console.log(`Updated reservation in 'requests' collection and created refund request ${newRefundRequestRef.id} for amount: ${refundAmount}`);
       }

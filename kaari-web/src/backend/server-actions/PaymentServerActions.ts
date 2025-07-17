@@ -273,27 +273,21 @@ export async function handleMoveIn(reservationId: string): Promise<{
     const now = new Date();
     const scheduledReleaseDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     
-    // Create a pending payout record
-    await addDoc(collection(db, PENDING_PAYOUTS_COLLECTION), {
-      reservationId,
-      propertyId: property.id,
-      userId: user.uid,
-      advertiserId,
-      amount: paymentData.amount || 0,
-      currency: paymentData.currency || 'MAD',
-      status: 'pending',
-      paymentId: paymentDoc.id,
-      scheduledReleaseDate: Timestamp.fromDate(scheduledReleaseDate),
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now()
-    });
-    
     // Update the reservation status to "movedIn"
     await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
       status: 'movedIn',
       movedIn: true,
       movedInAt: new Date(),
+      safetyWindowEndsAt: scheduledReleaseDate,
       updatedAt: new Date()
+    });
+    
+    // Schedule a job to create a payout after the safety window ends
+    // This will be handled by a Cloud Function or a cron job
+    // For now, we'll just set a flag to indicate that a payout should be created
+    await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
+      payoutPending: true,
+      payoutScheduledFor: scheduledReleaseDate
     });
     
     // Send notifications
@@ -428,6 +422,70 @@ export async function processPendingPayouts(): Promise<{
       success: false,
       processedCount: 0,
       error: error instanceof Error ? error.message : 'Unknown error processing payouts'
+    };
+  }
+}
+
+/**
+ * Process bookings with expired safety windows and create payouts
+ * This should be called by a scheduled job (e.g., Cloud Function)
+ */
+export async function processSafetyWindowExpirations(): Promise<{
+  success: boolean;
+  processedCount: number;
+  error?: string;
+}> {
+  try {
+    const now = new Date();
+    
+    // Query for bookings with expired safety windows that need payouts
+    const bookingsRef = collection(db, REQUESTS_COLLECTION);
+    const q = query(
+      bookingsRef,
+      where('status', '==', 'movedIn'),
+      where('payoutPending', '==', true),
+      where('payoutScheduledFor', '<=', Timestamp.fromDate(now))
+    );
+    
+    const querySnapshot = await getDocs(q);
+    let processedCount = 0;
+    
+    // Import PayoutsServerActions dynamically to avoid circular dependencies
+    const { createRentPayout } = await import('./PayoutsServerActions');
+    
+    for (const docSnapshot of querySnapshot.docs) {
+      const bookingId = docSnapshot.id;
+      
+      try {
+        // Create payout for this booking
+        const success = await createRentPayout(bookingId);
+        
+        if (success) {
+          // Update the booking to indicate that payout has been created
+          await updateDoc(doc(db, REQUESTS_COLLECTION, bookingId), {
+            payoutPending: false,
+            payoutProcessed: true,
+            payoutProcessedAt: serverTimestamp()
+          });
+          
+          processedCount++;
+        }
+      } catch (err) {
+        console.error(`Error processing safety window expiration for booking ${bookingId}:`, err);
+        // Continue with the next booking
+      }
+    }
+    
+    return {
+      success: true,
+      processedCount
+    };
+  } catch (error) {
+    console.error('Error processing safety window expirations:', error);
+    return {
+      success: false,
+      processedCount: 0,
+      error: error instanceof Error ? error.message : 'Unknown error processing safety window expirations'
     };
   }
 }
@@ -698,6 +756,7 @@ export default {
   processPayment,
   handleMoveIn,
   processPendingPayouts,
+  processSafetyWindowExpirations,
   getAdvertiserPayments,
   getUserPayments,
   getAdvertiserPaymentStats

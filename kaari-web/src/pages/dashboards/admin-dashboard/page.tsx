@@ -13,7 +13,8 @@ import {
   FaCalendarAlt,
   FaHome,
   FaHandshake,
-  FaComments
+  FaComments,
+  FaCreditCard
 } from 'react-icons/fa';
 import { 
   MdDashboard, 
@@ -58,6 +59,7 @@ import ReferralsPage from './referrals/page';
 import ReferralDetailPage from './referrals/detail';
 import MessagesPage from './messages/page';
 import ConversationPage from './messages/conversation';
+import PendingPayoutsPage from './pending-payouts/page';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -154,6 +156,13 @@ const AdminDashboard: React.FC = () => {
         </NavItem>
         
         <NavItem 
+          $active={activePage === 'pending-payouts'} 
+          onClick={() => handleNavigation('pending-payouts')}
+        >
+          <FaCreditCard /> Pending Payouts
+        </NavItem>
+        
+        <NavItem 
           $active={activePage === 'photoshoot-bookings'} 
           onClick={() => handleNavigation('photoshoot-bookings')}
         >
@@ -235,6 +244,7 @@ const AdminDashboard: React.FC = () => {
           <Route path="referrals/:id" element={<ReferralDetailPage />} />
           <Route path="messages" element={<MessagesPage />} />
           <Route path="messages/:id" element={<ConversationPage />} />
+          <Route path="pending-payouts" element={<PendingPayoutsPage />} />
           <Route path="photoshoot-bookings" element={<PhotoshootBookings />} />
           <Route path="photoshoot-bookings/view/:id" element={<PhotoshootBookingDetail onUpdateBooking={() => {}} />} />
           <Route path="teams" element={<TeamsPage />} />
