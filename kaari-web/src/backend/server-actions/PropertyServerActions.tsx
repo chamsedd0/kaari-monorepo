@@ -198,6 +198,39 @@ export async function getPropertiesByOwner(ownerId: string): Promise<Property[]>
 }
 
 /**
+ * Get properties by advertiser ID for the Advertiser Moderation page
+ */
+export async function getPropertiesByAdvertiserId(advertiserId: string): Promise<any[]> {
+  try {
+    // Properties use ownerId, not advertiserId
+    const properties = await getDocumentsByField<Property>(PROPERTIES_COLLECTION, 'ownerId', advertiserId);
+    
+    return properties.map(property => {
+      // Format next availability date
+      let nextAvailability = 'Not specified';
+      if (property.availableFrom) {
+        const date = property.availableFrom instanceof Date 
+          ? property.availableFrom 
+          : new Date(property.availableFrom);
+        nextAvailability = date.toLocaleDateString();
+      }
+      
+      return {
+        id: property.id,
+        title: property.title || 'Untitled Property',
+        city: property.address?.city || 'Unknown',
+        // Status is 'available' in the database, but we display as 'live' or 'hidden'
+        status: property.status === 'available' ? 'live' : 'hidden',
+        nextAvailability
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching properties by advertiser ID:', error);
+    throw new Error('Failed to fetch properties by advertiser ID');
+  }
+}
+
+/**
  * Initialize sample property data for development
  */
 export async function initializeSampleData(): Promise<string[]> {

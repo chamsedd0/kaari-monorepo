@@ -689,4 +689,75 @@ export class PhotoshootBookingServerActions {
       throw error;
     }
   }
+
+  /**
+   * Get photoshoots by advertiser ID for the Advertiser Moderation page
+   */
+  static async getPhotoshootsByAdvertiserId(advertiserId: string): Promise<any[]> {
+    try {
+      // First try with advertiserId field
+      const q1 = query(
+        bookingsCollection,
+        where('advertiserId', '==', advertiserId)
+      );
+      
+      let querySnapshot = await getDocs(q1);
+      
+      // If no results, try with userId field (older format)
+      if (querySnapshot.empty) {
+        const q2 = query(
+          bookingsCollection,
+          where('userId', '==', advertiserId)
+        );
+        querySnapshot = await getDocs(q2);
+      }
+      
+      return querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        
+        // Format dates
+        const requestDate = data.createdAt instanceof Timestamp 
+          ? data.createdAt.toDate().toLocaleDateString() 
+          : 'Unknown';
+        
+        const scheduledDate = data.date instanceof Timestamp 
+          ? data.date.toDate().toLocaleDateString() 
+          : 'Unknown';
+        
+        // Get property title or address
+        let propertyTitle = data.propertyTitle || '';
+        
+        // If no propertyTitle, try to construct from address fields
+        if (!propertyTitle) {
+          if (data.propertyAddress) {
+            propertyTitle = `${data.propertyAddress.street || ''} ${data.propertyAddress.city || ''}`.trim();
+          } else {
+            propertyTitle = `${data.streetName || ''} ${data.streetNumber || ''} ${data.city || ''}`.trim();
+          }
+          
+          if (!propertyTitle) {
+            propertyTitle = 'Unknown Property';
+          }
+        }
+        
+        return {
+          id: doc.id,
+          propertyTitle,
+          requestDate,
+          scheduledDate,
+          status: data.status === 'completed' ? 'done' : 'pending'
+        };
+      });
+    } catch (error) {
+      console.error('Error fetching photoshoots by advertiser ID:', error);
+      throw new Error('Failed to fetch photoshoots by advertiser ID');
+    }
+  }
 } 
+
+/**
+ * Get photoshoots by advertiser ID for the Advertiser Moderation page
+ */
+export const getPhotoshootsByAdvertiserId = async (advertiserId: string): Promise<any[]> => {
+  return PhotoshootBookingServerActions.getPhotoshootsByAdvertiserId(advertiserId);
+}; 

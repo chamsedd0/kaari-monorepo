@@ -69,6 +69,53 @@ export interface CancellationRequest {
   rejectedBy?: string;
 }
 
+// Interface for Advertiser
+export interface Advertiser {
+  id: string;
+  name: string;
+  city: string;
+  activePropertiesCount: number;
+  bookingsThisMonth: number;
+  referralEarningsPending: number;
+  photoshootsPending: number;
+  status: 'active' | 'suspended';
+}
+
+// Interface for Advertiser Property
+export interface AdvertiserProperty {
+  id: string;
+  title: string;
+  city: string;
+  status: 'live' | 'hidden';
+  nextAvailability: string;
+}
+
+// Interface for Photoshoot Request
+export interface PhotoshootRequest {
+  id: string;
+  propertyTitle: string;
+  requestDate: string;
+  scheduledDate: string;
+  status: 'pending' | 'done';
+}
+
+// Interface for Booking
+export interface AdvertiserBooking {
+  id: string;
+  tenantName: string;
+  moveInDate: string;
+  status: 'await-confirm' | 'confirmed' | 'safety-window-closed';
+  payoutPending: number;
+}
+
+// Interface for Referral Data
+export interface ReferralData {
+  code: string;
+  bookingsCount: number;
+  earningsPending: number;
+  earningsPaid: number;
+}
+
 /**
  * Get all refund requests
  */
@@ -1027,5 +1074,330 @@ export const createSampleCancellationRequest = async (): Promise<string> => {
   } catch (error) {
     console.error('Error creating sample cancellation request:', error);
     throw new Error('Failed to create sample cancellation request');
+  }
+};
+
+/**
+ * Get all advertisers
+ */
+export const getAdvertisers = async (): Promise<Advertiser[]> => {
+  try {
+    // Query users with role 'advertiser'
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('role', '==', 'advertiser'));
+    const querySnapshot = await getDocs(q);
+    
+    const advertisers: Advertiser[] = [];
+    
+    for (const docSnapshot of querySnapshot.docs) {
+      const userData = docSnapshot.data();
+      const userId = docSnapshot.id;
+      
+      // Count active properties - use ownerId, not advertiserId
+      const propertiesRef = collection(db, 'properties');
+      const propertiesQuery = query(propertiesRef, where('ownerId', '==', userId), where('status', '==', 'available'));
+      const propertiesSnapshot = await getDocs(propertiesQuery);
+      const activePropertiesCount = propertiesSnapshot.size;
+      
+      // Count bookings this month
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      
+      const bookingsRef = collection(db, 'bookings');
+      let bookingsThisMonth = 0;
+      
+      try {
+        const bookingsQuery = query(
+          bookingsRef, 
+          where('advertiserId', '==', userId),
+          where('status', '==', 'confirmed'),
+          where('moveInDate', '>=', Timestamp.fromDate(firstDayOfMonth)),
+          where('moveInDate', '<=', Timestamp.fromDate(lastDayOfMonth))
+        );
+        const bookingsSnapshot = await getDocs(bookingsQuery);
+        bookingsThisMonth = bookingsSnapshot.size;
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+      }
+      
+      // Count pending photoshoots - check both advertiserId and userId fields
+      const photoshootsRef = collection(db, 'photoshoot-bookings');
+      let photoshootsPending = 0;
+      
+      try {
+        // First try with advertiserId field
+        const photoshootsQuery1 = query(
+          photoshootsRef,
+          where('advertiserId', '==', userId),
+          where('status', '==', 'pending')
+        );
+        const photoshootsSnapshot1 = await getDocs(photoshootsQuery1);
+        photoshootsPending = photoshootsSnapshot1.size;
+        
+        // Also check the userId field (older format)
+        const photoshootsQuery2 = query(
+          photoshootsRef,
+          where('userId', '==', userId),
+          where('status', '==', 'pending')
+        );
+        const photoshootsSnapshot2 = await getDocs(photoshootsQuery2);
+        photoshootsPending += photoshootsSnapshot2.size;
+      } catch (error) {
+        console.error('Error fetching photoshoots:', error);
+      }
+      
+      // Calculate referral earnings pending
+      const referralsRef = collection(db, 'referrals');
+      let referralEarningsPending = 0;
+      
+      try {
+        // First check if user has a referral code
+        const referralCode = userData.referralCode;
+        
+        if (referralCode) {
+          // Look for referrals with this code
+          const referralsQuery = query(
+            referralsRef,
+            where('referrerCode', '==', referralCode),
+            where('status', '==', 'pending')
+          );
+          const referralsSnapshot = await getDocs(referralsQuery);
+          
+          referralsSnapshot.forEach(doc => {
+            const referralData = doc.data();
+            referralEarningsPending += referralData.amount || 0;
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching referrals:', error);
+      }
+      
+      advertisers.push({
+        id: userId,
+        name: userData.displayName || userData.name || 'Unknown Advertiser',
+        city: userData.city || 'Unknown',
+        activePropertiesCount,
+        bookingsThisMonth,
+        referralEarningsPending,
+        photoshootsPending,
+        status: userData.isBlocked ? 'suspended' : 'active'
+      });
+    }
+    
+    return advertisers;
+  } catch (error) {
+    console.error('Error getting advertisers:', error);
+    throw new Error('Failed to fetch advertisers');
+  }
+};
+
+/**
+ * Get advertiser by ID
+ */
+export const getAdvertiserById = async (advertiserId: string): Promise<Advertiser> => {
+  try {
+    const advertiserDoc = await getDoc(doc(db, 'users', advertiserId));
+    
+    if (!advertiserDoc.exists()) {
+      throw new Error('Advertiser not found');
+    }
+    
+    const userData = advertiserDoc.data();
+    
+    // Count active properties - use ownerId, not advertiserId
+    const propertiesRef = collection(db, 'properties');
+    const propertiesQuery = query(propertiesRef, where('ownerId', '==', advertiserId), where('status', '==', 'available'));
+    const propertiesSnapshot = await getDocs(propertiesQuery);
+    const activePropertiesCount = propertiesSnapshot.size;
+    
+    // Count bookings this month
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    
+    const bookingsRef = collection(db, 'bookings');
+    let bookingsThisMonth = 0;
+    
+    try {
+      const bookingsQuery = query(
+        bookingsRef, 
+        where('advertiserId', '==', advertiserId),
+        where('status', '==', 'confirmed'),
+        where('moveInDate', '>=', Timestamp.fromDate(firstDayOfMonth)),
+        where('moveInDate', '<=', Timestamp.fromDate(lastDayOfMonth))
+      );
+      const bookingsSnapshot = await getDocs(bookingsQuery);
+      bookingsThisMonth = bookingsSnapshot.size;
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+    }
+    
+    // Count pending photoshoots - check both advertiserId and userId fields
+    const photoshootsRef = collection(db, 'photoshoot-bookings');
+    let photoshootsPending = 0;
+    
+    try {
+      // First try with advertiserId field
+      const photoshootsQuery1 = query(
+        photoshootsRef,
+        where('advertiserId', '==', advertiserId),
+        where('status', '==', 'pending')
+      );
+      const photoshootsSnapshot1 = await getDocs(photoshootsQuery1);
+      photoshootsPending = photoshootsSnapshot1.size;
+      
+      // Also check the userId field (older format)
+      const photoshootsQuery2 = query(
+        photoshootsRef,
+        where('userId', '==', advertiserId),
+        where('status', '==', 'pending')
+      );
+      const photoshootsSnapshot2 = await getDocs(photoshootsQuery2);
+      photoshootsPending += photoshootsSnapshot2.size;
+    } catch (error) {
+      console.error('Error fetching photoshoots:', error);
+    }
+    
+    // Calculate referral earnings pending
+    const referralsRef = collection(db, 'referrals');
+    let referralEarningsPending = 0;
+    
+    try {
+      // First check if user has a referral code
+      const referralCode = userData.referralCode;
+      
+      if (referralCode) {
+        // Look for referrals with this code
+        const referralsQuery = query(
+          referralsRef,
+          where('referrerCode', '==', referralCode),
+          where('status', '==', 'pending')
+        );
+        const referralsSnapshot = await getDocs(referralsQuery);
+        
+        referralsSnapshot.forEach(doc => {
+          const referralData = doc.data();
+          referralEarningsPending += referralData.amount || 0;
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching referrals:', error);
+    }
+    
+    return {
+      id: advertiserId,
+      name: userData.displayName || userData.name || 'Unknown Advertiser',
+      city: userData.city || 'Unknown',
+      activePropertiesCount,
+      bookingsThisMonth,
+      referralEarningsPending,
+      photoshootsPending,
+      status: userData.isBlocked ? 'suspended' : 'active'
+    };
+  } catch (error) {
+    console.error('Error getting advertiser:', error);
+    throw new Error('Failed to fetch advertiser');
+  }
+};
+
+/**
+ * Get bookings by advertiser ID
+ */
+export const getBookingsByAdvertiserId = async (advertiserId: string): Promise<AdvertiserBooking[]> => {
+  try {
+    const bookingsRef = collection(db, 'bookings');
+    const q = query(bookingsRef, where('advertiserId', '==', advertiserId));
+    const querySnapshot = await getDocs(q);
+    
+    const bookings: AdvertiserBooking[] = [];
+    
+    for (const docSnapshot of querySnapshot.docs) {
+      const bookingData = docSnapshot.data();
+      
+      // Get tenant name
+      let tenantName = 'Unknown Tenant';
+      if (bookingData.userId) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', bookingData.userId));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            tenantName = userData.displayName || userData.name || 'Unknown Tenant';
+          }
+        } catch (error) {
+          console.error('Error fetching tenant:', error);
+        }
+      }
+      
+      // Format move-in date
+      let moveInDateStr = 'Unknown';
+      if (bookingData.moveInDate && bookingData.moveInDate.toDate) {
+        const moveInDate = bookingData.moveInDate.toDate();
+        moveInDateStr = moveInDate.toLocaleDateString();
+      }
+      
+      // Map status
+      let status: 'await-confirm' | 'confirmed' | 'safety-window-closed' = 'await-confirm';
+      
+      // Check the actual status in the database
+      if (bookingData.status === 'confirmed' || bookingData.status === 'paid') {
+        status = 'confirmed';
+        
+        // Check if safety window is closed
+        const now = new Date();
+        const moveInDate = bookingData.moveInDate?.toDate();
+        if (moveInDate && now.getTime() - moveInDate.getTime() > 7 * 24 * 60 * 60 * 1000) { // 7 days
+          status = 'safety-window-closed';
+        }
+      } else if (bookingData.status === 'pending' || bookingData.status === 'awaiting_payment') {
+        status = 'await-confirm';
+      }
+      
+      bookings.push({
+        id: docSnapshot.id,
+        tenantName,
+        moveInDate: moveInDateStr,
+        status,
+        payoutPending: bookingData.payoutPending || bookingData.amount || 0
+      });
+    }
+    
+    return bookings;
+  } catch (error) {
+    console.error('Error getting bookings:', error);
+    throw new Error('Failed to fetch bookings');
+  }
+};
+
+/**
+ * Get advertiser note
+ */
+export const getAdvertiserNote = async (advertiserId: string): Promise<string> => {
+  try {
+    const noteDoc = await getDoc(doc(db, 'advertiserNotes', advertiserId));
+    
+    if (noteDoc.exists()) {
+      return noteDoc.data().note || '';
+    }
+    
+    return '';
+  } catch (error) {
+    console.error('Error getting advertiser note:', error);
+    throw new Error('Failed to fetch advertiser note');
+  }
+};
+
+/**
+ * Save advertiser note
+ */
+export const saveAdvertiserNote = async (advertiserId: string, note: string): Promise<void> => {
+  try {
+    await setDoc(doc(db, 'advertiserNotes', advertiserId), {
+      note,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error saving advertiser note:', error);
+    throw new Error('Failed to save advertiser note');
   }
 };

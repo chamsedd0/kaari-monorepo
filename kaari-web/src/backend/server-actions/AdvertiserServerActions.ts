@@ -748,3 +748,64 @@ export const getAdvertiserSignupData = async (userId: string): Promise<any> => {
     return null;
   }
 }; 
+
+/**
+ * Get advertiser referral data for the Advertiser Moderation page
+ */
+export async function getAdvertiserReferralData(advertiserId: string): Promise<{
+  code: string;
+  bookingsCount: number;
+  earningsPending: number;
+  earningsPaid: number;
+}> {
+  try {
+    // Get the referral code for this advertiser
+    const userDoc = await getDoc(doc(db, 'users', advertiserId));
+    
+    if (!userDoc.exists()) {
+      throw new Error('Advertiser not found');
+    }
+    
+    const userData = userDoc.data();
+    const referralCode = userData.referralCode || '';
+    
+    if (!referralCode) {
+      return {
+        code: '',
+        bookingsCount: 0,
+        earningsPending: 0,
+        earningsPaid: 0
+      };
+    }
+    
+    // Get referrals where this advertiser is the referrer
+    const referralsRef = collection(db, 'referrals');
+    const q = query(referralsRef, where('referrerCode', '==', referralCode));
+    const querySnapshot = await getDocs(q);
+    
+    let bookingsCount = 0;
+    let earningsPending = 0;
+    let earningsPaid = 0;
+    
+    querySnapshot.forEach(doc => {
+      const referralData = doc.data();
+      bookingsCount++;
+      
+      if (referralData.status === 'pending') {
+        earningsPending += referralData.amount || 0;
+      } else if (referralData.status === 'paid') {
+        earningsPaid += referralData.amount || 0;
+      }
+    });
+    
+    return {
+      code: referralCode,
+      bookingsCount,
+      earningsPending,
+      earningsPaid
+    };
+  } catch (error) {
+    console.error('Error getting advertiser referral data:', error);
+    throw new Error('Failed to fetch advertiser referral data');
+  }
+} 

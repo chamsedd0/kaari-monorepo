@@ -8,13 +8,13 @@ import {
   FaMoneyBillAlt,
   FaUserCog,
   FaClipboardList,
-  FaUsers
+  FaUsers,
+  FaStore,
+  FaCalendarAlt
 } from 'react-icons/fa';
 import { 
   MdDashboard, 
-  MdSettings, 
   MdGroup, 
-  MdList, 
   MdPhotoCamera,
 } from 'react-icons/md';
 
@@ -39,10 +39,8 @@ import PropertyEditRequests from './property-edit-requests';
 import EditRequests from './edit-requests/page';
 import RefundRequests from './refund-requests/page';
 import CancellationRequests from './cancellation-requests/page';
-import AdminControls from './admin-controls';
 import TeamsPage from './teams';
 import OverviewPage from './overview';
-import TestDataGenerator from './test-data-generator';
 import PropertyPage from './properties/page';
 import PropertyEditPage from './properties/[id]/edit/page';
 import UsersPage from './users';
@@ -50,6 +48,9 @@ import UserDetailPage from './user-detail';
 import AdminLogsPage from './logs';
 import UsersManagementPage from './users-management';
 import UserManagementDetailPage from './user-management-detail';
+import AdvertiserModerationPage from './advertiser-moderation';
+import BookingsPage from './bookings/page';
+import BookingDetail from './bookings/booking-detail';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -115,6 +116,20 @@ const AdminDashboard: React.FC = () => {
         </NavItem>
         
         <NavItem 
+          $active={activePage === 'advertiser-moderation'} 
+          onClick={() => handleNavigation('advertiser-moderation')}
+        >
+          <FaStore /> Advertiser Moderation
+        </NavItem>
+        
+        <NavItem 
+          $active={activePage === 'bookings'} 
+          onClick={() => handleNavigation('bookings')}
+        >
+          <FaCalendarAlt /> Bookings
+        </NavItem>
+        
+        <NavItem 
           $active={activePage === 'photoshoot-bookings'} 
           onClick={() => handleNavigation('photoshoot-bookings')}
         >
@@ -157,20 +172,6 @@ const AdminDashboard: React.FC = () => {
         </NavItem>
         
         <NavItem 
-          $active={activePage === 'test-data-generator'} 
-          onClick={() => handleNavigation('test-data-generator')}
-        >
-          <MdList /> Test Data Generator
-        </NavItem>
-        
-        <NavItem 
-          $active={activePage === 'admin-controls'} 
-          onClick={() => handleNavigation('admin-controls')}
-        >
-          <MdSettings /> Admin Controls
-        </NavItem>
-        
-        <NavItem 
           $active={activePage === 'logs'} 
           onClick={() => handleNavigation('logs')}
         >
@@ -204,20 +205,22 @@ const AdminDashboard: React.FC = () => {
           <Route path="overview" element={<OverviewPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="users/:id" element={<UserDetailPage />} />
+          <Route path="advertiser-moderation" element={<AdvertiserModerationPage />} />
+          <Route path="advertiser-moderation/:id" element={<AdvertiserModerationPage />} />
+          <Route path="bookings" element={<BookingsPage />} />
+          <Route path="bookings/:id" element={<BookingDetail />} />
           <Route path="photoshoot-bookings" element={<PhotoshootBookings />} />
           <Route path="photoshoot-bookings/view/:id" element={<PhotoshootBookingDetail onUpdateBooking={() => {}} />} />
           <Route path="teams" element={<TeamsPage />} />
-          <Route path="admin-controls" element={<AdminControls />} />
           <Route path="properties" element={<PropertyPage />} />
           <Route path="properties/edit/:id" element={<PropertyEditPage />} />
           <Route path="property-edit-requests" element={<PropertyEditRequests />} />
           <Route path="edit-requests/*" element={<EditRequests />} />
           <Route path="refund-requests/*" element={<RefundRequests />} />
           <Route path="cancellation-requests/*" element={<CancellationRequests />} />
-          <Route path="test-data-generator" element={<TestDataGenerator />} />
           <Route path="logs" element={<AdminLogsPage />} />
           <Route path="users-management" element={<UsersManagementPage />} />
-          <Route path="user-management-detail/:userId" element={<UserManagementDetailPage />} />
+          <Route path="user-management/:id" element={<UserManagementDetailPage />} />
           <Route path="*" element={<div>404 Page Not Found</div>} />
         </Routes>
       </MainContent>
