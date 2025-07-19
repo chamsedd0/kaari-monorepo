@@ -33,6 +33,45 @@ export const CardBaseModelStyleReferralPassred = styled.div`
             align-items: start; 
             gap: 10px;
 
+            .countdown-timer {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                color: white;
+                border-radius: ${Theme.borders.radius.md};
+                width: 100%;
+                
+                .timer-block {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: ${Theme.borders.radius.md};
+                    min-width: 84px;
+                    height: 94px;
+                    flex: 1;
+                    
+                    .time {
+                        font: ${Theme.typography.fonts.h2};
+
+                    }
+                    
+                    .label {
+                        font: ${Theme.typography.fonts.mediumM};
+                        opacity: 0.9;
+                        font-size: 12px;
+                    }
+                }
+                
+                .separator {
+                    font: ${Theme.typography.fonts.extraLargeB};
+                    font-size: 32px;
+                    margin: 0 5px;
+                    line-height: 1;
+                }
+            }
+
             .time-text {
                 font: ${Theme.typography.fonts.text14};
                 color: ${Theme.colors.white};
@@ -48,6 +87,24 @@ export const CardBaseModelStyleReferralPassred = styled.div`
         gap: 10px;
         margin-top: 20px;
         width: 52%;
+
+        .welcome-message {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 20px;
+            border-radius: ${Theme.borders.radius.md};
+            margin-bottom: 20px;
+
+            h3 {
+                font: ${Theme.typography.fonts.largeB};
+                margin: 0 0 10px 0;
+            }
+
+            p {
+                font: ${Theme.typography.fonts.mediumM};
+                margin: 0;
+            }
+        }
 
         .icon-text12-container {
             display: flex;

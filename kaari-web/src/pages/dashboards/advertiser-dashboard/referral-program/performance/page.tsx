@@ -9,6 +9,7 @@ import iconinfo from '../../../../../components/skeletons/icons/Icon_Info2.svg'
 import { PurpleButtonMB48 } from "../../../../../components/skeletons/buttons/purple_MB48";
 import { ReferralHistoryTable } from './styles';
 import { useReferralProgram } from '../../../../../hooks/useReferralProgram';
+import { BpurpleButtonMB48 } from '../../../../../components/skeletons/buttons/border_purple_MB48';
 
 // Icons
 const CheckIcon = () => (
@@ -161,6 +162,10 @@ const PerformancePage = () => {
             <PurpleButtonMB48 
               text="Request Payout" 
               onClick={handleRequestPayout}
+            />
+            <BpurpleButtonMB48
+              text="Payout history" 
+              onClick={() => navigate('/dashboard/advertiser/referral-program/payout-history')}
             />
           </div>
         </div>
