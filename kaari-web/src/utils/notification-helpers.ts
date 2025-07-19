@@ -1135,3 +1135,100 @@ export const createMultiplePropertiesRefreshNotification = async (
     console.error('Failed to create multiple properties refresh notification:', error);
   }
 }; 
+
+/**
+ * Notification helpers for payouts
+ */
+export const payoutNotifications = {
+  // Notify user when payout request is approved
+  payoutRequestApproved: async (
+    userId: string,
+    userType: 'advertiser' | 'user',
+    amount: number,
+    currency: string = 'MAD',
+    reason: string
+  ): Promise<string> => {
+    const title = 'Payout Request Approved';
+    const message = `Your payout request for ${amount} ${currency} has been approved and is being processed.`;
+    const link = `/dashboard/${userType === 'advertiser' ? 'advertiser' : 'user'}/payments`;
+    
+    return NotificationService.createNotification(
+      userId,
+      userType,
+      'payout_request_approved',
+      title,
+      message,
+      link,
+      { amount, currency, reason }
+    );
+  },
+  
+  // Notify user when payout request is rejected
+  payoutRequestRejected: async (
+    userId: string,
+    userType: 'advertiser' | 'user',
+    amount: number,
+    currency: string = 'MAD',
+    reason: string,
+    rejectionReason: string
+  ): Promise<string> => {
+    const title = 'Payout Request Rejected';
+    const message = `Your payout request for ${amount} ${currency} has been rejected. Reason: ${rejectionReason}`;
+    const link = `/dashboard/${userType === 'advertiser' ? 'advertiser' : 'user'}/payments`;
+    
+    return NotificationService.createNotification(
+      userId,
+      userType,
+      'payout_request_rejected',
+      title,
+      message,
+      link,
+      { amount, currency, reason, rejectionReason }
+    );
+  },
+  
+  // Notify user when payout is processed
+  payoutProcessed: async (
+    userId: string,
+    userType: 'advertiser' | 'user',
+    amount: number,
+    currency: string = 'MAD',
+    reason: string
+  ): Promise<string> => {
+    const title = 'Payout Processed';
+    const message = `Your payout of ${amount} ${currency} has been processed and sent to your bank account.`;
+    const link = `/dashboard/${userType === 'advertiser' ? 'advertiser' : 'user'}/payments`;
+    
+    return NotificationService.createNotification(
+      userId,
+      userType,
+      'payout_processed',
+      title,
+      message,
+      link,
+      { amount, currency, reason }
+    );
+  },
+  
+  // Notify user when a refund is processed
+  refundProcessed: async (
+    userId: string,
+    amount: number,
+    currency: string = 'MAD',
+    propertyName: string = 'your booking'
+  ): Promise<string> => {
+    const title = 'Refund Processed';
+    const message = `Your refund of ${amount} ${currency} for ${propertyName} has been processed and sent to your bank account.`;
+    const link = `/dashboard/user/payments`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'refund_processed',
+      title,
+      message,
+      link,
+      { amount, currency, propertyName }
+    );
+  }
+}; 

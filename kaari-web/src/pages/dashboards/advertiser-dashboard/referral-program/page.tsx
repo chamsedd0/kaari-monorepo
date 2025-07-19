@@ -9,6 +9,7 @@ import IconVerified from '../../../../components/skeletons/icons/Icon_Verified.s
 import { useReferralProgram } from '../../../../hooks/useReferralProgram';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../../../../contexts/auth/AuthContext';
+import { useToast } from '../../../../contexts/ToastContext';
 
 // Icons
 const InfoIcon = () => (
@@ -59,6 +60,8 @@ const ReferralProgramPage: React.FC = () => {
     hasMetReferralPassRequirements
   } = useReferralProgram();
   const { user } = useAuth();
+  const { showToast } = useToast();
+  const [payoutLoading, setPayoutLoading] = useState(false);
 
   // Timer state for countdown
   const [timeRemaining, setTimeRemaining] = useState<{
@@ -99,10 +102,35 @@ const ReferralProgramPage: React.FC = () => {
 
   // Function to handle payout request
   const handleRequestPayout = async () => {
-    const success = await requestPayout();
-    if (success) {
-      // Show success message
-      console.log('Payout requested successfully');
+    try {
+      setPayoutLoading(true);
+      const success = await requestPayout();
+      
+      if (success) {
+        showToast({
+          type: 'success',
+          title: t('referral_program.payout_requested'),
+          message: t('referral_program.payout_success_message', 'Your payout request has been submitted successfully. It will be processed within 1-3 business days.'),
+          duration: 5000
+        });
+      } else {
+        showToast({
+          type: 'error',
+          title: t('referral_program.payout_error'),
+          message: t('referral_program.payout_error_message', 'There was an error processing your payout request. Please try again later.'),
+          duration: 5000
+        });
+      }
+    } catch (err) {
+      console.error('Error requesting payout:', err);
+      showToast({
+        type: 'error',
+        title: t('referral_program.payout_error'),
+        message: t('referral_program.payout_error_message', 'There was an error processing your payout request. Please try again later.'),
+        duration: 5000
+      });
+    } finally {
+      setPayoutLoading(false);
     }
   };
 
@@ -557,11 +585,15 @@ const ReferralProgramPage: React.FC = () => {
             </div>
 
             <div className="progress-card-buttons">
-              <button className="request-payout-btn" onClick={handleRequestPayout}>
-                Request Payout
+              <button 
+                className={`request-payout-btn ${payoutLoading ? 'loading' : ''}`} 
+                onClick={handleRequestPayout}
+                disabled={payoutLoading || referralData.referralStats.monthlyEarnings <= 0}
+              >
+                {payoutLoading ? t('referral_program.processing', 'Processing...') : t('referral_program.request_payout', 'Request Payout')}
               </button>
               <button className="performance-details-btn" onClick={handleViewPerformance}>
-                Performance Details
+                {t('referral_program.performance_details', 'Performance Details')}
               </button>
             </div>
           </div>

@@ -908,38 +908,65 @@ export const ReferralProgramPageStyle = styled.div`
       .progress-card-buttons {
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        margin-top: 8px;
-        align-items: center;
-        width: 100%;
-        
-        .request-payout-btn {
-          width: 100%;
-          padding: 12px;
-          background: ${Theme.colors.secondary};
-          color: white;
-          border: none;
-          border-radius: ${Theme.borders.radius.md};
-          font: ${Theme.typography.fonts.mediumB};
+        gap: 10px;
+        margin-top: 20px;
+
+        .request-payout-btn, .performance-details-btn {
+          padding: 12px 15px;
+          border-radius: 8px;
+          font-weight: 600;
           cursor: pointer;
+          transition: all 0.2s ease;
+          text-align: center;
           
-          &:hover {
-            background: ${Theme.colors.primary};
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+          
+          &.loading {
+            background-color: #f3eefb;
+            color: ${Theme.colors.secondary};
+            position: relative;
+            
+            &:after {
+              content: '';
+              position: absolute;
+              width: 20px;
+              height: 20px;
+              top: 50%;
+              right: 15px;
+              margin-top: -10px;
+              border: 2px solid transparent;
+              border-top-color: ${Theme.colors.secondary};
+              border-radius: 50%;
+              animation: spin 1s linear infinite;
+            }
+            
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
           }
         }
-        
+
+        .request-payout-btn {
+          background-color: ${Theme.colors.primary};
+          color: white;
+          border: none;
+          
+          &:hover:not(:disabled) {
+            background-color: ${Theme.colors.secondary};
+          }
+        }
+
         .performance-details-btn {
-            width: 100%;
-          padding: 12px;
-          background: transparent;
+          background-color: transparent;
           color: ${Theme.colors.secondary};
-          border: 3px solid ${Theme.colors.secondary};
-          border-radius: ${Theme.borders.radius.md};
-            font: ${Theme.typography.fonts.mediumB};
-          cursor: pointer;
+          border: 1px solid ${Theme.colors.secondary};
           
           &:hover {
-            background: ${Theme.colors.secondary}10;
+            background-color: #f3eefb;
           }
         }
       }

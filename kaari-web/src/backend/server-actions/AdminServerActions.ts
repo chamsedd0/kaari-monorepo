@@ -401,157 +401,96 @@ export const approveRefundRequest = async (refundRequestId: string): Promise<voi
     // serverTimestamp() cannot be used with arrayUnion
     const now = Timestamp.fromDate(new Date());
     
-    // Update the refund request status
+    // First, update the refund request status
     await updateDoc(refundRequestRef, {
       status: 'approved',
       updatedAt: serverTimestamp(),
+      adminReviewed: true,
       approvedAt: serverTimestamp(),
       approvedBy: auth.currentUser?.uid
     });
     
-    // Update the reservation status if it exists
+    // Calculate refund amount safely with fallbacks
+    const refundAmount = 
+      (typeof refundData.amount === 'number' && !isNaN(refundData.amount))
+        ? refundData.amount
+        : (typeof refundData.requestedRefundAmount === 'number' && !isNaN(refundData.requestedRefundAmount))
+          ? refundData.requestedRefundAmount
+          : 0;
+    
+    // Create a payout entry for the refund
+    try {
+      // Import PayoutsServerActions dynamically to avoid circular dependencies
+      const { createRefundPayout } = await import('./PayoutsServerActions');
+      
+      // Create the payout
+      await createRefundPayout(
+        refundData.userId,
+        refundAmount,
+        refundRequestId
+      );
+      
+      console.log(`Created refund payout for user ${refundData.userId} with amount ${refundAmount}`);
+    } catch (payoutError) {
+      console.error('Error creating refund payout:', payoutError);
+      // Don't throw error, just log it (non-critical)
+    }
+    
+    // Now check if the reservation exists before attempting to update it
     if (refundData.reservationId) {
       // First check in 'requests' collection
       const reservationRef = doc(db, 'requests', refundData.reservationId);
       let reservationDoc = await getDoc(reservationRef);
-      let reservationData = null;
-      let reservationCollection = 'requests';
       
-      // If not found in 'requests', try 'reservations' collection
-      if (!reservationDoc.exists()) {
-        const alternativeReservationRef = doc(db, 'reservations', refundData.reservationId);
-        reservationDoc = await getDoc(alternativeReservationRef);
-        reservationCollection = 'reservations';
-        
-        if (reservationDoc.exists()) {
-          reservationData = reservationDoc.data();
-          await updateDoc(alternativeReservationRef, {
-            status: 'refundComplete',
-            updatedAt: serverTimestamp(),
-          });
-          
-          // Determine the refund amount - try multiple fields with fallback
-          // This ensures we always have a valid numeric value
-          const refundAmount = 
-            (typeof refundData.amount === 'number' && !isNaN(refundData.amount)) ? refundData.amount : 
-            (typeof refundData.requestedRefundAmount === 'number' && !isNaN(refundData.requestedRefundAmount)) ? refundData.requestedRefundAmount : 
-            (typeof refundData.originalAmount === 'number' && !isNaN(refundData.originalAmount)) ? refundData.originalAmount * 0.5 : 
-            0; // Default to 0 if no valid amount found
-          
-          // Create a refund payment record (for tracking purposes)
-          const refundsRef = collection(db, 'refunds');
-          const newRefundRef = doc(refundsRef);
-          await setDoc(newRefundRef, {
-            userId: refundData.userId,
-            reservationId: refundData.reservationId,
-            propertyId: refundData.propertyId,
-            refundRequestId: refundRequestId,
-            amount: refundAmount, // Use the determined amount that will never be undefined
-            reason: refundData.reason || refundData.reasonsText || 'Refund approved by admin',
-            status: 'completed',
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-            processedBy: auth.currentUser?.uid
-          });
-          
-          // Create a payout entry for the refund
-          await createRefundPayout(refundData, refundAmount, refundRequestId);
-          
-          console.log(`Updated reservation in 'reservations' collection and created refund record with ID: ${newRefundRef.id} for amount: ${refundAmount}`);
-        } else {
-          console.log(`Reservation ${refundData.reservationId} not found in either collection. Only the refund request status has been updated.`);
-        }
-      } else {
-        // Found in 'requests' collection
-        reservationData = reservationDoc.data();
+      if (reservationDoc.exists()) {
+        // Update reservation status to refundCompleted
         await updateDoc(reservationRef, {
-          status: 'refundComplete',
-          updatedAt: serverTimestamp(),
-        });
-        
-        // Determine the refund amount - try multiple fields with fallback
-        // This ensures we always have a valid numeric value
-        const refundAmount = 
-          (typeof refundData.amount === 'number' && !isNaN(refundData.amount)) ? refundData.amount : 
-          (typeof refundData.requestedRefundAmount === 'number' && !isNaN(refundData.requestedRefundAmount)) ? refundData.requestedRefundAmount : 
-          (typeof refundData.originalAmount === 'number' && !isNaN(refundData.originalAmount)) ? refundData.originalAmount * 0.5 : 
-          0; // Default to 0 if no valid amount found
-        
-        // Create a refund payment record (for tracking purposes)
-        const refundsRef = collection(db, 'refunds');
-        const newRefundRef = doc(refundsRef);
-        await setDoc(newRefundRef, {
-          userId: refundData.userId,
-          reservationId: refundData.reservationId,
-          propertyId: refundData.propertyId,
-          refundRequestId: refundRequestId,
-          amount: refundAmount, // Use the determined amount that will never be undefined
-          reason: refundData.reason || refundData.reasonsText || 'Refund approved by admin',
-          status: 'completed',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          processedBy: auth.currentUser?.uid
-        });
-        
-        // Create a payout entry for the refund
-        await createRefundPayout(refundData, refundAmount, refundRequestId);
-        
-        console.log(`Updated reservation in 'requests' collection and created refund record with ID: ${newRefundRef.id} for amount: ${refundAmount}`);
-      }
-      
-      // Send notification to the user about the approved refund
-      if (refundData.userId && reservationData) {
-        try {
-          // Get property details for the notification
-          const propertyRef = doc(db, 'properties', refundData.propertyId);
-          const propertyDoc = await getDoc(propertyRef);
-          const propertyTitle = propertyDoc.exists() ? propertyDoc.data().title : 'your reservation';
-          
-          // Create a minimal reservation object for the notification
-          const reservationForNotification = {
-            id: refundData.reservationId,
-            propertyId: refundData.propertyId,
-            propertyTitle: propertyTitle,
-            status: 'refundComplete'
-          };
-          
-          await userNotifications.refundRequestHandled(
-            refundData.userId,
-            reservationForNotification as any,
-            true, // approved
-            refundData.reason || refundData.reasonsText || 'Your refund request has been approved.'
-          );
-          
-          console.log(`Sent refund approval notification to user ${refundData.userId}`);
-        } catch (notifError) {
-          console.error('Error sending refund approved notification:', notifError);
-          // Don't throw error, just log it (non-critical)
-        }
-      }
-    } else {
-      // Even if there's no reservation, we still want to create a payout for the refund
-      const refundAmount = 
-        (typeof refundData.amount === 'number' && !isNaN(refundData.amount)) ? refundData.amount : 
-        (typeof refundData.requestedRefundAmount === 'number' && !isNaN(refundData.requestedRefundAmount)) ? refundData.requestedRefundAmount : 
-        (typeof refundData.originalAmount === 'number' && !isNaN(refundData.originalAmount)) ? refundData.originalAmount * 0.5 : 
-        0;
-        
-      // Create a payout entry for the refund
-      await createRefundPayout(refundData, refundAmount, refundRequestId);
-    }
-    
-    // If this refund was generated from a cancellation request, update the cancellation request too
-    if (refundData.cancellationRequestId) {
-      const cancellationRequestRef = doc(db, 'cancellationRequests', refundData.cancellationRequestId);
-      const cancellationRequestDoc = await getDoc(cancellationRequestRef);
-      
-      if (cancellationRequestDoc.exists()) {
-        await updateDoc(cancellationRequestRef, {
-          refundStatus: 'completed',
+          status: 'refundCompleted',
           updatedAt: serverTimestamp()
         });
         
-        console.log(`Updated related cancellation request ${refundData.cancellationRequestId} with refund status`);
+        console.log(`Updated reservation ${refundData.reservationId} status to refundCompleted`);
+      } else {
+        // If not found in 'requests', try 'reservations' collection
+        const alternativeReservationRef = doc(db, 'reservations', refundData.reservationId);
+        reservationDoc = await getDoc(alternativeReservationRef);
+        
+        if (reservationDoc.exists()) {
+          // Update reservation status to refundCompleted
+          await updateDoc(alternativeReservationRef, {
+            status: 'refundCompleted',
+            updatedAt: serverTimestamp()
+          });
+          
+          console.log(`Updated reservation ${refundData.reservationId} status to refundCompleted in 'reservations' collection`);
+        } else {
+          console.log(`Reservation ${refundData.reservationId} not found in either collection. Only the refund request status has been updated.`);
+        }
+      }
+    }
+    
+    // Send notification to the user about the approved refund
+    if (refundData.userId) {
+      try {
+        // Create a minimal reservation object for the notification
+        const reservationForNotification = {
+          id: refundData.reservationId,
+          propertyId: refundData.propertyId,
+          propertyTitle: refundData.propertyName || 'your reservation',
+          status: 'refundCompleted'
+        };
+        
+        await userNotifications.refundRequestHandled(
+          refundData.userId,
+          reservationForNotification as any,
+          true, // approved
+          `Your refund request for ${refundAmount} MAD has been approved and is being processed.`
+        );
+        
+        console.log(`Sent refund approval notification to user ${refundData.userId}`);
+      } catch (notifError) {
+        console.error('Error sending refund approved notification:', notifError);
+        // Don't throw error, just log it (non-critical)
       }
     }
     
