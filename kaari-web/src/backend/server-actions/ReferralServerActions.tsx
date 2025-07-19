@@ -124,11 +124,11 @@ async function processReferralDoc(docSnapshot: QueryDocumentSnapshot<DocumentDat
     const referralHistory = data.referralHistory || [];
     
     // Calculate earnings
-    const pendingBookings = referralHistory.filter(booking => booking.status === 'pending');
-    const completedBookings = referralHistory.filter(booking => booking.status === 'completed' || booking.status === 'paid');
+    const pendingBookings = referralHistory.filter((booking: any) => booking.status === 'pending');
+    const completedBookings = referralHistory.filter((booking: any) => booking.status === 'completed' || booking.status === 'paid');
     
-    const earningsPending = pendingBookings.reduce((sum, booking) => sum + (booking.amount || 0), 0);
-    const earningsPaid = completedBookings.reduce((sum, booking) => sum + (booking.amount || 0), 0);
+    const earningsPending = pendingBookings.reduce((sum: number, booking: any) => sum + (booking.amount || 0), 0);
+    const earningsPaid = completedBookings.reduce((sum: number, booking: any) => sum + (booking.amount || 0), 0);
     
     // Get referral pass status
     const referralPass = data.referralPass || { active: false };
@@ -429,13 +429,17 @@ export async function getRecentReferrals(limitCount: number = 5): Promise<Referr
         referredUserId: data.referredUserId,
         referredUserName: data.referredUserName,
         referredUserEmail: data.referredUserEmail,
-        isUsed: data.isUsed,
-        isExpired: data.isExpired,
-        expiryDate: data.expiryDate instanceof Timestamp ? data.expiryDate.toDate() : new Date(data.expiryDate),
-        discountAmount: data.discountAmount,
-        discountCurrency: data.discountCurrency,
-        createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(data.createdAt),
-        updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(data.updatedAt)
+        isUsed: data.isUsed || false,
+        isExpired: data.isExpired || false,
+        expiryDate: data.expiryDate?.toDate() || new Date(),
+        discountAmount: data.discountAmount || 0,
+        discountCurrency: data.discountCurrency || 'MAD',
+        commissionAmount: data.commissionAmount || 0,
+        commissionCurrency: data.commissionCurrency || 'MAD',
+        commissionPaid: data.commissionPaid || false,
+        commissionPaidDate: data.commissionPaidDate?.toDate(),
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date()
       });
     }
     

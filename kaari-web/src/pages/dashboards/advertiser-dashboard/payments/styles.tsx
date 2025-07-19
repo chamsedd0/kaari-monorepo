@@ -1,321 +1,270 @@
-import styled from 'styled-components';
-import { Theme } from '../../../../theme/theme';
+import styled from "styled-components";
+import { Theme } from "../../../../theme/theme";
 
 export const PaymentsPageStyle = styled.div`
-  padding: 20px;
-  
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 32px;
+
   .title {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 20px;
+    font: ${Theme.typography.fonts.h3};
+    color: ${Theme.colors.black};
   }
-  
+
   .payments-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-  }
-  
-  .payment-stat {
-    padding: 20px;
-    border-radius: 8px;
-    
-    .payment-stat-title {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 10px;
-    }
-    
-    .payment-stat-value {
-      font-size: 24px;
-      font-weight: 600;
-      color: ${Theme.colors.secondary};
-    }
-    
-    .payment-number {
-      font-size: 24px;
-      font-weight: 600;
-      color: ${Theme.colors.secondary};
-    }
-    
-    .payment-pending {
-      font-size: 24px;
-      font-weight: 600;
-      color: ${Theme.colors.warning};
-    }
-    
-    .payment-requestable {
-      font-size: 24px;
-      font-weight: 600;
-      color: ${Theme.colors.success};
-      margin-bottom: 15px;
-    }
-    
-    button {
-      margin-top: 10px;
-      width: 100%;
+    display: flex;
+    gap: 21px;
+
+    .payment-stat {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        border: ${Theme.borders.primary};
+        border-radius: ${Theme.borders.radius.md};
+        padding: 40px 24px;
+
+        .payment-stat-title {
+            font: ${Theme.typography.fonts.extraLargeB};
+            color: ${Theme.colors.black};
+        }
+
+        .payment-stat-value {
+            font: ${Theme.typography.fonts.extraLargeB};
+            color: ${Theme.colors.success};
+        }
+
+        .payment-number {
+            font: ${Theme.typography.fonts.extraLargeB};
+            color: ${Theme.colors.primary};
+        }
+
+        .payment-pending {
+            font: ${Theme.typography.fonts.extraLargeB};
+            color: ${Theme.colors.warning};
+        }
     }
   }
-  
-  .border-container {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 20px;
-    background-color: white;
-  }
-  
+
   .payments-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    .payments-title, .section-title {
+        font: ${Theme.typography.fonts.h4B};
+        color: ${Theme.colors.black};
+    }
+
     .tabs-container {
       display: flex;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #e0e0e0;
+      gap: 16px;
+      margin-bottom: 16px;
       
       .tab-button {
-        padding: 10px 20px;
+        padding: 12px 24px;
+        font: ${Theme.typography.fonts.largeB};
+        color: ${Theme.colors.black};
         background: none;
         border: none;
+        border-bottom: 3px solid transparent;
         cursor: pointer;
-        font-size: 16px;
-        color: #666;
-        position: relative;
+        transition: all 0.2s ease;
         
         &.active {
-          color: ${Theme.colors.secondary};
-          font-weight: 600;
-          
-          &:after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background-color: ${Theme.colors.secondary};
-          }
+          color: ${Theme.colors.primary};
+          border-bottom: 3px solid ${Theme.colors.primary};
         }
         
-        &:hover {
-          color: ${Theme.colors.secondary};
+        &:hover:not(.active) {
+          color: ${Theme.colors.primary};
+          border-bottom: 3px solid ${Theme.colors.gray};
         }
       }
     }
-    
-    .slider-container {
-      margin-bottom: 20px;
-    }
-    
-    .section-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 15px;
-    }
-    
-    .success-message {
-      padding: 10px 15px;
-      background-color: #d4edda;
-      color: #155724;
-      border-radius: 4px;
-      margin-bottom: 15px;
-    }
-    
-    .error-message {
-      padding: 10px 15px;
-      background-color: #f8d7da;
-      color: #721c24;
-      border-radius: 4px;
-      margin-bottom: 15px;
-    }
-    
-    .loading-indicator {
-      text-align: center;
-      padding: 20px;
-      color: #666;
-    }
-    
-    .no-data-message {
-      text-align: center;
-      padding: 20px;
-      color: #666;
-    }
-    
-    .tenants-table {
+
+     .tenants-table {
       width: 100%;
       border-collapse: collapse;
+      background-color: ${Theme.colors.white};
+      border-radius: ${Theme.borders.radius.md};
+      overflow: hidden;
+      
+      th, td {
+        padding: 15px;
+        text-align: left;
+      }
       
       th {
-        text-align: left;
-        padding: 12px 10px;
-        border-bottom: 1px solid #e0e0e0;
-        color: #666;
-        font-weight: 600;
+        font: ${Theme.typography.fonts.largeB};
+        color: ${Theme.colors.black};
+        border-bottom: ${Theme.borders.primary};
       }
       
       td {
-        padding: 12px 10px;
-        border-bottom: 1px solid #e0e0e0;
-        vertical-align: middle;
+        font: ${Theme.typography.fonts.mediumM};
+        color: ${Theme.colors.black};
+        border-bottom: ${Theme.borders.primary};
       }
       
-      .tenant-info, .property-info {
-        display: flex;
-        align-items: center;
-        
-        .tenant-name, .property-name {
-          font-weight: 500;
-        }
-      }
-      
-      .move-in-date {
-        white-space: nowrap;
-      }
-      
-      .status-badge {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 500;
-        
-        &.completed, &.paid {
-          background-color: #d4edda;
-          color: #155724;
-        }
-        
-        &.pending {
-          background-color: #fff3cd;
-          color: #856404;
+      .request-row {
+        &.approved {
+          background-color: rgba(0, 180, 0, 0.05);
         }
         
         &.rejected {
-          background-color: #f8d7da;
-          color: #721c24;
-        }
-        
-        &.approved {
-          background-color: #cce5ff;
-          color: #004085;
+          background-color: rgba(255, 0, 0, 0.05);
         }
       }
       
-      .reason-badge {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 500;
-        
-        &.rent {
-          background-color: #d1ecf1;
-          color: #0c5460;
-        }
-        
-        &.referral {
-          background-color: #d4edda;
-          color: #155724;
-        }
-        
-        &.refund, &.cancellation {
-          background-color: #f8d7da;
-          color: #721c24;
-        }
-      }
-      
-      .request-payout-button {
-        padding: 6px 12px;
-        background-color: ${Theme.colors.secondary};
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
-        
-        &:hover {
-          background-color: ${Theme.colors.secondaryDark};
-        }
-        
-        &:disabled {
-          background-color: #cccccc;
-          cursor: not-allowed;
-        }
-      }
-      
-      .payout-status {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 12px;
+      .status {
+        font-weight: 600;
         
         &.pending {
-          background-color: #fff3cd;
-          color: #856404;
+          color: ${Theme.colors.warning};
         }
         
         &.approved {
-          background-color: #cce5ff;
-          color: #004085;
+          color: ${Theme.colors.success};
         }
         
         &.rejected {
-          background-color: #f8d7da;
-          color: #721c24;
+          color: ${Theme.colors.error};
         }
         
         &.paid {
-          background-color: #d4edda;
-          color: #155724;
-        }
-        
-        &.none {
-          background-color: #e2e3e5;
-          color: #383d41;
+          color: ${Theme.colors.success};
         }
       }
     }
-  }
-  
-  /* Modal styles */
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
-  
-  .modal-content {
-    background-color: white;
-    border-radius: 8px;
-    padding: 24px;
-    width: 100%;
-    max-width: 500px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     
-    h3 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: ${Theme.colors.secondary};
-    }
-    
-    p {
-      margin-bottom: 16px;
-      line-height: 1.5;
-    }
-    
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 24px;
+    .request-payout-button {
+      padding: 8px 16px;
+      font: ${Theme.typography.fonts.mediumM};
+      color: ${Theme.colors.white};
+      background-color: ${Theme.colors.primary};
+      border: none;
+      border-radius: ${Theme.borders.radius.sm};
+      cursor: pointer;
+      transition: all 0.2s ease;
       
-      button {
-        min-width: 120px;
+      &:hover {
+        background-color: ${Theme.colors.secondary};
+      }
+      
+      &:disabled {
+        background-color: ${Theme.colors.gray};
+        cursor: not-allowed;
+      }
+    }
+    
+    .payout-status {
+      display: inline-block;
+      padding: 6px 12px;
+      font: ${Theme.typography.fonts.smallB};
+      border-radius: ${Theme.borders.radius.sm};
+      
+      &.pending {
+        color: ${Theme.colors.warning};
+        background-color: rgba(255, 152, 0, 0.1);
+      }
+      
+      &.approved {
+        color: ${Theme.colors.success};
+        background-color: rgba(0, 180, 0, 0.1);
+      }
+      
+      &.rejected {
+        color: ${Theme.colors.error};
+        background-color: rgba(255, 0, 0, 0.1);
+      }
+      
+      &.paid {
+        color: ${Theme.colors.success};
+        background-color: rgba(0, 180, 0, 0.1);
+      }
+      
+      &.none {
+        color: ${Theme.colors.gray};
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+    }
+    
+    .success-message {
+      padding: 16px;
+      margin-bottom: 16px;
+      font: ${Theme.typography.fonts.mediumM};
+      color: ${Theme.colors.success};
+      background-color: rgba(0, 180, 0, 0.1);
+      border-radius: ${Theme.borders.radius.sm};
+    }
+    
+    .error-message {
+      padding: 16px;
+      margin-bottom: 16px;
+      font: ${Theme.typography.fonts.mediumM};
+      color: ${Theme.colors.error};
+      background-color: rgba(255, 0, 0, 0.1);
+      border-radius: ${Theme.borders.radius.sm};
+    }
+    
+    .loading-indicator {
+      padding: 24px;
+      text-align: center;
+      font: ${Theme.typography.fonts.mediumM};
+      color: ${Theme.colors.gray};
+    }
+    
+    .no-data-message {
+      padding: 24px;
+      text-align: center;
+      font: ${Theme.typography.fonts.mediumM};
+      color: ${Theme.colors.gray};
+    }
+    
+    .reason-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      font: ${Theme.typography.fonts.smallB};
+      border-radius: ${Theme.borders.radius.sm};
+      
+      &.rent-–-move-in {
+        color: ${Theme.colors.secondary};
+        background-color: rgba(126, 87, 194, 0.1);
+      }
+      
+      &.cushion-–-pre-move-cancel {
+        color: ${Theme.colors.warning};
+        background-color: rgba(255, 152, 0, 0.1);
+      }
+      
+      &.cushion-–-haani-max-cancel {
+        color: #c2185b;
+        background-color: rgba(194, 24, 91, 0.1);
+      }
+      
+      &.referral-commission {
+        color: ${Theme.colors.success};
+        background-color: rgba(0, 180, 0, 0.1);
+      }
+      
+      &.tenant-refund {
+        color: ${Theme.colors.error};
+        background-color: rgba(255, 0, 0, 0.1);
+      }
+    }
+    
+    .payout-row {
+      &.approved {
+        background-color: rgba(0, 180, 0, 0.05);
+      }
+      
+      &.rejected {
+        background-color: rgba(255, 0, 0, 0.05);
+      }
+      
+      &.paid {
+        background-color: rgba(126, 87, 194, 0.05);
       }
     }
   }

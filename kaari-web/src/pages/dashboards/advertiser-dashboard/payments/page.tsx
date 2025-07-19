@@ -8,17 +8,14 @@ import { formatDate } from '../../../../utils/date-utils';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import { BorderPurpleLB40 } from '../../../../components/skeletons/buttons/border_purple_LB40';
 import { PayoutRequest, Payout } from '../../../../services/PayoutsService';
-import { useToast } from '../../../../contexts/ToastContext';
 
 const PaymentsPage = () => {
   const { t } = useTranslation();
-  const toast = useToast();
   const [payments, setPayments] = useState<any[]>([]);
   const [paymentStats, setPaymentStats] = useState({
     totalCollected: 0,
     paymentCount: 0,
-    pendingAmount: 0,
-    requestableAmount: 0
+    pendingAmount: 0
   });
   const [payoutRequests, setPayoutRequests] = useState<PayoutRequest[]>([]);
   const [payoutHistory, setPayoutHistory] = useState<Payout[]>([]);
@@ -31,8 +28,6 @@ const PaymentsPage = () => {
   const [payoutSuccess, setPayoutSuccess] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>('date');
   const [activeTab, setActiveTab] = useState<'payments' | 'payouts' | 'history'>('payments');
-  const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
-  const [showPayoutConfirmation, setShowPayoutConfirmation] = useState<boolean>(false);
 
   // Load advertiser payments and stats
   useEffect(() => {
@@ -62,86 +57,92 @@ const PaymentsPage = () => {
 
     fetchData();
   }, []);
-
-  // Load payout history when the history tab is active
+  
+  // Load payout history
   useEffect(() => {
-    if (activeTab === 'history' && payoutHistory.length === 0) {
-      const fetchPayoutHistory = async () => {
-        try {
-          setHistoryLoading(true);
-          const history = await getCurrentUserPayoutHistory();
-          setPayoutHistory(history);
-          setHistoryError(null);
-        } catch (err: any) {
-          console.error('Error loading payout history:', err);
-          setHistoryError(err.message || 'Failed to load payout history');
-        } finally {
-          setHistoryLoading(false);
-        }
-      };
-      
+    const fetchPayoutHistory = async () => {
+      try {
+        setHistoryLoading(true);
+        const history = await getCurrentUserPayoutHistory();
+        setPayoutHistory(history);
+        setHistoryError(null);
+      } catch (err: any) {
+        console.error('Error loading payout history:', err);
+        setHistoryError(err.message || 'Failed to load payout history');
+        setPayoutHistory([]);
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+    
+    // Only fetch history when the history tab is active
+    if (activeTab === 'history') {
       fetchPayoutHistory();
     }
-  }, [activeTab, payoutHistory.length]);
+  }, [activeTab]);
 
-  // Handle sort change
-  const handleSortChange = (value: string) => {
-    setSortBy(value);
-  };
-
-  // Sort payments based on selected sort option
+  // Sort payments based on selected option
   const sortedPayments = [...payments].sort((a, b) => {
-    if (sortBy === 'tenant') {
-      const nameA = a.client?.name || '';
-      const nameB = b.client?.name || '';
-      return nameA.localeCompare(nameB);
-    } else if (sortBy === 'property') {
-      const propertyA = a.property?.title || '';
-      const propertyB = b.property?.title || '';
-      return propertyA.localeCompare(propertyB);
-    } else {
-      // Default sort by date
-      return new Date(b.payment.paymentDate).getTime() - new Date(a.payment.paymentDate).getTime();
+    switch (sortBy) {
+      case 'tenant':
+        return (a.client?.name || '').localeCompare(b.client?.name || '');
+      case 'property':
+        return (a.property?.title || '').localeCompare(b.property?.title || '');
+      case 'date':
+      default:
+        return new Date(b.payment.paymentDate).getTime() - new Date(a.payment.paymentDate).getTime();
     }
   });
 
-  // Handle payout request
-  const handlePayoutRequest = async () => {
-    if (payoutLoading) return;
-    
+  // Handle sort change
+  const handleSortChange = (value: string) => {
+    setSortBy(value.toLowerCase().split(' ')[1]);
+  };
+  
+  // Handle request payout
+  const handleRequestPayout = async (reservationId: string) => {
     try {
       setPayoutLoading(true);
       setPayoutError(null);
       setPayoutSuccess(null);
       
-      // Request payout for all eligible reservations
-      // In a real implementation, you would select specific reservations
-      const success = await requestRentPayout(selectedReservationId || '');
+      const success = await requestRentPayout(reservationId);
       
       if (success) {
-        setPayoutSuccess('Payout request submitted successfully.');
-        toast.showToast('success', 'Payout Request Submitted', 'Your payout request has been submitted successfully.');
+        setPayoutSuccess('Payout request submitted successfully. It will be processed within 1-3 business days.');
         
-        // Refresh data
-        const stats = await getAdvertiserPaymentStats();
-        setPaymentStats(stats);
-        
+        // Refresh payout requests
         const requests = await getCurrentUserPayoutRequests();
         setPayoutRequests(requests);
       } else {
-        setPayoutError('Failed to submit payout request.');
-        toast.showToast('error', 'Payout Request Failed', 'There was an error submitting your payout request. Please try again.');
+        setPayoutError('Failed to submit payout request. Please try again.');
       }
-      
-      setShowPayoutConfirmation(false);
-      setSelectedReservationId(null);
     } catch (err: any) {
       console.error('Error requesting payout:', err);
       setPayoutError(err.message || 'Failed to request payout');
-      toast.showToast('error', 'Payout Request Failed', err.message || 'Failed to request payout');
     } finally {
       setPayoutLoading(false);
     }
+  };
+  
+  // Check if a payout request exists for a reservation
+  const hasPayoutRequest = (reservationId: string): boolean => {
+    return payoutRequests.some(request => 
+      request.sourceType === 'rent' && 
+      request.sourceId === reservationId
+    );
+  };
+  
+  // Get payout request status for a reservation
+  const getPayoutRequestStatus = (reservationId: string): string => {
+    const request = payoutRequests.find(req => 
+      req.sourceType === 'rent' && 
+      req.sourceId === reservationId
+    );
+    
+    if (!request) return 'none';
+    
+    return request.status;
   };
   
   // Format payout status for display
@@ -163,18 +164,6 @@ const PaymentsPage = () => {
   // Format currency
   const formatCurrency = (amount: number, currency: string = 'MAD'): string => {
     return `${amount.toLocaleString()} ${currency}`;
-  };
-
-  // Handle reservation selection for payout
-  const handleReservationSelect = (reservationId: string) => {
-    setSelectedReservationId(reservationId);
-    setShowPayoutConfirmation(true);
-  };
-  
-  // Cancel payout confirmation
-  const cancelPayoutConfirmation = () => {
-    setShowPayoutConfirmation(false);
-    setSelectedReservationId(null);
   };
   
   return (
@@ -199,20 +188,6 @@ const PaymentsPage = () => {
           <div className="payment-pending">
             {loading ? '...' : `${paymentStats.pendingAmount} MAD`}
           </div>
-        </div>
-        <div className="payment-stat border-container">
-          <div className="payment-stat-title">{t('advertiser_dashboard.payments.requestable_amount', 'Requestable amount')}</div>
-          <div className="payment-requestable">
-            {loading ? '...' : `${paymentStats.requestableAmount} MAD`}
-          </div>
-          {paymentStats.requestableAmount > 0 && (
-            <PurpleButtonMB48 
-              onClick={() => setShowPayoutConfirmation(true)}
-              disabled={payoutLoading}
-            >
-              {payoutLoading ? 'Processing...' : 'Request Payout'}
-            </PurpleButtonMB48>
-          )}
         </div>
       </div>
       
@@ -269,6 +244,7 @@ const PaymentsPage = () => {
                       <th>{t('advertiser_dashboard.payments.column_amount', 'Amount')}</th>
                       <th>{t('advertiser_dashboard.payments.column_date', 'Date')}</th>
                       <th>{t('advertiser_dashboard.payments.column_payment_id', 'Payment ID')}</th>
+                      <th>{t('advertiser_dashboard.payments.column_actions', 'Actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -284,11 +260,11 @@ const PaymentsPage = () => {
                           </div>
                         </td>
                         <td>
-                          <span className={`status-badge ${paymentItem.payment.status}`}>
-                            {paymentItem.payment.status === 'completed' 
-                              ? t('advertiser_dashboard.payments.status_completed', 'Completed')
+                          {paymentItem.payment.status === 'completed' 
+                            ? t('advertiser_dashboard.payments.status_completed', 'Completed')
+                            : paymentItem.payment.status === 'pending'
+                              ? t('advertiser_dashboard.payments.status_pending', 'Pending (24h after move-in)')
                               : paymentItem.payment.status}
-                          </span>
                         </td>
                         <td>
                           <div className="property-info">
@@ -306,6 +282,25 @@ const PaymentsPage = () => {
                         </td>
                         <td>
                           {paymentItem.payment.transactionId || paymentItem.payment.id.substring(0, 7)}
+                        </td>
+                        <td>
+                          {paymentItem.payment.status === 'completed' && paymentItem.reservation?.status === 'movedIn' && !hasPayoutRequest(paymentItem.reservation.id) ? (
+                            <button 
+                              className="request-payout-button"
+                              onClick={() => handleRequestPayout(paymentItem.reservation.id)}
+                              disabled={payoutLoading}
+                            >
+                              {payoutLoading ? 'Processing...' : 'Request Payout'}
+                            </button>
+                          ) : paymentItem.payment.status === 'pending' ? (
+                            <span className="payout-status pending">
+                              {t('advertiser_dashboard.payments.not_available_yet', 'Not available yet')}
+                            </span>
+                          ) : (
+                            <span className={`payout-status ${getPayoutRequestStatus(paymentItem.reservation?.id || '')}`}>
+                              {formatPayoutStatus(getPayoutRequestStatus(paymentItem.reservation?.id || ''))}
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -347,28 +342,22 @@ const PaymentsPage = () => {
                   </thead>
                   <tbody>
                     {payoutRequests.map((request) => (
-                      <tr key={request.id}>
+                      <tr key={request.id} className={`request-row ${request.status}`}>
                         <td>
-                          <div className="request-type">
-                            <span className={`reason-badge ${request.sourceType}`}>
-                              {request.reason}
-                            </span>
-                          </div>
+                          {request.reason}
                         </td>
                         <td>
                           {`${request.amount} ${request.currency}`}
                         </td>
-                        <td>
-                          <span className={`status-badge ${request.status}`}>
-                            {formatPayoutStatus(request.status)}
-                          </span>
+                        <td className={`status ${request.status}`}>
+                          {formatPayoutStatus(request.status)}
                         </td>
                         <td>
                           {formatDate(request.createdAt)}
                         </td>
                         <td>
                           {request.paymentMethod ? 
-                            `${request.paymentMethod.bankName} (${request.paymentMethod.type} ****${request.paymentMethod.accountLast4})` : 
+                            `${request.paymentMethod.bankName} (${request.paymentMethod.type} ending in ${request.paymentMethod.accountLast4})` : 
                             'Not specified'}
                         </td>
                         <td>
@@ -408,21 +397,17 @@ const PaymentsPage = () => {
                   </thead>
                   <tbody>
                     {payoutHistory.map((payout) => (
-                      <tr key={payout.id}>
+                      <tr key={payout.id} className={`payout-row ${payout.status}`}>
                         <td>
-                          <div className="request-type">
-                            <span className={`reason-badge ${payout.sourceType}`}>
-                              {payout.reason}
-                            </span>
-                          </div>
-                        </td>
-                        <td>
-                          {`${payout.amount} ${payout.currency}`}
-                        </td>
-                        <td>
-                          <span className={`status-badge ${payout.status}`}>
-                            {formatPayoutStatus(payout.status)}
+                          <span className={`reason-badge ${payout.reason.replace(/\s+/g, '-').toLowerCase()}`}>
+                            {payout.reason}
                           </span>
+                        </td>
+                        <td>
+                          {formatCurrency(payout.amount, payout.currency)}
+                        </td>
+                        <td className={`status ${payout.status}`}>
+                          {formatPayoutStatus(payout.status)}
                         </td>
                         <td>
                           {formatDate(payout.createdAt)}
@@ -432,7 +417,7 @@ const PaymentsPage = () => {
                         </td>
                         <td>
                           {payout.paymentMethod ? 
-                            `${payout.paymentMethod.bankName} (${payout.paymentMethod.type} ****${payout.paymentMethod.accountLast4})` : 
+                            `${payout.paymentMethod.bankName} (${payout.paymentMethod.type} ending in ${payout.paymentMethod.accountLast4})` : 
                             'Not specified'}
                         </td>
                       </tr>
@@ -444,25 +429,6 @@ const PaymentsPage = () => {
           </>
         )}
       </div>
-      
-      {/* Payout Confirmation Modal */}
-      {showPayoutConfirmation && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>Request Payout</h3>
-            <p>Are you sure you want to request a payout for {formatCurrency(paymentStats.requestableAmount)}?</p>
-            <p>The funds will be sent to your registered payment method once approved.</p>
-            <div className="modal-actions">
-              <BorderPurpleLB40 onClick={cancelPayoutConfirmation} disabled={payoutLoading}>
-                Cancel
-              </BorderPurpleLB40>
-              <PurpleButtonMB48 onClick={handlePayoutRequest} disabled={payoutLoading}>
-                {payoutLoading ? 'Processing...' : 'Confirm Request'}
-              </PurpleButtonMB48>
-            </div>
-          </div>
-        </div>
-      )}
     </PaymentsPageStyle>
   );
 };

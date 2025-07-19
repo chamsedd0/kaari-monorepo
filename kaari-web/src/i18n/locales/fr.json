@@ -684,6 +684,7 @@
       "column_payment_id": "ID de paiement",
       "column_actions": "Actions",
       "status_completed": "Complété",
+      "status_pending": "En attente (24h après l'emménagement)",
       "payout_status_pending": "En attente",
       "payout_status_approved": "Approuvé",
       "payout_status_rejected": "Rejeté",
@@ -699,7 +700,8 @@
       "column_notes": "Notes",
       "column_reason": "Raison",
       "column_created_date": "Date de création",
-      "column_paid_date": "Date de paiement"
+      "column_paid_date": "Date de paiement",
+      "not_available_yet": "Pas encore disponible"
     },
     "tenants": {
       "title": "Vos locataires",

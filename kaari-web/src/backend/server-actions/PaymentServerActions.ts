@@ -21,6 +21,7 @@ export interface Payment {
   amount: number;
   currency: string;
   status: 'pending' | 'completed' | 'failed' | 'refunded';
+  advertiserStatus?: 'pending' | 'completed' | 'failed' | 'refunded';
   paymentMethod: string;
   transactionId?: string;
   paymentDate: Date;
@@ -79,6 +80,11 @@ export async function processPayment(reservationId: string): Promise<{
       throw new Error('Cannot process payment for a reservation that is not accepted');
     }
     
+    // Check if propertyId exists before using it
+    if (!reservation.propertyId) {
+      throw new Error('Property ID not found in reservation');
+    }
+    
     // Get property details for payment
     const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
     if (!property) {
@@ -97,6 +103,12 @@ export async function processPayment(reservationId: string): Promise<{
       throw new Error('User profile not found');
     }
     
+    // Get advertiser ID from property
+    const advertiserId = property.ownerId;
+    if (!advertiserId) {
+      throw new Error('Advertiser ID not found for this property');
+    }
+    
     // Prepare payment data
     const paymentData = {
       amount: reservation.totalPrice || 0,
@@ -112,7 +124,7 @@ export async function processPayment(reservationId: string): Promise<{
         reservationId,
         propertyId: property.id,
         userId: user.uid,
-        advertiserId: property.ownerId || property.advertiserId
+        advertiserId
       }
     };
     
@@ -133,10 +145,11 @@ export async function processPayment(reservationId: string): Promise<{
       reservationId,
       propertyId: property.id,
       userId: user.uid,
-      advertiserId: property.ownerId || property.advertiserId,
+      advertiserId,
       amount: reservation.totalPrice || 0,
       currency: 'MAD',
-      status: 'completed', // In real implementation, this would initially be 'pending'
+      status: 'completed', // For the client, the payment is completed
+      advertiserStatus: 'pending', // For the advertiser, it's pending until move-in + 24 hours
       paymentMethod: 'card', // This would come from the actual payment method used
       transactionId: simulatedTransactionId,
       paymentDate: Timestamp.now(),
@@ -146,8 +159,6 @@ export async function processPayment(reservationId: string): Promise<{
     
     // Update the reservation with payment information
     await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
-      paymentOrderId: orderID,
-      paymentStatus: 'paid',
       status: 'paid',
       updatedAt: new Date()
     });
@@ -162,23 +173,19 @@ export async function processPayment(reservationId: string): Promise<{
       const NotificationService = (await import('../../services/NotificationService')).default;
       
       // Notify advertiser about payment (but clarify they'll receive it after move-in)
-      if (property.ownerId || property.advertiserId) {
-        const advertiserId = property.ownerId || property.advertiserId;
-        
-        await NotificationService.createNotification(
-          advertiserId,
-          'advertiser',
-          'payment_confirmed',
-          'Payment Received',
-          `Payment has been received for the reservation at ${property.title || 'your property'}. Funds will be released 24 hours after client move-in.`,
-          `/dashboard/advertiser/reservations`,
-          {
-            reservationId,
-            propertyId: property.id,
-            status: 'paid'
-          }
-        );
-      }
+      await NotificationService.createNotification(
+        advertiserId,
+        'advertiser',
+        'payment_confirmed',
+        'Payment Received',
+        `Payment has been received for the reservation at ${property.title || 'your property'}. Funds will be released 24 hours after client move-in.`,
+        `/dashboard/advertiser/reservations`,
+        {
+          reservationId,
+          propertyId: property.id,
+          status: 'paid'
+        }
+      );
       
       // Notify user about payment confirmation
       await NotificationService.createNotification(
@@ -246,13 +253,18 @@ export async function handleMoveIn(reservationId: string): Promise<{
       throw new Error('Cannot confirm move-in for a reservation that is not paid');
     }
     
+    // Check if propertyId exists before using it
+    if (!reservation.propertyId) {
+      throw new Error('Property ID not found in reservation');
+    }
+    
     // Get property details
     const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
     if (!property) {
       throw new Error('Property not found');
     }
     
-    const advertiserId = property.ownerId || property.advertiserId;
+    const advertiserId = property.ownerId;
     if (!advertiserId) {
       throw new Error('Advertiser ID not found for this property');
     }
@@ -278,16 +290,7 @@ export async function handleMoveIn(reservationId: string): Promise<{
       status: 'movedIn',
       movedIn: true,
       movedInAt: new Date(),
-      safetyWindowEndsAt: scheduledReleaseDate,
       updatedAt: new Date()
-    });
-    
-    // Schedule a job to create a payout after the safety window ends
-    // This will be handled by a Cloud Function or a cron job
-    // For now, we'll just set a flag to indicate that a payout should be created
-    await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
-      payoutPending: true,
-      payoutScheduledFor: scheduledReleaseDate
     });
     
     // Send notifications
@@ -314,7 +317,7 @@ export async function handleMoveIn(reservationId: string): Promise<{
       await NotificationService.createNotification(
         user.uid,
         'user',
-        'move_in_confirmed',
+        'move_in_confirmation',
         'Move-In Confirmed',
         `Your move-in for ${property.title || 'the property'} has been confirmed.`,
         `/dashboard/user/reservations`,
@@ -393,7 +396,7 @@ export async function processPendingPayouts(): Promise<{
           await NotificationService.createNotification(
             payoutData.advertiserId,
             'advertiser',
-            'payout_completed',
+            'payout_processed',
             'Payout Completed',
             `A payment of ${payoutData.amount} ${payoutData.currency} has been released to your account.`,
             `/dashboard/advertiser/payments`,
@@ -455,9 +458,27 @@ export async function processSafetyWindowExpirations(): Promise<{
     
     for (const docSnapshot of querySnapshot.docs) {
       const bookingId = docSnapshot.id;
+      const bookingData = docSnapshot.data();
       
       try {
-        // Create payout for this booking
+        // Get property details
+        const propertyRef = doc(db, PROPERTIES_COLLECTION, bookingData.propertyId);
+        const propertyDoc = await getDoc(propertyRef);
+        
+        if (!propertyDoc.exists()) {
+          console.error(`Property not found for booking ${bookingId}`);
+          continue;
+        }
+        
+        const property = propertyDoc.data();
+        const advertiserId = property.ownerId;
+        
+        if (!advertiserId) {
+          console.error(`Advertiser ID not found for property ${bookingData.propertyId}`);
+          continue;
+        }
+        
+        // Create payout request for this booking
         const success = await createRentPayout(bookingId);
         
         if (success) {
@@ -467,6 +488,36 @@ export async function processSafetyWindowExpirations(): Promise<{
             payoutProcessed: true,
             payoutProcessedAt: serverTimestamp()
           });
+          
+          // Update the payment record to change advertiserStatus to 'completed'
+          // Find the payment record for this booking
+          const paymentsRef = collection(db, PAYMENTS_COLLECTION);
+          const paymentQuery = query(paymentsRef, where('reservationId', '==', bookingId));
+          const paymentSnapshot = await getDocs(paymentQuery);
+          
+          if (!paymentSnapshot.empty) {
+            const paymentDoc = paymentSnapshot.docs[0];
+            await updateDoc(doc(db, PAYMENTS_COLLECTION, paymentDoc.id), {
+              advertiserStatus: 'completed',
+              updatedAt: serverTimestamp()
+            });
+          }
+          
+          // Send notification to advertiser
+          const NotificationService = (await import('../../services/NotificationService')).default;
+          await NotificationService.createNotification(
+            advertiserId,
+            'advertiser',
+            'payout_request_approved',
+            'Payout Ready',
+            `A payout for ${bookingData.totalPrice || 0} MAD is now ready for your property. You can request this payout from your payments page.`,
+            `/dashboard/advertiser/payments`,
+            {
+              reservationId: bookingId,
+              propertyId: bookingData.propertyId,
+              amount: bookingData.totalPrice || 0
+            }
+          );
           
           processedCount++;
         }
@@ -535,9 +586,13 @@ export async function getAdvertiserPayments(): Promise<{
         ? paymentData.updatedAt.toDate() 
         : new Date(paymentData.updatedAt);
       
+      // Use advertiserStatus if available, otherwise fall back to status
+      const status = paymentData.advertiserStatus || paymentData.status;
+      
       const payment: Payment = {
         id: docSnapshot.id,
         ...paymentData,
+        status, // Use the advertiser-specific status
         paymentDate,
         createdAt,
         updatedAt
@@ -547,7 +602,8 @@ export async function getAdvertiserPayments(): Promise<{
       let property: Property | undefined;
       if (payment.propertyId) {
         try {
-          property = await getDocumentById<Property>(PROPERTIES_COLLECTION, payment.propertyId);
+          const propertyResult = await getDocumentById<Property>(PROPERTIES_COLLECTION, payment.propertyId);
+          property = propertyResult || undefined;
         } catch (err) {
           console.error(`Error fetching property ${payment.propertyId}:`, err);
         }
@@ -557,7 +613,8 @@ export async function getAdvertiserPayments(): Promise<{
       let client: User | undefined;
       if (payment.userId) {
         try {
-          client = await getDocumentById<User>(USERS_COLLECTION, payment.userId);
+          const clientResult = await getDocumentById<User>(USERS_COLLECTION, payment.userId);
+          client = clientResult || undefined;
         } catch (err) {
           console.error(`Error fetching client ${payment.userId}:`, err);
         }
@@ -634,7 +691,8 @@ export async function getUserPayments(): Promise<{
       let property: Property | undefined;
       if (payment.propertyId) {
         try {
-          property = await getDocumentById<Property>(PROPERTIES_COLLECTION, payment.propertyId);
+          const propertyResult = await getDocumentById<Property>(PROPERTIES_COLLECTION, payment.propertyId);
+          property = propertyResult || undefined;
         } catch (err) {
           console.error(`Error fetching property ${payment.propertyId}:`, err);
         }
@@ -644,7 +702,8 @@ export async function getUserPayments(): Promise<{
       let advertiser: User | undefined;
       if (payment.advertiserId) {
         try {
-          advertiser = await getDocumentById<User>(USERS_COLLECTION, payment.advertiserId);
+          const advertiserResult = await getDocumentById<User>(USERS_COLLECTION, payment.advertiserId);
+          advertiser = advertiserResult || undefined;
         } catch (err) {
           console.error(`Error fetching advertiser ${payment.advertiserId}:`, err);
         }
@@ -671,7 +730,6 @@ export async function getAdvertiserPaymentStats(): Promise<{
   totalCollected: number;
   paymentCount: number;
   pendingAmount: number;
-  requestableAmount: number;
 }> {
   try {
     const auth = getAuth();
@@ -689,8 +747,7 @@ export async function getAdvertiserPaymentStats(): Promise<{
       return {
         totalCollected: 0,
         paymentCount: 0,
-        pendingAmount: 0,
-        requestableAmount: 0
+        pendingAmount: 0
       };
     }
     
@@ -698,7 +755,41 @@ export async function getAdvertiserPaymentStats(): Promise<{
     
     // Calculate pending amount from pending payouts
     let pendingAmount = 0;
-    let requestableAmount = 0;
+    
+    // Get pending payouts for this advertiser
+    const pendingPayoutsRef = collection(db, PENDING_PAYOUTS_COLLECTION);
+    const q = query(
+      pendingPayoutsRef,
+      where('advertiserId', '==', user.uid),
+      where('status', '==', 'pending')
+    );
+    const querySnapshot = await getDocs(q);
+    
+    // Sum up the total amount of pending payouts
+    querySnapshot.docs.forEach(doc => {
+      const payoutData = doc.data();
+      pendingAmount += payoutData.amount || 0;
+    });
+    
+    // Include payments with advertiserStatus='pending'
+    const paymentsRef = collection(db, PAYMENTS_COLLECTION);
+    const paymentsQuery = query(
+      paymentsRef,
+      where('advertiserId', '==', user.uid),
+      where('advertiserStatus', '==', 'pending')
+    );
+    const paymentsSnapshot = await getDocs(paymentsQuery);
+    
+    // Get all reservationIds from pending payments to avoid double counting
+    const pendingPaymentReservationIds = new Set(
+      paymentsSnapshot.docs.map(doc => doc.data().reservationId)
+    );
+    
+    // Sum up the total amount of pending payments
+    paymentsSnapshot.docs.forEach(doc => {
+      const paymentData = doc.data();
+      pendingAmount += paymentData.amount || 0;
+    });
     
     // Get all properties for this advertiser
     const propertiesRef = collection(db, PROPERTIES_COLLECTION);
@@ -708,99 +799,39 @@ export async function getAdvertiserPaymentStats(): Promise<{
     const propertyIds = propertiesSnapshot.docs.map(doc => doc.id);
     
     // For each property, get paid reservations (before move-in)
+    // but only count those that don't already have a payment record
     for (const propertyId of propertyIds) {
       const requestsRef = collection(db, REQUESTS_COLLECTION);
-      
-      // Get paid reservations (before move-in) - these are pending
-      const paidRequestsQuery = query(
+      const requestsQuery = query(
         requestsRef, 
         where('propertyId', '==', propertyId),
         where('status', '==', 'paid')
       );
-      const paidRequestsSnapshot = await getDocs(paidRequestsQuery);
+      const requestsSnapshot = await getDocs(requestsQuery);
       
-      // Sum up the total price of all paid reservations
-      paidRequestsSnapshot.docs.forEach(doc => {
+      // Sum up the total price of paid reservations that don't have a payment record yet
+      requestsSnapshot.docs.forEach(doc => {
         const requestData = doc.data();
-        pendingAmount += requestData.totalPrice || 0;
-      });
-      
-      // Get moved-in reservations where refund window has passed - these are requestable
-      const now = new Date();
-      const movedInRequestsQuery = query(
-        requestsRef, 
-        where('propertyId', '==', propertyId),
-        where('status', '==', 'movedIn')
-      );
-      const movedInRequestsSnapshot = await getDocs(movedInRequestsQuery);
-      
-      // Check each moved-in reservation to see if refund window has passed
-      for (const docSnapshot of movedInRequestsSnapshot.docs) {
-        const requestData = docSnapshot.data();
+        const reservationId = doc.id;
         
-        // Skip if already processed for payout
-        if (requestData.payoutProcessed) {
-          continue;
-        }
-        
-        // Check if the 24-hour refund window has passed
-        if (!requestData.movedInAt) {
-          continue;
-        }
-        
-        // Convert Firestore timestamp to Date if needed
-        let moveInDate: Date;
-        if (typeof requestData.movedInAt === 'object' && 'seconds' in requestData.movedInAt) {
-          moveInDate = new Date((requestData.movedInAt as any).seconds * 1000);
-        } else {
-          moveInDate = new Date(requestData.movedInAt);
-        }
-        
-        // Calculate refund deadline (24 hours after move-in)
-        const refundDeadline = new Date(moveInDate);
-        refundDeadline.setHours(refundDeadline.getHours() + 24);
-        
-        // If refund window has passed, add to requestable amount
-        if (now > refundDeadline) {
-          requestableAmount += requestData.totalPrice || 0;
-        } else {
-          // Otherwise, add to pending amount
+        // Only count if we haven't already counted a payment for this reservation
+        if (!pendingPaymentReservationIds.has(reservationId)) {
           pendingAmount += requestData.totalPrice || 0;
         }
-      }
+      });
     }
-    
-    // Check for existing payout requests that haven't been approved yet
-    const payoutRequestsRef = collection(db, 'payoutRequests');
-    const payoutRequestsQuery = query(
-      payoutRequestsRef,
-      where('userId', '==', user.uid),
-      where('status', '==', 'pending')
-    );
-    const payoutRequestsSnapshot = await getDocs(payoutRequestsQuery);
-    
-    // Subtract requested amounts from requestable amount
-    payoutRequestsSnapshot.docs.forEach(doc => {
-      const requestData = doc.data();
-      requestableAmount -= requestData.amount || 0;
-    });
-    
-    // Ensure requestable amount doesn't go negative
-    requestableAmount = Math.max(0, requestableAmount);
     
     return {
       totalCollected: advertiserData.totalCollected || 0,
       paymentCount: advertiserData.paymentCount || 0,
-      pendingAmount,
-      requestableAmount
+      pendingAmount
     };
   } catch (error) {
     console.error('Error fetching advertiser payment stats:', error);
     return {
       totalCollected: 0,
       paymentCount: 0,
-      pendingAmount: 0,
-      requestableAmount: 0
+      pendingAmount: 0
     };
   }
 }

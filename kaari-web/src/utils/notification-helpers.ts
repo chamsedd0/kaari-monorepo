@@ -1140,6 +1140,98 @@ export const createMultiplePropertiesRefreshNotification = async (
  * Notification helpers for payouts
  */
 export const payoutNotifications = {
+  // Notify user when a payout request is automatically created
+  payoutRequestCreated: async (
+    userId: string,
+    userType: 'advertiser' | 'user',
+    amount: number,
+    currency: string = 'MAD',
+    reason: string,
+    propertyName: string = 'your property'
+  ): Promise<string> => {
+    const title = 'Payout Request Created';
+    const message = `A payout request of ${amount} ${currency} has been automatically created for ${propertyName}. The admin will review and process this request.`;
+    const link = `/dashboard/${userType === 'advertiser' ? 'advertiser' : 'user'}/payments`;
+    
+    return NotificationService.createNotification(
+      userId,
+      userType,
+      'payout_request_created',
+      title,
+      message,
+      link,
+      { amount, currency, reason, propertyName }
+    );
+  },
+  
+  // Notify user when a refund request is created
+  refundRequestCreated: async (
+    userId: string,
+    amount: number,
+    currency: string = 'MAD',
+    propertyName: string = 'your booking'
+  ): Promise<string> => {
+    const title = 'Refund Request Created';
+    const message = `A refund request of ${amount} ${currency} has been created for ${propertyName}. The admin will review and process this request.`;
+    const link = `/dashboard/user/payments`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'refund_request_created',
+      title,
+      message,
+      link,
+      { amount, currency, propertyName }
+    );
+  },
+  
+  // Notify user when a cancellation request is created
+  cancellationRequestCreated: async (
+    userId: string,
+    amount: number,
+    currency: string = 'MAD',
+    reason: string
+  ): Promise<string> => {
+    const title = 'Cancellation Request Created';
+    const message = `A cancellation payout request of ${amount} ${currency} has been created. The admin will review and process this request.`;
+    const link = `/dashboard/user/payments`;
+    
+    return NotificationService.createNotification(
+      userId,
+      'user',
+      'cancellation_request_created',
+      title,
+      message,
+      link,
+      { amount, currency, reason }
+    );
+  },
+  
+  // Notify user when a payout is created
+  payoutCreated: async (
+    userId: string,
+    userType: 'advertiser' | 'user',
+    amount: number,
+    currency: string = 'MAD',
+    reason: string,
+    propertyName: string = 'your property'
+  ): Promise<string> => {
+    const title = 'Payout Created';
+    const message = `A payout of ${amount} ${currency} has been created for ${propertyName}. You can request this payout from your payments page.`;
+    const link = `/dashboard/${userType === 'advertiser' ? 'advertiser' : 'user'}/payments`;
+    
+    return NotificationService.createNotification(
+      userId,
+      userType,
+      'payout_created',
+      title,
+      message,
+      link,
+      { amount, currency, reason, propertyName }
+    );
+  },
+  
   // Notify user when payout request is approved
   payoutRequestApproved: async (
     userId: string,

@@ -35,7 +35,7 @@ export type PaymentState = 'Hold' | 'Captured' | 'Voided';
 export interface BookingEvent {
   id?: string;
   bookingId: string;
-  type: 'request' | 'accept' | 'decline' | 'confirm' | 'cancel' | 'payment_capture' | 'payment_void';
+  type: 'request' | 'accept' | 'decline' | 'confirm' | 'cancel' | 'payment_capture' | 'payment_void' | 'note';
   timestamp: Date | Timestamp;
   description: string;
   userId?: string;
@@ -450,15 +450,14 @@ export async function getRecentBookings(limitCount: number = 5): Promise<any[]> 
       }
       
       bookings.push({
-        booking: {
-          id: bookingId,
-          ...bookingData,
-          createdAt: bookingData.createdAt instanceof Timestamp ? 
-            bookingData.createdAt.toDate() : 
-            new Date(bookingData.createdAt)
-        },
+        id: bookingId,
+        ...bookingData,
         property,
-        client
+        client,
+        createdAt: bookingData.createdAt?.toDate() || new Date(),
+        updatedAt: bookingData.updatedAt?.toDate() || new Date(),
+        moveInDate: bookingData.moveInDate?.toDate(),
+        paymentDate: bookingData.paymentDate?.toDate()
       });
     }
     

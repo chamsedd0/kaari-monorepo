@@ -249,7 +249,7 @@ export async function requestReferralPayout(referralId: string): Promise<boolean
     console.error('Error requesting referral payout:', error);
     throw new Error('Failed to request referral payout');
   }
-} 
+}
 
 /**
  * Get payout requests for the current user
@@ -268,10 +268,10 @@ export async function getCurrentUserPayoutRequests(): Promise<PayoutRequest[]> {
     console.error('Error getting user payout requests:', error);
     throw new Error('Failed to get user payout requests');
   }
-}
+} 
 
 /**
- * Create a payout entry for a refund request
+ * Create a payout request entry for a refund request
  * This is used by the admin when approving a refund request
  */
 export async function createRefundPayout(
@@ -295,39 +295,67 @@ export async function createRefundPayout(
       throw new Error('User has no payment method');
     }
     
-    // Create a new payout document
-    const payoutsRef = collection(db, PAYOUTS_COLLECTION);
+    // Get refund request details
+    const refundRequestRef = doc(db, REFUND_REQUESTS_COLLECTION, refundRequestId);
+    const refundRequestDoc = await getDoc(refundRequestRef);
     
-    await addDoc(payoutsRef, {
-      payeeId: userId,
-      payeeName: userData.name + (userData.surname ? ` ${userData.surname}` : ''),
-      payeePhone: userData.phoneNumber || 'No phone',
-      payeeType: 'client', // Refunds are always to clients
-      paymentMethod: {
-        bankName: userData.paymentMethod.bankName || 'Unknown Bank',
-        accountLast4: userData.paymentMethod.accountNumber ? 
-          userData.paymentMethod.accountNumber.slice(-4) : '****',
-        type: userData.paymentMethod.type || 'IBAN'
-      },
-      reason: 'Tenant Refund',
+    if (!refundRequestDoc.exists()) {
+      throw new Error('Refund request not found');
+    }
+    
+    const refundRequestData = refundRequestDoc.data();
+    
+    // Create a new payout request document
+    const payoutRequestsRef = collection(db, PAYOUT_REQUESTS_COLLECTION);
+    
+    await addDoc(payoutRequestsRef, {
+      userId: userId,
+      userType: 'client', // Refunds are always to clients
       amount: refundAmount,
       currency: 'MAD',
-      status: 'pending',
-      sourceId: refundRequestId,
       sourceType: 'refund',
+      sourceId: refundRequestId,
+      status: 'pending',
+      reason: 'Tenant Refund',
+      paymentMethod: {
+        type: userData.paymentMethod.type || 'IBAN',
+        bankName: userData.paymentMethod.bankName || '',
+        accountNumber: userData.paymentMethod.accountNumber || '',
+        accountLast4: userData.paymentMethod.accountNumber ? 
+          userData.paymentMethod.accountNumber.slice(-4) : '****'
+      },
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      // Add additional info for admin reference
+      propertyId: refundRequestData.propertyId,
+      propertyTitle: refundRequestData.propertyName || 'Unknown Property',
+      clientName: userData.name + (userData.surname ? ` ${userData.surname}` : ''),
+      reservationId: refundRequestData.reservationId,
+      adminCreated: true
     });
+    
+    // Send notification to client
+    try {
+      await payoutNotifications.refundRequestCreated(
+        userId,
+        refundAmount,
+        'MAD',
+        refundRequestData.propertyName || 'your booking'
+      );
+    } catch (notifError) {
+      console.error('Error sending refund request created notification:', notifError);
+      // Don't fail the operation if notification fails
+    }
     
     return true;
   } catch (error) {
-    console.error('Error creating refund payout:', error);
+    console.error('Error creating refund payout request:', error);
     return false;
   }
 }
 
 /**
- * Create a payout entry for a cancellation request
+ * Create a payout request entry for a cancellation request
  * This is used by the admin when approving a cancellation request
  */
 export async function createCancellationPayout(
@@ -352,36 +380,51 @@ export async function createCancellationPayout(
       throw new Error('User has no payment method');
     }
     
-    // Create a new payout document
-    const payoutsRef = collection(db, PAYOUTS_COLLECTION);
+    // Create a new payout request document
+    const payoutRequestsRef = collection(db, PAYOUT_REQUESTS_COLLECTION);
     
-    await addDoc(payoutsRef, {
-      payeeId: userId,
-      payeeName: userData.name + (userData.surname ? ` ${userData.surname}` : ''),
-      payeePhone: userData.phoneNumber || 'No phone',
-      payeeType: 'client', // Cancellations are always to clients
-      paymentMethod: {
-        bankName: userData.paymentMethod.bankName || 'Unknown Bank',
-        accountLast4: userData.paymentMethod.accountNumber ? 
-          userData.paymentMethod.accountNumber.slice(-4) : '****',
-        type: userData.paymentMethod.type || 'IBAN'
-      },
-      reason,
+    await addDoc(payoutRequestsRef, {
+      userId: userId,
+      userType: 'client', // Cancellations are always to clients
       amount: refundAmount,
       currency: 'MAD',
-      status: 'pending',
-      sourceId: cancellationRequestId,
       sourceType: 'cancellation',
+      sourceId: cancellationRequestId,
+      status: 'pending',
+      reason,
+      paymentMethod: {
+        type: userData.paymentMethod.type || 'IBAN',
+        bankName: userData.paymentMethod.bankName || '',
+        accountNumber: userData.paymentMethod.accountNumber || '',
+        accountLast4: userData.paymentMethod.accountNumber ? 
+          userData.paymentMethod.accountNumber.slice(-4) : '****'
+      },
       createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
+      // Add additional info for admin reference
+      clientName: userData.name + (userData.surname ? ` ${userData.surname}` : ''),
+      adminCreated: true
     });
+    
+    // Send notification to client
+    try {
+      await payoutNotifications.cancellationRequestCreated(
+        userId,
+        refundAmount,
+        'MAD',
+        reason
+      );
+    } catch (notifError) {
+      console.error('Error sending cancellation request created notification:', notifError);
+      // Don't fail the operation if notification fails
+    }
     
     return true;
   } catch (error) {
-    console.error('Error creating cancellation payout:', error);
+    console.error('Error creating cancellation payout request:', error);
     return false;
   }
-} 
+}
 
 /**
  * Process all pending payouts for a specific reason
@@ -468,7 +511,7 @@ export async function getUserPayoutHistory(userId: string): Promise<Payout[]> {
  * Get all payouts with pagination
  * Admin only function
  */
-export async function getAllPayouts(limitCount: number = 50, lastDocId?: string): Promise<{
+export async function getAllPayouts(limit: number = 50, lastDocId?: string): Promise<{
   payouts: Payout[];
   lastDocId: string | null;
   hasMore: boolean;
@@ -482,7 +525,7 @@ export async function getAllPayouts(limitCount: number = 50, lastDocId?: string)
       throw new Error('Admin not authenticated');
     }
     
-    let startAfterDoc = null;
+    let startAfterDoc: QueryDocumentSnapshot<DocumentData> | undefined = undefined;
     
     // If lastDocId is provided, get the document to start after
     if (lastDocId) {
@@ -490,11 +533,11 @@ export async function getAllPayouts(limitCount: number = 50, lastDocId?: string)
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
-        startAfterDoc = docSnap;
+        startAfterDoc = docSnap as QueryDocumentSnapshot<DocumentData>;
       }
     }
     
-    const result = await PayoutsService.getAllPayouts(limitCount, startAfterDoc);
+    const result = await PayoutsService.getAllPayouts(limit, startAfterDoc);
     
     return {
       payouts: result.payouts,
@@ -504,5 +547,114 @@ export async function getAllPayouts(limitCount: number = 50, lastDocId?: string)
   } catch (error) {
     console.error('Error getting all payouts:', error);
     throw new Error('Failed to get payouts');
+  }
+} 
+
+/**
+ * Create a payout request entry for a rent payment after the safety window expires
+ * This is used by the system to automatically create a payout request for the advertiser
+ */
+export async function createRentPayout(reservationId: string): Promise<boolean> {
+  try {
+    // Get the reservation
+    const reservationRef = doc(db, REQUESTS_COLLECTION, reservationId);
+    const reservationDoc = await getDoc(reservationRef);
+    
+    if (!reservationDoc.exists()) {
+      throw new Error('Reservation not found');
+    }
+    
+    const reservation = reservationDoc.data();
+    
+    // Verify that the reservation is in 'movedIn' status
+    if (reservation.status !== 'movedIn') {
+      throw new Error('Cannot create payout for a reservation that is not in moved-in status');
+    }
+    
+    // Check if the safety window has expired
+    const now = new Date();
+    const safetyWindowEndsAt = reservation.safetyWindowEndsAt?.toDate();
+    
+    if (!safetyWindowEndsAt || now < safetyWindowEndsAt) {
+      throw new Error('Safety window has not expired yet');
+    }
+    
+    // Get property details
+    const propertyRef = doc(db, PROPERTIES_COLLECTION, reservation.propertyId);
+    const propertyDoc = await getDoc(propertyRef);
+    
+    if (!propertyDoc.exists()) {
+      throw new Error('Property not found');
+    }
+    
+    const property = propertyDoc.data();
+    const advertiserId = property.ownerId;
+    
+    if (!advertiserId) {
+      throw new Error('Advertiser ID not found for this property');
+    }
+    
+    // Get advertiser details
+    const advertiserRef = doc(db, USERS_COLLECTION, advertiserId);
+    const advertiserDoc = await getDoc(advertiserRef);
+    
+    if (!advertiserDoc.exists()) {
+      throw new Error('Advertiser not found');
+    }
+    
+    const advertiser = advertiserDoc.data();
+    
+    // Check if advertiser has payment method
+    if (!advertiser.paymentMethod) {
+      throw new Error('Advertiser has no payment method');
+    }
+    
+    // Create a new payout request document
+    const payoutRequestsRef = collection(db, PAYOUT_REQUESTS_COLLECTION);
+    
+    await addDoc(payoutRequestsRef, {
+      userId: advertiserId,
+      userType: 'advertiser',
+      amount: reservation.totalPrice || 0,
+      currency: 'MAD',
+      sourceType: 'rent',
+      sourceId: reservationId,
+      status: 'pending',
+      reason: 'Rent – Move-in',
+      paymentMethod: {
+        type: advertiser.paymentMethod.type || 'IBAN',
+        bankName: advertiser.paymentMethod.bankName || '',
+        accountNumber: advertiser.paymentMethod.accountNumber || '',
+        accountLast4: advertiser.paymentMethod.accountNumber ? 
+          advertiser.paymentMethod.accountNumber.slice(-4) : '****'
+      },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      // Add additional info for admin reference
+      propertyTitle: property.title || 'Unknown Property',
+      clientName: reservation.clientName || 'Unknown Client',
+      moveInDate: reservation.moveInDate || null,
+      automaticallyCreated: true
+    });
+    
+    // Send notification to advertiser
+    try {
+      await payoutNotifications.payoutRequestCreated(
+        advertiserId,
+        'advertiser',
+        reservation.totalPrice || 0,
+        'MAD',
+        'Rent – Move-in',
+        property.title || 'your property'
+      );
+    } catch (notifError) {
+      console.error('Error sending payout request created notification:', notifError);
+      // Don't fail the operation if notification fails
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error creating rent payout request:', error);
+    return false;
   }
 } 
