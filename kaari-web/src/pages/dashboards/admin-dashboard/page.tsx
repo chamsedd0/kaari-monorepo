@@ -14,7 +14,8 @@ import {
   FaHome,
   FaHandshake,
   FaComments,
-  FaCreditCard
+  FaCreditCard,
+  FaHistory
 } from 'react-icons/fa';
 import { 
   MdDashboard, 
@@ -32,6 +33,8 @@ import {
   UserInfo,
   Avatar,
   UserName,
+  SidebarFooter,
+  LogoutButton
 } from './styles';
 
 import { useStore } from '../../../backend/store';
@@ -60,6 +63,7 @@ import ReferralDetailPage from './referrals/detail';
 import MessagesPage from './messages/page';
 import ConversationPage from './messages/conversation';
 import PendingPayoutsPage from './pending-payouts/page';
+import PayoutsHistoryPage from './payouts-history/page';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -163,6 +167,13 @@ const AdminDashboard: React.FC = () => {
         </NavItem>
         
         <NavItem 
+          $active={activePage === 'payouts-history'} 
+          onClick={() => handleNavigation('payouts-history')}
+        >
+          <FaHistory /> Payouts History
+        </NavItem>
+        
+        <NavItem 
           $active={activePage === 'photoshoot-bookings'} 
           onClick={() => handleNavigation('photoshoot-bookings')}
         >
@@ -210,6 +221,12 @@ const AdminDashboard: React.FC = () => {
         >
           <FaClipboardList /> Activity Logs
         </NavItem>
+        
+        <SidebarFooter>
+          <LogoutButton onClick={handleLogout}>
+            <FaSignOutAlt /> Logout
+          </LogoutButton>
+        </SidebarFooter>
       </Sidebar>
 
       <MainContent>
@@ -245,6 +262,7 @@ const AdminDashboard: React.FC = () => {
           <Route path="messages" element={<MessagesPage />} />
           <Route path="messages/:id" element={<ConversationPage />} />
           <Route path="pending-payouts" element={<PendingPayoutsPage />} />
+          <Route path="payouts-history" element={<PayoutsHistoryPage />} />
           <Route path="photoshoot-bookings" element={<PhotoshootBookings />} />
           <Route path="photoshoot-bookings/view/:id" element={<PhotoshootBookingDetail onUpdateBooking={() => {}} />} />
           <Route path="teams" element={<TeamsPage />} />

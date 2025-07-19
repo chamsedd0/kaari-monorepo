@@ -11,10 +11,14 @@ import {
   Timestamp,
   updateDoc,
   DocumentData,
+  DocumentReference,
   QueryDocumentSnapshot,
-  serverTimestamp
+  addDoc,
+  serverTimestamp,
+  limit
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { getAuth } from 'firebase/auth';
 
 // Collection references
 const REFERRALS_COLLECTION = 'referrals';
@@ -66,6 +70,29 @@ export interface ReferralBooking {
   status: 'pending' | 'paid' | 'completed';
   tenantId: string;
   tenantName: string;
+}
+
+// Referral interface
+export interface Referral {
+  id: string;
+  referrerId: string;
+  referrerName?: string;
+  referrerEmail?: string;
+  referralCode: string;
+  referredUserId?: string;
+  referredUserName?: string;
+  referredUserEmail?: string;
+  isUsed: boolean;
+  isExpired: boolean;
+  expiryDate: Date;
+  discountAmount: number;
+  discountCurrency: string;
+  commissionAmount: number;
+  commissionCurrency: string;
+  commissionPaid: boolean;
+  commissionPaidDate?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**
@@ -276,5 +303,149 @@ export async function updateReferralPassStatus(advertiserId: string, status: Ref
   } catch (error) {
     console.error('Error updating referral pass status:', error);
     throw new Error('Failed to update status');
+  }
+} 
+
+/**
+ * Get all referrals
+ */
+export async function getAllReferrals(): Promise<Referral[]> {
+  try {
+    const referralsRef = collection(db, REFERRALS_COLLECTION);
+    const q = query(
+      referralsRef,
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const referrals: Referral[] = [];
+    
+    for (const docSnapshot of querySnapshot.docs) {
+      const data = docSnapshot.data();
+      
+      referrals.push({
+        id: docSnapshot.id,
+        referrerId: data.referrerId,
+        referrerName: data.referrerName,
+        referrerEmail: data.referrerEmail,
+        referralCode: data.referralCode,
+        referredUserId: data.referredUserId,
+        referredUserName: data.referredUserName,
+        referredUserEmail: data.referredUserEmail,
+        isUsed: data.isUsed || false,
+        isExpired: data.isExpired || false,
+        expiryDate: data.expiryDate?.toDate() || new Date(),
+        discountAmount: data.discountAmount || 0,
+        discountCurrency: data.discountCurrency || 'MAD',
+        commissionAmount: data.commissionAmount || 0,
+        commissionCurrency: data.commissionCurrency || 'MAD',
+        commissionPaid: data.commissionPaid || false,
+        commissionPaidDate: data.commissionPaidDate?.toDate(),
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date()
+      });
+    }
+    
+    return referrals;
+  } catch (error) {
+    console.error('Error getting all referrals:', error);
+    return [];
+  }
+}
+
+/**
+ * Get referrals by referrer ID
+ */
+export async function getReferralsByReferrerId(referrerId: string): Promise<Referral[]> {
+  try {
+    const referralsRef = collection(db, REFERRALS_COLLECTION);
+    const q = query(
+      referralsRef,
+      where('referrerId', '==', referrerId),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const referrals: Referral[] = [];
+    
+    for (const docSnapshot of querySnapshot.docs) {
+      const data = docSnapshot.data();
+      
+      referrals.push({
+        id: docSnapshot.id,
+        referrerId: data.referrerId,
+        referrerName: data.referrerName,
+        referrerEmail: data.referrerEmail,
+        referralCode: data.referralCode,
+        referredUserId: data.referredUserId,
+        referredUserName: data.referredUserName,
+        referredUserEmail: data.referredUserEmail,
+        isUsed: data.isUsed || false,
+        isExpired: data.isExpired || false,
+        expiryDate: data.expiryDate?.toDate() || new Date(),
+        discountAmount: data.discountAmount || 0,
+        discountCurrency: data.discountCurrency || 'MAD',
+        commissionAmount: data.commissionAmount || 0,
+        commissionCurrency: data.commissionCurrency || 'MAD',
+        commissionPaid: data.commissionPaid || false,
+        commissionPaidDate: data.commissionPaidDate?.toDate(),
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date()
+      });
+    }
+    
+    return referrals;
+  } catch (error) {
+    console.error(`Error getting referrals for referrer ${referrerId}:`, error);
+    return [];
+  }
+} 
+
+/**
+ * Get recent referrals
+ * @param limitCount Maximum number of referrals to return
+ */
+export async function getRecentReferrals(limitCount: number = 5): Promise<Referral[]> {
+  try {
+    const referralsRef = collection(db, REFERRALS_COLLECTION);
+    const q = query(
+      referralsRef,
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const referrals: Referral[] = [];
+    
+    for (const docSnapshot of querySnapshot.docs) {
+      const data = docSnapshot.data();
+      
+      referrals.push({
+        id: docSnapshot.id,
+        referrerId: data.referrerId,
+        referrerName: data.referrerName,
+        referrerEmail: data.referrerEmail,
+        referralCode: data.referralCode,
+        referredUserId: data.referredUserId,
+        referredUserName: data.referredUserName,
+        referredUserEmail: data.referredUserEmail,
+        isUsed: data.isUsed || false,
+        isExpired: data.isExpired || false,
+        expiryDate: data.expiryDate?.toDate() || new Date(),
+        discountAmount: data.discountAmount || 0,
+        discountCurrency: data.discountCurrency || 'MAD',
+        commissionAmount: data.commissionAmount || 0,
+        commissionCurrency: data.commissionCurrency || 'MAD',
+        commissionPaid: data.commissionPaid || false,
+        commissionPaidDate: data.commissionPaidDate?.toDate(),
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date()
+      });
+    }
+    
+    return referrals;
+  } catch (error) {
+    console.error('Error getting recent referrals:', error);
+    return [];
   }
 } 

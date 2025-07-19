@@ -406,6 +406,69 @@ export async function addBookingNote(bookingId: string, note: string, userId: st
 }
 
 /**
+ * Get recent bookings with property and client details
+ * @param limitCount Maximum number of bookings to return
+ */
+export async function getRecentBookings(limitCount: number = 5): Promise<any[]> {
+  try {
+    const bookingsRef = collection(db, REQUESTS_COLLECTION);
+    const q = query(
+      bookingsRef,
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const bookings: any[] = [];
+    
+    for (const docSnapshot of querySnapshot.docs) {
+      const bookingData = docSnapshot.data();
+      const bookingId = docSnapshot.id;
+      
+      // Get property details
+      let property = null;
+      if (bookingData.propertyId) {
+        const propertyDoc = await getDoc(doc(db, PROPERTIES_COLLECTION, bookingData.propertyId));
+        if (propertyDoc.exists()) {
+          property = {
+            id: propertyDoc.id,
+            ...propertyDoc.data()
+          };
+        }
+      }
+      
+      // Get client details
+      let client = null;
+      if (bookingData.userId) {
+        const clientDoc = await getDoc(doc(db, USERS_COLLECTION, bookingData.userId));
+        if (clientDoc.exists()) {
+          client = {
+            id: clientDoc.id,
+            ...clientDoc.data()
+          };
+        }
+      }
+      
+      bookings.push({
+        id: bookingId,
+        ...bookingData,
+        property,
+        client,
+        createdAt: bookingData.createdAt?.toDate() || new Date(),
+        updatedAt: bookingData.updatedAt?.toDate() || new Date(),
+        moveInDate: bookingData.moveInDate?.toDate(),
+        paymentDate: bookingData.paymentDate?.toDate()
+      });
+    }
+    
+    return bookings;
+  } catch (error) {
+    console.error('Error getting recent bookings:', error);
+    return [];
+  }
+}
+
+/**
  * Helper function to process a booking document
  */
 async function processBookingDoc(docSnapshot: QueryDocumentSnapshot<DocumentData>): Promise<AdminBooking | null> {
