@@ -146,82 +146,83 @@ const OverviewPage: React.FC = () => {
           sortedPhotoshootBookings = [...photoshootBookings].sort((a, b) => 
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           ).slice(0, 5);
-        } catch (error) {
-          console.error('Error loading photoshoot bookings:', error);
+        } catch (err) {
+          console.error('Error fetching photoshoot bookings:', err);
         }
         
-        // Get active teams count
-        let activeTeams = 0;
+        // Get team members
+        let teamMembers = [];
         try {
-          const teams = await TeamServerActions.getActiveTeams();
-          activeTeams = teams.length;
-        } catch (error) {
-          console.error('Error loading teams:', error);
+          teamMembers = await TeamServerActions.getAllTeamMembers();
+        } catch (err) {
+          console.error('Error fetching team members:', err);
         }
         
         // Get users count
-        let totalUsers = 0;
-        let sortedUsers: any[] = [];
+        let usersCount = 0;
         try {
           const users = await getAllUsers();
-          totalUsers = users.length;
-          
-          // Get recent users (last 5 registered)
-          sortedUsers = [...users].sort((a, b) => 
-            new Date(b.createdAt || Date.now()).getTime() - new Date(a.createdAt || Date.now()).getTime()
-          ).slice(0, 5);
-        } catch (error) {
-          console.error('Error loading users:', error);
+          usersCount = users.length;
+        } catch (err) {
+          console.error('Error fetching users count:', err);
         }
         
         // Get pending payouts
-        let pendingPayouts: any[] = [];
+        let pendingPayouts = [];
+        let pendingPayoutsAmount = 0;
         try {
           pendingPayouts = await getAllPendingPayouts();
-        } catch (error) {
-          console.error('Error loading pending payouts:', error);
+          pendingPayoutsAmount = pendingPayouts.reduce((sum, payout) => sum + payout.amount, 0);
+        } catch (err) {
+          console.error('Error fetching pending payouts:', err);
         }
         
         // Get recent bookings
-        let bookings: any[] = [];
-        let pendingMoveIns = 0;
+        let recentBookings = [];
         try {
-          bookings = await getRecentBookings(5);
-          pendingMoveIns = bookings.filter(b => b.status === 'paid').length;
-        } catch (error) {
-          console.error('Error loading bookings:', error);
+          recentBookings = await getRecentBookings(5);
+        } catch (err) {
+          console.error('Error fetching recent bookings:', err);
         }
         
         // Get recent referrals
-        let activeReferrals = 0;
-        let recentReferrals: any[] = [];
+        let recentReferrals = [];
         try {
-          const allReferrals = await getAllReferrals();
-          activeReferrals = allReferrals.filter(r => !r.isExpired && !r.isUsed).length;
           recentReferrals = await getRecentReferrals(5);
-        } catch (error) {
-          console.error('Error loading referrals:', error);
+        } catch (err) {
+          console.error('Error fetching recent referrals:', err);
         }
         
-        // Set stats and recent activities
+        // Get referral stats
+        let referralCount = 0;
+        let activeReferrals = 0;
+        try {
+          const allReferrals = await getAllReferrals();
+          referralCount = allReferrals.length;
+          activeReferrals = allReferrals.filter(r => !r.isExpired && !r.isUsed).length;
+        } catch (err) {
+          console.error('Error fetching referral stats:', err);
+        }
+        
+        // Update state with all fetched data
         setStats({
           pendingBookings: pendingPhotoshootBookings,
           completedBookings: completedPhotoshootBookings,
-          activeTeams,
+          activeTeams: teamMembers.length, // Assuming teamMembers is an array of team members
           totalProperties: 0, // To be implemented
-          pendingPayouts: pendingPayouts.length,
-          totalUsers,
+          pendingPayouts: pendingPayoutsAmount,
+          totalUsers: usersCount,
           activeReferrals,
-          pendingMoveIns
+          pendingMoveIns: recentBookings.filter(b => b.status === 'paid').length // Assuming 'paid' means 'pending move-in'
         });
         
         setRecentPhotoshoots(sortedPhotoshootBookings);
         setRecentPayouts(pendingPayouts.slice(0, 5));
-        setRecentUsers(sortedUsers);
-        setRecentBookings(bookings);
+        setRecentUsers(users.slice(0, 5)); // Assuming 'users' is available from getAllUsers
+        setRecentBookings(recentBookings);
         setRecentReferrals(recentReferrals);
-      } catch (error) {
-        console.error('Error loading dashboard data:', error);
+      } catch (err) {
+        console.error('Error loading dashboard data:', err);
       } finally {
         setLoading(false);
       }

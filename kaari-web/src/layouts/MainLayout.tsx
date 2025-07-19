@@ -7,6 +7,9 @@ import eventBus, { AUTH_EVENTS, EventType } from '../utils/event-bus';
 import styled from 'styled-components';
 import LoadingScreen from '../components/loading/LoadingScreen';
 import ReviewPrompt from '../components/ReviewPrompt';
+import { NotificationProvider } from '../contexts/notifications/NotificationContext';
+import { ToastProvider } from '../contexts/ToastContext';
+import { ChecklistProvider } from '../contexts/checklist/ChecklistContext';
 
 const SkipLink = styled.a`
   position: absolute;
@@ -205,27 +208,29 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   };
   
   return (
-    <>
-      <LoadingScreen isLoading={isPageLoading} />
-      <SkipLink href="#main-content" className="skip-to-content">
-        Skip to content
-      </SkipLink>
-      {headerConfig.showMinimalHeader ? null : (
-        <UnifiedHeader
-          variant={headerConfig.variant}
-          userType={headerConfig.userType}
-          isAuthenticated={headerConfig.isAuthenticated}
-          showSearchBar={headerConfig.showSearchBar}
-        />
-      )}
-      <MainContent id="main-content" className={contentLoaded ? 'loaded' : ''}>
-        {isPageLoading ? <LoadingScreen /> : children}
-      </MainContent>
-      {shouldShowFooter() && contentLoaded && !isPageLoading && <Footer />}
-      
-      {/* Show review prompt only for authenticated clients */}
-      {isAuthenticated && userType === 'user' && <ReviewPrompt />}
-    </>
+    <NotificationProvider>
+      <ChecklistProvider>
+        <LoadingScreen isLoading={isPageLoading} />
+        <SkipLink href="#main-content" className="skip-to-content">
+          Skip to content
+        </SkipLink>
+        {headerConfig.showMinimalHeader ? null : (
+          <UnifiedHeader
+            variant={headerConfig.variant}
+            userType={headerConfig.userType}
+            isAuthenticated={headerConfig.isAuthenticated}
+            showSearchBar={headerConfig.showSearchBar}
+          />
+        )}
+        <MainContent id="main-content" className={contentLoaded ? 'loaded' : ''}>
+          {isPageLoading ? <LoadingScreen /> : children}
+        </MainContent>
+        {shouldShowFooter() && contentLoaded && !isPageLoading && <Footer />}
+        
+        {/* Show review prompt only for authenticated clients */}
+        {isAuthenticated && userType === 'user' && <ReviewPrompt />}
+      </ChecklistProvider>
+    </NotificationProvider>
   );
 };
 

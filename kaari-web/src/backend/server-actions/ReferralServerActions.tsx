@@ -429,17 +429,13 @@ export async function getRecentReferrals(limitCount: number = 5): Promise<Referr
         referredUserId: data.referredUserId,
         referredUserName: data.referredUserName,
         referredUserEmail: data.referredUserEmail,
-        isUsed: data.isUsed || false,
-        isExpired: data.isExpired || false,
-        expiryDate: data.expiryDate?.toDate() || new Date(),
-        discountAmount: data.discountAmount || 0,
-        discountCurrency: data.discountCurrency || 'MAD',
-        commissionAmount: data.commissionAmount || 0,
-        commissionCurrency: data.commissionCurrency || 'MAD',
-        commissionPaid: data.commissionPaid || false,
-        commissionPaidDate: data.commissionPaidDate?.toDate(),
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date()
+        isUsed: data.isUsed,
+        isExpired: data.isExpired,
+        expiryDate: data.expiryDate instanceof Timestamp ? data.expiryDate.toDate() : new Date(data.expiryDate),
+        discountAmount: data.discountAmount,
+        discountCurrency: data.discountCurrency,
+        createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(data.createdAt),
+        updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(data.updatedAt)
       });
     }
     

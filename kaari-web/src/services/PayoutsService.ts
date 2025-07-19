@@ -733,10 +733,10 @@ async getUserPayoutHistory(userId: string): Promise<Payout[]> {
 
 /**
  * Get all payouts with pagination
- * @param limit2 Maximum number of payouts to return
+ * @param limitCount Maximum number of payouts to return
  * @param startAfter Document to start after for pagination
  */
-async getAllPayouts(limit2: number = 50, startAfter?: QueryDocumentSnapshot<DocumentData>): Promise<{
+async getAllPayouts(limitCount: number = 50, startAfter?: QueryDocumentSnapshot<DocumentData>): Promise<{
   payouts: Payout[];
   lastDoc: QueryDocumentSnapshot<DocumentData> | null;
   hasMore: boolean;
@@ -749,13 +749,13 @@ async getAllPayouts(limit2: number = 50, startAfter?: QueryDocumentSnapshot<Docu
         collection(db, PAYOUTS_COLLECTION),
         orderBy('createdAt', 'desc'),
         startAfter(startAfter),
-        limit(limit2 + 1) // Get one extra to check if there are more
+        limit(limitCount + 1) // Get one extra to check if there are more
       );
     } else {
       q = query(
         collection(db, PAYOUTS_COLLECTION),
         orderBy('createdAt', 'desc'),
-        limit(limit2 + 1) // Get one extra to check if there are more
+        limit(limitCount + 1) // Get one extra to check if there are more
       );
     }
     
@@ -765,7 +765,7 @@ async getAllPayouts(limit2: number = 50, startAfter?: QueryDocumentSnapshot<Docu
     let hasMore = false;
     
     // Check if we have more documents
-    if (querySnapshot.docs.length > limit2) {
+    if (querySnapshot.docs.length > limitCount) {
       hasMore = true;
       // Remove the extra document
       querySnapshot.docs.pop();
