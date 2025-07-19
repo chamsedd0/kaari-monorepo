@@ -41,17 +41,17 @@ const ReferralPassGreenSkeleton: React.FC<ReferralPassGreenSkeletonProps> = ({
                 <span className="time">{timeRemaining.days}</span>
                 <span className="label">Days</span>
               </div>
-              <span className="separator">·</span>
+              <span className="separator">:</span>
               <div className="timer-block hours">
                 <span className="time">{String(timeRemaining.hours).padStart(2, '0')}</span>
                 <span className="label">Hours</span>
               </div>
-              <span className="separator">·</span>
+              <span className="separator">:</span>
               <div className="timer-block minutes">
                 <span className="time">{String(timeRemaining.minutes).padStart(2, '0')}</span>
                 <span className="label">Minutes</span>
               </div>
-              <span className="separator">·</span>
+              <span className="separator">:</span>
               <div className="timer-block seconds">
                 <span className="time">{String(timeRemaining.seconds).padStart(2, '0')}</span>
                 <span className="label">Seconds</span>

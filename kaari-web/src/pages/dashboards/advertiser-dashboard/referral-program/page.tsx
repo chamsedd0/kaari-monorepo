@@ -11,6 +11,13 @@ import YourEarningsCalculatorCard from "../../../../components/skeletons/cards/y
 import ThinFreePhotoshootCard from "../../../../components/skeletons/cards/thin-free-photoshoot";
 import ReferralPassGreenSkeleton from "../../../../components/skeletons/cards/referral-pass-green";
 import ReferralPassRedSkeleton from "../../../../components/skeletons/cards/referral-pass-red";
+import FacebookLogo from '../../../../components/icons/Logo_Facebook.svg';
+import InstagramLogo from '../../../../components/icons/Logo_Instagram.svg';
+import WhatsappLogo from '../../../../components/icons/Logo_Whatsapp.svg';
+import XLogo from '../../../../components/icons/Logo_X.svg';
+import CrossIcon from '../../../../components/icons/Icon_Cross.svg';
+import ShareIcon from '../../../../components/icons/Icon_Share.svg';
+import { BpurpleButtonMB48 } from '../../../../components/skeletons/buttons/border_purple_MB48';
 
 const InfoIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -396,8 +403,11 @@ const ReferralProgramPage: React.FC = () => {
         <div className="share-modal-overlay">
           <div className="share-modal">
             <div className="share-modal-header">
+              <img src={ShareIcon} alt="Share" />
               <h2>Share Your Code</h2>
-              <button className="close-btn" onClick={() => setShowShareModal(false)}>×</button>
+              <button className="close-btn" onClick={() => setShowShareModal(false)}>
+                <img src={CrossIcon} alt="Close" width="24" height="24" />
+              </button>
             </div>
             
             <div className="share-modal-content">
@@ -408,19 +418,27 @@ const ReferralProgramPage: React.FC = () => {
               
               <div className="share-options">
                 <div className="share-option" onClick={() => handleShare('facebook')}>
-                  <div className="share-icon facebook">f</div>
+                  <div className="share-icon facebook">
+                    <img src={FacebookLogo} alt="Facebook" />
+                  </div>
                   <span>Facebook</span>
                 </div>
                 <div className="share-option" onClick={() => handleShare('whatsapp')}>
-                  <div className="share-icon whatsapp">w</div>
+                  <div className="share-icon whatsapp">
+                    <img src={WhatsappLogo} alt="WhatsApp" />
+                  </div>
                   <span>WhatsApp</span>
                 </div>
                 <div className="share-option" onClick={() => handleShare('instagram')}>
-                  <div className="share-icon instagram">i</div>
+                  <div className="share-icon instagram">
+                    <img src={InstagramLogo} alt="Instagram" />
+                  </div>
                   <span>Instagram</span>
                 </div>
                 <div className="share-option" onClick={() => handleShare('twitter')}>
-                  <div className="share-icon twitter">x</div>
+                  <div className="share-icon twitter">
+                    <img src={XLogo} alt="X" />
+                  </div>
                   <span>X</span>
                 </div>
               </div>
@@ -431,7 +449,10 @@ const ReferralProgramPage: React.FC = () => {
               </div>
               
               <div className="share-modal-buttons">
-                <button className="close-button" onClick={() => setShowShareModal(false)}>Close</button>
+                <BpurpleButtonMB48 
+                  text="Close"
+                  onClick={() => setShowShareModal(false)}
+                />
                 <CopyButton />
               </div>
             </div>

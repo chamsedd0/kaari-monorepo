@@ -8,14 +8,12 @@ export const ReferralProgramPageStyle = styled.div`
 
     * {
       transition: all 0.2s ease;
-
-      
     }
 
     button {
         border-radius: ${Theme.borders.radius.extreme} !important;
         height: 48px !important;
-      }
+    }
    
   .page-header {
     display: flex;
@@ -95,7 +93,6 @@ export const ReferralProgramPageStyle = styled.div`
       flex: 1;
       max-width: 325px;
       
-      
       @media (max-width: 992px) {
         max-width: 100%;
       }
@@ -114,458 +111,7 @@ export const ReferralProgramPageStyle = styled.div`
       margin-bottom: 20px;
     }
     
-    &.referral-pass-card {
-      padding: 0;
-      overflow: hidden;
-      position: relative;
-      
-      .card-header {
-        padding: 20px 20px 0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        
-        .founding-partner-tag {
-          background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%);
-          color: #000;
-          padding: 4px 10px;
-          border-radius: ${Theme.borders.radius.sm};
-          font: ${Theme.typography.fonts.smallB};
-        }
-      }
-      
-      .referral-pass-content-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 20px;
-    }
-      
-      .countdown-timer-container {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        width: 100%;
-        flex: 1;
-      }
-      
-      .referral-pass-content {
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        flex: 1;
-      }
-      
-      &.active {
-        border: none;
-        background: linear-gradient(90deg, #00C2FF 0%, #00E15B 100%);
-
-        h2 {
-          color: white !important;
-          margin-bottom: 0 !important;
-        }
-        
-        .countdown-timer {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          color: white;
-          flex: 1;
-          background-color: rgba(255, 255, 255, 0.2);
-          border-radius: ${Theme.borders.radius.md};
-          padding: 10px;
-          width: 100%;
-          
-          .timer-block {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 10px;
-            border-radius: ${Theme.borders.radius.md};
-            min-width: 60px;
-            flex: 1;
-            
-            .time {
-              font: ${Theme.typography.fonts.extraLargeB};
-              font-size: 32px;
-              line-height: 1;
-            }
-            
-            .label {
-              font: ${Theme.typography.fonts.mediumM};
-              opacity: 0.9;
-              font-size: 12px;
-            }
-          }
-          
-          .separator {
-            font: ${Theme.typography.fonts.extraLargeB};
-            font-size: 32px;
-            margin: 0 5px;
-            line-height: 1;
-          }
-        }
-        
-        .pass-status {
-          
-          background-color: rgba(255, 255, 255, 0.2);
-          border-radius: ${Theme.borders.radius.md};
-          padding: 20px;
-          width: 100%;
-          height: 100%;
-          flex: 1;
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          
-        }
-
-        .referral-pass-status-container {
-          flex: 1;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-direction: column;
-          gap: 10px;
-        }
-        
-        .progress-metrics {
-          display: flex;
-          background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.2) 100%);
-          border-radius: ${Theme.borders.radius.md};
-          width: 100%;
-          height: 100%;
-          flex: 1;
-          
-          .metric-box {
-            flex: 1;
-            text-align: center;
-            color: white;
-            height: 100%;
-            padding: 20px;
-            
-            h4 {
-              font: ${Theme.typography.fonts.mediumM};
-              color: white;
-              margin: 0 0 5px 0;
-              font-size: 12px;
-            }
-            
-            .metric-value {
-              font: ${Theme.typography.fonts.largeB};
-              color: white;
-            }
-          }
-        }
-      }
-      
-      &.expired {
-        border: none;
-        background: linear-gradient(90deg, #9C27B0 0%, #E91E63 100%);
-        color: white;
-        position: relative;
-
-        h2 {
-          color: white !important;
-        }
-
-        .referral-pass-content-container {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          justify-content: flex-start;
-          width: 100%;
-          height: 100%;
-        }
-
-        .countdown-timer {
-          display: flex;
-          justify-content: flex-start;
-          align-items: center;
-          padding: 10px;
-          color: white;
-          margin-bottom: 5px;
-
-          .timer-block {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 10px;
-            border-radius: ${Theme.borders.radius.md};
-            min-width: 60px;
-
-            .time {
-              font: ${Theme.typography.fonts.extraLargeB};
-              font-size: 32px;
-              line-height: 1;
-            }
-
-            .label {
-              font: ${Theme.typography.fonts.mediumM};
-              opacity: 0.9;
-              font-size: 12px;
-            }
-          }
-
-          .separator {
-            font: ${Theme.typography.fonts.extraLargeB};
-            font-size: 32px;
-            margin: 0 5px;
-            line-height: 1;
-          }
-        }
-
-        .until-renewal {
-          text-align: left;
-          margin: 5px 0 15px 10px;
-          font: ${Theme.typography.fonts.mediumM};
-          color: ${Theme.colors.white};
-          font-size: 12px;
-        }
-
-        .referral-pass-status-container {
-          flex: 1;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .pass-status {
-          display: flex;
-          align-items: center;
-          padding: 15px;
-          color: white;
-          border-radius: ${Theme.borders.radius.md};
-          background-color: rgba(255, 255, 255, 0.2);
-          position: static;
-          max-width: 100%;
-
-          .lock-icon {
-            margin-right: 15px;
-          }
-
-          .status-text {
-            h3 {
-              font: ${Theme.typography.fonts.largeB};
-              margin: 0 0 5px 0;
-            }
-
-            p {
-              font: ${Theme.typography.fonts.mediumM};
-              margin: 0;
-              opacity: 0.9;
-              font-size: 12px;
-            }
-          }
-        }
-
-        .pass-info {
-          display: flex;
-          align-items: center;
-          font: ${Theme.typography.fonts.mediumM};
-          color: white;
-          margin-top: 10px;
-          padding: 0 10px;
-
-          svg {
-            margin-right: 10px;
-          }
-        }
-
-        .progress-metrics {
-          display: flex;
-          background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.2) 100%);
-          border-radius: ${Theme.borders.radius.md};
-          width: 100%;
-          height: 100%;
-          flex: 1;
-          margin-top: 20px;
-          padding: 10px;
-
-          .metric-box {
-            flex: 1;
-            text-align: center;
-            color: white;
-            height: 100%;
-            padding: 20px;
-
-            h4 {
-              font: ${Theme.typography.fonts.mediumM};
-              color: white;
-              margin: 0 0 5px 0;
-              font-size: 12px;
-            }
-
-            .metric-value {
-              font: ${Theme.typography.fonts.largeB};
-              color: white;
-            }
-          }
-        }
-      }
-
-      &.onboarding {
-        border: none;
-        background: linear-gradient(90deg, #8F27CE 0%, #C427CE 100%);
-        color: white;
-
-        h2 {
-          color: white !important;
-        }
-
-        .referral-pass-content-container {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          justify-content: flex-start;
-          width: 100%;
-          height: 100%;
-        }
-
-        .welcome-message {
-          background: linear-gradient(90deg, #8F27CE 0%, #C427CE 100%);
-          color: white;
-          padding: 20px;
-          border-radius: ${Theme.borders.radius.md};
-          margin-bottom: 20px;
-
-          h3 {
-            font: ${Theme.typography.fonts.largeB};
-            margin: 0 0 10px 0;
-          }
-
-          p {
-            font: ${Theme.typography.fonts.mediumM};
-            margin: 0;
-          }
-        }
-
-        .referral-pass-status-container {
-          flex: 1;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .progress-metrics {
-          display: flex;
-          background: linear-gradient(90deg, #8F27CE20 0%, #C427CE20 100%);
-          border-radius: ${Theme.borders.radius.md};
-          width: 100%;
-          height: 100%;
-          flex: 1;
-
-          .metric-box {
-            flex: 1;
-            text-align: center;
-            color: white;
-            height: 100%;
-            padding: 20px;
-
-            h4 {
-              font: ${Theme.typography.fonts.mediumM};
-              color: white;
-              margin: 0 0 5px 0;
-              font-size: 12px;
-            }
-
-            .metric-value {
-              font: ${Theme.typography.fonts.largeB};
-              color: white;
-            }
-          }
-        }
-
-        .onboarding-illustration {
-          display: flex;
-          justify-content: center;
-          margin: 20px 0;
-
-          img {
-            max-width: 200px;
-            height: auto;
-          }
-        }
-      }
-
-      .countdown-timer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px;
-        color: white;
-
-        &.expired {
-          opacity: 0.8;
-        }
-      }
-
-      .until-renewal {
-        text-align: left;
-        margin: 5px 0 15px 10px;
-        font: ${Theme.typography.fonts.mediumM};
-        color: ${Theme.colors.white};
-        font-size: 12px;
-      }
-
-      .pass-status {
-        display: flex;
-        align-items: center;
-        padding: 15px;
-        color: white;
-        border-radius: ${Theme.borders.radius.md};
-
-        .lock-icon {
-          margin-right: 15px;
-        }
-
-        .status-text {
-          h3 {
-            font: ${Theme.typography.fonts.largeB};
-            margin: 0 0 5px 0;
-          }
-
-          p {
-            font: ${Theme.typography.fonts.mediumM};
-            margin: 0;
-            opacity: 0.9;
-            font-size: 12px;
-          }
-        }
-      }
-
-      .pass-info {
-        display: flex;
-        align-items: center;
-        font: ${Theme.typography.fonts.mediumM};
-        color: white;
-        margin-top: 10px;
-        padding: 0 10px;
-
-        svg {
-          margin-right: 10px;
-        }
-      }
-    }
-    
     &.referral-link-card {
-
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -574,7 +120,6 @@ export const ReferralProgramPageStyle = styled.div`
       .referral-link-card-content {
         flex: 1;
       }
-      
 
       .referral-link-content {
         display: flex;
@@ -596,8 +141,6 @@ export const ReferralProgramPageStyle = styled.div`
           color: ${Theme.colors.gray2};
           background: #F9F9F9;
         }
-        
-        
       }
       
       .referral-actions {
@@ -631,7 +174,6 @@ export const ReferralProgramPageStyle = styled.div`
       .referral-info {
         font: ${Theme.typography.fonts.mediumM};
         color: ${Theme.colors.gray2};
-
         
         p {
           margin: 0;
@@ -645,179 +187,6 @@ export const ReferralProgramPageStyle = styled.div`
         padding: 4px;
         border: ${Theme.borders.primary};
         border-radius: ${Theme.borders.radius.md};
-        
-      }
-    }
-    
-    &.photoshoot-banner {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      background: linear-gradient(90deg, #8F27CE 0%, #C427CE 100%);
-      color: white;
-      
-      .photoshoot-content {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        
-        .photoshoot-text {
-          h3 {
-            font: ${Theme.typography.fonts.largeB};
-            margin: 0;
-          }
-          
-          h2 {
-            font: ${Theme.typography.fonts.extraLargeB};
-            margin: 5px 0 0 0;
-            color: white;
-          }
-        }
-      }
-      
-      .book-photoshoot-btn {
-        background: white;
-        color: ${Theme.colors.secondary};
-        border: none;
-        border-radius: ${Theme.borders.radius.md};
-        padding: 10px 20px;
-        font: ${Theme.typography.fonts.mediumB};
-        cursor: pointer;
-        
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-      }
-      
-      .photoshoot-image {
-        max-width: 120px;
-        
-        img {
-          width: 100%;
-          height: auto;
-        }
-      }
-    }
-    
-    &.earnings-calculator {
-      .calculator-content {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 30px;
-        
-        .sliders {
-          flex: 1;
-          min-width: 280px;
-          
-          .slider-group {
-            margin-bottom: 20px;
-            
-            .slider-label {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 10px;
-              font: ${Theme.typography.fonts.mediumM};
-              color: ${Theme.colors.black};
-              
-              .slider-value {
-                background: #F0E6FA;
-                padding: 2px 10px;
-                border-radius: ${Theme.borders.radius.sm};
-              }
-            }
-            
-            .slider-container {
-              display: flex;
-              align-items: center;
-              gap: 10px;
-              
-              .min-value, .max-value {
-                font: ${Theme.typography.fonts.mediumM};
-                color: ${Theme.colors.gray2};
-              }
-              
-              .slider {
-                flex: 1;
-                -webkit-appearance: none;
-                height: 6px;
-                background: #F0E6FA;
-                border-radius: 3px;
-                
-                &::-webkit-slider-thumb {
-                  -webkit-appearance: none;
-              width: 20px;
-              height: 20px;
-                  border-radius: 50%;
-                  background: ${Theme.colors.secondary};
-                  cursor: pointer;
-                }
-              }
-            }
-          }
-        }
-        
-        .calculator-results {
-          flex: 1;
-          min-width: 280px;
-          
-          .monthly-earnings {
-            background: #F9F9F9;
-            padding: 20px;
-            border-radius: ${Theme.borders.radius.md};
-            
-            h3 {
-              font: ${Theme.typography.fonts.mediumM};
-              color: ${Theme.colors.gray2};
-              margin: 0 0 10px 0;
-            }
-            
-            .earnings-amount {
-              font: ${Theme.typography.fonts.extraLargeB};
-              color: ${Theme.colors.black};
-              margin-bottom: 20px;
-            }
-            
-            .earnings-details {
-              .detail-row {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 10px;
-                font: ${Theme.typography.fonts.mediumM};
-                color: ${Theme.colors.gray2};
-                
-                &:last-child {
-                  margin-top: 15px;
-                  padding-top: 15px;
-                  border-top: 1px solid #E0E0E0;
-                  font: ${Theme.typography.fonts.mediumB};
-                  color: ${Theme.colors.black};
-                }
-              }
-            }
-          }
-        }
-      }
-      
-      .calculator-footer {
-        display: flex;
-        justify-content: center;
-        margin-top: 20px;
-        
-        .book-photoshoot-btn {
-          background: ${Theme.colors.secondary};
-          color: white;
-          border: none;
-          border-radius: ${Theme.borders.radius.md};
-          padding: 12px 24px;
-          font: ${Theme.typography.fonts.mediumB};
-          cursor: pointer;
-          
-          &:hover {
-            background: ${Theme.colors.primary};
-          }
-        }
       }
     }
     
@@ -973,11 +342,11 @@ export const ReferralProgramPageStyle = styled.div`
     }
     
     &.help-card {
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        
         .help-icon {
           width: 24px;
           height: 24px;
@@ -1006,7 +375,7 @@ export const ReferralProgramPageStyle = styled.div`
           color: ${Theme.colors.black};
           cursor: pointer;
       
-      &:hover {
+          &:hover {
             background: #F9F9F9;
           }
         }
@@ -1031,7 +400,7 @@ export const ReferralProgramPageStyle = styled.div`
     background: white;
     border-radius: ${Theme.borders.radius.lg};
     width: 90%;
-    max-width: 500px;
+    max-width: 550px;
     overflow: hidden;
     
     .share-modal-header {
@@ -1039,19 +408,22 @@ export const ReferralProgramPageStyle = styled.div`
       justify-content: space-between;
       align-items: center;
       padding: 20px;
-      border-bottom: 1px solid #E0E0E0;
-      
+
+      img {
+        width: 24px;
+        height: 24px;
+      }
+
       h2 {
-        margin: 0;
-        font: ${Theme.typography.fonts.largeB};
+        font: ${Theme.typography.fonts.h4B};
       }
       
       .close-btn {
         background: none;
         border: none;
-        font-size: 24px;
+        font: ${Theme.typography.fonts.h3};
         cursor: pointer;
-        color: ${Theme.colors.gray2};
+        color: ${Theme.colors.primary};
         
         &:hover {
           color: ${Theme.colors.black};
@@ -1063,18 +435,18 @@ export const ReferralProgramPageStyle = styled.div`
       padding: 20px;
       
       .share-text {
-        background: #F9F9F9;
-        padding: 20px;
+        padding: 20px 12px;
         border-radius: ${Theme.borders.radius.md};
+        border: ${Theme.borders.primary};
         margin-bottom: 20px;
         
         p {
           margin: 0 0 10px 0;
           font: ${Theme.typography.fonts.mediumM};
-          color: ${Theme.colors.black};
+          color: ${Theme.colors.gray2};
           
           &.share-link {
-            font: ${Theme.typography.fonts.mediumM};
+            font: ${Theme.typography.fonts.text14};
             color: ${Theme.colors.secondary};
           }
         }
@@ -1104,29 +476,18 @@ export const ReferralProgramPageStyle = styled.div`
             display: flex;
             align-items: center;
             justify-content: center;
-            font: ${Theme.typography.fonts.largeB};
-            color: white;
+            overflow: hidden;
             
-            &.facebook {
-              background: #3b5998;
-            }
-            
-            &.whatsapp {
-              background: #25D366;
-            }
-            
-            &.instagram {
-              background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-            }
-            
-            &.twitter {
-              background: #000000;
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
             }
           }
           
           span {
-            font: ${Theme.typography.fonts.mediumM};
-            color: ${Theme.colors.gray2};
+            font: ${Theme.typography.fonts.text14};
+            color: ${Theme.colors.black};
           }
         }
       }
@@ -1154,8 +515,8 @@ export const ReferralProgramPageStyle = styled.div`
         
         p {
           margin: 0;
-          font: ${Theme.typography.fonts.mediumM};
-          color: ${Theme.colors.black};
+          font: ${Theme.typography.fonts.mediumB};
+          color: ${Theme.colors.secondary};
           
           strong {
             font: ${Theme.typography.fonts.mediumB};
@@ -1174,17 +535,6 @@ export const ReferralProgramPageStyle = styled.div`
           border-radius: ${Theme.borders.radius.md};
           font: ${Theme.typography.fonts.mediumB};
           cursor: pointer;
-        }
-        
-        .close-button {
-          background: transparent;
-          border: 1px solid ${Theme.colors.gray2};
-          color: ${Theme.colors.gray2};
-          
-          &:hover {
-            border-color: ${Theme.colors.black};
-            color: ${Theme.colors.black};
-          }
         }
         
         .copy-button {
@@ -1234,33 +584,6 @@ export const ReferralProgramPageStyle = styled.div`
     
     .card {
       padding: 16px;
-      
-      &.referral-pass-card {
-        .countdown-timer {
-          .timer-block {
-            min-width: 40px;
-            padding: 5px;
-            
-            .time {
-              font-size: 24px;
-            }
-          }
-        }
-      }
-      
-      &.photoshoot-banner {
-        flex-direction: column;
-        
-        .photoshoot-image {
-          margin-top: 15px;
-        }
-      }
-      
-      &.earnings-calculator {
-        .calculator-content {
-          flex-direction: column;
-        }
-      }
     }
     
     .share-modal {

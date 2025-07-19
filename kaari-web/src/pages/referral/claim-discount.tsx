@@ -175,7 +175,7 @@ const ContentBox = styled.div`
   display: flex;
   width: 100%;
   background-color: white;
-  border-radius: ${Theme.borders.radius.large};
+  border-radius: ${Theme.borders.radius.lg};
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   
@@ -210,37 +210,35 @@ const RightContent = styled.div`
 `;
 
 const Title = styled.h1`
-  font: ${Theme.typography.fonts.boldL};
-  font-size: 48px;
+  font: ${Theme.typography.fonts.largeB};
   color: ${Theme.colors.black};
-  margin: 0 0 8px 0;
+
   
   @media (max-width: 768px) {
-    font-size: 32px;
+
   }
 `;
 
 const SubTitle = styled.h2`
-  font: ${Theme.typography.fonts.regularL};
-  font-size: 32px;
+  font: ${Theme.typography.fonts.largeM};
   color: ${Theme.colors.black};
-  margin: 0 0 32px 0;
+
   
   @media (max-width: 768px) {
-    font-size: 24px;
+
   }
 `;
 
 const Description = styled.p`
-  font: ${Theme.typography.fonts.regularM};
-  color: ${Theme.colors.darkGray};
+  font: ${Theme.typography.fonts.mediumM};
+  color: ${Theme.colors.black};
   margin: 0 0 24px 0;
   line-height: 1.5;
 `;
 
 const ImportantSection = styled.div`
   background: linear-gradient(90deg, ${Theme.colors.primary}20 0%, ${Theme.colors.secondary}20 100%);
-  border-radius: ${Theme.borders.radius.medium};
+  border-radius: ${Theme.borders.radius.md};
   padding: 24px;
   color: ${Theme.colors.black};
   width: 100%;
@@ -249,12 +247,12 @@ const ImportantSection = styled.div`
 `;
 
 const ImportantTitle = styled.h3`
-  font: ${Theme.typography.fonts.boldM};
+  font: ${Theme.typography.fonts.mediumB};
   margin: 0 0 8px 0;
 `;
 
 const ImportantText = styled.p`
-  font: ${Theme.typography.fonts.regularM};
+  font: ${Theme.typography.fonts.mediumM};
   margin: 0;
   line-height: 1.5;
 `;
@@ -270,9 +268,9 @@ const PrimaryButton = styled.button`
   background-color: ${Theme.colors.secondary};
   color: white;
   border: none;
-  border-radius: ${Theme.borders.radius.medium};
+  border-radius: ${Theme.borders.radius.md};
   padding: 16px;
-  font: ${Theme.typography.fonts.boldM};
+  font: ${Theme.typography.fonts.mediumB};
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
@@ -286,9 +284,9 @@ const SecondaryButton = styled.button`
   background-color: transparent;
   color: ${Theme.colors.secondary};
   border: 1px solid ${Theme.colors.secondary};
-  border-radius: ${Theme.borders.radius.medium};
+  border-radius: ${Theme.borders.radius.md};
   padding: 16px;
-  font: ${Theme.typography.fonts.boldM};
+  font: ${Theme.typography.fonts.mediumB};
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
@@ -299,13 +297,13 @@ const SecondaryButton = styled.button`
 `;
 
 const LoadingText = styled.p`
-  font: ${Theme.typography.fonts.regularL};
+  font: ${Theme.typography.fonts.largeM};
   color: white;
   text-align: center;
 `;
 
 const ErrorMessage = styled.p`
-  font: ${Theme.typography.fonts.regularL};
+  font: ${Theme.typography.fonts.largeM};
   color: ${Theme.colors.error};
   text-align: center;
   margin-bottom: 24px;

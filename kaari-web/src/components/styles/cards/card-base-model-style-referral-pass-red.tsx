@@ -59,16 +59,13 @@ export const CardBaseModelStyleReferralPassred = styled.div`
                     
                     .label {
                         font: ${Theme.typography.fonts.mediumM};
-                        opacity: 0.9;
-                        font-size: 12px;
+
                     }
                 }
                 
                 .separator {
-                    font: ${Theme.typography.fonts.extraLargeB};
-                    font-size: 32px;
-                    margin: 0 5px;
-                    line-height: 1;
+                    font: ${Theme.typography.fonts.h2};
+                    margin-bottom: 10px;
                 }
             }
 

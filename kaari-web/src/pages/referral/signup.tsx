@@ -318,7 +318,7 @@ const BackButton = styled.button`
   transition: background-color 0.2s;
   
   &:hover {
-    background-color: ${Theme.colors.lightGray};
+    background-color: ${Theme.colors.gray2};
   }
 `;
 
@@ -347,7 +347,7 @@ const ContentContainer = styled.div<{ isMobile: boolean }>`
 
 const SignupCard = styled.div<{ isMobile: boolean }>`
   background-color: white;
-  border-radius: ${Theme.borders.radius.large};
+  border-radius: ${Theme.borders.radius.lg};
   box-shadow: ${props => props.isMobile ? 'none' : '0 8px 24px rgba(0, 0, 0, 0.1)'};
   padding: ${props => props.isMobile ? '0' : '40px'};
   width: 100%;
@@ -358,13 +358,13 @@ const CardHeader = styled.div<{ isMobile: boolean }>`
   margin-bottom: 32px;
   
   h1 {
-    font: ${Theme.typography.fonts.boldL};
+    font: ${Theme.typography.fonts.largeB};
     margin: 16px 0 8px;
   }
   
   p {
-    font: ${Theme.typography.fonts.regularM};
-    color: ${Theme.colors.darkGray};
+    font: ${Theme.typography.fonts.mediumM};
+    color: ${Theme.colors.black};
     margin: 0;
   }
 `;
@@ -375,7 +375,7 @@ const DiscountBadge = styled.div`
   background: linear-gradient(90deg, ${Theme.colors.primary} 0%, ${Theme.colors.secondary} 100%);
   color: white;
   padding: 8px 16px;
-  border-radius: ${Theme.borders.radius.medium};
+  border-radius: ${Theme.borders.radius.md};
   margin: 0 auto;
   
   svg {
@@ -383,7 +383,7 @@ const DiscountBadge = styled.div`
   }
   
   span {
-    font: ${Theme.typography.fonts.boldM};
+    font: ${Theme.typography.fonts.mediumB};
   }
 `;
 
@@ -391,9 +391,9 @@ const ErrorMessage = styled.div`
   background-color: #FFF0F0;
   color: #E53935;
   padding: 12px 16px;
-  border-radius: ${Theme.borders.radius.medium};
+  border-radius: ${Theme.borders.radius.md};
   margin-bottom: 24px;
-  font: ${Theme.typography.fonts.regularM};
+  font: ${Theme.typography.fonts.mediumM};
 `;
 
 const GoogleButton = styled.button<{ isMobile: boolean }>`
@@ -402,16 +402,16 @@ const GoogleButton = styled.button<{ isMobile: boolean }>`
   justify-content: center;
   width: 100%;
   padding: 16px;
-  border: 1px solid ${Theme.colors.lightGray};
-  border-radius: ${Theme.borders.radius.medium};
+  border: 1px solid ${Theme.colors.gray};
+  border-radius: ${Theme.borders.radius.md};
   background-color: white;
-  font: ${Theme.typography.fonts.boldM};
+  font: ${Theme.typography.fonts.mediumB};
   color: ${Theme.colors.black};
   cursor: pointer;
   transition: background-color 0.2s;
   
   &:hover {
-    background-color: ${Theme.colors.lightGray};
+    background-color: ${Theme.colors.gray};
   }
   
   &:disabled {
@@ -434,13 +434,13 @@ const Divider = styled.div<{ isMobile: boolean }>`
     content: '';
     flex: 1;
     height: 1px;
-    background-color: ${Theme.colors.lightGray};
+    background-color: ${Theme.colors.gray};
   }
   
   span {
     padding: 0 16px;
-    color: ${Theme.colors.darkGray};
-    font: ${Theme.typography.fonts.regularM};
+    color: ${Theme.colors.black};
+    font: ${Theme.typography.fonts.mediumM};
   }
 `;
 
@@ -453,17 +453,17 @@ const CompactInputContainer = styled.div`
   
   label {
     display: block;
-    font: ${Theme.typography.fonts.regularM};
-    color: ${Theme.colors.darkGray};
+    font: ${Theme.typography.fonts.mediumM};
+    color: ${Theme.colors.black};
     margin-bottom: 8px;
   }
   
   input {
     width: 100%;
     padding: 16px;
-    border: 1px solid ${Theme.colors.lightGray};
-    border-radius: ${Theme.borders.radius.medium};
-    font: ${Theme.typography.fonts.regularM};
+    border: 1px solid ${Theme.colors.gray};
+    border-radius: ${Theme.borders.radius.md};
+    font: ${Theme.typography.fonts.mediumM};
     
     &:focus {
       outline: none;
@@ -487,7 +487,7 @@ const CompactInputContainer = styled.div`
       background: none;
       border: none;
       cursor: pointer;
-      color: ${Theme.colors.darkGray};
+      color: ${Theme.colors.black};
       
       &:hover {
         color: ${Theme.colors.primary};
@@ -506,8 +506,8 @@ const CompactPurpleButton = styled.button<{ isMobile: boolean }>`
   background-color: ${Theme.colors.secondary};
   color: white;
   border: none;
-  border-radius: ${Theme.borders.radius.medium};
-  font: ${Theme.typography.fonts.boldM};
+  border-radius: ${Theme.borders.radius.md};
+  font: ${Theme.typography.fonts.mediumB};
   cursor: pointer;
   transition: background-color 0.2s;
   
@@ -523,8 +523,8 @@ const CompactPurpleButton = styled.button<{ isMobile: boolean }>`
 
 const TermsText = styled.p`
   text-align: center;
-  font: ${Theme.typography.fonts.regularS};
-  color: ${Theme.colors.darkGray};
+  font: ${Theme.typography.fonts.mediumM};
+  color: ${Theme.colors.black};
   margin-top: 24px;
 `;
 
