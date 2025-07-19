@@ -23,11 +23,9 @@ import {
   getBookingsByCity, 
   searchBookings, 
   AdminBooking, 
-  AdminBookingStatus 
+  AdminBookingStatus,
+  PaymentState
 } from '../../../../backend/server-actions/BookingServerActions';
-
-// Define payment state type
-type PaymentState = 'Hold' | 'Captured' | 'Voided';
 
 // Excel-like styled components
 const BookingsTable = styled(Table)`
@@ -249,26 +247,30 @@ const TableContainer = styled.div`
   border-radius: 4px;
 `;
 
-const ActionButton = styled(Button)`
-  padding: 6px 12px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background-color: white;
-  border: 1px solid ${Theme.colors.gray};
-  border-radius: 4px;
-  font: ${Theme.typography.fonts.smallM};
-  
-  &:hover {
-    background-color: #f3eefb;
-    border-color: ${Theme.colors.secondary};
-  }
+const NoDataMessage = styled.div`
+  padding: 20px;
+  text-align: center;
+  color: #666;
 `;
 
-// Component for countdown timer
+const LoadingMessage = styled.div`
+  padding: 20px;
+  text-align: center;
+  color: #666;
+`;
+
+const StatusCount = styled.span`
+  background-color: ${Theme.colors.gray};
+  color: ${Theme.colors.gray2};
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+  margin-left: 5px;
+`;
+
 const CountdownTimer: React.FC<{ updatedAt: Date }> = ({ updatedAt }) => {
-  const [timeLeft, setTimeLeft] = useState('00:00');
-  const [isLessThanOneHour, setIsLessThanOneHour] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<string>('');
+  const [isLessThanOneHour, setIsLessThanOneHour] = useState<boolean>(false);
   
   useEffect(() => {
     const calculateTimeLeft = () => {
@@ -276,28 +278,24 @@ const CountdownTimer: React.FC<{ updatedAt: Date }> = ({ updatedAt }) => {
       const deadline = new Date(updatedAt.getTime() + 24 * 60 * 60 * 1000); // 24 hours from updatedAt
       const diffMs = deadline.getTime() - now.getTime();
       
-      if (diffMs <= 0) return { formatted: '00:00', lessThanHour: false };
+      if (diffMs <= 0) {
+        setTimeLeft('Expired');
+        setIsLessThanOneHour(false);
+        return;
+      }
       
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
       const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
       
-      const formatted = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-      const lessThanHour = hours < 1;
+      const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
       
-      return { formatted, lessThanHour };
+      setTimeLeft(timeString);
+      setIsLessThanOneHour(hours === 0);
     };
     
-    // Initial calculation
-    const { formatted, lessThanHour } = calculateTimeLeft();
-    setTimeLeft(formatted);
-    setIsLessThanOneHour(lessThanHour);
-    
-    // Update every minute
-    const timer = setInterval(() => {
-      const { formatted, lessThanHour } = calculateTimeLeft();
-      setTimeLeft(formatted);
-      setIsLessThanOneHour(lessThanHour);
-    }, 60000);
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
     
     return () => clearInterval(timer);
   }, [updatedAt]);
@@ -309,17 +307,16 @@ const CountdownTimer: React.FC<{ updatedAt: Date }> = ({ updatedAt }) => {
   );
 };
 
-// Main component
 const BookingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<AdminBooking[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [cityFilter, setCityFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [cities, setCities] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
   
   // Load bookings data
   useEffect(() => {
@@ -328,14 +325,40 @@ const BookingsPage: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Get all bookings
-        const allBookings = await getAllBookings();
-        setBookings(allBookings);
-        setFilteredBookings(allBookings);
+        let fetchedBookings: AdminBooking[];
         
-        // Extract unique cities
-        const uniqueCities = [...new Set(allBookings.map(booking => booking.property.city))];
+        if (statusFilter !== 'all' && cityFilter !== 'all') {
+          // First get bookings by status
+          const statusBookings = await getBookingsByStatus(statusFilter as AdminBookingStatus);
+          // Then filter by city manually
+          fetchedBookings = statusBookings.filter(booking => booking.property.city === cityFilter);
+        } else if (statusFilter !== 'all') {
+          // Get bookings filtered by status
+          fetchedBookings = await getBookingsByStatus(statusFilter as AdminBookingStatus);
+        } else if (cityFilter !== 'all') {
+          // Get bookings filtered by city
+          fetchedBookings = await getBookingsByCity(cityFilter);
+        } else {
+          // Get all bookings
+          fetchedBookings = await getAllBookings();
+        }
+        
+        // Extract unique cities for filter
+        const uniqueCities = [...new Set(fetchedBookings.map(booking => booking.property.city))];
         setCities(uniqueCities);
+        
+        // Sort bookings by date (most recent first)
+        fetchedBookings.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+        
+        setBookings(fetchedBookings);
+        
+        // Apply search filter if exists
+        if (searchQuery) {
+          const filtered = await searchBookings(searchQuery);
+          setFilteredBookings(filtered);
+        } else {
+          setFilteredBookings(fetchedBookings);
+        }
       } catch (err) {
         console.error('Error loading bookings:', err);
         setError('Failed to load bookings. Please try again later.');
@@ -345,220 +368,234 @@ const BookingsPage: React.FC = () => {
     };
     
     loadBookings();
-  }, []);
+  }, [statusFilter, cityFilter]);
   
-  // Apply filters
+  // Apply search filter
   useEffect(() => {
     const applyFilters = async () => {
+      if (searchQuery.trim() === '') {
+        setFilteredBookings(bookings);
+        return;
+      }
+      
       try {
-        setLoading(true);
-        setError(null);
+        const results = await searchBookings(searchQuery);
         
-        let filtered: AdminBooking[] = [];
+        // Apply additional filters if needed
+        let filtered = results;
         
-        // Apply status filter
         if (statusFilter !== 'all') {
-          filtered = await getBookingsByStatus(statusFilter as AdminBookingStatus);
-        } else {
-          filtered = [...bookings];
+          filtered = filtered.filter(booking => booking.status === statusFilter);
         }
         
-        // Apply city filter
         if (cityFilter !== 'all') {
-          if (statusFilter !== 'all') {
-            // If we already filtered by status, filter the results by city
-            filtered = filtered.filter(booking => booking.property.city === cityFilter);
-          } else {
-            // Otherwise, get bookings by city from the server
-            filtered = await getBookingsByCity(cityFilter);
-          }
-        }
-        
-        // Apply search filter
-        if (searchQuery.trim()) {
-          if (statusFilter !== 'all' || cityFilter !== 'all') {
-            // If we already filtered, filter the results by search query
-            const query = searchQuery.toLowerCase();
-            filtered = filtered.filter(
-              booking =>
-                booking.tenant.name.toLowerCase().includes(query) ||
-                booking.property.title.toLowerCase().includes(query)
-            );
-          } else {
-            // Otherwise, search bookings from the server
-            filtered = await searchBookings(searchQuery);
-          }
+          filtered = filtered.filter(booking => booking.property.city === cityFilter);
         }
         
         setFilteredBookings(filtered);
       } catch (err) {
-        console.error('Error applying filters:', err);
-        setError('Failed to apply filters. Please try again.');
-      } finally {
-        setLoading(false);
+        console.error('Error searching bookings:', err);
+        // Fallback to client-side filtering if API search fails
+        const query = searchQuery.toLowerCase();
+        const filtered = bookings.filter(booking => 
+          booking.property.title.toLowerCase().includes(query) ||
+          booking.property.city.toLowerCase().includes(query) ||
+          booking.tenant.name.toLowerCase().includes(query) ||
+          booking.tenant.phoneNumber?.toLowerCase().includes(query) ||
+          booking.advertiser.name.toLowerCase().includes(query) ||
+          booking.advertiser.phoneNumber?.toLowerCase().includes(query) ||
+          booking.bookingId.toLowerCase().includes(query)
+        );
+        
+        setFilteredBookings(filtered);
       }
     };
     
-    // Only apply server-side filtering if we have bookings loaded
-    if (bookings.length > 0) {
-      applyFilters();
-    }
-  }, [statusFilter, cityFilter, searchQuery, bookings]);
+    applyFilters();
+  }, [searchQuery, bookings, statusFilter, cityFilter]);
   
-  // Open booking detail page
+  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatusFilter(e.target.value);
+  };
+  
+  const handleCityFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setCityFilter(e.target.value);
+  };
+  
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+  
   const openBookingDetail = (booking: AdminBooking) => {
     navigate(`/dashboard/admin/bookings/${booking.id}`);
   };
   
-  // Format date for display
   const formatDate = (date: Date) => {
-    return date.toLocaleString('en-US', {
+    return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    });
+    }).format(date);
   };
   
-  // Get placeholder image for properties without images
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+  
   const getPlaceholderImage = (propertyTitle: string) => {
-    // Generate a color based on the property title
-    const hash = propertyTitle.split('').reduce((acc, char) => {
-      return char.charCodeAt(0) + ((acc << 5) - acc);
-    }, 0);
+    // Generate a placeholder image based on property title
+    const colors = ['#6c5ce7', '#00cec9', '#fdcb6e', '#e17055', '#74b9ff'];
+    const colorIndex = propertyTitle.length % colors.length;
+    const initials = propertyTitle.substring(0, 2).toUpperCase();
     
-    const color = `hsl(${Math.abs(hash) % 360}, 70%, 80%)`;
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 40;
+    const ctx = canvas.getContext('2d');
     
-    return `https://placehold.co/40x40/${color.replace('#', '')}?text=${propertyTitle.charAt(0)}`;
+    if (ctx) {
+      ctx.fillStyle = colors[colorIndex];
+      ctx.fillRect(0, 0, 40, 40);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(initials, 20, 20);
+    }
+    
+    return canvas.toDataURL();
+  };
+  
+  const countByStatus = (status: AdminBookingStatus | 'all'): number => {
+    if (status === 'all') {
+      return bookings.length;
+    }
+    return bookings.filter(booking => booking.status === status).length;
   };
   
   return (
-    <>
-      <DashboardCard>
-        <CardTitle>Reservations</CardTitle>
-        <CardContent>
-          {/* Filters */}
-          <FilterContainer>
-            <FilterSelect 
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Statuses</option>
-              <option value="Await-Advertiser">Await Advertiser</option>
-              <option value="Await-Tenant-Confirm">Await Tenant Confirm</option>
-              <option value="Confirmed">Confirmed</option>
-              <option value="Cancelled">Cancelled</option>
-            </FilterSelect>
-            
-            <FilterSelect 
-              value={cityFilter}
-              onChange={(e) => setCityFilter(e.target.value)}
-            >
-              <option value="all">All Cities</option>
-              {cities.map(city => (
-                <option key={city} value={city}>{city}</option>
-              ))}
-            </FilterSelect>
-            
-            <SearchContainer>
-              <FaSearch />
-              <SearchInput 
-                type="text" 
-                placeholder="Search tenant or property..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </SearchContainer>
-          </FilterContainer>
+    <DashboardCard>
+      <CardTitle>Bookings Management</CardTitle>
+      <CardContent>
+        <FilterContainer>
+          <FilterSelect
+            value={statusFilter}
+            onChange={handleStatusFilterChange}
+          >
+            <option value="all">All Statuses ({countByStatus('all')})</option>
+            <option value="Await-Advertiser">Awaiting Advertiser ({countByStatus('Await-Advertiser')})</option>
+            <option value="Await-Tenant-Confirm">Awaiting Tenant Confirmation ({countByStatus('Await-Tenant-Confirm')})</option>
+            <option value="Confirmed">Confirmed ({countByStatus('Confirmed')})</option>
+            <option value="Cancelled">Cancelled ({countByStatus('Cancelled')})</option>
+          </FilterSelect>
           
-          {/* Error message */}
-          {error && (
-            <div style={{ color: 'red', marginBottom: '15px' }}>
-              {error}
-            </div>
-          )}
+          <FilterSelect
+            value={cityFilter}
+            onChange={handleCityFilterChange}
+          >
+            <option value="all">All Cities</option>
+            {cities.map(city => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </FilterSelect>
           
-          {/* Bookings Table */}
+          <SearchContainer>
+            <FaSearch />
+            <SearchInput
+              type="text"
+              placeholder="Search by name, property, or ID"
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
+          </SearchContainer>
+        </FilterContainer>
+        
+        <TableContainer>
           {loading ? (
-            <p>Loading bookings...</p>
+            <LoadingMessage>Loading booking data...</LoadingMessage>
+          ) : error ? (
+            <NoDataMessage>{error}</NoDataMessage>
           ) : filteredBookings.length === 0 ? (
-            <p>No bookings found matching your criteria.</p>
+            <NoDataMessage>No bookings found matching your criteria.</NoDataMessage>
           ) : (
-            <TableContainer>
-              <BookingsTable>
-                <BookingsTableHead>
-                  <BookingRow>
-                    <BookingsTableHeader style={{ width: '10%' }}>Booking ID</BookingsTableHeader>
-                    <BookingsTableHeader style={{ width: '20%' }}>Property</BookingsTableHeader>
-                    <BookingsTableHeader style={{ width: '15%' }}>Tenant</BookingsTableHeader>
-                    <BookingsTableHeader style={{ width: '15%' }}>Advertiser</BookingsTableHeader>
-                    <BookingsTableHeader style={{ width: '10%' }}>Status</BookingsTableHeader>
-                    <BookingsTableHeader style={{ width: '10%' }}>Timer</BookingsTableHeader>
-                    <BookingsTableHeader style={{ width: '10%' }}>Payment State</BookingsTableHeader>
-                    <BookingsTableHeader style={{ width: '10%' }}>Actions</BookingsTableHeader>
-                  </BookingRow>
-                </BookingsTableHead>
-                <tbody>
-                  {filteredBookings.map(booking => (
-                    <BookingRow key={booking.id} onClick={() => openBookingDetail(booking)}>
-                      <BookingCell>{booking.bookingId}</BookingCell>
-                      <PropertyCell>
-                        <PropertyThumbnail 
-                          src={booking.property.thumbnail || getPlaceholderImage(booking.property.title)} 
-                          alt={booking.property.title} 
-                          onError={(e) => {
-                            // If image fails to load, replace with placeholder
-                            (e.target as HTMLImageElement).src = getPlaceholderImage(booking.property.title);
-                          }}
-                        />
-                        <PropertyInfo>
-                          <PropertyTitle>{booking.property.title}</PropertyTitle>
-                          <PropertyCity>{booking.property.city}</PropertyCity>
-                        </PropertyInfo>
-                      </PropertyCell>
-                      <BookingCell>
-                        <ContactInfo>
-                          <ContactName>{booking.tenant.name}</ContactName>
-                          <ContactPhone>{booking.tenant.phoneNumber}</ContactPhone>
-                        </ContactInfo>
-                      </BookingCell>
-                      <BookingCell>
-                        <ContactInfo>
-                          <ContactName>{booking.advertiser.name}</ContactName>
-                          <ContactPhone>{booking.advertiser.phoneNumber}</ContactPhone>
-                        </ContactInfo>
-                      </BookingCell>
-                      <BookingCell>
-                        <StatusBadge $status={booking.status}>{booking.status}</StatusBadge>
-                      </BookingCell>
-                      <BookingCell>
-                        {(booking.status === 'Await-Advertiser' || booking.status === 'Await-Tenant-Confirm') && (
+            <BookingsTable>
+              <BookingsTableHead>
+                <tr>
+                  <BookingsTableHeader style={{ width: '5%' }}>ID</BookingsTableHeader>
+                  <BookingsTableHeader style={{ width: '20%' }}>Property</BookingsTableHeader>
+                  <BookingsTableHeader style={{ width: '15%' }}>Tenant</BookingsTableHeader>
+                  <BookingsTableHeader style={{ width: '15%' }}>Advertiser</BookingsTableHeader>
+                  <BookingsTableHeader style={{ width: '15%' }}>Date</BookingsTableHeader>
+                  <BookingsTableHeader style={{ width: '10%' }}>Amount</BookingsTableHeader>
+                  <BookingsTableHeader style={{ width: '10%' }}>Status</BookingsTableHeader>
+                  <BookingsTableHeader style={{ width: '10%' }}>Payment</BookingsTableHeader>
+                </tr>
+              </BookingsTableHead>
+              <tbody>
+                {filteredBookings.map(booking => (
+                  <BookingRow key={booking.id} onClick={() => openBookingDetail(booking)}>
+                    <BookingCell>{booking.bookingId}</BookingCell>
+                    <PropertyCell>
+                      <PropertyThumbnail
+                        src={booking.property.thumbnail || getPlaceholderImage(booking.property.title)}
+                        alt={booking.property.title}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = getPlaceholderImage(booking.property.title);
+                        }}
+                      />
+                      <PropertyInfo>
+                        <PropertyTitle>{booking.property.title}</PropertyTitle>
+                        <PropertyCity>{booking.property.city}</PropertyCity>
+                      </PropertyInfo>
+                    </PropertyCell>
+                    <BookingCell>
+                      <ContactInfo>
+                        <ContactName>{booking.tenant.name}</ContactName>
+                        <ContactPhone>{booking.tenant.phoneNumber}</ContactPhone>
+                      </ContactInfo>
+                    </BookingCell>
+                    <BookingCell>
+                      <ContactInfo>
+                        <ContactName>{booking.advertiser.name}</ContactName>
+                        <ContactPhone>{booking.advertiser.phoneNumber}</ContactPhone>
+                      </ContactInfo>
+                    </BookingCell>
+                    <BookingCell>
+                      {formatDate(booking.updatedAt)}
+                      {booking.status === 'Await-Advertiser' && (
+                        <div>
                           <CountdownTimer updatedAt={booking.updatedAt} />
-                        )}
-                      </BookingCell>
-                      <BookingCell>
-                        <PaymentStateBadge $state={booking.paymentState}>
-                          {booking.paymentState}
-                        </PaymentStateBadge>
-                      </BookingCell>
-                      <BookingCell>
-                        <ActionButton onClick={(e) => {
-                          e.stopPropagation();
-                          openBookingDetail(booking);
-                        }}>
-                          <FaEye /> View
-                        </ActionButton>
-                      </BookingCell>
-                    </BookingRow>
-                  ))}
-                </tbody>
-              </BookingsTable>
-            </TableContainer>
+                        </div>
+                      )}
+                    </BookingCell>
+                    <BookingCell>
+                      {formatAmount(booking.amount)}
+                    </BookingCell>
+                    <BookingCell>
+                      <StatusBadge $status={booking.status}>
+                        {booking.status}
+                      </StatusBadge>
+                    </BookingCell>
+                    <BookingCell>
+                      <PaymentStateBadge $state={booking.paymentState}>
+                        {booking.paymentState}
+                      </PaymentStateBadge>
+                    </BookingCell>
+                  </BookingRow>
+                ))}
+              </tbody>
+            </BookingsTable>
           )}
-        </CardContent>
-      </DashboardCard>
-    </>
+        </TableContainer>
+      </CardContent>
+    </DashboardCard>
   );
 };
 

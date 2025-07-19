@@ -726,8 +726,21 @@ export const approveCancellationRequest = async (cancellationRequestId: string):
             const daysToMoveIn = typeof cancellationData.daysToMoveIn === 'number' ? cancellationData.daysToMoveIn : 0;
             const payoutReason = daysToMoveIn <= 3 ? 'Cushion – Pre-move Cancel' : 'Cushion – Haani Max Cancel';
             
-            // Create the payout
-            await createCancellationPayout(cancellationData.reservationId, payoutReason);
+            // Get property details to find advertiser ID
+            const propertyRef = doc(db, 'properties', cancellationData.propertyId);
+            const propertyDoc = await getDoc(propertyRef);
+            const propertyData = propertyDoc.exists() ? propertyDoc.data() : null;
+            
+            // Create the payout - need to pass userId and refundAmount
+            const advertiserId = propertyData?.ownerId || '';
+            const cushionAmount = daysToMoveIn <= 3 ? 500 : 250; // Example amounts
+            
+            await createCancellationPayout(
+              advertiserId,
+              cushionAmount,
+              cancellationRequestId,
+              payoutReason
+            );
             
             console.log(`Created ${payoutReason} payout for booking ${cancellationData.reservationId}`);
           } catch (payoutError) {
@@ -793,8 +806,21 @@ export const approveCancellationRequest = async (cancellationRequestId: string):
           const daysToMoveIn = typeof cancellationData.daysToMoveIn === 'number' ? cancellationData.daysToMoveIn : 0;
           const payoutReason = daysToMoveIn <= 3 ? 'Cushion – Pre-move Cancel' : 'Cushion – Haani Max Cancel';
           
-          // Create the payout
-          await createCancellationPayout(cancellationData.reservationId, payoutReason);
+          // Get property details to find advertiser ID
+          const propertyRef = doc(db, 'properties', cancellationData.propertyId);
+          const propertyDoc = await getDoc(propertyRef);
+          const propertyData = propertyDoc.exists() ? propertyDoc.data() : null;
+          
+          // Create the payout - need to pass userId and refundAmount
+          const advertiserId = propertyData?.ownerId || '';
+          const cushionAmount = daysToMoveIn <= 3 ? 500 : 250; // Example amounts
+          
+          await createCancellationPayout(
+            advertiserId,
+            cushionAmount,
+            cancellationRequestId,
+            payoutReason
+          );
           
           console.log(`Created ${payoutReason} payout for booking ${cancellationData.reservationId}`);
         } catch (payoutError) {

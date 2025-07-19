@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaArrowLeft, FaClock, FaUser, FaBuilding, FaCreditCard, FaClipboard } from 'react-icons/fa';
+import { FaArrowLeft, FaClock, FaUser, FaBuilding, FaCreditCard, FaClipboard, FaCopy } from 'react-icons/fa';
 import { Theme } from '../../../../theme/theme';
 import {
   DashboardCard,
@@ -68,13 +68,13 @@ const StatusBadge = styled.span<{ $status: string }>`
   background-color: ${props => {
     switch (props.$status) {
       case 'Await-Advertiser':
-        return '#ffeeba'; // yellow
+        return '#fef7e0'; // yellow
       case 'Await-Tenant-Confirm':
         return '#fff3cd'; // orange
       case 'Confirmed':
-        return '#d4edda'; // green
+        return '#e6f4ea'; // green
       case 'Cancelled':
-        return '#f8d7da'; // grey
+        return '#f8d7da'; // red
       default:
         return '#e2e3e5';
     }
@@ -83,15 +83,49 @@ const StatusBadge = styled.span<{ $status: string }>`
   color: ${props => {
     switch (props.$status) {
       case 'Await-Advertiser':
-        return '#856404'; // dark yellow
+        return '#b06000'; // dark yellow
       case 'Await-Tenant-Confirm':
         return '#664d03'; // dark orange
       case 'Confirmed':
-        return '#155724'; // dark green
+        return '#137333'; // dark green
       case 'Cancelled':
-        return '#721c24'; // dark grey
+        return '#721c24'; // dark red
       default:
         return '#383d41';
+    }
+  }};
+`;
+
+const PaymentStateBadge = styled.span<{ $state: string }>`
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  
+  background-color: ${props => {
+    switch (props.$state) {
+      case 'Hold':
+        return '#fef7e0'; // yellow
+      case 'Captured':
+        return '#e6f4ea'; // green
+      case 'Voided':
+        return '#f1f3f4'; // grey
+      default:
+        return '#f1f3f4';
+    }
+  }};
+  
+  color: ${props => {
+    switch (props.$state) {
+      case 'Hold':
+        return '#b06000'; // dark orange
+      case 'Captured':
+        return '#137333'; // dark green
+      case 'Voided':
+        return '#5f6368'; // dark grey
+      default:
+        return '#5f6368';
     }
   }};
 `;
@@ -164,6 +198,12 @@ const NoteInput = styled.textarea`
   border-radius: 4px;
   min-height: 100px;
   resize: vertical;
+  margin-bottom: 10px;
+  
+  &:focus {
+    outline: none;
+    border-color: ${Theme.colors.secondary};
+  }
 `;
 
 const ErrorMessage = styled.div`
@@ -176,39 +216,118 @@ const SuccessMessage = styled.div`
   margin-bottom: 15px;
 `;
 
+const DetailContainer = styled.div`
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+`;
+
+const DetailSection = styled.div`
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid ${Theme.colors.gray};
+  padding: 20px;
+  margin-bottom: 20px;
+`;
+
+const ContactItem = styled.div`
+  margin-bottom: 15px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const ContactLabel = styled.div`
+  font: ${Theme.typography.fonts.smallB};
+  color: ${Theme.colors.gray2};
+  margin-bottom: 5px;
+`;
+
+const ContactValue = styled.div`
+  font: ${Theme.typography.fonts.smallM};
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const CopyButton = styled.button`
+  background: none;
+  border: none;
+  color: ${Theme.colors.secondary};
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 2px;
+  
+  &:hover {
+    background-color: #f0f0f0;
+  }
+`;
+
+const PaymentInfo = styled.div`
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid ${Theme.colors.gray};
+`;
+
+const PaymentRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  
+  &:last-child {
+    margin-bottom: 0;
+    font-weight: bold;
+  }
+`;
+
+const PaymentLabel = styled.div`
+  color: ${Theme.colors.gray2};
+`;
+
+const PaymentValue = styled.div``;
+
+const LoadingMessage = styled.div`
+  padding: 20px;
+  text-align: center;
+  color: #666;
+`;
+
 // Component for countdown timer
 const CountdownTimer: React.FC<{ updatedAt: Date }> = ({ updatedAt }) => {
-  const [timeLeft, setTimeLeft] = useState('00:00');
-  const [isLessThanOneHour, setIsLessThanOneHour] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<string>('');
+  const [isLessThanOneHour, setIsLessThanOneHour] = useState<boolean>(false);
   
   useEffect(() => {
+    // Check if date is valid before proceeding
+    if (!updatedAt || isNaN(updatedAt.getTime())) {
+      setTimeLeft('Invalid date');
+      return;
+    }
+    
     const calculateTimeLeft = () => {
       const now = new Date();
       const deadline = new Date(updatedAt.getTime() + 24 * 60 * 60 * 1000); // 24 hours from updatedAt
       const diffMs = deadline.getTime() - now.getTime();
       
-      if (diffMs <= 0) return { formatted: '00:00', lessThanHour: false };
+      if (diffMs <= 0) {
+        setTimeLeft('Expired');
+        setIsLessThanOneHour(false);
+        return;
+      }
       
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
       const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
       
-      const formatted = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-      const lessThanHour = hours < 1;
+      const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
       
-      return { formatted, lessThanHour };
+      setTimeLeft(timeString);
+      setIsLessThanOneHour(hours === 0);
     };
     
-    // Initial calculation
-    const { formatted, lessThanHour } = calculateTimeLeft();
-    setTimeLeft(formatted);
-    setIsLessThanOneHour(lessThanHour);
-    
-    // Update every minute
-    const timer = setInterval(() => {
-      const { formatted, lessThanHour } = calculateTimeLeft();
-      setTimeLeft(formatted);
-      setIsLessThanOneHour(lessThanHour);
-    }, 60000);
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
     
     return () => clearInterval(timer);
   }, [updatedAt]);
@@ -249,7 +368,7 @@ const BookingDetail: React.FC = () => {
         setEvents(eventsData);
       } catch (error) {
         console.error('Error loading booking details:', error);
-        setError('Failed to load booking details. Please try again later.');
+        setError('Failed to load booking details');
       } finally {
         setLoading(false);
       }
@@ -263,249 +382,294 @@ const BookingDetail: React.FC = () => {
   };
   
   const handleAddNote = async () => {
-    if (!id || !note.trim()) return;
+    if (!note.trim() || !booking || !id) return;
     
     try {
       setAddingNote(true);
       setError(null);
       setSuccess(null);
       
-      // In a real app, get the current user ID
-      const userId = 'admin-user-id';
-      await addBookingNote(id, note, userId);
+      // Add note to booking
+      const noteId = await addBookingNote(id, note, 'admin'); // 'admin' should be replaced with actual admin ID
       
-      // Refresh events
-      const eventsData = await getBookingEvents(id);
-      setEvents(eventsData);
+      // Update events list
+      const newEvent: BookingEvent = {
+        id: noteId,
+        bookingId: id,
+        type: 'note',
+        timestamp: new Date(),
+        description: note,
+        userId: 'admin',
+        userName: 'Admin'
+      };
       
-      // Clear note input and show success message
+      setEvents([newEvent, ...events]);
       setNote('');
       setSuccess('Note added successfully');
-      
-      // Hide success message after 3 seconds
-      setTimeout(() => {
-        setSuccess(null);
-      }, 3000);
     } catch (error) {
       console.error('Error adding note:', error);
-      setError('Failed to add note. Please try again.');
+      setError('Failed to add note');
     } finally {
       setAddingNote(false);
     }
   };
   
-  // Format date for display
   const formatDate = (date: Date) => {
-    return date.toLocaleString('en-US', {
+    // Check if date is valid before formatting
+    if (!date || isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    
+    return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    });
+    }).format(date);
   };
   
-  // Get placeholder image for properties without images
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+  
   const getPlaceholderImage = (propertyTitle: string) => {
-    // Generate a color based on the property title
-    const hash = propertyTitle.split('').reduce((acc, char) => {
-      return char.charCodeAt(0) + ((acc << 5) - acc);
-    }, 0);
+    // Generate a placeholder image based on property title
+    const colors = ['#6c5ce7', '#00cec9', '#fdcb6e', '#e17055', '#74b9ff'];
+    const colorIndex = propertyTitle.length % colors.length;
+    const initials = propertyTitle.substring(0, 2).toUpperCase();
     
-    const color = `hsl(${Math.abs(hash) % 360}, 70%, 80%)`;
+    const canvas = document.createElement('canvas');
+    canvas.width = 300;
+    canvas.height = 150;
+    const ctx = canvas.getContext('2d');
     
-    return `https://placehold.co/100x100/${color.replace('#', '')}?text=${propertyTitle.charAt(0)}`;
+    if (ctx) {
+      ctx.fillStyle = colors[colorIndex];
+      ctx.fillRect(0, 0, 300, 150);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 48px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(initials, 150, 75);
+    }
+    
+    return canvas.toDataURL();
+  };
+  
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // Could add a toast notification here
+    } catch (err) {
+      console.error('Failed to copy text:', err);
+    }
   };
   
   if (loading) {
     return (
-      <DashboardCard>
-        <CardContent>
-          <p>Loading booking details...</p>
-        </CardContent>
-      </DashboardCard>
+      <DetailContainer>
+        <BackButton onClick={handleBack}>
+          <FaArrowLeft /> Back to Bookings
+        </BackButton>
+        <LoadingMessage>Loading booking details...</LoadingMessage>
+      </DetailContainer>
     );
   }
   
-  if (!booking) {
+  if (error || !booking) {
     return (
-      <DashboardCard>
-        <CardContent>
-          <BackButton onClick={handleBack}>
-            <FaArrowLeft /> Back to Bookings
-          </BackButton>
-          <p>Booking not found.</p>
-        </CardContent>
-      </DashboardCard>
+      <DetailContainer>
+        <BackButton onClick={handleBack}>
+          <FaArrowLeft /> Back to Bookings
+        </BackButton>
+        <ErrorMessage>{error || 'Booking not found'}</ErrorMessage>
+      </DetailContainer>
     );
   }
   
   return (
-    <DashboardCard>
-      <CardContent>
-        <BackButton onClick={handleBack}>
-          <FaArrowLeft /> Back to Bookings
-        </BackButton>
+    <DetailContainer>
+      <BackButton onClick={handleBack}>
+        <FaArrowLeft /> Back to Bookings
+      </BackButton>
+      
+      <DetailHeader>
+        <BookingId>{booking.bookingId}</BookingId>
+        <StatusBadge $status={booking.status}>{booking.status}</StatusBadge>
+        <PaymentStateBadge $state={booking.paymentState}>{booking.paymentState}</PaymentStateBadge>
+        {booking.status === 'Await-Advertiser' && (
+          <CountdownTimer updatedAt={booking.updatedAt} />
+        )}
+      </DetailHeader>
+      
+      <DetailGrid>
+        {/* Property Section */}
+        <DetailSection>
+          <SectionTitle><FaBuilding /> Property Details</SectionTitle>
+          
+          <PropertyImage 
+            src={booking.property.thumbnail || getPlaceholderImage(booking.property.title)} 
+            alt={booking.property.title}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = getPlaceholderImage(booking.property.title);
+            }}
+          />
+          
+          <h4 style={{ margin: '0 0 10px 0' }}>{booking.property.title}</h4>
+          <PropertyAddress>{booking.property.city}</PropertyAddress>
+        </DetailSection>
         
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-        {success && <SuccessMessage>{success}</SuccessMessage>}
-        
-        <DetailHeader>
-          <BookingId>{booking.bookingId}</BookingId>
-          <StatusBadge $status={booking.status}>{booking.status}</StatusBadge>
-          {(booking.status === 'Await-Advertiser' || booking.status === 'Await-Tenant-Confirm') && (
-            <CountdownTimer updatedAt={booking.updatedAt} />
+        {/* Tenant Section */}
+        <DetailSection>
+          <SectionTitle><FaUser /> Tenant Information</SectionTitle>
+          
+          <ContactItem>
+            <ContactLabel>Name</ContactLabel>
+            <ContactValue>{booking.tenant.name}</ContactValue>
+          </ContactItem>
+          
+          <ContactItem>
+            <ContactLabel>Phone Number</ContactLabel>
+            <ContactValue>
+              {booking.tenant.phoneNumber}
+              <CopyButton onClick={() => copyToClipboard(booking.tenant.phoneNumber)}>
+                <FaCopy size={14} />
+              </CopyButton>
+            </ContactValue>
+          </ContactItem>
+          
+          {booking.tenant.email && (
+            <ContactItem>
+              <ContactLabel>Email</ContactLabel>
+              <ContactValue>
+                {booking.tenant.email}
+                <CopyButton onClick={() => copyToClipboard(booking.tenant.email!)}>
+                  <FaCopy size={14} />
+                </CopyButton>
+              </ContactValue>
+            </ContactItem>
           )}
-        </DetailHeader>
+          
+          <PaymentInfo>
+            <PaymentRow>
+              <PaymentLabel>Created</PaymentLabel>
+              <PaymentValue>{formatDate(booking.createdAt)}</PaymentValue>
+            </PaymentRow>
+            <PaymentRow>
+              <PaymentLabel>Last Updated</PaymentLabel>
+              <PaymentValue>{formatDate(booking.updatedAt)}</PaymentValue>
+            </PaymentRow>
+            {booking.cardLastFour && (
+              <PaymentRow>
+                <PaymentLabel>Card</PaymentLabel>
+                <PaymentValue>•••• {booking.cardLastFour}</PaymentValue>
+              </PaymentRow>
+            )}
+            {booking.gatewayReference && (
+              <PaymentRow>
+                <PaymentLabel>Payment Reference</PaymentLabel>
+                <PaymentValue>
+                  {booking.gatewayReference}
+                  <CopyButton onClick={() => copyToClipboard(booking.gatewayReference!)}>
+                    <FaCopy size={14} />
+                  </CopyButton>
+                </PaymentValue>
+              </PaymentRow>
+            )}
+            <PaymentRow>
+              <PaymentLabel>Amount</PaymentLabel>
+              <PaymentValue>{formatAmount(booking.amount)}</PaymentValue>
+            </PaymentRow>
+          </PaymentInfo>
+        </DetailSection>
         
-        {/* Timeline */}
-        <TimelineContainer>
-          <SectionTitle>
-            <FaClipboard /> Timeline
-          </SectionTitle>
-          {events.length > 0 ? (
+        {/* Advertiser Section */}
+        <DetailSection>
+          <SectionTitle><FaUser /> Advertiser Information</SectionTitle>
+          
+          <ContactItem>
+            <ContactLabel>Name</ContactLabel>
+            <ContactValue>{booking.advertiser.name}</ContactValue>
+          </ContactItem>
+          
+          <ContactItem>
+            <ContactLabel>Phone Number</ContactLabel>
+            <ContactValue>
+              {booking.advertiser.phoneNumber}
+              <CopyButton onClick={() => copyToClipboard(booking.advertiser.phoneNumber)}>
+                <FaCopy size={14} />
+              </CopyButton>
+            </ContactValue>
+          </ContactItem>
+          
+          {booking.advertiser.email && (
+            <ContactItem>
+              <ContactLabel>Email</ContactLabel>
+              <ContactValue>
+                {booking.advertiser.email}
+                <CopyButton onClick={() => copyToClipboard(booking.advertiser.email!)}>
+                  <FaCopy size={14} />
+                </CopyButton>
+              </ContactValue>
+            </ContactItem>
+          )}
+        </DetailSection>
+        
+        {/* Admin Notes Section */}
+        <DetailSection>
+          <SectionTitle><FaClipboard /> Admin Notes</SectionTitle>
+          
+          <NoteInput 
+            value={note} 
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Add a note about this booking..."
+          />
+          
+          <Button 
+            onClick={handleAddNote} 
+            disabled={!note.trim() || addingNote}
+          >
+            {addingNote ? 'Adding...' : 'Add Note'}
+          </Button>
+          
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+          {success && <SuccessMessage>{success}</SuccessMessage>}
+        </DetailSection>
+        
+        {/* Timeline Section */}
+        <DetailSection>
+          <SectionTitle><FaClock /> Timeline</SectionTitle>
+          
+          {events.length === 0 ? (
+            <div style={{ color: '#666', fontStyle: 'italic' }}>No events recorded for this booking.</div>
+          ) : (
             events.map((event, index) => (
-              <TimelineItem key={event.id || index}>
+              <TimelineItem key={index}>
                 <TimelineDot />
                 <TimelineContent>
-                  <TimelineTitle>{event.description}</TimelineTitle>
+                  <TimelineTitle>
+                    {event.description}
+                    {event.userName && ` by ${event.userName}`}
+                  </TimelineTitle>
                   <TimelineDate>
-                    {formatDate(event.timestamp instanceof Date 
-                      ? event.timestamp 
-                      : new Date((event.timestamp as any).seconds * 1000))}
+                    {formatDate(event.timestamp instanceof Date ? event.timestamp : 
+                      (event.timestamp && typeof event.timestamp.toDate === 'function') ? 
+                        event.timestamp.toDate() : 
+                        new Date())}
                   </TimelineDate>
                 </TimelineContent>
               </TimelineItem>
             ))
-          ) : (
-            <p>No events found for this booking.</p>
           )}
-        </TimelineContainer>
-        
-        <DetailGrid>
-          {/* Tenant Info */}
-          <DetailItem>
-            <SectionTitle>
-              <FaUser /> Tenant
-            </SectionTitle>
-            <DetailPanel>
-              <div>
-                <strong>Name:</strong> {booking.tenant.name}
-              </div>
-              <div>
-                <strong>Phone:</strong> {booking.tenant.phoneNumber}
-              </div>
-              {booking.tenant.email && (
-                <div>
-                  <strong>Email:</strong> {booking.tenant.email}
-                </div>
-              )}
-            </DetailPanel>
-          </DetailItem>
-          
-          {/* Advertiser Info */}
-          <DetailItem>
-            <SectionTitle>
-              <FaUser /> Advertiser
-            </SectionTitle>
-            <DetailPanel>
-              <div>
-                <strong>Name:</strong> {booking.advertiser.name}
-              </div>
-              <div>
-                <strong>Phone:</strong> {booking.advertiser.phoneNumber}
-              </div>
-              {booking.advertiser.email && (
-                <div>
-                  <strong>Email:</strong> {booking.advertiser.email}
-                </div>
-              )}
-            </DetailPanel>
-          </DetailItem>
-        </DetailGrid>
-        
-        {/* Payment Details */}
-        <DetailItem>
-          <SectionTitle>
-            <FaCreditCard /> Payment Details
-          </SectionTitle>
-          <DetailPanel>
-            <div>
-              <strong>Amount:</strong> €{booking.amount.toFixed(2)}
-            </div>
-            <div>
-              <strong>Status:</strong> {booking.paymentState}
-            </div>
-            {booking.cardLastFour && (
-              <div>
-                <strong>Card:</strong> **** **** **** {booking.cardLastFour}
-              </div>
-            )}
-            {booking.gatewayReference && (
-              <div>
-                <strong>Reference:</strong> {booking.gatewayReference}
-              </div>
-            )}
-          </DetailPanel>
-        </DetailItem>
-        
-        {/* Property Snapshot */}
-        <DetailItem>
-          <SectionTitle>
-            <FaBuilding /> Property
-          </SectionTitle>
-          <PropertyCard>
-            <PropertyImageContainer>
-              <PropertyImage 
-                src={booking.property.thumbnail || getPlaceholderImage(booking.property.title)} 
-                alt={booking.property.title} 
-                onError={(e) => {
-                  // If image fails to load, replace with placeholder
-                  (e.target as HTMLImageElement).src = getPlaceholderImage(booking.property.title);
-                }}
-              />
-            </PropertyImageContainer>
-            <PropertyInfo>
-              <PropertyTitle>{booking.property.title}</PropertyTitle>
-              <PropertyAddress>{booking.property.city}</PropertyAddress>
-            </PropertyInfo>
-          </PropertyCard>
-        </DetailItem>
-        
-        {/* Internal Note */}
-        <NotesSection>
-          <SectionTitle>Internal Notes</SectionTitle>
-          <FormGroup>
-            <NoteInput
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Add an internal note about this booking..."
-            />
-          </FormGroup>
-          <ActionBar>
-            <Button onClick={handleAddNote} disabled={addingNote || !note.trim()}>
-              {addingNote ? 'Adding...' : 'Add Note'}
-            </Button>
-          </ActionBar>
-          
-          <NotesList>
-            {events.filter(event => event.type === 'note').map((noteEvent, index) => (
-              <NoteItem key={noteEvent.id || `note-${index}`}>
-                <NoteHeader>
-                  <span>{noteEvent.userName || 'Admin'}</span>
-                  <span>
-                    {formatDate(noteEvent.timestamp instanceof Date 
-                      ? noteEvent.timestamp 
-                      : new Date((noteEvent.timestamp as any).seconds * 1000))}
-                  </span>
-                </NoteHeader>
-                <NoteContent>{noteEvent.description}</NoteContent>
-              </NoteItem>
-            ))}
-          </NotesList>
-        </NotesSection>
-      </CardContent>
-    </DashboardCard>
+        </DetailSection>
+      </DetailGrid>
+    </DetailContainer>
   );
 };
 

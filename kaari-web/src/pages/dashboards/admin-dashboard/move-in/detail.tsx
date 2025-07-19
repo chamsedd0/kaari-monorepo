@@ -12,6 +12,7 @@ import {
   getMoveInBookingById, 
   getMoveInEvents,
   updateMoveInBookingNote,
+  addMoveInEvent,
   MoveInBooking, 
   MoveInEvent,
   MoveInStatus 
@@ -254,6 +255,7 @@ const NoteTextArea = styled.textarea`
   border: 1px solid ${Theme.colors.gray};
   border-radius: 4px;
   font: ${Theme.typography.fonts.smallM};
+  margin-top: 10px;
   resize: vertical;
   
   &:focus {
@@ -262,62 +264,127 @@ const NoteTextArea = styled.textarea`
   }
 `;
 
-const SaveButton = styled.button`
-  margin-top: 10px;
-  padding: 8px 16px;
+const SaveNoteButton = styled.button`
   background-color: ${Theme.colors.secondary};
   color: white;
   border: none;
   border-radius: 4px;
+  padding: 8px 16px;
   font: ${Theme.typography.fonts.smallB};
+  margin-top: 10px;
   cursor: pointer;
   
   &:hover {
     background-color: ${Theme.colors.primary};
   }
+  
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
 `;
 
-// Safety Window Timer Component
+const PaymentInfo = styled.div`
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid ${Theme.colors.gray};
+`;
+
+const PaymentRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  
+  &:last-child {
+    margin-bottom: 0;
+    font-weight: bold;
+  }
+`;
+
+const PaymentLabel = styled.div`
+  color: ${Theme.colors.gray2};
+`;
+
+const PaymentValue = styled.div``;
+
+const LoadingMessage = styled.div`
+  padding: 20px;
+  text-align: center;
+  color: #666;
+`;
+
+const ErrorMessage = styled.div`
+  padding: 20px;
+  text-align: center;
+  color: #dc3545;
+`;
+
 const SafetyWindowTimer: React.FC<{ moveInDate: Date; status: MoveInStatus }> = ({ moveInDate, status }) => {
-  const [timeLeft, setTimeLeft] = useState('—');
-  const [isLessThanOneHour, setIsLessThanOneHour] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<string>('');
+  const [isActive, setIsActive] = useState<boolean>(false);
+  const [isLessThanOneHour, setIsLessThanOneHour] = useState<boolean>(false);
   
   useEffect(() => {
-    if (status !== 'Safety Window Open') {
-      setTimeLeft('—');
+    // Check if date is valid before proceeding
+    if (!moveInDate || isNaN(moveInDate.getTime())) {
+      setTimeLeft('Invalid date');
+      setIsActive(false);
       return;
     }
     
     const calculateTimeLeft = () => {
       const now = new Date();
-      const safetyWindowEnd = new Date(moveInDate.getTime() + 24 * 60 * 60 * 1000);
-      const diffMs = safetyWindowEnd.getTime() - now.getTime();
+      const moveInDateTime = new Date(moveInDate);
+      const safetyWindowEnd = new Date(moveInDateTime.getTime() + 24 * 60 * 60 * 1000); // 24 hours after move-in
       
-      if (diffMs <= 0) return { formatted: '00:00', lessThanHour: false };
+      // Determine if the safety window is active
+      const isInSafetyWindow = now >= moveInDateTime && now < safetyWindowEnd;
+      setIsActive(isInSafetyWindow);
       
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      let targetDate;
+      let prefix = '';
       
-      const formatted = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-      const lessThanHour = hours < 1;
+      if (now < moveInDateTime) {
+        // Time until move-in
+        targetDate = moveInDateTime;
+        prefix = 'Move-in in: ';
+      } else if (now < safetyWindowEnd) {
+        // Time until safety window closes
+        targetDate = safetyWindowEnd;
+        prefix = 'Window closes in: ';
+      } else {
+        // Safety window has closed
+        setTimeLeft('Window closed');
+        return;
+      }
       
-      return { formatted, lessThanHour };
+      // Calculate time difference
+      const diff = targetDate.getTime() - now.getTime();
+      
+      // Convert to hours, minutes, seconds
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      // Format the time
+      const timeString = `${prefix}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+      setTimeLeft(timeString);
+      setIsLessThanOneHour(hours === 0);
     };
     
-    const { formatted, lessThanHour } = calculateTimeLeft();
-    setTimeLeft(formatted);
-    setIsLessThanOneHour(lessThanHour);
-    
-    const timer = setInterval(() => {
-      const { formatted, lessThanHour } = calculateTimeLeft();
-      setTimeLeft(formatted);
-      setIsLessThanOneHour(lessThanHour);
-    }, 60000);
-    
-    return () => clearInterval(timer);
+    // Only calculate if status is relevant
+    if (status === 'Move-in Upcoming' || status === 'Safety Window Open') {
+      calculateTimeLeft();
+      const timer = setInterval(calculateTimeLeft, 1000);
+      return () => clearInterval(timer);
+    } else {
+      setTimeLeft('');
+      setIsActive(false);
+    }
   }, [moveInDate, status]);
   
-  if (status !== 'Safety Window Open') return null;
+  if (!timeLeft) return null;
   
   return (
     <TimerDisplay $isLessThanOneHour={isLessThanOneHour}>
@@ -332,10 +399,10 @@ const MoveInDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [booking, setBooking] = useState<MoveInBooking | null>(null);
   const [events, setEvents] = useState<MoveInEvent[]>([]);
-  const [note, setNote] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [note, setNote] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [savingNote, setSavingNote] = useState<boolean>(false);
   
   useEffect(() => {
     const loadBookingDetails = async () => {
@@ -345,7 +412,7 @@ const MoveInDetailPage: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Load booking details
+        // Get booking details
         const bookingData = await getMoveInBookingById(id);
         if (!bookingData) {
           setError('Booking not found');
@@ -355,12 +422,12 @@ const MoveInDetailPage: React.FC = () => {
         setBooking(bookingData);
         setNote(bookingData.internalNote || '');
         
-        // Load events
+        // Get booking events
         const eventsData = await getMoveInEvents(id);
         setEvents(eventsData);
       } catch (err) {
         console.error('Error loading booking details:', err);
-        setError('Failed to load booking details');
+        setError('Failed to load booking details. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -370,52 +437,95 @@ const MoveInDetailPage: React.FC = () => {
   }, [id]);
   
   const handleSaveNote = async () => {
-    if (!booking) return;
+    if (!booking || !id) return;
     
     try {
-      setSaving(true);
-      await updateMoveInBookingNote(booking.id, note);
-      // Show success message or update UI
+      setSavingNote(true);
+      await updateMoveInBookingNote(id, note);
+      
+      // Add event for the note update
+      await addMoveInEvent({
+        bookingId: id,
+        type: 'move_in_confirmed',
+        timestamp: new Date(),
+        description: 'Admin updated internal note',
+        userId: 'admin', // Should be replaced with actual admin ID
+        userName: 'Admin' // Should be replaced with actual admin name
+      });
+      
+      // Could add success message here
     } catch (err) {
       console.error('Error saving note:', err);
-      // Show error message
+      // Could add error message here
     } finally {
-      setSaving(false);
+      setSavingNote(false);
     }
   };
   
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      // Show success message
+      // Could add a toast notification here
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error('Failed to copy text:', err);
     }
   };
   
   const formatDateTime = (date: Date) => {
-    return date.toLocaleString('en-US', {
+    // Check if date is valid before formatting
+    if (!date || isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    
+    return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    });
+    }).format(date);
   };
   
   const getPlaceholderImage = (propertyTitle: string) => {
-    const hash = propertyTitle.split('').reduce((acc, char) => {
-      return char.charCodeAt(0) + ((acc << 5) - acc);
-    }, 0);
+    // Generate a placeholder image based on property title
+    const colors = ['#6c5ce7', '#00cec9', '#fdcb6e', '#e17055', '#74b9ff'];
+    const colorIndex = propertyTitle.length % colors.length;
+    const initials = propertyTitle.substring(0, 2).toUpperCase();
     
-    const color = `hsl(${Math.abs(hash) % 360}, 70%, 80%)`;
-    return `https://placehold.co/300x150/${color.replace('#', '')}?text=${propertyTitle.charAt(0)}`;
+    const canvas = document.createElement('canvas');
+    canvas.width = 300;
+    canvas.height = 150;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      ctx.fillStyle = colors[colorIndex];
+      ctx.fillRect(0, 0, 300, 150);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 48px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(initials, 150, 75);
+    }
+    
+    return canvas.toDataURL();
+  };
+  
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
   };
   
   if (loading) {
     return (
       <DetailContainer>
-        <p>Loading booking details...</p>
+        <BackButton onClick={() => navigate('/dashboard/admin/move-in')}>
+          <FaArrowLeft /> Back to Move-In Management
+        </BackButton>
+        <LoadingMessage>Loading booking details...</LoadingMessage>
       </DetailContainer>
     );
   }
@@ -424,9 +534,9 @@ const MoveInDetailPage: React.FC = () => {
     return (
       <DetailContainer>
         <BackButton onClick={() => navigate('/dashboard/admin/move-in')}>
-          <FaArrowLeft /> Back to Move-in Management
+          <FaArrowLeft /> Back to Move-In Management
         </BackButton>
-        <p style={{ color: 'red' }}>{error || 'Booking not found'}</p>
+        <ErrorMessage>{error || 'Booking not found'}</ErrorMessage>
       </DetailContainer>
     );
   }
@@ -434,61 +544,47 @@ const MoveInDetailPage: React.FC = () => {
   return (
     <DetailContainer>
       <BackButton onClick={() => navigate('/dashboard/admin/move-in')}>
-        <FaArrowLeft /> Back to Move-in Management
+        <FaArrowLeft /> Back to Move-In Management
       </BackButton>
       
-      {/* Header */}
       <DetailHeader>
         <HeaderLeft>
           <BookingId>{booking.bookingId}</BookingId>
           <StatusBadge $status={booking.status}>{booking.status}</StatusBadge>
+          {booking.reason !== 'None' && (
+            <span style={{ color: '#666' }}>{booking.reason}</span>
+          )}
         </HeaderLeft>
+        
         <SafetyWindowTimer moveInDate={booking.moveInDate} status={booking.status} />
       </DetailHeader>
       
-      {/* Timeline */}
-      <DetailSection>
-        <TimelineContainer>
-          <SectionTitle>
-            <FaClock /> Timeline
-          </SectionTitle>
-          
-          {/* Default events */}
-          <TimelineItem>
-            <TimelineDot />
-            <TimelineContent>
-              <TimelineTime>{formatDateTime(booking.paymentCapturedAt)}</TimelineTime>
-              <TimelineDescription>Payment captured - {booking.amount} MAD</TimelineDescription>
-            </TimelineContent>
-          </TimelineItem>
-          
-          <TimelineItem>
-            <TimelineDot />
-            <TimelineContent>
-              <TimelineTime>{formatDateTime(booking.moveInDate)}</TimelineTime>
-              <TimelineDescription>Move-in scheduled</TimelineDescription>
-            </TimelineContent>
-          </TimelineItem>
-          
-          {/* Custom events */}
-          {events.map(event => (
-            <TimelineItem key={event.id}>
-              <TimelineDot />
-              <TimelineContent>
-                <TimelineTime>{formatDateTime(event.timestamp)}</TimelineTime>
-                <TimelineDescription>{event.description}</TimelineDescription>
-              </TimelineContent>
-            </TimelineItem>
-          ))}
-        </TimelineContainer>
-      </DetailSection>
-      
       <DetailGrid>
-        {/* Tenant Details */}
+        {/* Property Section */}
         <DetailSection>
-          <SectionTitle>
-            <FaUser /> Tenant Details
-          </SectionTitle>
+          <SectionTitle><FaHome /> Property Details</SectionTitle>
+          
+          <PropertyImage 
+            src={booking.property.thumbnail || getPlaceholderImage(booking.property.title)} 
+            alt={booking.property.title}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = getPlaceholderImage(booking.property.title);
+            }}
+          />
+          
+          <h4 style={{ margin: '0 0 10px 0' }}>{booking.property.title}</h4>
+          <PropertyAddress>{booking.property.address}</PropertyAddress>
+          
+          <AmenitiesList>
+            {booking.property.amenities.map((amenity, index) => (
+              <AmenityTag key={index}>{amenity}</AmenityTag>
+            ))}
+          </AmenitiesList>
+        </DetailSection>
+        
+        {/* Tenant Section */}
+        <DetailSection>
+          <SectionTitle><FaUser /> Tenant Information</SectionTitle>
           
           <ContactItem>
             <ContactLabel>Name</ContactLabel>
@@ -496,11 +592,11 @@ const MoveInDetailPage: React.FC = () => {
           </ContactItem>
           
           <ContactItem>
-            <ContactLabel>Phone</ContactLabel>
+            <ContactLabel>Phone Number</ContactLabel>
             <ContactValue>
               {booking.tenant.phoneNumber}
               <CopyButton onClick={() => copyToClipboard(booking.tenant.phoneNumber)}>
-                <FaCopy size={12} />
+                <FaCopy size={14} />
               </CopyButton>
             </ContactValue>
           </ContactItem>
@@ -510,8 +606,8 @@ const MoveInDetailPage: React.FC = () => {
               <ContactLabel>Email</ContactLabel>
               <ContactValue>
                 {booking.tenant.email}
-                <CopyButton onClick={() => copyToClipboard(booking.tenant.email)}>
-                  <FaCopy size={12} />
+                <CopyButton onClick={() => copyToClipboard(booking.tenant.email!)}>
+                  <FaCopy size={14} />
                 </CopyButton>
               </ContactValue>
             </ContactItem>
@@ -519,17 +615,41 @@ const MoveInDetailPage: React.FC = () => {
           
           {booking.tenant.bankLastFour && (
             <ContactItem>
-              <ContactLabel>Bank (Last 4)</ContactLabel>
-              <ContactValue>****{booking.tenant.bankLastFour}</ContactValue>
+              <ContactLabel>Bank Account (Last 4)</ContactLabel>
+              <ContactValue>•••• {booking.tenant.bankLastFour}</ContactValue>
             </ContactItem>
           )}
+          
+          <PaymentInfo>
+            <PaymentRow>
+              <PaymentLabel>Move-In Date</PaymentLabel>
+              <PaymentValue>{booking.moveInDate ? formatDateTime(booking.moveInDate) : 'Not set'}</PaymentValue>
+            </PaymentRow>
+            <PaymentRow>
+              <PaymentLabel>Payment Captured</PaymentLabel>
+              <PaymentValue>{booking.paymentCapturedAt ? formatDateTime(booking.paymentCapturedAt) : 'Not captured'}</PaymentValue>
+            </PaymentRow>
+            {booking.gatewayReference && (
+              <PaymentRow>
+                <PaymentLabel>Payment Reference</PaymentLabel>
+                <PaymentValue>
+                  {booking.gatewayReference}
+                  <CopyButton onClick={() => copyToClipboard(booking.gatewayReference!)}>
+                    <FaCopy size={14} />
+                  </CopyButton>
+                </PaymentValue>
+              </PaymentRow>
+            )}
+            <PaymentRow>
+              <PaymentLabel>Amount</PaymentLabel>
+              <PaymentValue>{formatAmount(booking.amount)}</PaymentValue>
+            </PaymentRow>
+          </PaymentInfo>
         </DetailSection>
         
-        {/* Advertiser Details */}
+        {/* Advertiser Section */}
         <DetailSection>
-          <SectionTitle>
-            <FaUser /> Advertiser Details
-          </SectionTitle>
+          <SectionTitle><FaUser /> Advertiser Information</SectionTitle>
           
           <ContactItem>
             <ContactLabel>Name</ContactLabel>
@@ -537,11 +657,11 @@ const MoveInDetailPage: React.FC = () => {
           </ContactItem>
           
           <ContactItem>
-            <ContactLabel>Phone</ContactLabel>
+            <ContactLabel>Phone Number</ContactLabel>
             <ContactValue>
               {booking.advertiser.phoneNumber}
               <CopyButton onClick={() => copyToClipboard(booking.advertiser.phoneNumber)}>
-                <FaCopy size={12} />
+                <FaCopy size={14} />
               </CopyButton>
             </ContactValue>
           </ContactItem>
@@ -551,70 +671,61 @@ const MoveInDetailPage: React.FC = () => {
               <ContactLabel>Email</ContactLabel>
               <ContactValue>
                 {booking.advertiser.email}
-                <CopyButton onClick={() => copyToClipboard(booking.advertiser.email)}>
-                  <FaCopy size={12} />
+                <CopyButton onClick={() => copyToClipboard(booking.advertiser.email!)}>
+                  <FaCopy size={14} />
                 </CopyButton>
               </ContactValue>
             </ContactItem>
           )}
         </DetailSection>
+        
+        {/* Admin Notes Section */}
+        <DetailSection>
+          <SectionTitle><FaFileAlt /> Admin Notes</SectionTitle>
+          
+          <NoteTextArea 
+            value={note} 
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Add internal notes about this move-in booking..."
+          />
+          
+          <SaveNoteButton 
+            onClick={handleSaveNote} 
+            disabled={savingNote}
+          >
+            {savingNote ? 'Saving...' : 'Save Note'}
+          </SaveNoteButton>
+        </DetailSection>
+        
+        {/* Timeline Section */}
+        <TimelineContainer>
+          <DetailSection>
+            <SectionTitle><FaClock /> Timeline</SectionTitle>
+            
+            {events.length === 0 ? (
+              <div style={{ color: '#666', fontStyle: 'italic' }}>No events recorded for this booking.</div>
+            ) : (
+              events.map((event, index) => (
+                <TimelineItem key={index}>
+                  <TimelineDot />
+                  <TimelineContent>
+                    <TimelineTime>
+                      {formatDateTime(event.timestamp instanceof Date ? event.timestamp : 
+                        (event.timestamp && typeof event.timestamp.toDate === 'function') ? 
+                          event.timestamp.toDate() : 
+                          new Date())}
+                    </TimelineTime>
+                    <TimelineDescription>
+                      {event.description}
+                      {event.userName && ` by ${event.userName}`}
+                    </TimelineDescription>
+                  </TimelineContent>
+                </TimelineItem>
+              ))
+            )}
+          </DetailSection>
+        </TimelineContainer>
       </DetailGrid>
-      
-      {/* Property Snapshot */}
-      <DetailSection>
-        <SectionTitle>
-          <FaHome /> Property Snapshot
-        </SectionTitle>
-        
-        <PropertyImage 
-          src={booking.property.thumbnail || getPlaceholderImage(booking.property.title)}
-          alt={booking.property.title}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = getPlaceholderImage(booking.property.title);
-          }}
-        />
-        
-        <ContactItem>
-          <ContactLabel>Property Title</ContactLabel>
-          <ContactValue>{booking.property.title}</ContactValue>
-        </ContactItem>
-        
-        <ContactItem>
-          <ContactLabel>Address</ContactLabel>
-          <PropertyAddress>{booking.property.address}</PropertyAddress>
-        </ContactItem>
-        
-        {booking.property.amenities.length > 0 && (
-          <ContactItem>
-            <ContactLabel>Key Amenities</ContactLabel>
-            <AmenitiesList>
-              {booking.property.amenities.slice(0, 5).map((amenity, index) => (
-                <AmenityTag key={index}>{amenity}</AmenityTag>
-              ))}
-              {booking.property.amenities.length > 5 && (
-                <AmenityTag>+{booking.property.amenities.length - 5} more</AmenityTag>
-              )}
-            </AmenitiesList>
-          </ContactItem>
-        )}
-      </DetailSection>
-      
-      {/* Internal Notes */}
-      <DetailSection>
-        <SectionTitle>
-          <FaFileAlt /> Internal Notes
-        </SectionTitle>
-        
-        <NoteTextArea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="Add internal notes about this booking..."
-        />
-        
-        <SaveButton onClick={handleSaveNote} disabled={saving}>
-          {saving ? 'Saving...' : 'Save Note'}
-        </SaveButton>
-      </DetailSection>
     </DetailContainer>
   );
 };

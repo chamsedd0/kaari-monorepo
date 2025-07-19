@@ -1,6 +1,17 @@
 'use server';
 
-import { createDocument, getDocumentById, getDocumentsByField, updateDocument } from '../firebase/firestore';
+import { 
+  collection, 
+  getDocs, 
+  getDoc, 
+  doc, 
+  query, 
+  where, 
+  orderBy, 
+  updateDoc, 
+  serverTimestamp 
+} from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { getCurrentUserProfile } from '../firebase/auth';
 import { User } from '../entities';
 import { EditRequestFormData } from '../../components/skeletons/constructed/modals/property-edit-request-modal';
@@ -206,7 +217,7 @@ export const approvePropertyEditRequest = async (requestId: string) => {
     };
 
     // Update the edit request status
-    await updateDocument(PROPERTY_EDIT_REQUESTS_COLLECTION, requestId, {
+    await updateDoc(doc(db, PROPERTY_EDIT_REQUESTS_COLLECTION, requestId), {
       status: 'approved',
       updatedAt: Date.now()
     });

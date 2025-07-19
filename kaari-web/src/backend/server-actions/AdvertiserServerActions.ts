@@ -236,7 +236,7 @@ export async function getAdvertiserReservationRequests(): Promise<{
         }
         
         // Get the property data
-        const property = propertyMap[reservationData.propertyId];
+        const property = propertyMap[reservationData.propertyId || ''];
         
         // Get the client data
         let client = null;
@@ -380,13 +380,13 @@ export async function checkPropertyHasActiveReservations(propertyId: string): Pr
       } else if (reservation.status === 'paid' && reason !== 'movedIn') {
         hasActiveReservations = true;
         reason = 'paid';
-      } else if (reservation.status === 'completed' && !reasonPriority.slice(0, 2).includes(reason)) {
+      } else if (reservation.status === 'completed' && reason !== 'movedIn' && reason !== 'paid') {
         hasActiveReservations = true;
         reason = 'completed';
-      } else if (reservation.status === 'accepted' && !reasonPriority.slice(0, 3).includes(reason)) {
+      } else if (reservation.status === 'accepted' && reason !== 'movedIn' && reason !== 'paid' && reason !== 'completed') {
         hasActiveReservations = true;
         reason = 'accepted';
-      } else if (reservation.status === 'pending' && !reasonPriority.slice(0, 4).includes(reason)) {
+      } else if (reservation.status === 'pending' && reason !== 'movedIn' && reason !== 'paid' && reason !== 'completed' && reason !== 'accepted') {
         hasActiveReservations = true;
         reason = 'pending';
       }

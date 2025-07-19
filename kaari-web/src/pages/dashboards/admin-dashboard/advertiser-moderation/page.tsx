@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FaSearch, FaArrowLeft } from 'react-icons/fa';
+import { FaSearch, FaArrowLeft, FaCopy } from 'react-icons/fa';
 import {
   Container,
   FilterBar,
@@ -35,6 +35,7 @@ import {
 import { getAdvertiserReferralData } from '../../../../backend/server-actions/AdvertiserServerActions';
 import { getPropertiesByAdvertiserId } from '../../../../backend/server-actions/PropertyServerActions';
 import { getPhotoshootsByAdvertiserId } from '../../../../backend/server-actions/PhotoshootBookingServerActions';
+import { Theme } from '../../../../theme/theme';
 
 // Types
 interface Advertiser {
@@ -54,6 +55,7 @@ interface Property {
   city: string;
   status: 'live' | 'hidden';
   nextAvailability: string;
+  thumbnail?: string;
 }
 
 interface PhotoshootRequest {
@@ -96,6 +98,10 @@ const AdvertiserModerationPage: React.FC = () => {
   const [note, setNote] = useState('');
   const [cities, setCities] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [savingNote, setSavingNote] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -104,8 +110,12 @@ const AdvertiserModerationPage: React.FC = () => {
     const fetchAdvertisers = async () => {
       setLoading(true);
       try {
-        // Replace with actual API call
+        // Get advertisers data
         const response = await getAdvertisers();
+        
+        // Sort by name
+        response.sort((a, b) => a.name.localeCompare(b.name));
+        
         setAdvertisers(response);
         setFilteredAdvertisers(response);
         
@@ -114,6 +124,7 @@ const AdvertiserModerationPage: React.FC = () => {
         setCities(uniqueCities);
       } catch (error) {
         console.error('Error fetching advertisers:', error);
+        setError('Failed to fetch advertisers. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -149,43 +160,37 @@ const AdvertiserModerationPage: React.FC = () => {
     if (!id) return;
     
     const fetchAdvertiserDetails = async () => {
-      setLoading(true);
+      setDetailLoading(true);
+      setError(null);
       try {
-        console.log('Fetching advertiser details for ID:', id);
-        
         // Fetch advertiser basic info
         const advertiser = await getAdvertiserById(id);
-        console.log('Advertiser data:', advertiser);
         setSelectedAdvertiser(advertiser);
         
         // Fetch properties
         const props = await getPropertiesByAdvertiserId(id);
-        console.log('Properties data:', props);
         setProperties(props || []);
         
         // Fetch photoshoots
         const photoshoots = await getPhotoshootsByAdvertiserId(id);
-        console.log('Photoshoots data:', photoshoots);
         setPhotoshootRequests(photoshoots || []);
         
         // Fetch bookings
         const advBookings = await getBookingsByAdvertiserId(id);
-        console.log('Bookings data:', advBookings);
         setBookings(advBookings || []);
         
         // Fetch referrals
         const referrals = await getAdvertiserReferralData(id);
-        console.log('Referrals data:', referrals);
         setReferralData(referrals || null);
         
         // Fetch notes
         const advertiserNote = await getAdvertiserNote(id);
-        console.log('Note data:', advertiserNote);
         setNote(advertiserNote || '');
       } catch (error) {
         console.error('Error fetching advertiser details:', error);
+        setError('Failed to load advertiser details. Please try again later.');
       } finally {
-        setLoading(false);
+        setDetailLoading(false);
       }
     };
     
@@ -204,12 +209,27 @@ const AdvertiserModerationPage: React.FC = () => {
     if (!selectedAdvertiser) return;
     
     try {
+      setSavingNote(true);
+      setError(null);
+      setSuccess(null);
+      
       await saveAdvertiserNote(selectedAdvertiser.id, note);
-      // Show success message
+      setSuccess('Note saved successfully');
+      
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
     } catch (error) {
       console.error('Error saving note:', error);
-      // Show error message
+      setError('Failed to save note. Please try again.');
+    } finally {
+      setSavingNote(false);
     }
+  };
+  
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
   };
 
   const paginatedAdvertisers = filteredAdvertisers.slice(
@@ -218,6 +238,67 @@ const AdvertiserModerationPage: React.FC = () => {
   );
 
   const totalPages = Math.ceil(filteredAdvertisers.length / itemsPerPage);
+  
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+  
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
+  
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // Could add a toast notification here
+    } catch (err) {
+      console.error('Failed to copy text:', err);
+    }
+  };
+  
+  const getPlaceholderImage = (title: string) => {
+    // Generate a placeholder image based on title
+    const colors = ['#6c5ce7', '#00cec9', '#fdcb6e', '#e17055', '#74b9ff'];
+    const colorIndex = title.length % colors.length;
+    const initials = title.substring(0, 2).toUpperCase();
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 40;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      ctx.fillStyle = colors[colorIndex];
+      ctx.fillRect(0, 0, 40, 40);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(initials, 20, 20);
+    }
+    
+    return canvas.toDataURL();
+  };
 
   // Render advertiser list (overview)
   const renderAdvertiserList = () => (
@@ -229,7 +310,7 @@ const AdvertiserModerationPage: React.FC = () => {
           <FaSearch />
           <input
             type="text"
-            placeholder="Search by name or phone"
+            placeholder="Search by name"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -249,62 +330,71 @@ const AdvertiserModerationPage: React.FC = () => {
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
         >
-          <option value="all">All Status</option>
+          <option value="all">All Statuses</option>
           <option value="active">Active</option>
           <option value="suspended">Suspended</option>
         </FilterSelect>
       </FilterBar>
       
-      <AdvertiserTable>
-        <thead>
-          <TableHeader>
-            <th>Advertiser Name</th>
-            <th>City</th>
-            <th>Active Properties</th>
-            <th>Bookings This Month</th>
-            <th>Referral Earnings Pending</th>
-            <th>Photoshoots Pending</th>
-            <th>Status</th>
-          </TableHeader>
-        </thead>
-        <tbody>
-          {paginatedAdvertisers.map(advertiser => (
-            <TableRow 
-              key={advertiser.id} 
-              onClick={() => handleRowClick(advertiser)}
-            >
-              <TableCell>{advertiser.name}</TableCell>
-              <TableCell>{advertiser.city}</TableCell>
-              <TableCell>{advertiser.activePropertiesCount}</TableCell>
-              <TableCell>{advertiser.bookingsThisMonth}</TableCell>
-              <TableCell>{advertiser.referralEarningsPending} MAD</TableCell>
-              <TableCell>{advertiser.photoshootsPending}</TableCell>
-              <TableCell>
-                <span className={`status ${advertiser.status}`}>
-                  {advertiser.status.charAt(0).toUpperCase() + advertiser.status.slice(1)}
-                </span>
-              </TableCell>
-            </TableRow>
-          ))}
-        </tbody>
-      </AdvertiserTable>
+      {error && <div style={{ color: 'red', marginBottom: '15px' }}>{error}</div>}
       
-      {totalPages > 1 && (
-        <Pagination>
-          <button 
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Previous
-          </button>
-          <span>{page} of {totalPages}</span>
-          <button 
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >
-            Next
-          </button>
-        </Pagination>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px' }}>Loading advertisers...</div>
+      ) : filteredAdvertisers.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          No advertisers found matching your criteria.
+        </div>
+      ) : (
+        <>
+          <AdvertiserTable>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>City</th>
+                <th>Active Properties</th>
+                <th>Bookings (Month)</th>
+                <th>Pending Referrals</th>
+                <th>Pending Photoshoots</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedAdvertisers.map(advertiser => (
+                <TableRow key={advertiser.id} onClick={() => handleRowClick(advertiser)}>
+                  <TableCell>{advertiser.name}</TableCell>
+                  <TableCell>{advertiser.city}</TableCell>
+                  <TableCell>{advertiser.activePropertiesCount}</TableCell>
+                  <TableCell>{advertiser.bookingsThisMonth}</TableCell>
+                  <TableCell>{formatCurrency(advertiser.referralEarningsPending)}</TableCell>
+                  <TableCell>{advertiser.photoshootsPending}</TableCell>
+                  <TableCell>
+                    <span className={`status ${advertiser.status}`}>
+                      {advertiser.status === 'active' ? 'Active' : 'Suspended'}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </tbody>
+          </AdvertiserTable>
+          
+          {totalPages > 1 && (
+            <Pagination>
+              <button 
+                onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                disabled={page === 1}
+              >
+                Previous
+              </button>
+              <span>Page {page} of {totalPages}</span>
+              <button 
+                onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={page === totalPages}
+              >
+                Next
+              </button>
+            </Pagination>
+          )}
+        </>
       )}
     </Container>
   );
@@ -312,222 +402,264 @@ const AdvertiserModerationPage: React.FC = () => {
   // Render advertiser detail
   const renderAdvertiserDetail = () => {
     if (!selectedAdvertiser) {
-      return (
-        <DetailContainer>
-          <BackButton onClick={handleBackClick}>
-            <FaArrowLeft /> Back to List
-          </BackButton>
-          <div>No advertiser data found for ID: {id}</div>
-        </DetailContainer>
-      );
+      return <div>Select an advertiser to view details</div>;
     }
-    
-    const activePropertiesCount = properties.filter(p => p.status === 'live').length;
-    const hiddenPropertiesCount = properties.filter(p => p.status === 'hidden').length;
-    
+
     return (
       <DetailContainer>
         <BackButton onClick={handleBackClick}>
-          <FaArrowLeft /> Back to List
+          <FaArrowLeft /> Back to Advertisers
         </BackButton>
         
-        <DetailHeader>
-          <h2>{selectedAdvertiser.name || 'Unknown Advertiser'}</h2>
-          <span className={`status ${selectedAdvertiser.status || 'active'}`}>
-            {selectedAdvertiser.status ? selectedAdvertiser.status.charAt(0).toUpperCase() + selectedAdvertiser.status.slice(1) : 'Active'}
-          </span>
-        </DetailHeader>
+        {success && <div style={{ color: 'green', marginBottom: '15px' }}>{success}</div>}
+        {error && <div style={{ color: 'red', marginBottom: '15px' }}>{error}</div>}
         
-        <DetailStats>
-          <StatBox>
-            <span className="label">City</span>
-            <span className="value">{selectedAdvertiser.city || 'Unknown'}</span>
-          </StatBox>
-          <StatBox>
-            <span className="label">Properties</span>
-            <span className="value">{activePropertiesCount} active, {hiddenPropertiesCount} hidden</span>
-          </StatBox>
-          <StatBox>
-            <span className="label">Bookings This Month</span>
-            <span className="value">{selectedAdvertiser.bookingsThisMonth || 0}</span>
-          </StatBox>
-          <StatBox>
-            <span className="label">Pending Photoshoots</span>
-            <span className="value">{selectedAdvertiser.photoshootsPending || 0}</span>
-          </StatBox>
-          <StatBox>
-            <span className="label">Referral Earnings Pending</span>
-            <span className="value">{selectedAdvertiser.referralEarningsPending || 0} MAD</span>
-          </StatBox>
-        </DetailStats>
-        
-        <TabContainer>
-          <Tab 
-            $active={activeTab === 'properties'} 
-            onClick={() => setActiveTab('properties')}
-          >
-            Properties ({properties.length})
-          </Tab>
-          <Tab 
-            $active={activeTab === 'photoshoots'} 
-            onClick={() => setActiveTab('photoshoots')}
-          >
-            Photoshoot Requests ({photoshootRequests.length})
-          </Tab>
-          <Tab 
-            $active={activeTab === 'bookings'} 
-            onClick={() => setActiveTab('bookings')}
-          >
-            Bookings ({bookings.length})
-          </Tab>
-          <Tab 
-            $active={activeTab === 'referrals'} 
-            onClick={() => setActiveTab('referrals')}
-          >
-            Referrals
-          </Tab>
-        </TabContainer>
-        
-        <TabContent $visible={activeTab === 'properties'}>
-          {properties.length > 0 ? (
-            <AdvertiserTable>
-              <thead>
-                <TableHeader>
-                  <th>Property Title</th>
-                  <th>City</th>
-                  <th>Status</th>
-                  <th>Next Availability</th>
-                </TableHeader>
-              </thead>
-              <tbody>
-                {properties.map(property => (
-                  <TableRow key={property.id}>
-                    <TableCell>{property.title || 'Untitled Property'}</TableCell>
-                    <TableCell>{property.city || 'Unknown'}</TableCell>
-                    <TableCell>
-                      <span className={`status ${property.status || 'hidden'}`}>
-                        {property.status ? property.status.charAt(0).toUpperCase() + property.status.slice(1) : 'Hidden'}
-                      </span>
-                    </TableCell>
-                    <TableCell>{property.nextAvailability || 'Not specified'}</TableCell>
-                  </TableRow>
-                ))}
-              </tbody>
-            </AdvertiserTable>
-          ) : (
-            <div style={{ padding: '20px', textAlign: 'center' }}>No properties found for this advertiser.</div>
-          )}
-        </TabContent>
-        
-        <TabContent $visible={activeTab === 'photoshoots'}>
-          {photoshootRequests.length > 0 ? (
-            <AdvertiserTable>
-              <thead>
-                <TableHeader>
-                  <th>Property Title</th>
-                  <th>Request Date</th>
-                  <th>Scheduled Date</th>
-                  <th>Status</th>
-                </TableHeader>
-              </thead>
-              <tbody>
-                {photoshootRequests.map(request => (
-                  <TableRow key={request.id}>
-                    <TableCell>{request.propertyTitle || 'Unknown Property'}</TableCell>
-                    <TableCell>{request.requestDate || 'Unknown'}</TableCell>
-                    <TableCell>{request.scheduledDate || 'Not scheduled'}</TableCell>
-                    <TableCell>
-                      <span className={`status ${request.status || 'pending'}`}>
-                        {request.status ? request.status.charAt(0).toUpperCase() + request.status.slice(1) : 'Pending'}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </tbody>
-            </AdvertiserTable>
-          ) : (
-            <div style={{ padding: '20px', textAlign: 'center' }}>No photoshoot requests found for this advertiser.</div>
-          )}
-        </TabContent>
-        
-        <TabContent $visible={activeTab === 'bookings'}>
-          {bookings.length > 0 ? (
-            <AdvertiserTable>
-              <thead>
-                <TableHeader>
-                  <th>Booking ID</th>
-                  <th>Tenant Name</th>
-                  <th>Move-in Date</th>
-                  <th>Status</th>
-                  <th>Payout Pending</th>
-                </TableHeader>
-              </thead>
-              <tbody>
-                {bookings.map(booking => (
-                  <TableRow key={booking.id}>
-                    <TableCell>{booking.id}</TableCell>
-                    <TableCell>{booking.tenantName || 'Unknown Tenant'}</TableCell>
-                    <TableCell>{booking.moveInDate || 'Unknown'}</TableCell>
-                    <TableCell>
-                      <span className={`status ${booking.status || 'await-confirm'}`}>
-                        {booking.status 
-                          ? booking.status.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') 
-                          : 'Await Confirm'}
-                      </span>
-                    </TableCell>
-                    <TableCell>{booking.payoutPending || 0} MAD</TableCell>
-                  </TableRow>
-                ))}
-              </tbody>
-            </AdvertiserTable>
-          ) : (
-            <div style={{ padding: '20px', textAlign: 'center' }}>No bookings found for this advertiser.</div>
-          )}
-        </TabContent>
-        
-        <TabContent $visible={activeTab === 'referrals'}>
-          {referralData ? (
-            <div className="referral-content">
-              <div className="referral-stats">
-                <StatBox>
-                  <span className="label">Referral Code</span>
-                  <span className="value">{referralData.code || 'No code'}</span>
-                </StatBox>
-                <StatBox>
-                  <span className="label">Bookings via Code</span>
-                  <span className="value">{referralData.bookingsCount || 0}</span>
-                </StatBox>
-                <StatBox>
-                  <span className="label">Earnings Pending</span>
-                  <span className="value">{referralData.earningsPending || 0} MAD</span>
-                </StatBox>
-                <StatBox>
-                  <span className="label">Earnings Paid</span>
-                  <span className="value">{referralData.earningsPaid || 0} MAD</span>
-                </StatBox>
+        {detailLoading ? (
+          <div style={{ textAlign: 'center', padding: '40px' }}>Loading advertiser details...</div>
+        ) : (
+          <>
+            <DetailHeader>
+              <h2>{selectedAdvertiser.name}</h2>
+              <span className={`status ${selectedAdvertiser.status}`}>
+                {selectedAdvertiser.status === 'active' ? 'Active' : 'Suspended'}
+              </span>
+            </DetailHeader>
+            
+            <DetailStats>
+              <StatBox>
+                <h3>Properties</h3>
+                <p>{selectedAdvertiser.activePropertiesCount}</p>
+              </StatBox>
+              <StatBox>
+                <h3>Bookings (Month)</h3>
+                <p>{selectedAdvertiser.bookingsThisMonth}</p>
+              </StatBox>
+              <StatBox>
+                <h3>Pending Referrals</h3>
+                <p>{formatCurrency(selectedAdvertiser.referralEarningsPending)}</p>
+              </StatBox>
+              <StatBox>
+                <h3>Pending Photoshoots</h3>
+                <p>{selectedAdvertiser.photoshootsPending}</p>
+              </StatBox>
+            </DetailStats>
+            
+            <NoteBox>
+              <h3>Admin Notes</h3>
+              <NoteInput
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Add internal notes about this advertiser..."
+              />
+              <SaveNoteButton 
+                onClick={handleSaveNote}
+                disabled={savingNote}
+              >
+                {savingNote ? 'Saving...' : 'Save Note'}
+              </SaveNoteButton>
+            </NoteBox>
+            
+            <TabContainer>
+              <div className="tabs">
+                <Tab 
+                  className={activeTab === 'properties' ? 'active' : ''} 
+                  onClick={() => handleTabChange('properties')}
+                >
+                  Properties
+                </Tab>
+                <Tab 
+                  className={activeTab === 'bookings' ? 'active' : ''} 
+                  onClick={() => handleTabChange('bookings')}
+                >
+                  Bookings
+                </Tab>
+                <Tab 
+                  className={activeTab === 'photoshoots' ? 'active' : ''} 
+                  onClick={() => handleTabChange('photoshoots')}
+                >
+                  Photoshoots
+                </Tab>
+                <Tab 
+                  className={activeTab === 'referrals' ? 'active' : ''} 
+                  onClick={() => handleTabChange('referrals')}
+                >
+                  Referrals
+                </Tab>
               </div>
-            </div>
-          ) : (
-            <div style={{ padding: '20px', textAlign: 'center' }}>No referral data found for this advertiser.</div>
-          )}
-        </TabContent>
-        
-        <NoteBox>
-          <h4>Admin Notes</h4>
-          <NoteInput
-            placeholder="Add notes about this advertiser here..."
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          />
-          <SaveNoteButton onClick={handleSaveNote}>Save Note</SaveNoteButton>
-        </NoteBox>
+              
+              <TabContent className={activeTab === 'properties' ? 'active' : ''}>
+                {properties.length === 0 ? (
+                  <div style={{ padding: '20px', textAlign: 'center' }}>
+                    No properties found for this advertiser.
+                  </div>
+                ) : (
+                  <AdvertiserTable>
+                    <thead>
+                      <tr>
+                        <th>Property</th>
+                        <th>City</th>
+                        <th>Status</th>
+                        <th>Next Availability</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {properties.map(property => (
+                        <TableRow key={property.id}>
+                          <TableCell>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <img 
+                                src={property.thumbnail || getPlaceholderImage(property.title)} 
+                                alt={property.title}
+                                style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }}
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = getPlaceholderImage(property.title);
+                                }}
+                              />
+                              <span>{property.title}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{property.city}</TableCell>
+                          <TableCell>
+                            <span className={`status ${property.status}`}>
+                              {property.status === 'live' ? 'Live' : 'Hidden'}
+                            </span>
+                          </TableCell>
+                          <TableCell>{property.nextAvailability}</TableCell>
+                        </TableRow>
+                      ))}
+                    </tbody>
+                  </AdvertiserTable>
+                )}
+              </TabContent>
+              
+              <TabContent className={activeTab === 'bookings' ? 'active' : ''}>
+                {bookings.length === 0 ? (
+                  <div style={{ padding: '20px', textAlign: 'center' }}>
+                    No bookings found for this advertiser.
+                  </div>
+                ) : (
+                  <AdvertiserTable>
+                    <thead>
+                      <tr>
+                        <th>Tenant</th>
+                        <th>Move-in Date</th>
+                        <th>Status</th>
+                        <th>Payout Pending</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bookings.map(booking => (
+                        <TableRow key={booking.id}>
+                          <TableCell>{booking.tenantName}</TableCell>
+                          <TableCell>{formatDate(booking.moveInDate)}</TableCell>
+                          <TableCell>
+                            <span className={`status ${booking.status}`}>
+                              {booking.status === 'await-confirm' ? 'Awaiting Confirmation' :
+                               booking.status === 'confirmed' ? 'Confirmed' : 'Safety Window Closed'}
+                            </span>
+                          </TableCell>
+                          <TableCell>{formatCurrency(booking.payoutPending)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </tbody>
+                  </AdvertiserTable>
+                )}
+              </TabContent>
+              
+              <TabContent className={activeTab === 'photoshoots' ? 'active' : ''}>
+                {photoshootRequests.length === 0 ? (
+                  <div style={{ padding: '20px', textAlign: 'center' }}>
+                    No photoshoot requests found for this advertiser.
+                  </div>
+                ) : (
+                  <AdvertiserTable>
+                    <thead>
+                      <tr>
+                        <th>Property</th>
+                        <th>Request Date</th>
+                        <th>Scheduled Date</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {photoshootRequests.map(request => (
+                        <TableRow key={request.id}>
+                          <TableCell>{request.propertyTitle}</TableCell>
+                          <TableCell>{formatDate(request.requestDate)}</TableCell>
+                          <TableCell>{formatDate(request.scheduledDate)}</TableCell>
+                          <TableCell>
+                            <span className={`status ${request.status}`}>
+                              {request.status === 'pending' ? 'Pending' : 'Done'}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </tbody>
+                  </AdvertiserTable>
+                )}
+              </TabContent>
+              
+              <TabContent className={activeTab === 'referrals' ? 'active' : ''}>
+                {!referralData ? (
+                  <div style={{ padding: '20px', textAlign: 'center' }}>
+                    No referral data found for this advertiser.
+                  </div>
+                ) : (
+                  <div style={{ padding: '20px' }}>
+                    <div style={{ marginBottom: '20px' }}>
+                      <h3>Referral Code</h3>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '10px',
+                        padding: '10px',
+                        background: '#f5f5f5',
+                        borderRadius: '4px',
+                        fontFamily: 'monospace',
+                        fontSize: '1.2rem'
+                      }}>
+                        {referralData.code}
+                        <button 
+                          onClick={() => copyToClipboard(referralData.code)}
+                          style={{ 
+                            background: 'none', 
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: Theme.colors.secondary
+                          }}
+                        >
+                          <FaCopy />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <DetailStats>
+                      <StatBox>
+                        <h3>Bookings Count</h3>
+                        <p>{referralData.bookingsCount}</p>
+                      </StatBox>
+                      <StatBox>
+                        <h3>Earnings (Pending)</h3>
+                        <p>{formatCurrency(referralData.earningsPending)}</p>
+                      </StatBox>
+                      <StatBox>
+                        <h3>Earnings (Paid)</h3>
+                        <p>{formatCurrency(referralData.earningsPaid)}</p>
+                      </StatBox>
+                      <StatBox>
+                        <h3>Total Earnings</h3>
+                        <p>{formatCurrency(referralData.earningsPending + referralData.earningsPaid)}</p>
+                      </StatBox>
+                    </DetailStats>
+                  </div>
+                )}
+              </TabContent>
+            </TabContainer>
+          </>
+        )}
       </DetailContainer>
     );
   };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   return id ? renderAdvertiserDetail() : renderAdvertiserList();
 };

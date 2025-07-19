@@ -194,6 +194,33 @@ const NoDataMessage = styled.div`
   color: #666;
 `;
 
+const LoadingMessage = styled.div`
+  padding: 20px;
+  text-align: center;
+  color: #666;
+`;
+
+const FilterContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+`;
+
+const FilterSelect = styled.select`
+  min-width: 150px;
+  padding: 8px 10px;
+  border: 1px solid ${Theme.colors.gray};
+  border-radius: 4px;
+  font: ${Theme.typography.fonts.smallM};
+  background-color: white;
+  
+  &:focus {
+    outline: none;
+    border-color: ${Theme.colors.secondary};
+  }
+`;
+
 const ReferralsPage: React.FC = () => {
   const navigate = useNavigate();
   const [advertisers, setAdvertisers] = useState<ReferralAdvertiser[]>([]);
@@ -201,6 +228,7 @@ const ReferralsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [passStatusFilter, setPassStatusFilter] = useState<string>('all');
   
   // Load referral advertisers data
   useEffect(() => {
@@ -211,6 +239,14 @@ const ReferralsPage: React.FC = () => {
         
         // Get all referral advertisers
         const allAdvertisers = await getAllReferralAdvertisers();
+        
+        // Sort by earnings (pending + paid) descending
+        allAdvertisers.sort((a, b) => {
+          const totalEarningsA = a.earningsPending + a.earningsPaid;
+          const totalEarningsB = b.earningsPending + b.earningsPaid;
+          return totalEarningsB - totalEarningsA;
+        });
+        
         setAdvertisers(allAdvertisers);
         setFilteredAdvertisers(allAdvertisers);
       } catch (err) {
@@ -224,23 +260,29 @@ const ReferralsPage: React.FC = () => {
     loadAdvertisers();
   }, []);
   
-  // Apply search filter
+  // Apply filters when search query or pass status filter changes
   useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredAdvertisers(advertisers);
-      return;
+    let filtered = [...advertisers];
+    
+    // Apply pass status filter
+    if (passStatusFilter !== 'all') {
+      filtered = filtered.filter(advertiser => advertiser.passStatus === passStatusFilter);
     }
     
-    const query = searchQuery.toLowerCase();
-    const filtered = advertisers.filter(
-      advertiser =>
-        advertiser.name.toLowerCase().includes(query) ||
-        advertiser.phoneNumber.toLowerCase().includes(query) ||
-        advertiser.referralCode.toLowerCase().includes(query)
-    );
+    // Apply search filter
+    if (searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        advertiser =>
+          advertiser.name.toLowerCase().includes(query) ||
+          advertiser.phoneNumber.toLowerCase().includes(query) ||
+          advertiser.referralCode.toLowerCase().includes(query) ||
+          (advertiser.email && advertiser.email.toLowerCase().includes(query))
+      );
+    }
     
     setFilteredAdvertisers(filtered);
-  }, [searchQuery, advertisers]);
+  }, [searchQuery, passStatusFilter, advertisers]);
   
   // Open advertiser detail drawer
   const openAdvertiserDetail = (advertiser: ReferralAdvertiser) => {
@@ -248,119 +290,133 @@ const ReferralsPage: React.FC = () => {
   };
   
   // Copy referral code to clipboard
-  const copyReferralCode = async (code: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const copyToClipboard = async (text: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
     try {
-      await navigator.clipboard.writeText(code);
-      // You could add a toast notification here
+      await navigator.clipboard.writeText(text);
+      // Could add a toast notification here
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error('Failed to copy text:', err);
     }
   };
   
-  // Format currency amount
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-MA', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'MAD',
+      currency: 'EUR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
   };
-
-  // Get the total referrals count
+  
   const getTotalReferrals = (advertiser: ReferralAdvertiser) => {
-    return advertiser.referralStats?.totalReferrals || 0;
+    // Use referralStats if available, otherwise use bookingsViaCode
+    if (advertiser.referralStats) {
+      return advertiser.referralStats.totalReferrals + advertiser.referralStats.successfulBookings;
+    }
+    return advertiser.bookingsViaCode;
+  };
+  
+  const getTotalEarnings = (advertiser: ReferralAdvertiser) => {
+    return advertiser.earningsPending + advertiser.earningsPaid;
+  };
+  
+  const handlePassStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPassStatusFilter(e.target.value);
+  };
+  
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
   };
   
   return (
-    <>
-      <DashboardCard>
-        <CardTitle>Referral Management</CardTitle>
-        <CardContent>
-          {/* Search */}
+    <DashboardCard>
+      <CardTitle>Referral Program Management</CardTitle>
+      <CardContent>
+        <FilterContainer>
+          <FilterSelect
+            value={passStatusFilter}
+            onChange={handlePassStatusFilterChange}
+          >
+            <option value="all">All Pass Statuses</option>
+            <option value="active">Active Pass</option>
+            <option value="locked">Locked Pass</option>
+          </FilterSelect>
+          
           <SearchContainer>
             <FaSearch />
-            <SearchInput 
-              type="text" 
-              placeholder="Search by name, phone, or code..." 
+            <SearchInput
+              type="text"
+              placeholder="Search by name, phone, or code"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
             />
           </SearchContainer>
-          
-          {/* Error message */}
-          {error && (
-            <div style={{ color: 'red', marginBottom: '15px' }}>
-              {error}
-            </div>
-          )}
-          
-          {/* Referral Table */}
+        </FilterContainer>
+        
+        <TableContainer>
           {loading ? (
-            <p>Loading referral advertisers...</p>
+            <LoadingMessage>Loading referral data...</LoadingMessage>
+          ) : error ? (
+            <NoDataMessage>{error}</NoDataMessage>
           ) : filteredAdvertisers.length === 0 ? (
             <NoDataMessage>No referral advertisers found matching your criteria.</NoDataMessage>
           ) : (
-            <TableContainer>
-              <ReferralTable>
-                <ReferralTableHead>
-                  <ReferralRow>
-                    <ReferralTableHeader style={{ width: '25%' }}>Advertiser</ReferralTableHeader>
-                    <ReferralTableHeader style={{ width: '15%' }}>Referral Code</ReferralTableHeader>
-                    <ReferralTableHeader style={{ width: '15%' }}>Bookings via Code</ReferralTableHeader>
-                    <ReferralTableHeader style={{ width: '15%' }}>Earnings Pending</ReferralTableHeader>
-                    <ReferralTableHeader style={{ width: '15%' }}>Earnings Paid</ReferralTableHeader>
-                    <ReferralTableHeader style={{ width: '10%' }}>Pass Status</ReferralTableHeader>
-                    <ReferralTableHeader style={{ width: '5%' }}>Actions</ReferralTableHeader>
+            <ReferralTable>
+              <ReferralTableHead>
+                <tr>
+                  <ReferralTableHeader style={{ width: '20%' }}>Advertiser</ReferralTableHeader>
+                  <ReferralTableHeader style={{ width: '15%' }}>Referral Code</ReferralTableHeader>
+                  <ReferralTableHeader style={{ width: '10%' }}>Total Referrals</ReferralTableHeader>
+                  <ReferralTableHeader style={{ width: '15%' }}>Earnings (Pending)</ReferralTableHeader>
+                  <ReferralTableHeader style={{ width: '15%' }}>Earnings (Paid)</ReferralTableHeader>
+                  <ReferralTableHeader style={{ width: '15%' }}>Total Earnings</ReferralTableHeader>
+                  <ReferralTableHeader style={{ width: '10%' }}>Pass Status</ReferralTableHeader>
+                </tr>
+              </ReferralTableHead>
+              <tbody>
+                {filteredAdvertisers.map(advertiser => (
+                  <ReferralRow key={advertiser.id} onClick={() => openAdvertiserDetail(advertiser)}>
+                    <ReferralCell>
+                      <ContactInfo>
+                        <ContactName>{advertiser.name}</ContactName>
+                        <ContactPhone>{advertiser.phoneNumber}</ContactPhone>
+                      </ContactInfo>
+                    </ReferralCell>
+                    <ReferralCell>
+                      <ReferralCode>
+                        {advertiser.referralCode}
+                        <FaCopy 
+                          size={14} 
+                          onClick={(e) => copyToClipboard(advertiser.referralCode, e)}
+                        />
+                      </ReferralCode>
+                    </ReferralCell>
+                    <ReferralCell>
+                      <BookingsCount>{getTotalReferrals(advertiser)}</BookingsCount>
+                    </ReferralCell>
+                    <ReferralCell>
+                      <EarningsAmount>{formatCurrency(advertiser.earningsPending)}</EarningsAmount>
+                    </ReferralCell>
+                    <ReferralCell>
+                      <EarningsAmount>{formatCurrency(advertiser.earningsPaid)}</EarningsAmount>
+                    </ReferralCell>
+                    <ReferralCell>
+                      <EarningsAmount>{formatCurrency(getTotalEarnings(advertiser))}</EarningsAmount>
+                    </ReferralCell>
+                    <ReferralCell>
+                      <PassStatusBadge $status={advertiser.passStatus}>
+                        {advertiser.passStatus === 'active' ? 'Active' : 'Locked'}
+                      </PassStatusBadge>
+                    </ReferralCell>
                   </ReferralRow>
-                </ReferralTableHead>
-                <tbody>
-                  {filteredAdvertisers.map(advertiser => (
-                    <ReferralRow key={advertiser.id} onClick={() => openAdvertiserDetail(advertiser)}>
-                      <ReferralCell>
-                        <ContactInfo>
-                          <ContactName>{advertiser.name}</ContactName>
-                          <ContactPhone>{advertiser.phoneNumber}</ContactPhone>
-                        </ContactInfo>
-                      </ReferralCell>
-                      <ReferralCell>
-                        <ReferralCode>
-                          {advertiser.referralCode}
-                          <FaCopy size={14} onClick={(e) => copyReferralCode(advertiser.referralCode, e)} />
-                        </ReferralCode>
-                      </ReferralCell>
-                      <ReferralCell>
-                        <BookingsCount>{getTotalReferrals(advertiser)}</BookingsCount>
-                      </ReferralCell>
-                      <ReferralCell>
-                        <EarningsAmount>{formatCurrency(advertiser.earningsPending)}</EarningsAmount>
-                      </ReferralCell>
-                      <ReferralCell>
-                        <EarningsAmount>{formatCurrency(advertiser.earningsPaid)}</EarningsAmount>
-                      </ReferralCell>
-                      <ReferralCell>
-                        <PassStatusBadge $status={advertiser.passStatus}>
-                          {advertiser.passStatus === 'active' ? 'Active' : 'Locked'}
-                        </PassStatusBadge>
-                      </ReferralCell>
-                      <ReferralCell>
-                        <ActionButton onClick={(e) => {
-                          e.stopPropagation();
-                          openAdvertiserDetail(advertiser);
-                        }}>
-                          <FaEye />
-                        </ActionButton>
-                      </ReferralCell>
-                    </ReferralRow>
-                  ))}
-                </tbody>
-              </ReferralTable>
-            </TableContainer>
+                ))}
+              </tbody>
+            </ReferralTable>
           )}
-        </CardContent>
-      </DashboardCard>
-    </>
+        </TableContainer>
+      </CardContent>
+    </DashboardCard>
   );
 };
 

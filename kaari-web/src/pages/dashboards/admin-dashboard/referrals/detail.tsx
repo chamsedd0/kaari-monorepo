@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaUser, FaPhone, FaEnvelope, FaCopy, FaToggleOn, FaToggleOff, FaCalendarAlt } from 'react-icons/fa';
+import { FaArrowLeft, FaUser, FaPhone, FaEnvelope, FaCopy, FaToggleOn, FaToggleOff, FaCalendarAlt, FaExclamationTriangle } from 'react-icons/fa';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
 import {
@@ -232,6 +232,7 @@ const NoteTextArea = styled.textarea`
   border-radius: 4px;
   font: ${Theme.typography.fonts.smallM};
   resize: vertical;
+  margin-bottom: 10px;
   
   &:focus {
     outline: none;
@@ -240,7 +241,6 @@ const NoteTextArea = styled.textarea`
 `;
 
 const SaveButton = styled.button`
-  margin-top: 10px;
   padding: 8px 16px;
   background-color: ${Theme.colors.secondary};
   color: white;
@@ -252,39 +252,94 @@ const SaveButton = styled.button`
   &:hover {
     background-color: ${Theme.colors.primary};
   }
-`;
-
-const NoBookingsMessage = styled.div`
-  padding: 20px;
-  text-align: center;
-  color: #666;
-  font: ${Theme.typography.fonts.smallM};
-`;
-
-const PassInfoContainer = styled.div`
-  margin-top: 15px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-`;
-
-const PassInfoRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
   
-  &:last-child {
-    margin-bottom: 0;
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
   }
 `;
 
-const PassInfoLabel = styled.div`
-  font: ${Theme.typography.fonts.smallB};
-  color: ${Theme.colors.gray2};
+const StatusBadge = styled.span<{ $status: string }>`
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  
+  background-color: ${props => {
+    switch (props.$status) {
+      case 'pending':
+        return '#fef7e0'; // yellow
+      case 'paid':
+        return '#e6f4ea'; // green
+      case 'completed':
+        return '#e6f4ea'; // green
+      default:
+        return '#f1f3f4';
+    }
+  }};
+  
+  color: ${props => {
+    switch (props.$status) {
+      case 'pending':
+        return '#b06000'; // dark yellow
+      case 'paid':
+      case 'completed':
+        return '#137333'; // dark green
+      default:
+        return '#5f6368';
+    }
+  }};
 `;
 
-const PassInfoValue = styled.div`
-  font: ${Theme.typography.fonts.smallM};
+const PassRequirementsList = styled.ul`
+  margin: 0;
+  padding-left: 20px;
+`;
+
+const PassRequirementItem = styled.li<{ $isMet: boolean }>`
+  margin-bottom: 8px;
+  color: ${props => props.$isMet ? '#137333' : '#5f6368'};
+`;
+
+const LoadingMessage = styled.div`
+  padding: 20px;
+  text-align: center;
+  color: #666;
+`;
+
+const ErrorMessage = styled.div`
+  padding: 20px;
+  text-align: center;
+  color: #dc3545;
+`;
+
+const SuccessMessage = styled.div`
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #e6f4ea;
+  border-radius: 4px;
+  color: #137333;
+  font-weight: 500;
+`;
+
+const NoDataMessage = styled.div`
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+`;
+
+const WarningMessage = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #fff3cd;
+  border-radius: 4px;
+  color: #664d03;
+  font-weight: 500;
 `;
 
 const ReferralDetailPage: React.FC = () => {
@@ -292,11 +347,12 @@ const ReferralDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [advertiser, setAdvertiser] = useState<ReferralAdvertiser | null>(null);
   const [bookings, setBookings] = useState<ReferralBooking[]>([]);
-  const [note, setNote] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [note, setNote] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [savingNote, setSavingNote] = useState<boolean>(false);
+  const [togglingStatus, setTogglingStatus] = useState<boolean>(false);
+  const [success, setSuccess] = useState<string | null>(null);
   
   useEffect(() => {
     const loadAdvertiserDetails = async () => {
@@ -306,7 +362,7 @@ const ReferralDetailPage: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Load advertiser details
+        // Get advertiser details
         const advertiserData = await getReferralAdvertiserById(id);
         if (!advertiserData) {
           setError('Advertiser not found');
@@ -316,12 +372,12 @@ const ReferralDetailPage: React.FC = () => {
         setAdvertiser(advertiserData);
         setNote(advertiserData.internalNote || '');
         
-        // Load referral bookings
+        // Get referral bookings
         const bookingsData = await getReferralBookingsByAdvertiserId(id);
         setBookings(bookingsData);
       } catch (err) {
         console.error('Error loading advertiser details:', err);
-        setError('Failed to load advertiser details');
+        setError('Failed to load advertiser details. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -331,86 +387,141 @@ const ReferralDetailPage: React.FC = () => {
   }, [id]);
   
   const handleSaveNote = async () => {
-    if (!advertiser) return;
+    if (!advertiser || !id) return;
     
     try {
-      setSaving(true);
-      await updateReferralAdvertiserNote(advertiser.id, note);
-      // Show success message or update UI
+      setSavingNote(true);
+      setError(null);
+      setSuccess(null);
+      
+      await updateReferralAdvertiserNote(id, note);
+      setSuccess('Note saved successfully');
+      
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
     } catch (err) {
       console.error('Error saving note:', err);
-      // Show error message
+      setError('Failed to save note. Please try again.');
     } finally {
-      setSaving(false);
+      setSavingNote(false);
     }
   };
   
   const handleTogglePassStatus = async () => {
-    if (!advertiser) return;
+    if (!advertiser || !id) return;
     
     try {
-      setUpdatingStatus(true);
+      setTogglingStatus(true);
+      setError(null);
+      setSuccess(null);
+      
+      // Toggle pass status
       const newStatus: ReferralPassStatus = advertiser.passStatus === 'active' ? 'locked' : 'active';
-      await updateReferralPassStatus(advertiser.id, newStatus);
+      await updateReferralPassStatus(id, newStatus);
       
       // Update local state
       setAdvertiser({
         ...advertiser,
-        passStatus: newStatus,
-        referralPass: advertiser.referralPass ? {
-          ...advertiser.referralPass,
-          active: newStatus === 'active'
-        } : undefined
+        passStatus: newStatus
       });
       
-      // Show success message
+      setSuccess(`Pass status updated to ${newStatus === 'active' ? 'Active' : 'Locked'}`);
+      
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
     } catch (err) {
       console.error('Error updating pass status:', err);
-      // Show error message
+      setError('Failed to update pass status. Please try again.');
     } finally {
-      setUpdatingStatus(false);
+      setTogglingStatus(false);
     }
   };
   
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      // Show success message
+      // Could add a toast notification here
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error('Failed to copy text:', err);
     }
   };
   
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
+    // Check if date is valid before formatting
+    if (!date || isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    
+    return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
-    });
+    }).format(date);
   };
   
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('fr-MA', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'MAD',
+      currency: 'EUR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
   };
   
   const getPlaceholderImage = (propertyTitle: string) => {
-    const hash = propertyTitle.split('').reduce((acc, char) => {
-      return char.charCodeAt(0) + ((acc << 5) - acc);
-    }, 0);
+    // Generate a placeholder image based on property title
+    const colors = ['#6c5ce7', '#00cec9', '#fdcb6e', '#e17055', '#74b9ff'];
+    const colorIndex = propertyTitle.length % colors.length;
+    const initials = propertyTitle.substring(0, 2).toUpperCase();
     
-    const color = `hsl(${Math.abs(hash) % 360}, 70%, 80%)`;
-    return `https://placehold.co/30x30/${color.replace('#', '')}?text=${propertyTitle.charAt(0)}`;
+    const canvas = document.createElement('canvas');
+    canvas.width = 30;
+    canvas.height = 30;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      ctx.fillStyle = colors[colorIndex];
+      ctx.fillRect(0, 0, 30, 30);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 14px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(initials, 15, 15);
+    }
+    
+    return canvas.toDataURL();
+  };
+  
+  const getTotalReferrals = () => {
+    if (!advertiser) return 0;
+    
+    // Use referralStats if available, otherwise use bookingsViaCode
+    if (advertiser.referralStats) {
+      return advertiser.referralStats.totalReferrals + advertiser.referralStats.successfulBookings;
+    }
+    return advertiser.bookingsViaCode;
+  };
+  
+  const getTotalEarnings = () => {
+    if (!advertiser) return 0;
+    return advertiser.earningsPending + advertiser.earningsPaid;
+  };
+  
+  const isPassRequirementMet = (current: number, required: number) => {
+    return current >= required;
   };
   
   if (loading) {
     return (
       <DetailContainer>
-        <p>Loading advertiser details...</p>
+        <BackButton onClick={() => navigate('/dashboard/admin/referrals')}>
+          <FaArrowLeft /> Back to Referrals
+        </BackButton>
+        <LoadingMessage>Loading advertiser details...</LoadingMessage>
       </DetailContainer>
     );
   }
@@ -421,7 +532,7 @@ const ReferralDetailPage: React.FC = () => {
         <BackButton onClick={() => navigate('/dashboard/admin/referrals')}>
           <FaArrowLeft /> Back to Referrals
         </BackButton>
-        <p style={{ color: 'red' }}>{error || 'Advertiser not found'}</p>
+        <ErrorMessage>{error || 'Advertiser not found'}</ErrorMessage>
       </DetailContainer>
     );
   }
@@ -432,22 +543,25 @@ const ReferralDetailPage: React.FC = () => {
         <FaArrowLeft /> Back to Referrals
       </BackButton>
       
-      {/* Header */}
+      {success && <SuccessMessage>{success}</SuccessMessage>}
+      
       <DetailHeader>
         <HeaderLeft>
           <AdvertiserName>{advertiser.name}</AdvertiserName>
+          <div>Referral Code: <strong>{advertiser.referralCode}</strong></div>
         </HeaderLeft>
+        
         <HeaderRight>
-          <PassStatusToggle onClick={handleTogglePassStatus} title="Toggle pass status">
+          <PassStatusToggle onClick={handleTogglePassStatus} title="Click to toggle pass status">
             {advertiser.passStatus === 'active' ? (
               <>
-                <FaToggleOn size={24} color="#137333" />
-                <span style={{ color: '#137333' }}>Active</span>
+                <FaToggleOn size={24} color={Theme.colors.secondary} />
+                <span>Pass Active</span>
               </>
             ) : (
               <>
-                <FaToggleOff size={24} color="#5f6368" />
-                <span style={{ color: '#5f6368' }}>Locked</span>
+                <FaToggleOff size={24} color={Theme.colors.gray2} />
+                <span>Pass Locked</span>
               </>
             )}
           </PassStatusToggle>
@@ -455,11 +569,9 @@ const ReferralDetailPage: React.FC = () => {
       </DetailHeader>
       
       <DetailGrid>
-        {/* Advertiser Info */}
+        {/* Contact Information */}
         <DetailSection>
-          <SectionTitle>
-            <FaUser /> Advertiser Information
-          </SectionTitle>
+          <SectionTitle><FaUser /> Contact Information</SectionTitle>
           
           <ContactItem>
             <ContactLabel>Name</ContactLabel>
@@ -467,7 +579,7 @@ const ReferralDetailPage: React.FC = () => {
           </ContactItem>
           
           <ContactItem>
-            <ContactLabel>Phone</ContactLabel>
+            <ContactLabel>Phone Number</ContactLabel>
             <ContactValue>
               {advertiser.phoneNumber}
               <CopyButton onClick={() => copyToClipboard(advertiser.phoneNumber)}>
@@ -497,155 +609,149 @@ const ReferralDetailPage: React.FC = () => {
               </CopyButton>
             </ReferralCodeDisplay>
           </ContactItem>
+        </DetailSection>
+        
+        {/* Referral Pass */}
+        <DetailSection>
+          <SectionTitle><FaCalendarAlt /> Referral Pass Status</SectionTitle>
           
-          {advertiser.referralPass && (
-            <ContactItem>
-              <ContactLabel>Referral Pass</ContactLabel>
-              <PassInfoContainer>
-                <PassInfoRow>
-                  <PassInfoLabel>Status</PassInfoLabel>
-                  <PassInfoValue>{advertiser.referralPass.active ? 'Active' : 'Locked'}</PassInfoValue>
-                </PassInfoRow>
-                <PassInfoRow>
-                  <PassInfoLabel>Booking Requirement</PassInfoLabel>
-                  <PassInfoValue>{advertiser.referralPass.bookingRequirement}</PassInfoValue>
-                </PassInfoRow>
-                <PassInfoRow>
-                  <PassInfoLabel>Bookings Since Pass</PassInfoLabel>
-                  <PassInfoValue>{advertiser.referralPass.bookingsSincePass}</PassInfoValue>
-                </PassInfoRow>
-                <PassInfoRow>
-                  <PassInfoLabel>Listing Requirement</PassInfoLabel>
-                  <PassInfoValue>{advertiser.referralPass.listingRequirement}</PassInfoValue>
-                </PassInfoRow>
-                <PassInfoRow>
-                  <PassInfoLabel>Listings Since Pass</PassInfoLabel>
-                  <PassInfoValue>{advertiser.referralPass.listingsSincePass}</PassInfoValue>
-                </PassInfoRow>
-                <PassInfoRow>
-                  <PassInfoLabel>Expiry Date</PassInfoLabel>
-                  <PassInfoValue>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <FaCalendarAlt size={12} />
-                      {formatDate(advertiser.referralPass.expiryDate)}
-                    </div>
-                  </PassInfoValue>
-                </PassInfoRow>
-              </PassInfoContainer>
-            </ContactItem>
+          {advertiser.referralPass ? (
+            <>
+              <ContactItem>
+                <ContactLabel>Status</ContactLabel>
+                <ContactValue>
+                  {advertiser.passStatus === 'active' ? (
+                    <span style={{ color: '#137333', fontWeight: 'bold' }}>Active</span>
+                  ) : (
+                    <span style={{ color: '#5f6368' }}>Locked</span>
+                  )}
+                </ContactValue>
+              </ContactItem>
+              
+              {advertiser.referralPass.expiryDate && !isNaN(advertiser.referralPass.expiryDate.getTime()) && (
+                <ContactItem>
+                  <ContactLabel>Expiry Date</ContactLabel>
+                  <ContactValue>{formatDate(advertiser.referralPass.expiryDate)}</ContactValue>
+                </ContactItem>
+              )}
+              
+              <ContactItem>
+                <ContactLabel>Requirements</ContactLabel>
+                <PassRequirementsList>
+                  <PassRequirementItem 
+                    $isMet={isPassRequirementMet(
+                      advertiser.referralPass.bookingsSincePass, 
+                      advertiser.referralPass.bookingRequirement
+                    )}
+                  >
+                    Bookings: {advertiser.referralPass.bookingsSincePass} / {advertiser.referralPass.bookingRequirement}
+                  </PassRequirementItem>
+                  <PassRequirementItem 
+                    $isMet={isPassRequirementMet(
+                      advertiser.referralPass.listingsSincePass, 
+                      advertiser.referralPass.listingRequirement
+                    )}
+                  >
+                    Listings: {advertiser.referralPass.listingsSincePass} / {advertiser.referralPass.listingRequirement}
+                  </PassRequirementItem>
+                </PassRequirementsList>
+              </ContactItem>
+            </>
+          ) : (
+            <WarningMessage>
+              <FaExclamationTriangle />
+              No referral pass information available
+            </WarningMessage>
           )}
         </DetailSection>
         
-        {/* Internal Notes */}
+        {/* Earnings Summary */}
         <DetailSection>
-          <SectionTitle>Internal Notes</SectionTitle>
+          <SectionTitle>Earnings Summary</SectionTitle>
           
-          <NoteTextArea
-            value={note}
+          <EarningsSummary>
+            <EarningsRow>
+              <EarningsLabel>Total Referrals</EarningsLabel>
+              <EarningsValue>{getTotalReferrals()}</EarningsValue>
+            </EarningsRow>
+            <EarningsRow>
+              <EarningsLabel>Pending Earnings</EarningsLabel>
+              <EarningsValue>{formatCurrency(advertiser.earningsPending)}</EarningsValue>
+            </EarningsRow>
+            <EarningsRow>
+              <EarningsLabel>Paid Earnings</EarningsLabel>
+              <EarningsValue>{formatCurrency(advertiser.earningsPaid)}</EarningsValue>
+            </EarningsRow>
+            <EarningsRow>
+              <EarningsLabel>Total Earnings</EarningsLabel>
+              <EarningsValue>{formatCurrency(getTotalEarnings())}</EarningsValue>
+            </EarningsRow>
+          </EarningsSummary>
+        </DetailSection>
+        
+        {/* Admin Notes */}
+        <DetailSection>
+          <SectionTitle>Admin Notes</SectionTitle>
+          
+          <NoteTextArea 
+            value={note} 
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Add internal notes about this advertiser's referrals..."
+            placeholder="Add internal notes about this advertiser..."
           />
           
-          <SaveButton onClick={handleSaveNote} disabled={saving}>
-            {saving ? 'Saving...' : 'Save Note'}
+          <SaveButton 
+            onClick={handleSaveNote} 
+            disabled={savingNote}
+          >
+            {savingNote ? 'Saving...' : 'Save Note'}
           </SaveButton>
         </DetailSection>
         
-        {/* Referral Stats */}
-        {advertiser.referralStats && (
-          <DetailSection>
-            <SectionTitle>Referral Statistics</SectionTitle>
-            
-            <PassInfoContainer>
-              <PassInfoRow>
-                <PassInfoLabel>First Rent Bonus</PassInfoLabel>
-                <PassInfoValue>{advertiser.referralStats.firstRentBonus}</PassInfoValue>
-              </PassInfoRow>
-              <PassInfoRow>
-                <PassInfoLabel>Total Referrals</PassInfoLabel>
-                <PassInfoValue>{advertiser.referralStats.totalReferrals}</PassInfoValue>
-              </PassInfoRow>
-              <PassInfoRow>
-                <PassInfoLabel>Successful Bookings</PassInfoLabel>
-                <PassInfoValue>{advertiser.referralStats.successfulBookings}</PassInfoValue>
-              </PassInfoRow>
-              <PassInfoRow>
-                <PassInfoLabel>Monthly Earnings</PassInfoLabel>
-                <PassInfoValue>{formatCurrency(advertiser.referralStats.monthlyEarnings)}</PassInfoValue>
-              </PassInfoRow>
-              <PassInfoRow>
-                <PassInfoLabel>Annual Earnings</PassInfoLabel>
-                <PassInfoValue>{formatCurrency(advertiser.referralStats.annualEarnings)}</PassInfoValue>
-              </PassInfoRow>
-            </PassInfoContainer>
-          </DetailSection>
-        )}
-        
-        {/* Bookings List */}
+        {/* Referral Bookings */}
         <DetailSection style={{ gridColumn: '1 / -1' }}>
-          <SectionTitle>Bookings via Referral Code</SectionTitle>
+          <SectionTitle>Referral Bookings</SectionTitle>
           
           {bookings.length === 0 ? (
-            <NoBookingsMessage>
-              No bookings have been made using this advertiser's referral code yet.
-            </NoBookingsMessage>
+            <NoDataMessage>No referral bookings found for this advertiser.</NoDataMessage>
           ) : (
-            <>
-              <BookingsTable>
-                <BookingsTableHead>
-                  <BookingsTableRow>
-                    <BookingsTableHeader>Booking ID</BookingsTableHeader>
-                    <BookingsTableHeader>Property</BookingsTableHeader>
-                    <BookingsTableHeader>Tenant</BookingsTableHeader>
-                    <BookingsTableHeader>Date</BookingsTableHeader>
-                    <BookingsTableHeader>Amount Earned</BookingsTableHeader>
-                    <BookingsTableHeader>Status</BookingsTableHeader>
+            <BookingsTable>
+              <BookingsTableHead>
+                <tr>
+                  <BookingsTableHeader>Property</BookingsTableHeader>
+                  <BookingsTableHeader>Tenant</BookingsTableHeader>
+                  <BookingsTableHeader>Date</BookingsTableHeader>
+                  <BookingsTableHeader>Amount</BookingsTableHeader>
+                  <BookingsTableHeader>Status</BookingsTableHeader>
+                </tr>
+              </BookingsTableHead>
+              <tbody>
+                {bookings.map((booking, index) => (
+                  <BookingsTableRow key={index}>
+                    <BookingsTableCell>
+                      <PropertyInfo>
+                        <PropertyThumbnail 
+                          src={booking.propertyThumbnail || getPlaceholderImage(booking.propertyTitle)}
+                          alt={booking.propertyTitle}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = getPlaceholderImage(booking.propertyTitle);
+                          }}
+                        />
+                        <PropertyTitle>{booking.propertyTitle}</PropertyTitle>
+                      </PropertyInfo>
+                    </BookingsTableCell>
+                    <BookingsTableCell>{booking.tenantName}</BookingsTableCell>
+                    <BookingsTableCell>{formatDate(booking.date)}</BookingsTableCell>
+                    <BookingsTableCell>{formatCurrency(booking.amount)}</BookingsTableCell>
+                    <BookingsTableCell>
+                      <StatusBadge $status={booking.status}>
+                        {booking.status === 'pending' ? 'Pending' : 
+                         booking.status === 'paid' ? 'Paid' : 'Completed'}
+                      </StatusBadge>
+                    </BookingsTableCell>
                   </BookingsTableRow>
-                </BookingsTableHead>
-                <tbody>
-                  {bookings.map(booking => (
-                    <BookingsTableRow key={booking.id}>
-                      <BookingsTableCell>{booking.bookingId}</BookingsTableCell>
-                      <BookingsTableCell>
-                        <PropertyInfo>
-                          <PropertyThumbnail 
-                            src={booking.propertyThumbnail || getPlaceholderImage(booking.propertyTitle)} 
-                            alt={booking.propertyTitle} 
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = getPlaceholderImage(booking.propertyTitle);
-                            }}
-                          />
-                          <PropertyTitle>{booking.propertyTitle}</PropertyTitle>
-                        </PropertyInfo>
-                      </BookingsTableCell>
-                      <BookingsTableCell>{booking.tenantName}</BookingsTableCell>
-                      <BookingsTableCell>{formatDate(booking.date)}</BookingsTableCell>
-                      <BookingsTableCell style={{ color: Theme.colors.primary, fontWeight: 500 }}>
-                        {formatCurrency(booking.amount)}
-                      </BookingsTableCell>
-                      <BookingsTableCell>
-                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                      </BookingsTableCell>
-                    </BookingsTableRow>
-                  ))}
-                </tbody>
-              </BookingsTable>
-              
-              <EarningsSummary>
-                <EarningsRow>
-                  <EarningsLabel>Total Pending</EarningsLabel>
-                  <EarningsValue>{formatCurrency(advertiser.earningsPending)}</EarningsValue>
-                </EarningsRow>
-                <EarningsRow>
-                  <EarningsLabel>Total Paid</EarningsLabel>
-                  <EarningsValue>{formatCurrency(advertiser.earningsPaid)}</EarningsValue>
-                </EarningsRow>
-                <EarningsRow>
-                  <EarningsLabel>Total Earnings</EarningsLabel>
-                  <EarningsValue>{formatCurrency(advertiser.earningsPending + advertiser.earningsPaid)}</EarningsValue>
-                </EarningsRow>
-              </EarningsSummary>
-            </>
+                ))}
+              </tbody>
+            </BookingsTable>
           )}
         </DetailSection>
       </DetailGrid>

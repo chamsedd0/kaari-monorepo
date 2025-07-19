@@ -231,7 +231,7 @@ const ReferralProgramPage: React.FC = () => {
       <div className="cards-layout">
         <div className="main-column">
           {/* Referral Pass Card - Show different UI based on active state */}
-          {isReferralPassActive() ? (
+              {isReferralPassActive() ? (
             <ReferralPassGreenSkeleton 
               listingsCurrent={referralData.referralPass.listingsSincePass}
               listingsTotal={referralData.referralPass.listingRequirement}
@@ -242,7 +242,7 @@ const ReferralProgramPage: React.FC = () => {
               timeRemaining={timeRemaining}
               isFoundingPartner={isFoundingPartner}
             />
-          ) : hasMetRequirements ? (
+              ) : hasMetRequirements ? (
             <ReferralPassRedSkeleton 
               listingsCurrent={referralData.referralPass.listingsSincePass}
               listingsTotal={referralData.referralPass.listingRequirement}

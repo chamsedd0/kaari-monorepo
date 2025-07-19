@@ -257,169 +257,195 @@ const TableContainer = styled.div`
   border-radius: 4px;
 `;
 
-const ActionButton = styled.button`
-  padding: 6px 12px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background-color: white;
-  border: 1px solid ${Theme.colors.gray};
-  border-radius: 4px;
-  font: ${Theme.typography.fonts.smallM};
-  cursor: pointer;
-  
-  &:hover {
-    background-color: #f3eefb;
-    border-color: ${Theme.colors.secondary};
-  }
+const NoDataMessage = styled.div`
+  padding: 20px;
+  text-align: center;
+  color: #666;
 `;
 
-// Component for countdown timer (only during Safety Window Open)
+const LoadingMessage = styled.div`
+  padding: 20px;
+  text-align: center;
+  color: #666;
+`;
+
+const StatusCount = styled.span`
+  background-color: ${Theme.colors.gray};
+  color: ${Theme.colors.gray2};
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+  margin-left: 5px;
+`;
+
 const SafetyWindowTimer: React.FC<{ moveInDate: Date; status: MoveInStatus }> = ({ moveInDate, status }) => {
-  const [timeLeft, setTimeLeft] = useState('—');
-  const [isLessThanOneHour, setIsLessThanOneHour] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<string>('');
+  const [isActive, setIsActive] = useState<boolean>(false);
+  const [isLessThanOneHour, setIsLessThanOneHour] = useState<boolean>(false);
   
   useEffect(() => {
-    if (status !== 'Safety Window Open') {
-      setTimeLeft('—');
-      return;
-    }
-    
     const calculateTimeLeft = () => {
       const now = new Date();
-      const safetyWindowEnd = new Date(moveInDate.getTime() + 24 * 60 * 60 * 1000); // 24 hours after move-in
-      const diffMs = safetyWindowEnd.getTime() - now.getTime();
+      const moveInDateTime = new Date(moveInDate);
+      const safetyWindowEnd = new Date(moveInDateTime.getTime() + 24 * 60 * 60 * 1000); // 24 hours after move-in
       
-      if (diffMs <= 0) return { formatted: '00:00', lessThanHour: false };
+      // Determine if the safety window is active
+      const isInSafetyWindow = now >= moveInDateTime && now < safetyWindowEnd;
+      setIsActive(isInSafetyWindow);
       
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      let targetDate;
+      let prefix = '';
       
-      const formatted = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-      const lessThanHour = hours < 1;
+      if (now < moveInDateTime) {
+        // Time until move-in
+        targetDate = moveInDateTime;
+        prefix = 'Move-in in: ';
+      } else if (now < safetyWindowEnd) {
+        // Time until safety window closes
+        targetDate = safetyWindowEnd;
+        prefix = 'Window closes in: ';
+      } else {
+        // Safety window has closed
+        setTimeLeft('Window closed');
+        return;
+      }
       
-      return { formatted, lessThanHour };
+      // Calculate time difference
+      const diff = targetDate.getTime() - now.getTime();
+      
+      // Convert to hours, minutes, seconds
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      // Format the time
+      const timeString = `${prefix}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+      setTimeLeft(timeString);
+      setIsLessThanOneHour(hours === 0);
     };
     
-    // Initial calculation
-    const { formatted, lessThanHour } = calculateTimeLeft();
-    setTimeLeft(formatted);
-    setIsLessThanOneHour(lessThanHour);
-    
-    // Update every minute
-    const timer = setInterval(() => {
-      const { formatted, lessThanHour } = calculateTimeLeft();
-      setTimeLeft(formatted);
-      setIsLessThanOneHour(lessThanHour);
-    }, 60000);
-    
-    return () => clearInterval(timer);
+    // Only calculate if status is relevant
+    if (status === 'Move-in Upcoming' || status === 'Safety Window Open') {
+      calculateTimeLeft();
+      const timer = setInterval(calculateTimeLeft, 1000);
+      return () => clearInterval(timer);
+    } else {
+      setTimeLeft('');
+      setIsActive(false);
+    }
   }, [moveInDate, status]);
   
-  const isActive = status === 'Safety Window Open';
+  if (!timeLeft) return null;
   
   return (
     <TimerDisplay $isLessThanOneHour={isLessThanOneHour} $isActive={isActive}>
-      {isActive && <FaClock size={12} />}
+      <FaClock />
       {timeLeft}
     </TimerDisplay>
   );
 };
 
-// Main component
 const MoveInPage: React.FC = () => {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<MoveInBooking[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<MoveInBooking[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   
-  // Load all bookings
-  const loadBookings = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const allBookings = await getAllMoveInBookings();
-      setBookings(allBookings);
-      
-      // Apply initial filters
-      applyFilters(allBookings, statusFilter, searchTerm);
-    } catch (err: any) {
-      console.error('Error loading move-in bookings:', err);
-      setError(err.message || 'Failed to load move-in bookings');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Initial load
+  // Load bookings data
   useEffect(() => {
+    const loadBookings = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        let fetchedBookings: MoveInBooking[];
+        
+        if (statusFilter === 'all') {
+          // Get all move-in bookings
+          fetchedBookings = await getAllMoveInBookings();
+        } else {
+          // Get bookings filtered by status
+          fetchedBookings = await getMoveInBookingsByStatus(statusFilter as MoveInStatus);
+        }
+        
+        // Sort bookings by move-in date (most recent first)
+        fetchedBookings.sort((a, b) => b.moveInDate.getTime() - a.moveInDate.getTime());
+        
+        setBookings(fetchedBookings);
+        setFilteredBookings(fetchedBookings);
+      } catch (err) {
+        console.error('Error loading move-in bookings:', err);
+        setError('Failed to load move-in bookings. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
     loadBookings();
-  }, []);
+  }, [statusFilter]);
   
-  // Apply filters when status or search term changes
+  // Apply search filter
   useEffect(() => {
-    applyFilters(bookings, statusFilter, searchTerm);
-  }, [statusFilter, searchTerm]);
-  
-  // Apply filters to bookings
-  const applyFilters = (
-    bookingsToFilter: MoveInBooking[], 
-    status: string, 
-    search: string
-  ) => {
-    let filtered = [...bookingsToFilter];
+    const applyFilters = (
+      bookingsToFilter: MoveInBooking[], 
+      status: string, 
+      search: string
+    ) => {
+      // Start with all bookings
+      let result = [...bookingsToFilter];
+      
+      // Apply status filter
+      if (status !== 'all') {
+        result = result.filter(booking => booking.status === status);
+      }
+
+      // Apply search filter if provided
+      if (search.trim() !== '') {
+        const searchLower = search.toLowerCase();
+        result = result.filter(booking => 
+          booking.property.title.toLowerCase().includes(searchLower) ||
+          booking.property.city.toLowerCase().includes(searchLower) ||
+          booking.tenant.name.toLowerCase().includes(searchLower) ||
+          booking.tenant.phoneNumber.toLowerCase().includes(searchLower) ||
+          booking.advertiser.name.toLowerCase().includes(searchLower) ||
+          booking.advertiser.phoneNumber.toLowerCase().includes(searchLower) ||
+          booking.bookingId.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      return result;
+    };
     
-    // Apply status filter
-    if (status !== 'all') {
-      filtered = filtered.filter(booking => booking.status === status);
-    }
-    
-    // Apply search filter
-    if (search.trim()) {
-      const term = search.toLowerCase();
-      filtered = filtered.filter(
-        booking => 
-          booking.tenant.name.toLowerCase().includes(term) ||
-          booking.property.title.toLowerCase().includes(term) ||
-          booking.property.city.toLowerCase().includes(term) ||
-          booking.bookingId.toLowerCase().includes(term)
-      );
-    }
-    
+    const filtered = applyFilters(bookings, statusFilter, searchQuery);
     setFilteredBookings(filtered);
-  };
+  }, [bookings, searchQuery, statusFilter]);
   
-  // Handle status filter change
   const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setStatusFilter(e.target.value);
   };
   
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+    setSearchQuery(e.target.value);
   };
   
-  // Open booking detail
   const openBookingDetail = (booking: MoveInBooking) => {
     navigate(`/dashboard/admin/move-in/${booking.id}`);
   };
   
-  // Copy phone number to clipboard
   const copyToClipboard = async (text: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent row click
     try {
       await navigator.clipboard.writeText(text);
-      alert(`Copied: ${text}`);
+      // Could add a toast notification here
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error('Failed to copy text:', err);
     }
   };
   
-  // Format move-in date
   const formatMoveInDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
@@ -430,158 +456,158 @@ const MoveInPage: React.FC = () => {
     }).format(date);
   };
   
-  // Format amount
   const formatAmount = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'MAD',
+      currency: 'EUR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
   };
   
-  // Get placeholder image if property thumbnail is missing
   const getPlaceholderImage = (propertyTitle: string) => {
-    // Generate a color based on the property title
-    const hash = propertyTitle.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const hue = hash % 360;
+    // Generate a placeholder image based on property title
+    const colors = ['#6c5ce7', '#00cec9', '#fdcb6e', '#e17055', '#74b9ff'];
+    const colorIndex = propertyTitle.length % colors.length;
+    const initials = propertyTitle.substring(0, 2).toUpperCase();
     
-    // Create a colored placeholder
-    return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='hsl(${hue}, 70%25, 80%25)' /%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='hsl(${hue}, 70%25, 30%25)' text-anchor='middle' dy='.3em'%3E${propertyTitle.charAt(0)}%3C/text%3E%3C/svg%3E`;
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 40;
+    const ctx = canvas.getContext('2d');
+    
+    if (ctx) {
+      ctx.fillStyle = colors[colorIndex];
+      ctx.fillRect(0, 0, 40, 40);
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(initials, 20, 20);
+    }
+    
+    return canvas.toDataURL();
   };
   
-  // Count bookings by status
   const countByStatus = (status: MoveInStatus | 'all'): number => {
-    if (status === 'all') return bookings.length;
+    if (status === 'all') {
+      return bookings.length;
+    }
     return bookings.filter(booking => booking.status === status).length;
   };
   
   return (
     <DashboardCard>
-      <CardTitle>Move-in Management</CardTitle>
+      <CardTitle>Move-In Management</CardTitle>
       <CardContent>
-        <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <select 
-              value={statusFilter} 
-              onChange={handleStatusFilterChange}
-              style={{
-                padding: '8px 12px',
-                borderRadius: '4px',
-                border: '1px solid #ccc',
-                backgroundColor: 'white'
-              }}
-            >
-              <option value="all">All Statuses ({countByStatus('all')})</option>
-              <option value="Move-in Upcoming">Upcoming ({countByStatus('Move-in Upcoming')})</option>
-              <option value="Safety Window Open">Safety Window Open ({countByStatus('Safety Window Open')})</option>
-              <option value="Safety Window Closed">Completed ({countByStatus('Safety Window Closed')})</option>
-              <option value="Cancelled – Tenant">Cancelled by Tenant ({countByStatus('Cancelled – Tenant')})</option>
-              <option value="Cancelled – Advertiser">Cancelled by Advertiser ({countByStatus('Cancelled – Advertiser')})</option>
-            </select>
-          </div>
+        <FilterContainer>
+          <FilterSelect 
+            value={statusFilter}
+            onChange={handleStatusFilterChange}
+          >
+            <option value="all">All Statuses ({countByStatus('all')})</option>
+            <option value="Move-in Upcoming">Move-in Upcoming ({countByStatus('Move-in Upcoming')})</option>
+            <option value="Safety Window Open">Safety Window Open ({countByStatus('Safety Window Open')})</option>
+            <option value="Safety Window Closed">Safety Window Closed ({countByStatus('Safety Window Closed')})</option>
+            <option value="Cancelled – Tenant">Cancelled – Tenant ({countByStatus('Cancelled – Tenant')})</option>
+            <option value="Cancelled – Advertiser">Cancelled – Advertiser ({countByStatus('Cancelled – Advertiser')})</option>
+          </FilterSelect>
           
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            padding: '6px 12px',
-            backgroundColor: 'white'
-          }}>
-            <FaSearch style={{ color: '#666', marginRight: '8px' }} />
-            <input
-              type="text"
-              placeholder="Search by tenant, property, or booking ID"
-              value={searchTerm}
+          <SearchContainer>
+            <FaSearch />
+            <SearchInput 
+              type="text" 
+              placeholder="Search by name, property, or phone"
+              value={searchQuery}
               onChange={handleSearchChange}
-              style={{
-                border: 'none',
-                outline: 'none',
-                width: '250px',
-                fontSize: '14px'
-              }}
             />
-          </div>
-        </div>
+          </SearchContainer>
+        </FilterContainer>
         
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px' }}>
-            Loading move-in data...
-          </div>
-        ) : error ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: 'red' }}>
-            {error}
-          </div>
-        ) : filteredBookings.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-            No move-in bookings found matching your criteria.
-          </div>
-        ) : (
-          <MoveInTable>
-            <MoveInTableHead>
-              <tr>
-                <MoveInTableHeader style={{ width: '30%' }}>Property</MoveInTableHeader>
-                <MoveInTableHeader style={{ width: '20%' }}>Tenant</MoveInTableHeader>
-                <MoveInTableHeader style={{ width: '15%' }}>Move-in Date</MoveInTableHeader>
-                <MoveInTableHeader style={{ width: '15%' }}>Status</MoveInTableHeader>
-                <MoveInTableHeader style={{ width: '10%' }}>Amount</MoveInTableHeader>
-                <MoveInTableHeader style={{ width: '10%' }}>Booking ID</MoveInTableHeader>
-              </tr>
-            </MoveInTableHead>
-            <tbody>
-              {filteredBookings.map(booking => (
-                <MoveInRow key={booking.id} onClick={() => openBookingDetail(booking)}>
-                  <PropertyCell>
-                    <PropertyThumbnail 
-                      src={booking.property.thumbnail || getPlaceholderImage(booking.property.title)} 
-                      alt={booking.property.title}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = getPlaceholderImage(booking.property.title);
-                      }}
-                    />
-                    <PropertyInfo>
-                      <PropertyTitle>{booking.property.title}</PropertyTitle>
-                      <PropertyCity>{booking.property.city}</PropertyCity>
-                    </PropertyInfo>
-                  </PropertyCell>
-                  <MoveInCell>
-                    <ContactInfo>
-                      <ContactName>{booking.tenant.name}</ContactName>
-                      <ContactPhone onClick={(e) => copyToClipboard(booking.tenant.phoneNumber, e)}>
-                        {booking.tenant.phoneNumber} <FaCopy size={12} />
-                      </ContactPhone>
-                    </ContactInfo>
-                  </MoveInCell>
-                  <MoveInCell>
-                    {formatMoveInDate(booking.moveInDate)}
-                    {booking.status === 'Safety Window Open' && (
-                      <SafetyWindowTimer moveInDate={booking.moveInDate} status={booking.status} />
-                    )}
-                  </MoveInCell>
-                  <MoveInCell>
-                    <StatusBadge $status={booking.status}>
-                      {booking.status}
-                    </StatusBadge>
-                    {booking.reason !== 'None' && (
-                      <div style={{ marginTop: '5px' }}>
-                        <ReasonBadge $reason={booking.reason}>
-                          {booking.reason}
-                        </ReasonBadge>
-                      </div>
-                    )}
-                  </MoveInCell>
-                  <MoveInCell>
-                    {formatAmount(booking.amount)}
-                  </MoveInCell>
-                  <MoveInCell>
-                    {booking.bookingId}
-                  </MoveInCell>
-                </MoveInRow>
-              ))}
-            </tbody>
-          </MoveInTable>
-        )}
+        <TableContainer>
+          {loading ? (
+            <LoadingMessage>Loading move-in data...</LoadingMessage>
+          ) : error ? (
+            <NoDataMessage>{error}</NoDataMessage>
+          ) : filteredBookings.length === 0 ? (
+            <NoDataMessage>No move-in bookings found matching your criteria.</NoDataMessage>
+          ) : (
+            <MoveInTable>
+              <MoveInTableHead>
+                <tr>
+                  <MoveInTableHeader style={{ width: '25%' }}>Property</MoveInTableHeader>
+                  <MoveInTableHeader style={{ width: '15%' }}>Tenant</MoveInTableHeader>
+                  <MoveInTableHeader style={{ width: '15%' }}>Advertiser</MoveInTableHeader>
+                  <MoveInTableHeader style={{ width: '15%' }}>Move-In Date</MoveInTableHeader>
+                  <MoveInTableHeader style={{ width: '10%' }}>Amount</MoveInTableHeader>
+                  <MoveInTableHeader style={{ width: '10%' }}>Status</MoveInTableHeader>
+                  <MoveInTableHeader style={{ width: '10%' }}>Safety Window</MoveInTableHeader>
+                </tr>
+              </MoveInTableHead>
+              <tbody>
+                {filteredBookings.map(booking => (
+                  <MoveInRow key={booking.id} onClick={() => openBookingDetail(booking)}>
+                    <PropertyCell>
+                      <PropertyThumbnail 
+                        src={booking.property.thumbnail || getPlaceholderImage(booking.property.title)} 
+                        alt={booking.property.title}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = getPlaceholderImage(booking.property.title);
+                        }}
+                      />
+                      <PropertyInfo>
+                        <PropertyTitle>{booking.property.title}</PropertyTitle>
+                        <PropertyCity>{booking.property.city}</PropertyCity>
+                      </PropertyInfo>
+                    </PropertyCell>
+                    <MoveInCell>
+                      <ContactInfo>
+                        <ContactName>{booking.tenant.name}</ContactName>
+                        <ContactPhone onClick={(e) => copyToClipboard(booking.tenant.phoneNumber, e)}>
+                          {booking.tenant.phoneNumber}
+                          <FaCopy size={12} />
+                        </ContactPhone>
+                      </ContactInfo>
+                    </MoveInCell>
+                    <MoveInCell>
+                      <ContactInfo>
+                        <ContactName>{booking.advertiser.name}</ContactName>
+                        <ContactPhone onClick={(e) => copyToClipboard(booking.advertiser.phoneNumber, e)}>
+                          {booking.advertiser.phoneNumber}
+                          <FaCopy size={12} />
+                        </ContactPhone>
+                      </ContactInfo>
+                    </MoveInCell>
+                    <MoveInCell>
+                      {formatMoveInDate(booking.moveInDate)}
+                    </MoveInCell>
+                    <MoveInCell>
+                      {formatAmount(booking.amount)}
+                    </MoveInCell>
+                    <MoveInCell>
+                      <StatusBadge $status={booking.status}>
+                        {booking.status}
+                      </StatusBadge>
+                      {booking.reason !== 'None' && (
+                        <div style={{ marginTop: '5px' }}>
+                          <ReasonBadge $reason={booking.reason}>
+                            {booking.reason}
+                          </ReasonBadge>
+                        </div>
+                      )}
+                    </MoveInCell>
+                    <MoveInCell>
+                      <SafetyWindowTimer 
+                        moveInDate={booking.moveInDate}
+                        status={booking.status}
+                      />
+                    </MoveInCell>
+                  </MoveInRow>
+                ))}
+              </tbody>
+            </MoveInTable>
+          )}
+        </TableContainer>
       </CardContent>
     </DashboardCard>
   );

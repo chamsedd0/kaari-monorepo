@@ -129,16 +129,33 @@ const PaymentCallbackContainer = styled.div`
   }
 `;
 
+// Create a flag to prevent multiple reservation creations
+let isProcessing = false;
+
 const PaymentCallback: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState<string>('Processing your payment...');
   const [progress, setProgress] = useState<number>(0);
+  const [reservationId, setReservationId] = useState<string | null>(null);
   
   useEffect(() => {
     const processPaymentResult = async () => {
       try {
+        // Check if we already have a reservation ID from a previous processing attempt
+        if (reservationId) {
+          console.log('Reservation already created with ID:', reservationId);
+          setStatus('success');
+          setMessage('Your payment was successful and your reservation has been confirmed!');
+          
+          // Redirect to success page after 3 seconds
+          setTimeout(() => {
+            navigate('/payment-success?reservationId=' + reservationId);
+          }, 3000);
+          return;
+        }
+        
         // Get the payment status from URL parameters
         const paymentStatus = searchParams.get('status');
         const reservationData = localStorage.getItem('pendingReservation');
@@ -153,39 +170,53 @@ const PaymentCallback: React.FC = () => {
         
         // Check if payment was successful
         if (paymentStatus === 'success') {
-          // Create the reservation
-          const reservation = await createCheckoutReservation(pendingReservation);
-          
-          console.log('Reservation created:', reservation);
-          
-          // Apply discount to booking if available
-          if (pendingReservation.rentalData.discount) {
-            try {
-              const discountApplied = await referralService.applyDiscountToBooking(
-                pendingReservation.userId,
-                reservation.id,
-                pendingReservation.propertyId,
-                pendingReservation.propertyTitle || 'Property',
-                pendingReservation.rentalData.price
-              );
-              
-              console.log(`Discount applied to booking: ${discountApplied} MAD`);
-            } catch (discountErr) {
-              console.error('Error applying discount to booking:', discountErr);
-              // Don't fail the whole process if discount application fails
-            }
+          // Check if we're already processing this reservation to prevent duplicates
+          if (isProcessing) {
+            console.log('Already processing reservation, preventing duplicate creation');
+            return;
           }
           
-          // Clear the pending reservation data
-          localStorage.removeItem('pendingReservation');
+          isProcessing = true;
           
-          setStatus('success');
-          setMessage('Your payment was successful and your reservation has been confirmed!');
-          
-          // Redirect to success page after 3 seconds
-          setTimeout(() => {
-            navigate('/payment-success?reservationId=' + reservation.id);
-          }, 3000);
+          try {
+            // Create the reservation
+            const reservation = await createCheckoutReservation(pendingReservation);
+            
+            console.log('Reservation created:', reservation);
+            setReservationId(reservation.id);
+            
+            // Apply discount to booking if available
+            if (pendingReservation.rentalData.discount) {
+              try {
+                const discountApplied = await referralService.applyDiscountToBooking(
+                  pendingReservation.userId,
+                  reservation.id,
+                  pendingReservation.propertyId,
+                  pendingReservation.propertyTitle || 'Property',
+                  pendingReservation.rentalData.price
+                );
+                
+                console.log(`Discount applied to booking: ${discountApplied} MAD`);
+              } catch (discountErr) {
+                console.error('Error applying discount to booking:', discountErr);
+                // Don't fail the whole process if discount application fails
+              }
+            }
+            
+            // Clear the pending reservation data
+            localStorage.removeItem('pendingReservation');
+            
+            setStatus('success');
+            setMessage('Your payment was successful and your reservation has been confirmed!');
+            
+            // Redirect to success page after 3 seconds
+            setTimeout(() => {
+              navigate('/payment-success?reservationId=' + reservation.id);
+            }, 3000);
+          } finally {
+            // Reset the processing flag regardless of success or failure
+            isProcessing = false;
+          }
         } else {
           // Payment failed or was cancelled
           setStatus('error');
@@ -194,11 +225,15 @@ const PaymentCallback: React.FC = () => {
               ? 'Your payment was cancelled. Please try again.'
               : 'Your payment was not successful. Please try again.'
           );
+          
+          // Clear the pending reservation data
+          localStorage.removeItem('pendingReservation');
         }
       } catch (error) {
         console.error('Error processing payment result:', error);
         setStatus('error');
         setMessage('An error occurred while processing your payment. Please contact support.');
+        isProcessing = false;
       }
     };
     
@@ -216,7 +251,7 @@ const PaymentCallback: React.FC = () => {
     processPaymentResult();
     
     return () => clearInterval(progressInterval);
-  }, [searchParams, navigate]);
+  }, [searchParams, navigate, reservationId]);
   
   const handleContinue = () => {
     if (status === 'success') {
@@ -249,9 +284,10 @@ const PaymentCallback: React.FC = () => {
           <FaCheckCircle className="status-icon success" />
           <h1 className="status-title">Payment Successful</h1>
           <p className="status-message">{message}</p>
-          <p className="status-message">Redirecting you to the confirmation page...</p>
-          <div className="progress-bar">
-            <div className="progress"></div>
+          <div className="action-buttons">
+            <button className="action-button primary" onClick={handleContinue}>
+              View My Reservations
+            </button>
           </div>
         </div>
       )}
@@ -261,7 +297,6 @@ const PaymentCallback: React.FC = () => {
           <FaTimesCircle className="status-icon error" />
           <h1 className="status-title">Payment Failed</h1>
           <p className="status-message">{message}</p>
-          
           <div className="action-buttons">
             <button className="action-button primary" onClick={handleContinue}>
               Try Again

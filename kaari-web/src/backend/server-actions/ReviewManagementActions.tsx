@@ -2,13 +2,34 @@
 
 import { Review, Property, Request } from '../entities';
 import { 
-  getDocumentById, 
-  updateDocument, 
-  getDocuments,
-  getDocumentsByField,
-  createDocument
-} from '../firebase/firestore';
+  collection, 
+  getDocs, 
+  getDoc, 
+  doc, 
+  query, 
+  where, 
+  orderBy, 
+  updateDoc, 
+  serverTimestamp,
+  Timestamp,
+  addDoc
+} from 'firebase/firestore';
+import { db } from '../firebase/config';
 import { getCurrentUserProfile } from '../firebase/auth';
+
+// Define a type for the review prompt
+interface ReviewPrompt {
+  id: string;
+  userId: string;
+  propertyId: string;
+  requestId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  promptedAt?: Date;
+  completed?: boolean;
+  dismissed?: boolean;
+  reviewId?: string;
+}
 
 // Collection names
 const REVIEWS_COLLECTION = 'reviews';

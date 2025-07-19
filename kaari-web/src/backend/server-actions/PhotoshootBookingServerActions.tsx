@@ -204,17 +204,18 @@ export class PhotoshootBookingServerActions {
       // Send notification to the advertiser
       const advertiserId = bookingData.advertiserId || bookingData.userId;
       if (advertiserId) {
-        const notificationService = new NotificationService();
-        await notificationService.createNotification(
+        // Import NotificationService dynamically to avoid circular dependencies
+        const NotificationService = (await import('../../services/NotificationService')).default;
+        
+        await NotificationService.createNotification(
           advertiserId,
           'advertiser',
-          'photoshoot_reminder',
-          'Photoshoot Booking Created',
-          `Your photoshoot booking for ${new Date(bookingData.date).toLocaleDateString()} at ${bookingData.timeSlot} has been created and is waiting for team assignment.`,
-          `/dashboard/advertiser/photoshoot`,
-          { bookingId: docRef.id, date: bookingData.date, timeSlot: bookingData.timeSlot }
+          'team_assigned_photoshoot',
+          'Photoshoot Scheduled',
+          `Your photoshoot for ${bookingData.propertyAddress?.city || 'your property'} has been scheduled for ${bookingData.date} at ${bookingData.timeSlot || 'the scheduled time'}.`,
+          `/dashboard/advertiser/photoshoots`,
+          { bookingId: docRef.id }
         );
-        console.log(`Notification sent to advertiser ${advertiserId} about new booking creation`);
       }
       
       // Also send a notification to admins
