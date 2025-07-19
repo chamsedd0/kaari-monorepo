@@ -38,7 +38,7 @@ export const CardBaseModelStyleYourEarningsCalculator = styled.div<EarningsCalcu
             flex-direction: column;
             align-items: start;
             justify-content: start;
-            margin-top: 50px;
+            margin-top: 30px;
             gap: 20px;
             width: 50%;
 
@@ -159,7 +159,7 @@ export const CardBaseModelStyleYourEarningsCalculator = styled.div<EarningsCalcu
             gap: 48px;
             border-radius: ${Theme.borders.radius.lg};
             border:${Theme.borders.primary};
-            padding: 38px 12px;
+            padding: 30px 12px;
             width: 380px;
             height: 100%;
 

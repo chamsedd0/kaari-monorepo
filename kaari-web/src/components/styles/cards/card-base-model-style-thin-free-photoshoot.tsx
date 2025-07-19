@@ -9,7 +9,7 @@ export const CardBaseModelStyleThinFreePhotoshoot = styled.div`
     padding: 20px;
     max-height: 96px;
     border-radius: ${Theme.borders.radius.lg};
-    background: ${Theme.colors.secondary};
+    background: linear-gradient(135deg, rgba(143, 39, 206, 1) 0%, rgba(151, 71, 255, 1) 100%);
     position: relative;
     overflow: hidden;
 
@@ -19,6 +19,7 @@ export const CardBaseModelStyleThinFreePhotoshoot = styled.div`
         align-items: start;
         justify-content: start;
         gap: 8px;
+        width: 130%;
 
         .text-16 {
             font: ${Theme.typography.fonts.text16};
@@ -38,6 +39,7 @@ export const CardBaseModelStyleThinFreePhotoshoot = styled.div`
         display: flex;
         align-items: flex-end;
         justify-content: center;
+        width: 130%;
     }
     .image-container img {
         width: 170px;

@@ -139,6 +139,30 @@ export const PerformancePageStyle = styled.div`
           margin-top: 4px;
         }
       }
+      
+      .payout-button-container {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+        max-width: 450px;
+        
+        > * {
+          flex: 1;
+          max-width: none !important;
+          width: 100% !important;
+        }
+        
+        @media (max-width: 600px) {
+          flex-direction: column;
+          gap: 16px;
+          max-width: 250px;
+          
+          > * {
+            flex: none;
+            max-width: 250px !important;
+          }
+        }
+      }
     }
     
     &.eligibility-card {

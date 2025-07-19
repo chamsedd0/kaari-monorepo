@@ -11,8 +11,8 @@ const ThinFreePhotoshootCard: React.FC<ThinFreePhotoshootCardProps> = ({ onBookC
   return (
     <CardBaseModelStyleThinFreePhotoshoot>
       <div className="text-container">
-        <span className="text-16">List your property with our</span>
-        <span className="h3-text">Free Photoshoot!</span>
+        <div className="text-16">List your property with our</div>
+        <div className="h3-text">Free Photoshoot!</div>
       </div>
       <div className="image-container">
         <img src={CameraGirl} alt="Camera Girl" />

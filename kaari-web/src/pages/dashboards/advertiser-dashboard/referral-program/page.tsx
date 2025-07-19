@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { ReferralProgramPageStyle } from './styles';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-
 import arowdown from '../../../../components/skeletons/icons/Icon_arrow_Down.svg'
 import arowup from '../../../../components/skeletons/icons/Icon_arrow_Up.svg'
-import IconVerified from '../../../../components/skeletons/icons/Icon_Verified.svg'
 import { useReferralProgram } from '../../../../hooks/useReferralProgram';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../../../../contexts/auth/AuthContext';
-import { useToast } from '../../../../contexts/ToastContext';
+import YourEarningsCalculatorCard from "../../../../components/skeletons/cards/your-earnings-calculator-card";
+import ThinFreePhotoshootCard from "../../../../components/skeletons/cards/thin-free-photoshoot";
+import ReferralPassGreenSkeleton from "../../../../components/skeletons/cards/referral-pass-green";
+import ReferralPassRedSkeleton from "../../../../components/skeletons/cards/referral-pass-red";
 
-// Icons
 const InfoIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="10" cy="10" r="9.5" stroke="white" />
@@ -60,8 +60,6 @@ const ReferralProgramPage: React.FC = () => {
     hasMetReferralPassRequirements
   } = useReferralProgram();
   const { user } = useAuth();
-  const { showToast } = useToast();
-  const [payoutLoading, setPayoutLoading] = useState(false);
 
   // Timer state for countdown
   const [timeRemaining, setTimeRemaining] = useState<{
@@ -102,35 +100,10 @@ const ReferralProgramPage: React.FC = () => {
 
   // Function to handle payout request
   const handleRequestPayout = async () => {
-    try {
-      setPayoutLoading(true);
-      const success = await requestPayout();
-      
-      if (success) {
-        showToast({
-          type: 'success',
-          title: t('referral_program.payout_requested'),
-          message: t('referral_program.payout_success_message', 'Your payout request has been submitted successfully. It will be processed within 1-3 business days.'),
-          duration: 5000
-        });
-      } else {
-        showToast({
-          type: 'error',
-          title: t('referral_program.payout_error'),
-          message: t('referral_program.payout_error_message', 'There was an error processing your payout request. Please try again later.'),
-          duration: 5000
-        });
-      }
-    } catch (err) {
-      console.error('Error requesting payout:', err);
-      showToast({
-        type: 'error',
-        title: t('referral_program.payout_error'),
-        message: t('referral_program.payout_error_message', 'There was an error processing your payout request. Please try again later.'),
-        duration: 5000
-      });
-    } finally {
-      setPayoutLoading(false);
+    const success = await requestPayout();
+    if (success) {
+      // Show success message
+      console.log('Payout requested successfully');
     }
   };
 
@@ -251,165 +224,41 @@ const ReferralProgramPage: React.FC = () => {
       <div className="cards-layout">
         <div className="main-column">
           {/* Referral Pass Card - Show different UI based on active state */}
-          <div className={`card referral-pass-card ${isReferralPassActive() ? 'active' : hasMetRequirements ? 'expired' : 'onboarding'}`}>
-            <div className="card-header">
-              <h2>Referral Pass</h2>
-              {isFoundingPartner && (
-                <div className="founding-partner-tag">
-                  Founding Partner Access
-                </div>
-              )}
-            </div>
-
-            <div className="referral-pass-content">
-              {isReferralPassActive() ? (
-                <>
-                  {/* Active Pass UI */}
-                  <div className="countdown-timer">
-                    <div className="timer-block days">
-                      <span className="time">{timeRemaining?.days || 0}</span>
-                      <span className="label">Days</span>
-                    </div>
-                    <span className="separator">·</span>
-                    <div className="timer-block hours">
-                      <span className="time">{String(timeRemaining?.hours || 0).padStart(2, '0')}</span>
-                      <span className="label">Hours</span>
-                    </div>
-                    <span className="separator">·</span>
-                    <div className="timer-block minutes">
-                      <span className="time">{String(timeRemaining?.minutes || 0).padStart(2, '0')}</span>
-                      <span className="label">Minutes</span>
-                    </div>
-                    <span className="separator">·</span>
-                    <div className="timer-block seconds">
-                      <span className="time">{String(timeRemaining?.seconds || 0).padStart(2, '0')}</span>
-                      <span className="label">Seconds</span>
-                    </div>
-                  </div>
-                  <div className="until-renewal">Until Renewal</div>
-
-                  <div className="pass-status active">
-                    <div className="lock-icon">
-                      <LockIcon locked={false} />
-                    </div>
-                    <div className="status-text">
-                      <h3>Your Pass is Active!</h3>
-                      <p>Valid until: {referralData.referralPass.expiryDate.toLocaleDateString()}</p>
-                    </div>
-                  </div>
-
-                  <div className="progress-metrics">
-                    <div className="metric-box">
-                      <h4>Listings Since Pass</h4>
-                      <div className="metric-value">
-                        {referralData.referralPass.listingsSincePass}/{referralData.referralPass.listingRequirement}
-                      </div>
-                    </div>
-                    <div className="metric-box">
-                      <h4>Bookings Since Pass</h4>
-                      <div className="metric-value">
-                        {referralData.referralPass.bookingsSincePass}/{referralData.referralPass.bookingRequirement}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pass-info">
-                    {isFoundingPartner ? (
-                      <>
-                        <InfoIcon /> As a founding partner, your pass is active for 90 days with no conditions.
-                      </>
-                    ) : (
-                      <>
-                        <InfoIcon /> List {referralData.referralPass.listingRequirement} properties or get {referralData.referralPass.bookingRequirement} bookings to keep your Pass!
-                      </>
-                    )}
-                  </div>
-                </>
-              ) : hasMetRequirements ? (
-                <>
-                  {/* Expired Pass UI */}
-                  <div className="countdown-timer expired">
-                    <div className="timer-block days">
-                      <span className="time">0</span>
-                      <span className="label">Days</span>
-                    </div>
-                    <span className="separator">·</span>
-                    <div className="timer-block hours">
-                      <span className="time">00</span>
-                      <span className="label">Hours</span>
-                    </div>
-                    <span className="separator">·</span>
-                    <div className="timer-block minutes">
-                      <span className="time">00</span>
-                      <span className="label">Minutes</span>
-                    </div>
-                    <span className="separator">·</span>
-                    <div className="timer-block seconds">
-                      <span className="time">00</span>
-                      <span className="label">Seconds</span>
-                    </div>
-                  </div>
-                  <div className="until-renewal">Until Renewal</div>
-
-                  <div className="pass-status expired">
-                    <div className="lock-icon">
-                      <LockIcon locked={true} />
-                    </div>
-                    <div className="status-text">
-                      <h3>Your Pass Expired!</h3>
-                      <p>Valid until: {referralData.referralPass.expiryDate.toLocaleDateString()}</p>
-                    </div>
-                  </div>
-
-                  <div className="progress-metrics">
-                    <div className="metric-box">
-                      <h4>Listings Since Pass</h4>
-                      <div className="metric-value">
-                        {referralData.referralPass.listingsSincePass}/{referralData.referralPass.listingRequirement}
-                      </div>
-                    </div>
-                    <div className="metric-box">
-                      <h4>Bookings Since Pass</h4>
-                      <div className="metric-value">
-                        {referralData.referralPass.bookingsSincePass}/{referralData.referralPass.bookingRequirement}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pass-info">
-                    <InfoIcon /> List {referralData.referralPass.listingRequirement} properties or get {referralData.referralPass.bookingRequirement} bookings to keep your Pass!
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Onboarding/Welcome UI */}
-                  <div className="welcome-message">
-                    <h3>Welcome to Kaari's Referral Program!</h3>
-                    <p>To get access to your Referral Link, You need to fit the requirements shown below.</p>
-                  </div>
-
-                  <div className="progress-metrics onboarding">
-                    <div className="metric-box">
-                      <h4>Listings Required</h4>
-                      <div className="metric-value">
-                        {referralData.referralPass.listingsSincePass}/{referralData.referralPass.listingRequirement}
-                      </div>
-                    </div>
-                    <div className="metric-box">
-                      <h4>Bookings Required</h4>
-                      <div className="metric-value">
-                        {referralData.referralPass.bookingsSincePass}/{referralData.referralPass.bookingRequirement}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="onboarding-illustration">
-                    <img src="/referral-illustration.svg" alt="Referral Illustration" />
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+          {isReferralPassActive() ? (
+            <ReferralPassGreenSkeleton 
+              listingsCurrent={referralData.referralPass.listingsSincePass}
+              listingsTotal={referralData.referralPass.listingRequirement}
+              bookingsCurrent={referralData.referralPass.bookingsSincePass}
+              bookingsTotal={referralData.referralPass.bookingRequirement}
+              validUntil={referralData.referralPass.expiryDate.toLocaleDateString()}
+              passStatus="Your Pass is Active!"
+              timeRemaining={timeRemaining}
+              isFoundingPartner={isFoundingPartner}
+            />
+          ) : hasMetRequirements ? (
+            <ReferralPassRedSkeleton 
+              listingsCurrent={referralData.referralPass.listingsSincePass}
+              listingsTotal={referralData.referralPass.listingRequirement}
+              bookingsCurrent={referralData.referralPass.bookingsSincePass}
+              bookingsTotal={referralData.referralPass.bookingRequirement}
+              validUntil={referralData.referralPass.expiryDate.toLocaleDateString()}
+              passStatus="Your Pass Expired!"
+              timeRemaining={timeRemaining}
+              isFoundingPartner={isFoundingPartner}
+            />
+          ) : (
+            <ReferralPassRedSkeleton 
+              listingsCurrent={referralData.referralPass.listingsSincePass}
+              listingsTotal={referralData.referralPass.listingRequirement}
+              bookingsCurrent={referralData.referralPass.bookingsSincePass}
+              bookingsTotal={referralData.referralPass.bookingRequirement}
+              validUntil=""
+              passStatus="Welcome to Kaari's Referral Program!"
+              timeRemaining={null}
+              isFoundingPartner={isFoundingPartner}
+              isOnboarding={true}
+            />
+          )}
 
           {/* Your Referral Link Card - Only show if pass is active */}
           {isReferralPassActive() && (
@@ -462,87 +311,10 @@ const ReferralProgramPage: React.FC = () => {
           )}
 
           {/* Free Photoshoot Banner */}
-          <div className="card photoshoot-banner">
-            <div className="photoshoot-content">
-              <div className="photoshoot-text">
-                <h3>List your property with our</h3>
-                <h2>Free Photoshoot!</h2>
-              </div>
-              <button className="book-photoshoot-btn" onClick={handleBookPhotoshoot}>
-                Book a Photoshoot
-              </button>
-            </div>
-            <div className="photoshoot-image">
-              <img src="/images/camera-girl.svg" alt="Photographer" />
-            </div>
-          </div>
+          <ThinFreePhotoshootCard/>
 
           {/* Earnings Calculator Card */}
-          <div className="card earnings-calculator">
-            <div className="card-header">
-              <h2>Your Earnings Calculator</h2>
-            </div>
-            
-            <div className="calculator-content">
-              <div className="sliders">
-                <div className="slider-group">
-                  <div className="slider-label">
-                    <span>Average Monthly Referrals</span>
-                    <span className="slider-value">3</span>
-                  </div>
-                  <div className="slider-container">
-                    <span className="min-value">0</span>
-                    <input type="range" min="0" max="50" value="3" className="slider" />
-                    <span className="max-value">50</span>
-                  </div>
-                </div>
-                
-                <div className="slider-group">
-                  <div className="slider-label">
-                    <span>Average Tenant Rent</span>
-                    <span className="slider-value">300</span>
-                  </div>
-                  <div className="slider-container">
-                    <span className="min-value">0</span>
-                    <input type="range" min="0" max="500" value="300" className="slider" />
-                    <span className="max-value">500</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="calculator-results">
-                <div className="monthly-earnings">
-                  <h3>Monthly earnings</h3>
-                  <div className="earnings-amount">1200 MAD</div>
-                  
-                  <div className="earnings-details">
-                    <div className="detail-row">
-                      <span>First rent's bonus</span>
-                      <span>10%</span>
-                    </div>
-                    <div className="detail-row">
-                      <span>Successful Bookings</span>
-                      <span>10</span>
-                    </div>
-                    <div className="detail-row">
-                      <span>Total Referrals</span>
-                      <span>10</span>
-                    </div>
-                    <div className="detail-row">
-                      <span>Annual earnings</span>
-                      <span>14400 MAD</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="calculator-footer">
-              <button className="book-photoshoot-btn" onClick={handleBookPhotoshoot}>
-                Book a Photoshoot
-              </button>
-            </div>
-          </div>
+          <YourEarningsCalculatorCard/>
         </div>
 
         <div className="sidebar">
@@ -585,15 +357,11 @@ const ReferralProgramPage: React.FC = () => {
             </div>
 
             <div className="progress-card-buttons">
-              <button 
-                className={`request-payout-btn ${payoutLoading ? 'loading' : ''}`} 
-                onClick={handleRequestPayout}
-                disabled={payoutLoading || referralData.referralStats.monthlyEarnings <= 0}
-              >
-                {payoutLoading ? t('referral_program.processing', 'Processing...') : t('referral_program.request_payout', 'Request Payout')}
+              <button className="request-payout-btn" onClick={handleRequestPayout}>
+                Request Payout
               </button>
               <button className="performance-details-btn" onClick={handleViewPerformance}>
-                {t('referral_program.performance_details', 'Performance Details')}
+                Performance Details
               </button>
             </div>
           </div>
