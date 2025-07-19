@@ -450,14 +450,15 @@ export async function getRecentBookings(limitCount: number = 5): Promise<any[]> 
       }
       
       bookings.push({
-        id: bookingId,
-        ...bookingData,
+        booking: {
+          id: bookingId,
+          ...bookingData,
+          createdAt: bookingData.createdAt instanceof Timestamp ? 
+            bookingData.createdAt.toDate() : 
+            new Date(bookingData.createdAt)
+        },
         property,
-        client,
-        createdAt: bookingData.createdAt?.toDate() || new Date(),
-        updatedAt: bookingData.updatedAt?.toDate() || new Date(),
-        moveInDate: bookingData.moveInDate?.toDate(),
-        paymentDate: bookingData.paymentDate?.toDate()
+        client
       });
     }
     

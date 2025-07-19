@@ -5,14 +5,18 @@ import {
   getDocs, 
   Timestamp, 
   doc, 
-  getDoc 
+  getDoc,
+  updateDoc,
+  increment
 } from 'firebase/firestore';
 import { db } from '../backend/firebase/config';
 import { Request } from '../backend/entities';
 import referralService from './ReferralService';
+import NotificationService from './NotificationService';
 
 const REQUESTS_COLLECTION = 'requests';
 const REFERRAL_DISCOUNTS_COLLECTION = 'referralDiscounts';
+const USERS_COLLECTION = 'users';
 
 class DiscountFinalizationService {
   /**
@@ -66,8 +70,70 @@ class DiscountFinalizationService {
         return false;
       }
       
+      // Find the discount associated with this booking
+      const discountsRef = collection(db, REFERRAL_DISCOUNTS_COLLECTION);
+      const q = query(
+        discountsRef, 
+        where('bookingId', '==', bookingId),
+        where('isUsed', '==', false)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        console.log('No pending discount found for booking:', bookingId);
+        return false;
+      }
+      
+      const discountDoc = querySnapshot.docs[0];
+      const discountData = discountDoc.data();
+      const userId = discountData.userId;
+      const advertiserId = discountData.advertiserId;
+      const bookingAmount = discountData.bookingAmount || 0;
+      
       // Refund window has passed, finalize the discount
-      return await referralService.finalizeDiscountUsage(bookingId);
+      const result = await referralService.finalizeDiscountUsage(bookingId);
+      
+      if (result) {
+        // Update advertiser's total earnings and payment stats
+        const advertiserRef = doc(db, USERS_COLLECTION, advertiserId);
+        const advertiserDoc = await getDoc(advertiserRef);
+        
+        if (advertiserDoc.exists()) {
+          const advertiserData = advertiserDoc.data();
+          const referralStats = advertiserData.referralStats || {};
+          
+          // Calculate earnings based on bonus rate
+          const bonusRate = this.getBonusRateValue(referralStats.firstRentBonus || "5%");
+          const earnings = bookingAmount * bonusRate;
+          
+          // Update advertiser payment stats
+          await updateDoc(advertiserRef, {
+            totalCollected: increment(earnings),
+            paymentCount: increment(1)
+          });
+          
+          // Send notification to the advertiser
+          try {
+            await NotificationService.createNotification(
+              advertiserId,
+              'advertiser',
+              'referral_commission_earned',
+              'Referral Commission Earned',
+              `You've earned ${earnings} MAD in commission from a successful referral booking.`,
+              `/dashboard/advertiser/referral-program`,
+              {
+                amount: earnings,
+                bookingId: bookingId
+              }
+            );
+          } catch (notificationError) {
+            console.error('Error sending referral commission notification:', notificationError);
+          }
+        }
+      }
+      
+      return result;
     } catch (error) {
       console.error('Error checking and finalizing discount:', error);
       return false;
@@ -164,6 +230,14 @@ class DiscountFinalizationService {
       console.error('Error checking all pending discounts:', error);
       throw error;
     }
+  }
+
+  /**
+   * Convert bonus rate string to a number (e.g. "5%" -> 0.05)
+   */
+  private getBonusRateValue(bonusRate: string): number {
+    const percentage = parseInt(bonusRate.replace('%', ''));
+    return percentage / 100;
   }
 }
 

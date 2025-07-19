@@ -158,13 +158,13 @@ async function processMoveInBookingDoc(docSnapshot: QueryDocumentSnapshot<Docume
   try {
     const data = docSnapshot.data();
     
-    // Skip if not a rental request or not paid
-    if (data.requestType !== 'rent' || data.status !== 'paid') {
+    // Skip if not a rental request
+    if (data.requestType !== 'rent') {
       return null;
     }
     
     // Skip if no move-in date
-    if (!data.scheduledDate) {
+    if (!data.scheduledDate && !data.moveInDate) {
       return null;
     }
     
@@ -215,10 +215,10 @@ async function processMoveInBookingDoc(docSnapshot: QueryDocumentSnapshot<Docume
           const tenantData = tenantDoc.data();
           tenant = {
             id: data.userId,
-            name: tenantData.displayName || tenantData.name || data.fullName || 'Unknown Tenant',
-            phoneNumber: tenantData.phoneNumber || data.phoneNumber || 'Unknown',
-            email: tenantData.email || data.email,
-            bankLastFour: tenantData.bankLastFour || data.cardLastFour
+            name: tenantData.name || 'Unknown Tenant',
+            phoneNumber: tenantData.phoneNumber || 'Unknown',
+            email: tenantData.email,
+            bankLastFour: tenantData.paymentMethod?.accountNumber?.slice(-4)
           };
         }
       } catch (error) {
@@ -228,43 +228,40 @@ async function processMoveInBookingDoc(docSnapshot: QueryDocumentSnapshot<Docume
     
     // Get advertiser data
     let advertiser = {
-      id: '',
+      id: data.advertiserId || '',
       name: 'Unknown Advertiser',
       phoneNumber: 'Unknown',
       email: undefined as string | undefined
     };
     
-    // Try to get advertiser from property data
-    if (property.id) {
+    if (data.advertiserId) {
       try {
-        const propertyDoc = await getDoc(doc(db, PROPERTIES_COLLECTION, property.id));
-        if (propertyDoc.exists()) {
-          const propertyData = propertyDoc.data();
-          if (propertyData.advertiserId) {
-            const advertiserDoc = await getDoc(doc(db, USERS_COLLECTION, propertyData.advertiserId));
-            if (advertiserDoc.exists()) {
-              const advertiserData = advertiserDoc.data();
-              advertiser = {
-                id: propertyData.advertiserId,
-                name: advertiserData.displayName || advertiserData.name || 'Unknown Advertiser',
-                phoneNumber: advertiserData.phoneNumber || 'Unknown',
-                email: advertiserData.email
-              };
-            }
-          }
+        const advertiserDoc = await getDoc(doc(db, USERS_COLLECTION, data.advertiserId));
+        if (advertiserDoc.exists()) {
+          const advertiserData = advertiserDoc.data();
+          advertiser = {
+            id: data.advertiserId,
+            name: advertiserData.name || 'Unknown Advertiser',
+            phoneNumber: advertiserData.phoneNumber || 'Unknown',
+            email: advertiserData.email
+          };
         }
       } catch (error) {
         console.error('Error fetching advertiser:', error);
       }
     }
     
-    // Convert dates
-    const moveInDate = data.scheduledDate.toDate ? data.scheduledDate.toDate() : new Date(data.scheduledDate);
-    const paymentCapturedAt = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
-    const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
-    const updatedAt = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
+    // Calculate status based on dates and booking state
+    const moveInDate = data.moveInDate instanceof Timestamp ? 
+      data.moveInDate.toDate() : 
+      data.scheduledDate instanceof Timestamp ? 
+        data.scheduledDate.toDate() : 
+        new Date(data.scheduledDate || data.moveInDate);
     
-    // Calculate status and reason
+    const paymentCapturedAt = data.paymentCapturedAt instanceof Timestamp ? 
+      data.paymentCapturedAt.toDate() : 
+      new Date(data.paymentCapturedAt || data.createdAt);
+    
     const { status, reason } = calculateMoveInStatus(
       moveInDate,
       paymentCapturedAt,
@@ -274,7 +271,7 @@ async function processMoveInBookingDoc(docSnapshot: QueryDocumentSnapshot<Docume
     
     return {
       id: docSnapshot.id,
-      bookingId: `R-${docSnapshot.id.slice(-4).toUpperCase()}`,
+      bookingId: data.bookingId || `R-${docSnapshot.id.substring(0, 5)}`,
       property,
       tenant,
       advertiser,
@@ -282,11 +279,11 @@ async function processMoveInBookingDoc(docSnapshot: QueryDocumentSnapshot<Docume
       status,
       reason,
       paymentCapturedAt,
-      createdAt,
-      updatedAt,
-      amount: data.totalPrice || data.price || 0,
+      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(data.createdAt),
+      updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(data.updatedAt),
+      amount: data.totalPrice || 0,
       gatewayReference: data.gatewayReference,
-      internalNote: data.internalNote || ''
+      internalNote: data.internalNote
     };
   } catch (error) {
     console.error('Error processing move-in booking:', error);
@@ -299,12 +296,11 @@ async function processMoveInBookingDoc(docSnapshot: QueryDocumentSnapshot<Docume
  */
 export async function getAllMoveInBookings(): Promise<MoveInBooking[]> {
   try {
-    const bookingsRef = collection(db, REQUESTS_COLLECTION);
+    const requestsRef = collection(db, REQUESTS_COLLECTION);
     const q = query(
-      bookingsRef,
+      requestsRef,
       where('requestType', '==', 'rent'),
-      where('status', 'in', ['paid', 'movedIn', 'cancelled', 'refundProcessing', 'refundCompleted']),
-      orderBy('scheduledDate', 'desc')
+      orderBy('updatedAt', 'desc')
     );
     
     const querySnapshot = await getDocs(q);
@@ -319,8 +315,8 @@ export async function getAllMoveInBookings(): Promise<MoveInBooking[]> {
     
     return bookings;
   } catch (error) {
-    console.error('Error fetching move-in bookings:', error);
-    throw new Error('Failed to fetch move-in bookings');
+    console.error('Error getting move-in bookings:', error);
+    return [];
   }
 }
 

@@ -35,19 +35,19 @@ const PROPERTIES_COLLECTION = 'properties';
  * Helper function to process a payout document
  */
 async function processPayoutDoc(docSnapshot: QueryDocumentSnapshot<DocumentData>): Promise<Payout> {
-  const data = docSnapshot.data();
-  
-  return {
-    id: docSnapshot.id,
+    const data = docSnapshot.data();
+    
+    return {
+      id: docSnapshot.id,
     payeeId: data.payeeId,
     payeeName: data.payeeName,
     payeePhone: data.payeePhone || 'No phone',
     payeeType: data.payeeType,
     paymentMethod: data.paymentMethod || {
       bankName: 'Unknown Bank',
-      accountLast4: '****',
-      type: 'IBAN'
-    },
+        accountLast4: '****',
+        type: 'IBAN'
+      },
     reason: data.reason,
     amount: data.amount,
     status: data.status,
@@ -249,7 +249,7 @@ export async function requestReferralPayout(referralId: string): Promise<boolean
     console.error('Error requesting referral payout:', error);
     throw new Error('Failed to request referral payout');
   }
-}
+} 
 
 /**
  * Get payout requests for the current user
@@ -468,7 +468,7 @@ export async function getUserPayoutHistory(userId: string): Promise<Payout[]> {
  * Get all payouts with pagination
  * Admin only function
  */
-export async function getAllPayouts(limit: number = 50, lastDocId?: string): Promise<{
+export async function getAllPayouts(limitCount: number = 50, lastDocId?: string): Promise<{
   payouts: Payout[];
   lastDocId: string | null;
   hasMore: boolean;
@@ -494,7 +494,7 @@ export async function getAllPayouts(limit: number = 50, lastDocId?: string): Pro
       }
     }
     
-    const result = await PayoutsService.getAllPayouts(limit, startAfterDoc);
+    const result = await PayoutsService.getAllPayouts(limitCount, startAfterDoc);
     
     return {
       payouts: result.payouts,

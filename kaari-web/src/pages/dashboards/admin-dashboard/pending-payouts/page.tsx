@@ -372,36 +372,36 @@ const PendingPayoutsPage: React.FC = () => {
   
   // Load payouts and payout requests
   const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
       try {
+        setLoading(true);
+        setError(null);
+        
+        try {
         // Get pending payouts
-        const allPayouts = await getAllPendingPayouts();
-        setPayouts(allPayouts);
-        setFilteredPayouts(allPayouts);
+          const allPayouts = await getAllPendingPayouts();
+            setPayouts(allPayouts);
+            setFilteredPayouts(allPayouts);
         
         // Get pending payout requests
         const allPayoutRequests = await getAllPendingPayoutRequests();
         setPayoutRequests(allPayoutRequests);
         setFilteredPayoutRequests(allPayoutRequests);
-      } catch (err) {
+        } catch (err) {
         console.error('Error loading payouts data:', err);
         setError('Failed to load payout data. Please try again later.');
-        setPayouts([]);
-        setFilteredPayouts([]);
+          setPayouts([]);
+          setFilteredPayouts([]);
         setPayoutRequests([]);
         setFilteredPayoutRequests([]);
-      }
-    } catch (err) {
+        }
+      } catch (err) {
       console.error('Error loading data:', err);
       setError('Failed to load data. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+      } finally {
+        setLoading(false);
+      }
+    };
+    
   // Load data on mount
   useEffect(() => {
     loadData();
@@ -634,7 +634,7 @@ const PendingPayoutsPage: React.FC = () => {
         ) : activeTab === 'requests' ? (
           // Payout Requests Tab
           filteredPayoutRequests.length === 0 ? (
-            <EmptyState>
+          <EmptyState>
               <FaInbox size={48} />
               <h3>No pending payout requests found</h3>
               <p>When payout requests are submitted, they will appear here for approval.</p>
@@ -729,72 +729,72 @@ const PendingPayoutsPage: React.FC = () => {
               <FaInbox size={48} />
               <h3>No pending payouts found</h3>
               <p>When payouts are approved and ready to be paid, they will appear here.</p>
-            </EmptyState>
-          ) : (
-            <>
-              <Table>
-                <TableHead>
-                  <tr>
-                    <TableHeader>Payee</TableHeader>
-                    <TableHeader>Pay-out Method</TableHeader>
-                    <TableHeader>Reason</TableHeader>
-                    <TableHeader>Amount</TableHeader>
-                    <TableHeader>Status / Action</TableHeader>
-                  </tr>
-                </TableHead>
-                <tbody>
-                  {filteredPayouts.map(payout => (
-                    <TableRow key={payout.id} $isPending={payout.status === 'pending'}>
-                      <TableCell>
-                        <PayeeInfo>
-                          <PayeeName>{payout.payeeName}</PayeeName>
-                          <PayeePhone>{payout.payeePhone}</PayeePhone>
-                        </PayeeInfo>
-                      </TableCell>
-                      <TableCell>
-                        <PaymentMethodInfo>
-                          <BankName>{payout.paymentMethod.bankName}</BankName>
-                          <AccountNumber>
-                            {payout.paymentMethod.type} ending in {payout.paymentMethod.accountLast4}
-                          </AccountNumber>
-                        </PaymentMethodInfo>
-                      </TableCell>
-                      <TableCell>
-                        <ReasonBadge $type={payout.reason}>
-                          {payout.reason}
-                        </ReasonBadge>
-                      </TableCell>
-                      <TableCell>
+          </EmptyState>
+        ) : (
+          <>
+            <Table>
+              <TableHead>
+                <tr>
+                  <TableHeader>Payee</TableHeader>
+                  <TableHeader>Pay-out Method</TableHeader>
+                  <TableHeader>Reason</TableHeader>
+                  <TableHeader>Amount</TableHeader>
+                  <TableHeader>Status / Action</TableHeader>
+                </tr>
+              </TableHead>
+              <tbody>
+                {filteredPayouts.map(payout => (
+                  <TableRow key={payout.id} $isPending={payout.status === 'pending'}>
+                    <TableCell>
+                      <PayeeInfo>
+                        <PayeeName>{payout.payeeName}</PayeeName>
+                        <PayeePhone>{payout.payeePhone}</PayeePhone>
+                      </PayeeInfo>
+                    </TableCell>
+                    <TableCell>
+                      <PaymentMethodInfo>
+                        <BankName>{payout.paymentMethod.bankName}</BankName>
+                        <AccountNumber>
+                          {payout.paymentMethod.type} ending in {payout.paymentMethod.accountLast4}
+                        </AccountNumber>
+                      </PaymentMethodInfo>
+                    </TableCell>
+                    <TableCell>
+                      <ReasonBadge $type={payout.reason}>
+                        {payout.reason}
+                      </ReasonBadge>
+                    </TableCell>
+                    <TableCell>
                         <Amount>{formatCurrency(payout.amount, payout.currency)}</Amount>
-                      </TableCell>
-                      <TableCell>
-                        {payout.status === 'pending' ? (
-                          <ActionButton
-                            onClick={() => handleMarkAsPaid(payout.id)}
-                            $disabled={processingPayouts[payout.id]}
-                          >
-                            {processingPayouts[payout.id] ? (
-                              <FaSpinner />
-                            ) : (
-                              <FaCheck />
-                            )}
-                            Mark as Paid
-                          </ActionButton>
-                        ) : (
-                          <StatusBadge $status={payout.status}>
-                            Paid
-                          </StatusBadge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </tbody>
-              </Table>
-              
-              <TotalAmount>
+                    </TableCell>
+                    <TableCell>
+                      {payout.status === 'pending' ? (
+                        <ActionButton
+                          onClick={() => handleMarkAsPaid(payout.id)}
+                          $disabled={processingPayouts[payout.id]}
+                        >
+                          {processingPayouts[payout.id] ? (
+                            <FaSpinner />
+                          ) : (
+                            <FaCheck />
+                          )}
+                          Mark as Paid
+                        </ActionButton>
+                      ) : (
+                        <StatusBadge $status={payout.status}>
+                          Paid
+                        </StatusBadge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </tbody>
+            </Table>
+            
+            <TotalAmount>
                 Total: {formatCurrency(totalPayoutAmount)}
-              </TotalAmount>
-            </>
+            </TotalAmount>
+          </>
           )
         )}
       </CardContent>

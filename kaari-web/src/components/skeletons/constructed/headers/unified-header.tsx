@@ -20,7 +20,6 @@ import eventBus, { AUTH_EVENTS, EventType } from '../../../../utils/event-bus';
 import LanguageSwitcher from '../../language-switcher/language-switcher';
 import { useTranslation } from 'react-i18next';
 import NotificationBell from '../../notifications/NotificationBell';
-import { NotificationProvider } from '../../../../contexts/notifications/NotificationContext';
 
 // Define the styled components for different header styles
 const HeaderContainer = styled(HeaderBaseModel)<{
@@ -598,7 +597,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   }, []);
 
   return (
-    <NotificationProvider>
+    <>
       <HeaderContainer 
         isTransparent={isTransparent}
         scrolled={scrolled} 
@@ -622,7 +621,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         onClose={() => setShowSignOutModal(false)}
         onConfirm={handleSignOut}
       />
-    </NotificationProvider>
+    </>
   );
 };
 

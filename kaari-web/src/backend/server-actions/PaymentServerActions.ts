@@ -671,6 +671,7 @@ export async function getAdvertiserPaymentStats(): Promise<{
   totalCollected: number;
   paymentCount: number;
   pendingAmount: number;
+  requestableAmount: number;
 }> {
   try {
     const auth = getAuth();
@@ -688,7 +689,8 @@ export async function getAdvertiserPaymentStats(): Promise<{
       return {
         totalCollected: 0,
         paymentCount: 0,
-        pendingAmount: 0
+        pendingAmount: 0,
+        requestableAmount: 0
       };
     }
     
@@ -696,23 +698,8 @@ export async function getAdvertiserPaymentStats(): Promise<{
     
     // Calculate pending amount from pending payouts
     let pendingAmount = 0;
+    let requestableAmount = 0;
     
-    // Get pending payouts for this advertiser
-    const pendingPayoutsRef = collection(db, PENDING_PAYOUTS_COLLECTION);
-    const q = query(
-      pendingPayoutsRef,
-      where('advertiserId', '==', user.uid),
-      where('status', '==', 'pending')
-    );
-    const querySnapshot = await getDocs(q);
-    
-    // Sum up the total amount of pending payouts
-    querySnapshot.docs.forEach(doc => {
-      const payoutData = doc.data();
-      pendingAmount += payoutData.amount || 0;
-    });
-    
-    // Also include reservations in 'paid' status (before move-in)
     // Get all properties for this advertiser
     const propertiesRef = collection(db, PROPERTIES_COLLECTION);
     const propertiesQuery = query(propertiesRef, where('ownerId', '==', user.uid));
@@ -723,31 +710,97 @@ export async function getAdvertiserPaymentStats(): Promise<{
     // For each property, get paid reservations (before move-in)
     for (const propertyId of propertyIds) {
       const requestsRef = collection(db, REQUESTS_COLLECTION);
-      const requestsQuery = query(
+      
+      // Get paid reservations (before move-in) - these are pending
+      const paidRequestsQuery = query(
         requestsRef, 
         where('propertyId', '==', propertyId),
         where('status', '==', 'paid')
       );
-      const requestsSnapshot = await getDocs(requestsQuery);
+      const paidRequestsSnapshot = await getDocs(paidRequestsQuery);
       
       // Sum up the total price of all paid reservations
-      requestsSnapshot.docs.forEach(doc => {
+      paidRequestsSnapshot.docs.forEach(doc => {
         const requestData = doc.data();
         pendingAmount += requestData.totalPrice || 0;
       });
+      
+      // Get moved-in reservations where refund window has passed - these are requestable
+      const now = new Date();
+      const movedInRequestsQuery = query(
+        requestsRef, 
+        where('propertyId', '==', propertyId),
+        where('status', '==', 'movedIn')
+      );
+      const movedInRequestsSnapshot = await getDocs(movedInRequestsQuery);
+      
+      // Check each moved-in reservation to see if refund window has passed
+      for (const docSnapshot of movedInRequestsSnapshot.docs) {
+        const requestData = docSnapshot.data();
+        
+        // Skip if already processed for payout
+        if (requestData.payoutProcessed) {
+          continue;
+        }
+        
+        // Check if the 24-hour refund window has passed
+        if (!requestData.movedInAt) {
+          continue;
+        }
+        
+        // Convert Firestore timestamp to Date if needed
+        let moveInDate: Date;
+        if (typeof requestData.movedInAt === 'object' && 'seconds' in requestData.movedInAt) {
+          moveInDate = new Date((requestData.movedInAt as any).seconds * 1000);
+        } else {
+          moveInDate = new Date(requestData.movedInAt);
+        }
+        
+        // Calculate refund deadline (24 hours after move-in)
+        const refundDeadline = new Date(moveInDate);
+        refundDeadline.setHours(refundDeadline.getHours() + 24);
+        
+        // If refund window has passed, add to requestable amount
+        if (now > refundDeadline) {
+          requestableAmount += requestData.totalPrice || 0;
+        } else {
+          // Otherwise, add to pending amount
+          pendingAmount += requestData.totalPrice || 0;
+        }
+      }
     }
+    
+    // Check for existing payout requests that haven't been approved yet
+    const payoutRequestsRef = collection(db, 'payoutRequests');
+    const payoutRequestsQuery = query(
+      payoutRequestsRef,
+      where('userId', '==', user.uid),
+      where('status', '==', 'pending')
+    );
+    const payoutRequestsSnapshot = await getDocs(payoutRequestsQuery);
+    
+    // Subtract requested amounts from requestable amount
+    payoutRequestsSnapshot.docs.forEach(doc => {
+      const requestData = doc.data();
+      requestableAmount -= requestData.amount || 0;
+    });
+    
+    // Ensure requestable amount doesn't go negative
+    requestableAmount = Math.max(0, requestableAmount);
     
     return {
       totalCollected: advertiserData.totalCollected || 0,
       paymentCount: advertiserData.paymentCount || 0,
-      pendingAmount
+      pendingAmount,
+      requestableAmount
     };
   } catch (error) {
     console.error('Error fetching advertiser payment stats:', error);
     return {
       totalCollected: 0,
       paymentCount: 0,
-      pendingAmount: 0
+      pendingAmount: 0,
+      requestableAmount: 0
     };
   }
 }

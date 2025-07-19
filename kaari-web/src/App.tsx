@@ -725,14 +725,10 @@ function App() {
     // Otherwise use MainLayout
     return (
       <ToastProvider>
-        <NotificationProvider>
-          <ChecklistProvider>
-            <MainLayout>
-              <ScrollToTop />
-              {routes}
-            </MainLayout>
-          </ChecklistProvider>
-        </NotificationProvider>
+        <ScrollToTop />
+        <MainLayout>
+          {routes}
+        </MainLayout>
       </ToastProvider>
     );
   };
