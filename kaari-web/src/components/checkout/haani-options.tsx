@@ -51,6 +51,7 @@ const OptionCard = styled.div<{ selected: boolean; isPremium?: boolean }>`
   position: relative;
   overflow: hidden;
   
+  
   &:hover {
     border-color: ${Theme.colors.secondary};
     box-shadow: 0 4px 12px rgba(143, 39, 206, 0.1);
@@ -126,7 +127,6 @@ const OptionCard = styled.div<{ selected: boolean; isPremium?: boolean }>`
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 1.5rem;
     
     &:hover {
       background-color: ${props => props.selected ? Theme.colors.primary : Theme.colors.tertiary};

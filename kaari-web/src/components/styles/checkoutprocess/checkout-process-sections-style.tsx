@@ -287,6 +287,27 @@ export const PaymentMethodContainer = styled.div`
         cursor: not-allowed;
       }
     }
+
+    .continue-button {
+      background-color: ${Theme.colors.secondary};
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 100px;
+      font: ${Theme.typography.fonts.mediumB};
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 140px;
+      
+      &:hover {
+        background-color: ${Theme.colors.primary};
+      }
+      
+      &:disabled {
+        background-color: ${Theme.colors.tertiary};
+        cursor: not-allowed;
+      }
+    }
   }
 
   .modal-overlay {

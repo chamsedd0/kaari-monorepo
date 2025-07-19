@@ -9,7 +9,7 @@ import { getUserPayments } from '../../../../backend/server-actions/PaymentServe
 import { formatDate } from '../../../../utils/date-utils';
 
 const PaymentsPage: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'payments' | 'completed'>('payments');
+    const [activeTab, setActiveTab] = useState<'payouts' | 'completed'>('payouts');
     const [payments, setPayments] = useState<any[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -47,10 +47,10 @@ const PaymentsPage: React.FC = () => {
                     <h1 className="title">Payments</h1>
                     <div className="control-buttons">
                         <button 
-                            className={`button ${activeTab === 'payments' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('payments')}
+                            className={`button ${activeTab === 'payouts' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('payouts')}
                         >
-                            Payments
+                            Payout Methods
                         </button>
                         <button 
                             className={`button ${activeTab === 'completed' ? 'active' : ''}`}
@@ -61,10 +61,10 @@ const PaymentsPage: React.FC = () => {
                     </div>
                 </div>
                 <div className="main-section">
-                    {activeTab === 'payments' && (
+                    {activeTab === 'payouts' && (
                         <>
-                            <h2 className="title">Payment Methods</h2>
-                            <p className="subtitle">Manage your payment methods using our secure payment system</p>
+                            <h2 className="title">Payout Methods</h2>
+                            <p className="subtitle">Manage your payout methods using our secure payment system</p>
                             <div className="payment-info-saved">
                                 <Mastercard
                                     cardNumber="1234567890123456"
@@ -75,7 +75,7 @@ const PaymentsPage: React.FC = () => {
                                 
                             </div>
                             <div className="advanced-filtering-button">
-                                <PurpleButtonMB48 text="Add payment method" />
+                                <PurpleButtonMB48 text="Add Payout Method" />
                             </div>
                         </>
                     )}
