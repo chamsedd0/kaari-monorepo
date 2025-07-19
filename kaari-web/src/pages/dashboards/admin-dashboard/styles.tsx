@@ -21,6 +21,29 @@ export const Sidebar = styled.div`
   top: 0;
   bottom: 0;
   z-index: 10;
+  overflow-y: auto; /* Make the sidebar scrollable */
+  
+  /* Styling for scrollbar - webkit browsers */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+  
+  /* Firefox scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
 `;
 
 export const SidebarHeader = styled.div`
@@ -419,4 +442,30 @@ export const ActionButtons = styled.div`
   gap: 10px;
   justify-content: flex-end;
   margin-top: 20px;
+`;
+
+export const SidebarFooter = styled.div`
+  margin-top: auto;
+  padding: 20px;
+  border-top: 1px solid #eee;
+`;
+
+export const LogoutButton = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: #d32f2f;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  
+  &:hover {
+    background-color: #ffebee;
+  }
+  
+  svg {
+    margin-right: 10px;
+    font-size: 18px;
+  }
 `;

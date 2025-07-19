@@ -155,7 +155,6 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
 
         <div style={{ 
           textAlign: 'center', 
-          marginTop: '16px', 
           fontSize: '13px', 
           color: Theme.colors.gray2,
           padding: '8px 0',

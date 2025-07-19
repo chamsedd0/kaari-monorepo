@@ -27,7 +27,10 @@ export type AdvertiserNotificationType =
   | 'refund_requested'
   | 'new_message'
   | 'property_refresh_reminder'
-  | 'property_refresh_warning';
+  | 'property_refresh_warning'
+  | 'payout_request_approved'
+  | 'payout_request_rejected'
+  | 'payout_processed';
 
 // Notification types for clients/users
 export type ClientNotificationType = 
@@ -43,7 +46,11 @@ export type ClientNotificationType =
   | 'cancellation_request_handled'
   | 'inquiry_response'
   | 'property_availability'
-  | 'new_message';
+  | 'new_message'
+  | 'payout_request_approved'
+  | 'payout_request_rejected'
+  | 'payout_processed'
+  | 'refund_processed';
 
 // Add a new type for admin notifications
 export type AdminNotificationType = 

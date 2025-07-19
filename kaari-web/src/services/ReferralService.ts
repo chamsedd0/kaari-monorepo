@@ -645,20 +645,31 @@ class ReferralService {
   // Request a payout (this would typically involve more backend logic)
   async requestPayout(userId: string): Promise<boolean> {
     try {
-      // In a real implementation, this would create a payout request record
-      // For now, we'll just log it
-      console.log(`Payout requested by user ${userId}`);
+      // Get the referral data for this user
+      const referralRef = doc(db, 'referrals', userId);
+      const referralDoc = await getDoc(referralRef);
       
-      // Create a payout request document
-      const payoutRequestRef = doc(collection(db, 'payoutRequests'));
-      await setDoc(payoutRequestRef, {
-        userId,
-        amount: 0, // This would be calculated from the actual earnings
-        status: 'pending',
-        requestedAt: Timestamp.now()
-      });
+      if (!referralDoc.exists()) {
+        console.error('No referral data found for user:', userId);
+        return false;
+      }
       
-      return true;
+      const referralData = referralDoc.data();
+      const referralStats = referralData.referralStats || {};
+      
+      // Check if there are earnings available to withdraw
+      const monthlyEarnings = referralStats.monthlyEarnings || 0;
+      
+      if (monthlyEarnings <= 0) {
+        console.error('No earnings available for payout');
+        return false;
+      }
+      
+      // Import the PayoutsService
+      const PayoutsService = (await import('./PayoutsService')).default;
+      
+      // Request a payout through the PayoutsService
+      return await PayoutsService.requestReferralPayout(userId);
     } catch (error) {
       console.error('Error requesting payout:', error);
       return false;
