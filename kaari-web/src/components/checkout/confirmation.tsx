@@ -403,32 +403,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
             )}
           </div>
           
-          <div className="detail-section">
-            <h3 className="section-heading">Payment Method</h3>
-            
-            {selectedPaymentMethod ? (
-              <>
-                <div className="detail-row">
-                  <span className="detail-label">Card Type</span>
-                  <span className="detail-value">{selectedPaymentMethod.details.brand}</span>
-                </div>
-                
-                <div className="detail-row">
-                  <span className="detail-label">Card Number</span>
-                  <span className="detail-value">•••• •••• •••• {selectedPaymentMethod.details.last4}</span>
-                </div>
-                
-                <div className="detail-row">
-                  <span className="detail-label">Expiration</span>
-                  <span className="detail-value">{selectedPaymentMethod.details.expiry}</span>
-                </div>
-              </>
-            ) : (
-              <div className="detail-row">
-                <span className="detail-value">No payment method selected</span>
-              </div>
-            )}
-          </div>
+          
           
           <div className="navigation-buttons">
             <button className="back-button" onClick={handleBack}>
@@ -461,11 +436,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
         </div>
       </div>
       
-      <div className="navigation-buttons">
-        <button className="back-button" onClick={handleBack}>
-          Back
-        </button>
-      </div>
+     
     </ConfirmationContainer>
   );
 };

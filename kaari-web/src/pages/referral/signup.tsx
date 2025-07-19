@@ -3,16 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import styled from 'styled-components';
 import { Theme } from '../../theme/theme';
-import { FaGoogle, FaArrowLeft, FaEye, FaEyeSlash, FaGift } from 'react-icons/fa';
-import Logo from '../../assets/images/purpleLogo.svg';
-import { getAuth, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from 'firebase/auth';
+import { FaEye, FaEyeSlash, FaExclamationTriangle, FaUser } from 'react-icons/fa';
+import { getAuth, sendEmailVerification } from 'firebase/auth';
 import { useStore } from '../../backend/store';
 import { useToastService } from '../../services/ToastService';
-import { LanguageSwitcher, MobileLanguageSwitcher } from '../../components/skeletons/language-switcher';
 import { getReferralCode } from '../../utils/referral-utils';
 import MainLayout from '../../layouts/MainLayout';
-import { getDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../backend/firebase/config';
+import { GoogleButtonMB48 } from '../../components/skeletons/buttons/google_MB48';
+import googleIcon from '../../components/skeletons/icons/google-icon.svg';
 
 // Custom compact input component
 const CompactInput = ({ title, ...props }: { title: string, [key: string]: any }) => {
@@ -65,14 +63,18 @@ const ReferralSignupPage: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false);
   
   // Form state
+  const [step, setStep] = useState<'email' | 'password' | 'login'>('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [rememberDevice, setRememberDevice] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [discountAmount, setDiscountAmount] = useState<number>(200); // Default 200 MAD
+  const [userName, setUserName] = useState('John');
+  const [userAge, setUserAge] = useState('20');
   
   // Check if device is mobile and extract referral code
   useEffect(() => {
@@ -101,23 +103,52 @@ const ReferralSignupPage: React.FC = () => {
     };
   }, [navigate]);
   
-  // Handle email signup
-  const handleEmailSignup = async (e: React.FormEvent) => {
+  // Handle email step
+  const handleEmailStep = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate email
+    if (!email) {
+      setError('Email is required');
+      return;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    
+    setError(null);
+    setStep('password');
+  };
+  
+  // Handle password creation
+  const handlePasswordCreation = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form
-    if (!email || !password || !confirmPassword || !name) {
-      setError(t('referral.signup.errors.all_fields_required', 'All fields are required'));
+    if (!password || !confirmPassword) {
+      setError('All fields are required');
       return;
     }
     
     if (password !== confirmPassword) {
-      setError(t('referral.signup.errors.passwords_dont_match', 'Passwords don\'t match'));
+      setError('Passwords don\'t match');
       return;
     }
     
-    if (password.length < 6) {
-      setError(t('referral.signup.errors.password_too_short', 'Password must be at least 6 characters'));
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+    
+    // Check if password contains both letters and numbers
+    const hasLetters = /[a-zA-Z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    if (!hasLetters || !hasNumbers) {
+      setError('Password must contain both letters and numbers');
       return;
     }
     
@@ -126,7 +157,7 @@ const ReferralSignupPage: React.FC = () => {
     
     try {
       // Create user with email and password, passing the referral code
-      const user = await signUp(email, password, name, 'client', referralCode);
+      const user = await signUp(email, password, '', 'client', referralCode);
       
       // Send email verification
       const auth = getAuth();
@@ -138,18 +169,41 @@ const ReferralSignupPage: React.FC = () => {
         toast.auth.verificationEmailSent();
       }
       
+      // Move to login step
+      setStep('login');
+      setIsLoading(false);
+    } catch (err: any) {
+      console.error('Signup error:', err);
+      setError(err.message || 'An error occurred during signup');
+      setIsLoading(false);
+    }
+  };
+  
+  // Handle login
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!loginPassword) {
+      setError('Password is required');
+      return;
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
       // Show success message about the discount
       toast.showToast(
         'success',
-        t('referral.signup.discount_applied', 'Discount Applied!'),
-        t('referral.signup.discount_message', 'Your {{amount}} MAD discount has been applied to your account and is valid for 7 days.', { amount: discountAmount })
+        'Discount Applied!',
+        `Your ${discountAmount} MAD discount has been applied to your account and is valid for 7 days.`
       );
       
       // Redirect to the property list page
       navigate('/properties', { replace: true });
     } catch (err: any) {
-      console.error('Signup error:', err);
-      setError(err.message || t('referral.signup.errors.signup_error', 'An error occurred during signup'));
+      console.error('Login error:', err);
+      setError(err.message || 'An error occurred during login');
       setIsLoading(false);
     }
   };
@@ -157,7 +211,7 @@ const ReferralSignupPage: React.FC = () => {
   // Handle Google signup
   const handleGoogleSignup = async () => {
     if (!referralCode) {
-      setError(t('referral.signup.errors.missing_referral', 'Missing referral code'));
+      setError('Missing referral code');
       return;
     }
     
@@ -173,8 +227,8 @@ const ReferralSignupPage: React.FC = () => {
         // Show success message about the discount
         toast.showToast(
           'success',
-          t('referral.signup.discount_applied', 'Discount Applied!'),
-          t('referral.signup.discount_message', 'Your {{amount}} MAD discount has been applied to your account and is valid for 7 days.', { amount: discountAmount })
+          'Discount Applied!',
+          `Your ${discountAmount} MAD discount has been applied to your account and is valid for 7 days.`
         );
         
         // Redirect to the property list page
@@ -182,103 +236,198 @@ const ReferralSignupPage: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Google signup error:', err);
-      setError(err.message || t('referral.signup.errors.google_error', 'An error occurred during Google signup'));
+      setError(err.message || 'An error occurred during Google signup');
     }
     
     setIsLoading(false);
-  };
-
-  // Handle back button click
-  const handleBackClick = () => {
-    navigate(`/referral/claim-discount?ref=${referralCode}`);
   };
   
   return (
     <MainLayout>
       <SignupContainer isMobile={isMobile}>
-        <TopSection isMobile={isMobile}>
-          <BackButton onClick={handleBackClick}>
-            <FaArrowLeft />
-          </BackButton>
-          <LogoContainer>
-            <img src={Logo} alt={t('common.kaari_logo')} height={isMobile ? "28" : "32"} />
-          </LogoContainer>
-          <LanguageSwitcherContainer>
-            {isMobile ? <MobileLanguageSwitcher lightBackground={true} /> : <LanguageSwitcher />}
-          </LanguageSwitcherContainer>
-        </TopSection>
-        
         <ContentContainer isMobile={isMobile}>
           <SignupCard isMobile={isMobile}>
-            <CardHeader isMobile={isMobile}>
-              <DiscountBadge>
-                <FaGift />
-                <span>{discountAmount} MAD {t('referral.signup.discount', 'Discount')}</span>
-              </DiscountBadge>
-              <h1>{t('referral.signup.title', 'Create an Account')}</h1>
-              <p>{t('referral.signup.subtitle', 'Sign up to claim your discount')}</p>
-            </CardHeader>
-            
-            {error && (
-              <ErrorMessage>
-                {error}
-              </ErrorMessage>
+            {step === 'email' ? (
+              <>
+                <CardHeader isMobile={isMobile}>
+                  <h1>Log in or Sign up</h1>
+                </CardHeader>
+                
+                <ReferralBanner>
+                  <div className="banner-icon">
+                    <span>%</span>
+                  </div>
+                  <span className="banner-text">
+                    Your Referral code is automatically applied!
+                  </span>
+                </ReferralBanner>
+                
+                {error && (
+                  <ErrorMessage>
+                    {error}
+                  </ErrorMessage>
+                )}
+                
+                <SignupForm onSubmit={handleEmailStep}>
+                  <CompactInput
+                    type="email"
+                    placeholder="email@email.com"
+                    value={email}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                    title="Email"
+                  />
+                  
+                  <Divider isMobile={isMobile}>
+                    <span>or</span>
+                  </Divider>
+                  
+                  <GoogleButtonWrapper>
+                    <GoogleButtonMB48 
+                      icon={googleIcon}
+                      text="Connect  with Google"
+                    />
+                  </GoogleButtonWrapper>
+                  
+                  <LoginOptions>
+                    <div className="checkbox-container">
+                      <input
+                        type="checkbox"
+                        id="remember-device-email"
+                        checked={rememberDevice}
+                        onChange={(e) => setRememberDevice(e.target.checked)}
+                      />
+                      <label htmlFor="remember-device-email">
+                        Remember this device
+                      </label>
+                    </div>
+                    <ForgotPasswordLink>
+                      Forgot password?
+                    </ForgotPasswordLink>
+                  </LoginOptions>
+                  
+                  <SubmitButtonWrapper isMobile={isMobile}>
+                    <CompactPurpleButton 
+                      type="submit"
+                      disabled={isLoading}
+                      isMobile={isMobile}
+                    >
+                      {isLoading ? 'Loading...' : 'Log in or Sign Up'}
+                    </CompactPurpleButton>
+                  </SubmitButtonWrapper>
+                </SignupForm>
+                
+                <AdvertiserLink>
+                  Are you an advertiser?
+                </AdvertiserLink>
+              </>
+            ) : step === 'password' ? (
+              <>
+                <CardHeader isMobile={isMobile}>
+                  <h1>Create Password</h1>
+                </CardHeader>
+                
+                {error && (
+                  <ErrorMessage>
+                    {error}
+                  </ErrorMessage>
+                )}
+                
+                <SignupForm onSubmit={handlePasswordCreation}>
+                  <PasswordInput
+                    title="Create Password"
+                    value={password}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                    placeholder="Enter here"
+                  />
+                  
+                  <PasswordInput
+                    title="Re-enter Password"
+                    value={confirmPassword}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
+                    placeholder="Enter here"
+                  />
+                  
+                  <PasswordRequirements>
+                    <FaExclamationTriangle />
+                    <span>Passwords must have at least 8 characters and contain numbers and letters</span>
+                  </PasswordRequirements>
+                  
+                  <SubmitButtonWrapper isMobile={isMobile}>
+                    <CompactPurpleButton 
+                      type="submit"
+                      disabled={isLoading}
+                      isMobile={isMobile}
+                    >
+                      {isLoading ? 'Loading...' : 'Create Password'}
+                    </CompactPurpleButton>
+                  </SubmitButtonWrapper>
+                </SignupForm>
+              </>
+            ) : (
+              <>
+                <CardHeader isMobile={isMobile}>
+                  <h1>Enter Password</h1>
+                </CardHeader>
+                
+                <UserInfoSection>
+                  <p className="login-text">You are logging in as</p>
+                  <UserCard>
+                    <div className="user-avatar">
+                      <FaUser />
+                    </div>
+                    <div className="user-details">
+                      <span className="user-name">{userName}, {userAge}</span>
+                    </div>
+                  </UserCard>
+                </UserInfoSection>
+                
+                {error && (
+                  <ErrorMessage>
+                    {error}
+                  </ErrorMessage>
+                )}
+                
+                <SignupForm onSubmit={handleLogin}>
+                  <PasswordInput
+                    title="Your password"
+                    value={loginPassword}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLoginPassword(e.target.value)}
+                    placeholder="email@email.com"
+                  />
+                  
+                  <LoginOptions>
+                    <div className="checkbox-container">
+                      <input
+                        type="checkbox"
+                        id="remember-device"
+                        checked={rememberDevice}
+                        onChange={(e) => setRememberDevice(e.target.checked)}
+                      />
+                      <label htmlFor="remember-device">
+                        Remember this device
+                      </label>
+                    </div>
+                    <ForgotPasswordLink>
+                      Forgot password?
+                    </ForgotPasswordLink>
+                  </LoginOptions>
+                  
+                  <SubmitButtonWrapper isMobile={isMobile}>
+                    <CompactPurpleButton 
+                      type="submit"
+                      disabled={isLoading}
+                      isMobile={isMobile}
+                    >
+                      {isLoading ? 'Loading...' : 'Log in'}
+                    </CompactPurpleButton>
+                  </SubmitButtonWrapper>
+                </SignupForm>
+                
+                <AdvertiserLink>
+                  Are you an advertiser?
+                </AdvertiserLink>
+              </>
             )}
-            
-            <GoogleButton onClick={handleGoogleSignup} disabled={isLoading} isMobile={isMobile}>
-              <FaGoogle />
-              {t('referral.signup.continue_with_google', 'Continue with Google')}
-            </GoogleButton>
-            
-            <Divider isMobile={isMobile}>
-              <span>{t('common.or', 'or')}</span>
-            </Divider>
-            
-            <SignupForm onSubmit={handleEmailSignup}>
-              <CompactInput
-                type="text"
-                placeholder={t('referral.signup.name_placeholder', 'Your full name')}
-                value={name}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setName(e.target.value)}
-                title={t('referral.signup.full_name', 'Full Name')}
-              />
-              
-              <CompactInput
-                type="email"
-                placeholder={t('referral.signup.email_placeholder', 'Your email address')}
-                value={email}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                title={t('referral.signup.email', 'Email')}
-              />
-              
-              <PasswordInput
-                title={t('referral.signup.password', 'Password')}
-                value={password}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                placeholder={t('referral.signup.password_placeholder', 'Create a password')}
-              />
-              
-              <PasswordInput
-                title={t('referral.signup.confirm_password', 'Confirm Password')}
-                value={confirmPassword}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
-                placeholder={t('referral.signup.confirm_password_placeholder', 'Confirm your password')}
-              />
-              
-              <SubmitButtonWrapper isMobile={isMobile}>
-                <CompactPurpleButton 
-                  type="submit"
-                  disabled={isLoading}
-                  isMobile={isMobile}
-                >
-                  {isLoading ? t('common.loading', 'Loading...') : t('referral.signup.create_account', 'Create Account & Claim Discount')}
-                </CompactPurpleButton>
-              </SubmitButtonWrapper>
-            </SignupForm>
-            
-            <TermsText>
-              {t('referral.signup.terms', 'By signing up, you agree to our Terms of Service and Privacy Policy')}
-            </TermsText>
           </SignupCard>
         </ContentContainer>
       </SignupContainer>
@@ -296,44 +445,6 @@ const SignupContainer = styled.div<{ isMobile: boolean }>`
   background-color: ${Theme.colors.white};
 `;
 
-const TopSection = styled.div<{ isMobile: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: ${props => props.isMobile ? '24px' : '40px'};
-  position: relative;
-`;
-
-const BackButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 20px;
-  color: ${Theme.colors.black};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-  
-  &:hover {
-    background-color: ${Theme.colors.gray2};
-  }
-`;
-
-const LogoContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  flex: 1;
-`;
-
-const LanguageSwitcherContainer = styled.div`
-  min-width: 100px;
-  display: flex;
-  justify-content: flex-end;
-`;
-
 const ContentContainer = styled.div<{ isMobile: boolean }>`
   display: flex;
   flex-direction: column;
@@ -347,43 +458,91 @@ const ContentContainer = styled.div<{ isMobile: boolean }>`
 
 const SignupCard = styled.div<{ isMobile: boolean }>`
   background-color: white;
-  border-radius: ${Theme.borders.radius.lg};
-  box-shadow: ${props => props.isMobile ? 'none' : '0 8px 24px rgba(0, 0, 0, 0.1)'};
   padding: ${props => props.isMobile ? '0' : '40px'};
   width: 100%;
 `;
 
 const CardHeader = styled.div<{ isMobile: boolean }>`
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   
   h1 {
-    font: ${Theme.typography.fonts.largeB};
-    margin: 16px 0 8px;
-  }
-  
-  p {
-    font: ${Theme.typography.fonts.mediumM};
-    color: ${Theme.colors.black};
+    font: ${Theme.typography.fonts.extraLargeB};
     margin: 0;
+    color: ${Theme.colors.black};
   }
 `;
 
-const DiscountBadge = styled.div`
-  display: inline-flex;
+const ReferralBanner = styled.div`
+  display: flex;
   align-items: center;
-  background: linear-gradient(90deg, ${Theme.colors.primary} 0%, ${Theme.colors.secondary} 100%);
+  background: linear-gradient(90deg, rgba(173, 115, 255, 1) 0%, rgba(0, 191, 212, 1) 100%);
   color: white;
-  padding: 8px 16px;
+  padding: 12px 16px;
   border-radius: ${Theme.borders.radius.md};
-  margin: 0 auto;
+  margin-bottom: 24px;
   
-  svg {
-    margin-right: 8px;
+  .banner-icon {
+    background-color: white;
+    color: rgba(173, 115, 255, 1);
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-weight: bold;
+    font-size: 14px;
   }
   
-  span {
-    font: ${Theme.typography.fonts.mediumB};
+  .banner-text {
+    font: ${Theme.typography.fonts.mediumM};
+  }
+`;
+
+const UserInfoSection = styled.div`
+  text-align: center;
+  margin-bottom: 24px;
+  
+  .login-text {
+    font: ${Theme.typography.fonts.mediumM};
+    color: ${Theme.colors.black};
+    margin: 0 0 16px 0;
+  }
+`;
+
+const UserCard = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: ${Theme.colors.gray2};
+  border-radius: 50px;
+  padding: 8px 16px;
+  width: fit-content;
+  margin: 0 auto;
+  
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: ${Theme.colors.primary};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    
+    svg {
+      color: white;
+      font-size: 16px;
+    }
+  }
+  
+  .user-details {
+    .user-name {
+      font: ${Theme.typography.fonts.mediumB};
+      color: ${Theme.colors.black};
+    }
   }
 `;
 
@@ -394,54 +553,6 @@ const ErrorMessage = styled.div`
   border-radius: ${Theme.borders.radius.md};
   margin-bottom: 24px;
   font: ${Theme.typography.fonts.mediumM};
-`;
-
-const GoogleButton = styled.button<{ isMobile: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 16px;
-  border: 1px solid ${Theme.colors.gray};
-  border-radius: ${Theme.borders.radius.md};
-  background-color: white;
-  font: ${Theme.typography.fonts.mediumB};
-  color: ${Theme.colors.black};
-  cursor: pointer;
-  transition: background-color 0.2s;
-  
-  &:hover {
-    background-color: ${Theme.colors.gray};
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  
-  svg {
-    margin-right: 12px;
-    color: #4285F4;
-  }
-`;
-
-const Divider = styled.div<{ isMobile: boolean }>`
-  display: flex;
-  align-items: center;
-  margin: 24px 0;
-  
-  &::before, &::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background-color: ${Theme.colors.gray};
-  }
-  
-  span {
-    padding: 0 16px;
-    color: ${Theme.colors.black};
-    font: ${Theme.typography.fonts.mediumM};
-  }
 `;
 
 const SignupForm = styled.form`
@@ -461,14 +572,13 @@ const CompactInputContainer = styled.div`
   input {
     width: 100%;
     padding: 16px;
-    border: 1px solid ${Theme.colors.gray};
-    border-radius: ${Theme.borders.radius.md};
+    border: ${Theme.borders.primary};
+    border-radius: ${Theme.borders.radius.extreme};
     font: ${Theme.typography.fonts.mediumM};
     
     &:focus {
       outline: none;
-      border-color: ${Theme.colors.primary};
-      box-shadow: 0 0 0 2px ${Theme.colors.primary}20;
+      border-color: rgba(173, 115, 255, 1);
     }
   }
   
@@ -496,6 +606,96 @@ const CompactInputContainer = styled.div`
   }
 `;
 
+const LoginOptions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  
+  .checkbox-container {
+    display: flex;
+    align-items: center;
+    
+    input[type="checkbox"] {
+      margin-right: 8px;
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      accent-color: ${Theme.colors.secondary};
+      border: 1px solid ${Theme.colors.black};
+      border-radius: 4px;
+    }
+    
+    label {
+      font: ${Theme.typography.fonts.mediumM};
+      color: ${Theme.colors.black};
+      margin: 0;
+      cursor: pointer;
+    }
+  }
+`;
+
+const ForgotPasswordLink = styled.span`
+  font: ${Theme.typography.fonts.mediumM};
+  color: ${Theme.colors.primary};
+  cursor: pointer;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const PasswordRequirements = styled.div`
+  display: flex;
+  align-items: flex-start;
+  background-color: ${Theme.colors.primary}20;
+  color: white;
+  padding: 12px 16px;
+  border-radius: ${Theme.borders.radius.md};
+  margin-bottom: 24px;
+  
+  svg {
+    margin-right: 12px;
+    margin-top: 2px;
+    color: ${Theme.colors.primary};
+    flex-shrink: 0;
+  }
+  
+  span {
+    font: ${Theme.typography.fonts.mediumM};
+    color: ${Theme.colors.primary};
+    line-height: 1.4;
+  }
+`;
+
+const Divider = styled.div<{ isMobile: boolean }>`
+  display: flex;
+  align-items: center;
+  margin: 24px 0;
+  
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background-color: ${Theme.colors.sixth};
+  }
+  
+  span {
+    padding: 0 16px;
+    color: ${Theme.colors.black};
+    font: ${Theme.typography.fonts.mediumM};
+  }
+`;
+
+const GoogleButtonWrapper = styled.div`
+  width: 100%;
+  margin-bottom: 24px;
+  
+  > * {
+    width: 100%;
+  }
+`;
+
 const SubmitButtonWrapper = styled.div<{ isMobile: boolean }>`
   margin-top: 24px;
 `;
@@ -506,7 +706,7 @@ const CompactPurpleButton = styled.button<{ isMobile: boolean }>`
   background-color: ${Theme.colors.secondary};
   color: white;
   border: none;
-  border-radius: ${Theme.borders.radius.md};
+  border-radius: ${Theme.borders.radius.extreme};
   font: ${Theme.typography.fonts.mediumB};
   cursor: pointer;
   transition: background-color 0.2s;
@@ -521,11 +721,16 @@ const CompactPurpleButton = styled.button<{ isMobile: boolean }>`
   }
 `;
 
-const TermsText = styled.p`
+const AdvertiserLink = styled.p`
   text-align: center;
   font: ${Theme.typography.fonts.mediumM};
-  color: ${Theme.colors.black};
+  color: ${Theme.colors.secondary};
   margin-top: 24px;
+  cursor: pointer;
+  
+  &:hover {
+    text-decoration: underline;
+  }
 `;
 
 export default ReferralSignupPage; 

@@ -7,6 +7,7 @@ import { getReferralCode } from '../../utils/referral-utils';
 import { useReferralSignup } from '../../hooks/useReferralSignup';
 import MainLayout from '../../layouts/MainLayout';
 import { getAuth, signOut } from 'firebase/auth';
+import twoGuysSvg from '../../components/skeletons/icons/2-guys.svg';
 
 const ClaimDiscountPage: React.FC = () => {
   const { t } = useTranslation();
@@ -95,55 +96,54 @@ const ClaimDiscountPage: React.FC = () => {
     <MainLayout>
       <Container>
         <ContentWrapper>
-          <ContentBox>
-            <LeftContent>
-              <Title>
-                {isClaimed 
-                  ? t('referral.claim.successTitle', 'Discount Successfully Claimed!')
-                  : t('referral.claim.title', 'You\'ve got 200 MAD OFF')}
-              </Title>
-              
-              <SubTitle>
-                {isClaimed 
-                  ? null
-                  : t('referral.claim.subtitle', 'your next booking on Kaari!')}
-              </SubTitle>
-              
-              <ImportantSection>
-                <ImportantTitle>
-                  {t('referral.claim.importantTitle', 'Important!')}
-                </ImportantTitle>
-                <ImportantText>
-                  {t('referral.claim.validityText', 'Your discount is valid for 7 days.')}
-                  <br />
-                  {t('referral.claim.claimNow', 'Claim it now and use it on any property.')}
-                </ImportantText>
-              </ImportantSection>
-              
-              {!isClaimed ? (
-                <ButtonsContainer>
-                  <PrimaryButton onClick={handleClaimDiscount}>
-                    {t('referral.claim.claimButton', 'Claim my Discount')}
-                  </PrimaryButton>
-                  <SecondaryButton onClick={handleBrowseProperties}>
-                    {t('referral.claim.browseButton', 'Browse Properties')}
-                  </SecondaryButton>
-                </ButtonsContainer>
-              ) : (
-                <ButtonsContainer>
-                  <PrimaryButton onClick={() => navigate(`/referral/signup?ref=${referralCode}`)}>
-                    {t('referral.claim.createAccountButton', 'Create Account')}
-                  </PrimaryButton>
-                  <SecondaryButton onClick={handleBrowseProperties}>
-                    {t('referral.claim.browseButton', 'Browse Properties')}
-                  </SecondaryButton>
-                </ButtonsContainer>
-              )}
-            </LeftContent>
-            <RightContent>
-              <img src="/referral-illustration.svg" alt="Referral Illustration" />
-            </RightContent>
-          </ContentBox>
+          <LeftContent>
+            <Title>
+              {isClaimed 
+                ? t('referral.claim.successTitle', 'Discount Successfully Claimed!')
+                : "You've got"}
+            </Title>
+            
+            {!isClaimed && (
+              <DiscountAmount>
+                200 MAD OFF
+              </DiscountAmount>
+            )}
+            
+            <SubTitle>
+              {isClaimed 
+                ? null
+                : t('referral.claim.subtitle', 'your next booking on Kaari!')}
+            </SubTitle>
+            
+
+              <ImportantTitle>
+                {t('referral.claim.importantTitle', 'Important!')}
+              </ImportantTitle>
+              <ImportantText>
+                {t('referral.claim.validityText', 'Your discount is valid for 7 days.')}
+                <br />
+                {t('referral.claim.claimNow', 'Claim it now and use it on any property.')}
+              </ImportantText>
+           
+            
+            {!isClaimed ? (
+              <ButtonsContainer>
+                <PrimaryButton onClick={handleClaimDiscount}>
+                  {t('referral.claim.claimButton', 'Claim my Discount')}
+                </PrimaryButton>
+              </ButtonsContainer>
+            ) : (
+              <ButtonsContainer>
+                <PrimaryButton onClick={() => navigate(`/referral/signup?ref=${referralCode}`)}>
+                  {t('referral.claim.createAccountButton', 'Create Account')}
+                </PrimaryButton>
+
+              </ButtonsContainer>
+            )}
+          </LeftContent>
+          <RightContent>
+            <img src={twoGuysSvg} alt="Referral Illustration" />
+          </RightContent>
         </ContentWrapper>
       </Container>
     </MainLayout>
@@ -159,24 +159,15 @@ const Container = styled.div`
   min-height: calc(100vh - 80px);
   padding: 20px;
   margin-top: 80px;
-  background: linear-gradient(135deg, ${Theme.colors.primary} 0%, ${Theme.colors.secondary} 100%);
+  background: linear-gradient(135deg, rgba(67, 13, 174, 1) 0%, rgba(159, 50, 225, 1) 50%, rgba(225, 155, 50, 1) 100%);
 `;
 
 const ContentWrapper = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 1000px;
   width: 100%;
-  margin: 40px 0;
-`;
-
-const ContentBox = styled.div`
-  display: flex;
-  width: 100%;
-  background-color: white;
+  max-width: 1200px;
+  background: transparent;
   border-radius: ${Theme.borders.radius.lg};
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   
   @media (max-width: 768px) {
@@ -185,10 +176,12 @@ const ContentBox = styled.div`
 `;
 
 const LeftContent = styled.div`
-  padding: 48px;
+  padding: 40px 48px;
   display: flex;
   flex-direction: column;
   flex: 1;
+  color: white;
+  justify-content: center;
   
   @media (max-width: 768px) {
     padding: 32px;
@@ -199,62 +192,58 @@ const RightContent = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(90deg, ${Theme.colors.primary} 0%, ${Theme.colors.secondary} 100%);
   flex: 1;
   padding: 20px;
   
   img {
     max-width: 100%;
-    max-height: 400px;
+    max-height: 485px;
+    filter: brightness(1.1) contrast(1.1);
   }
 `;
 
 const Title = styled.h1`
-  font: ${Theme.typography.fonts.largeB};
-  color: ${Theme.colors.black};
+  font: ${Theme.typography.fonts.extraLargeM};
+  color: white;
+  
+
+`;
+
+const DiscountAmount = styled.h1`
+  font: ${Theme.typography.fonts.h1};
+  color: white;
 
   
-  @media (max-width: 768px) {
 
-  }
 `;
 
 const SubTitle = styled.h2`
-  font: ${Theme.typography.fonts.largeM};
-  color: ${Theme.colors.black};
-
+  font: ${Theme.typography.fonts.h3};
+  color: white;
+  margin: 0 0 40px 0;
   
-  @media (max-width: 768px) {
 
-  }
 `;
 
-const Description = styled.p`
-  font: ${Theme.typography.fonts.mediumM};
-  color: ${Theme.colors.black};
-  margin: 0 0 24px 0;
-  line-height: 1.5;
-`;
 
-const ImportantSection = styled.div`
-  background: linear-gradient(90deg, ${Theme.colors.primary}20 0%, ${Theme.colors.secondary}20 100%);
-  border-radius: ${Theme.borders.radius.md};
-  padding: 24px;
-  color: ${Theme.colors.black};
-  width: 100%;
-  margin-bottom: 32px;
-  margin-top: auto;
-`;
 
 const ImportantTitle = styled.h3`
-  font: ${Theme.typography.fonts.mediumB};
+  font: ${Theme.typography.fonts.h4DB};
   margin: 0 0 8px 0;
+  color: white;
+
 `;
 
 const ImportantText = styled.p`
-  font: ${Theme.typography.fonts.mediumM};
-  margin: 0;
-  line-height: 1.5;
+  font: ${Theme.typography.fonts.smallM};
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+  color: white;
+ 
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
 `;
 
 const ButtonsContainer = styled.div`
@@ -262,39 +251,28 @@ const ButtonsContainer = styled.div`
   flex-direction: column;
   gap: 16px;
   width: 100%;
+  max-width: 160px;
 `;
 
 const PrimaryButton = styled.button`
-  background-color: ${Theme.colors.secondary};
+  background-color: rgba(225, 155, 50, 1);
   color: white;
   border: none;
-  border-radius: ${Theme.borders.radius.md};
-  padding: 16px;
-  font: ${Theme.typography.fonts.mediumB};
+  border-radius: ${Theme.borders.radius.extreme};
+  padding: 16px 19px;
+  font: ${Theme.typography.fonts.text14};
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
+  margin-top: 20px;
+ 
 
   &:hover {
-    background-color: ${Theme.colors.primary};
+    background-color: rgba(225, 155, 50, 0.9);
+    transform: translateY(-2px);
   }
 `;
 
-const SecondaryButton = styled.button`
-  background-color: transparent;
-  color: ${Theme.colors.secondary};
-  border: 1px solid ${Theme.colors.secondary};
-  border-radius: ${Theme.borders.radius.md};
-  padding: 16px;
-  font: ${Theme.typography.fonts.mediumB};
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-
-  &:hover {
-    background-color: ${Theme.colors.secondary}10;
-  }
-`;
 
 const LoadingText = styled.p`
   font: ${Theme.typography.fonts.largeM};
@@ -304,7 +282,7 @@ const LoadingText = styled.p`
 
 const ErrorMessage = styled.p`
   font: ${Theme.typography.fonts.largeM};
-  color: ${Theme.colors.error};
+  color: #ff6b6b;
   text-align: center;
   margin-bottom: 24px;
 `;
