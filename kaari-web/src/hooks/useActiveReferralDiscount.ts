@@ -87,6 +87,7 @@ export const useActiveReferralDiscount = () => {
     
     // Only clients can have discounts
     if (currentUser.role !== 'client') {
+      console.log(`User role ${currentUser.role} is not eligible for referral discounts`);
       setActiveDiscount(null);
       setLoading(false);
       return;

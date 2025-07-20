@@ -377,8 +377,22 @@ class MessageService {
         return;
       }
       
-      // Send notification based on recipient type
-      if (recipientProfile.userType === 'advertiser') {
+      // Get the actual user document to determine the correct role
+      const recipientRef = doc(db, this.usersCollection, recipientId);
+      const recipientDoc = await getDoc(recipientRef);
+      
+      if (!recipientDoc.exists()) {
+        console.error('Recipient user document not found');
+        return;
+      }
+      
+      const recipientData = recipientDoc.data();
+      const recipientRole = recipientData.role || 'client';
+      
+      console.log(`Sending message notification to ${recipientId} with role ${recipientRole}`);
+      
+      // Send notification based on recipient role
+      if (recipientRole === 'advertiser') {
         await advertiserNotifications.newMessage(
           recipientId,
           senderId,

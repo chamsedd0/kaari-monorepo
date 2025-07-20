@@ -198,7 +198,7 @@ export async function cancelReservation(reservationId: string): Promise<void> {
 }
 
 // Add the function to mark a reservation as completed when the user moves in
-export async function completeReservation(reservationId: string): Promise<void> {
+export async function completeReservation(reservationId: string): Promise<boolean> {
   try {
     // Check if user is authenticated
     const currentUser = await getCurrentUserProfile();
@@ -217,77 +217,127 @@ export async function completeReservation(reservationId: string): Promise<void> 
       throw new Error('Not authorized to complete this reservation');
     }
     
-    // Update the reservation status to "movedIn" with "moved_in" flag and timestamp
-    const moveInDate = new Date();
+    // Verify that the reservation is in 'paid' status
+    if (reservation.status !== 'paid') {
+      throw new Error('Cannot complete a reservation that is not paid');
+    }
+    
+    // Update the reservation status to "movedIn"
     await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
       status: 'movedIn',
-      movedIn: true,
-      movedInAt: moveInDate,
+      movedInAt: new Date(),
       updatedAt: new Date()
     });
     
-    // Schedule discount finalization after refund window passes
+    // Schedule review prompt for 3 days after move-in
     try {
-      // Import discount finalization service dynamically to avoid circular dependencies
-      const discountFinalizationService = (await import('../../services/DiscountFinalizationService')).default;
-      discountFinalizationService.scheduleDiscountFinalization(reservationId, moveInDate);
-    } catch (discountErr) {
-      console.error('Error scheduling discount finalization:', discountErr);
-      // Non-blocking - doesn't affect the main workflow
+      await scheduleReviewPromptAfterMoveIn(reservationId);
+    } catch (error) {
+      console.error('Error scheduling review prompt:', error);
+      // Non-critical, continue execution
     }
     
-    // Schedule a review prompt for 3 hours after moving in
-    // This is done asynchronously to avoid blocking the main workflow
-    scheduleReviewPromptAfterMoveIn(reservationId).catch(error => {
-      console.error('Error scheduling review prompt:', error);
-      // Non-blocking - doesn't affect the main workflow
-    });
-    
     // Send notification to the advertiser about the move-in
-    try {
-      if (reservation.propertyId) {
-        const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
-        if (property && property.ownerId) {
-          // Create client name for the notification
-          const clientName = currentUser.name && currentUser.surname 
-            ? `${currentUser.name} ${currentUser.surname}` 
-            : currentUser.email || 'A client';
-            
-          // Create a reservation object for notification
-          const reservationForNotification = {
-            id: reservationId,
-            propertyId: reservation.propertyId,
-            propertyTitle: property.title || 'Property',
-            clientId: currentUser.id,
-            clientName,
-            advertiserId: property.ownerId,
-            status: 'movedIn'
-          };
+    if (reservation.propertyId) {
+      const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
+      if (property && property.ownerId) {
+        // Create client name for the notification
+        const clientName = currentUser.name && currentUser.surname 
+          ? `${currentUser.name} ${currentUser.surname}` 
+          : currentUser.email || 'A client';
           
-          // Send notification to the advertiser
+        // Create a reservation object for notification
+        const reservationForNotification = {
+          id: reservationId,
+          propertyId: reservation.propertyId,
+          propertyTitle: property.title || 'Property',
+          clientId: currentUser.id,
+          clientName,
+          advertiserId: property.ownerId,
+          status: 'movedIn'
+        };
+        
+        // Send notification to the advertiser
+        try {
           await advertiserNotifications.clientMovedIn(
             property.ownerId,
             reservationForNotification as any
           );
-          
-          // Send confirmation to the client
-          await userNotifications.moveInConfirmation(
-            currentUser.id,
-            reservationForNotification as any
-          );
-          
-          console.log(`Move-in notification sent to advertiser: ${property.ownerId}`);
+        } catch (notifError) {
+          console.error('Error sending move-in notification:', notifError);
+          // Don't throw error, just log it (non-critical)
         }
       }
-    } catch (notifError) {
-      console.error('Error sending move-in notification:', notifError);
-      // Don't throw error, just log it (non-critical)
     }
     
-    return;
+    return true;
   } catch (error) {
     console.error('Error completing reservation:', error);
     throw error;
+  }
+}
+
+/**
+ * Get client dashboard statistics
+ */
+export async function getClientStatistics(): Promise<{
+  reservationsCount: number;
+  pendingReservations: number;
+  approvedReservations: number;
+  rejectedReservations: number;
+  paidReservations: number;
+  movedInReservations: number;
+  refundedReservations: number;
+  cancelledReservations: number;
+  underReviewReservations: number;
+  savedPropertiesCount: number;
+}> {
+  try {
+    // Check if user is authenticated
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    // Get all requests by this user
+    const requests = await getDocumentsByField<Request>(
+      REQUESTS_COLLECTION,
+      'userId',
+      currentUser.id
+    );
+    
+    // Calculate statistics
+    const pendingReservations = requests.filter(req => req.status === 'pending').length;
+    const approvedReservations = requests.filter(req => req.status === 'accepted').length;
+    const rejectedReservations = requests.filter(req => req.status === 'rejected').length;
+    const paidReservations = requests.filter(req => req.status === 'paid').length;
+    const movedInReservations = requests.filter(req => req.status === 'movedIn').length;
+    const refundedReservations = requests.filter(req => 
+      req.status === 'refundCompleted' || 
+      req.status === 'refundProcessing' || 
+      req.status === 'refundFailed'
+    ).length;
+    const cancelledReservations = requests.filter(req => req.status === 'cancelled').length;
+    const underReviewReservations = requests.filter(req => req.status === 'cancellationUnderReview').length;
+    
+    // Get saved properties count
+    const savedProperties = await getSavedProperties();
+    
+    return {
+      reservationsCount: requests.length,
+      pendingReservations,
+      approvedReservations,
+      rejectedReservations,
+      paidReservations,
+      movedInReservations,
+      refundedReservations,
+      cancelledReservations,
+      underReviewReservations,
+      savedPropertiesCount: savedProperties.length
+    };
+  } catch (error) {
+    console.error('Error fetching client statistics:', error);
+    throw new Error('Failed to fetch client statistics');
   }
 }
 

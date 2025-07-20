@@ -102,6 +102,27 @@ export async function cancelReservation(reservationId: string): Promise<boolean>
         status: 'cancelled',
         updatedAt: new Date()
       });
+      
+      // For early cancellations (before advertiser approval), create an automatic refund payout request
+      if (reservation.paymentMethodId && reservation.totalPrice) {
+        try {
+          // Import PayoutsService
+          const { default: PayoutsService } = await import('../../services/PayoutsService');
+          
+          // Create refund payout for the client
+          await PayoutsService.createRefundPayout(
+            currentUser.id,
+            reservation.totalPrice,
+            reservationId,
+            reservation.propertyId
+          );
+          
+          console.log(`Created automatic refund payout request for early cancellation: ${reservationId}`);
+        } catch (payoutError) {
+          console.error('Error creating payout request for early cancellation:', payoutError);
+          // Don't throw error, continue with cancellation
+        }
+      }
     } else {
       await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
         status: 'cancellationUnderReview',

@@ -1,20 +1,30 @@
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc, 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  onSnapshot, 
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  addDoc,
+  updateDoc,
   Timestamp,
-  DocumentReference,
+  onSnapshot,
+  orderBy,
+  limit,
   DocumentData,
-  addDoc
-} from 'firebase/firestore';
-import { db } from '../backend/firebase/config';
+  DocumentSnapshot
+} from "firebase/firestore";
+import { db } from "../backend/firebase/config";
 import { User } from '../backend/entities';
+
+// Generate a simple UUID
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 // Define referral program related interfaces
 export interface ReferralPass {
@@ -350,53 +360,80 @@ class ReferralService {
     }
   }
 
-  // Apply referral code when a user signs up
+  // Apply a referral code to get a discount
   async applyReferralCode(userId: string, referralCode: string): Promise<boolean> {
     try {
+      // First, check if the user is a client (only clients can use referral discounts)
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        console.error('User not found:', userId);
+        return false;
+      }
+      
+      const userData = userDoc.data();
+      
+      // Only clients can use referral discounts
+      if (userData.role !== 'client') {
+        console.error(`User role ${userData.role} is not eligible for referral discounts`);
+        return false;
+      }
+      
+      // Check if the user already has an active discount
+      const existingDiscount = await this.getUserDiscount(userId);
+      if (existingDiscount) {
+        console.log('User already has an active discount');
+        return false;
+      }
+      
       // Find the advertiser with this referral code
       const referralsRef = collection(db, 'referrals');
       const q = query(referralsRef, where('referralCode', '==', referralCode));
       const querySnapshot = await getDocs(q);
       
       if (querySnapshot.empty) {
-        console.error('No advertiser found with this referral code');
+        console.error('Invalid referral code:', referralCode);
         return false;
       }
       
-      // Get the first matching advertiser
       const advertiserDoc = querySnapshot.docs[0];
       const advertiserId = advertiserDoc.id;
+      const advertiserData = advertiserDoc.data();
       
-      // Update the user document with the referrer info
-      const userDocRef = doc(db, 'users', userId);
-      await updateDoc(userDocRef, {
-        referredBy: advertiserId
-      });
+      // Prevent self-referrals
+      if (advertiserId === userId) {
+        console.error('Cannot use your own referral code');
+        return false;
+      }
+      
+      // Check if the referral pass is active
+      const referralPass = advertiserData.referralPass;
+      if (!referralPass || !referralPass.active) {
+        console.error('Advertiser referral pass is not active');
+        return false;
+      }
       
       // Update the advertiser's referral stats
-      const advertiserData = advertiserDoc.data();
-      const referralStats = advertiserData.referralStats || {
-        totalReferrals: 0,
-        successfulBookings: 0,
-        monthlyEarnings: 0,
-        annualEarnings: 0
-      };
-      
-      // Increment total referrals
-      referralStats.totalReferrals += 1;
+      const referralStats = advertiserData.referralStats || {};
+      referralStats.totalReferrals = (referralStats.totalReferrals || 0) + 1;
       
       await updateDoc(advertiserDoc.ref, {
         'referralStats': referralStats
       });
       
-      // Add to referral history
-      const userDoc = await getDoc(userDocRef);
-      if (userDoc.exists()) {
-        const userData = userDoc.data() as User;
-        const historyItem: any = {
-          id: userId,
+      // Add this user to the advertiser's referral history
+      const clientDoc = await getDoc(doc(db, 'users', userId));
+      if (clientDoc.exists()) {
+        const userData = clientDoc.data();
+        const userName = userData.name && userData.surname 
+          ? `${userData.name} ${userData.surname}` 
+          : userData.email || 'Anonymous User';
+          
+        const historyItem = {
+          id: generateUUID(),
           tenantId: userId,
-          tenantName: `${userData.name || ''} ${userData.surname || ''}`.trim() || 'New User',
+          tenantName: userName,
           status: 'pending',
           propertyId: '',
           propertyName: '',

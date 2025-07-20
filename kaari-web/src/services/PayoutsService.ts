@@ -1054,10 +1054,19 @@ async getAllPayouts(limit2: number = 50, lastDocId?: string): Promise<{
       const advertiserPhone = advertiserData.phoneNumber || 'No phone';
       
       // Calculate amount (this would be the advertiser's share of the payment)
-      // In a real implementation, this would account for platform fees, etc.
       const amount = reservation.totalPrice || 0;
       const platformFee = amount * 0.05; // 5% platform fee
-      const payoutAmount = amount - platformFee;
+      
+      // Note: Haani Max fee does NOT go to the advertiser, it's for Kaari
+      let haaniMaxFee = 0;
+      let payoutAmount = amount - platformFee;
+      let notes = `Platform fee: ${platformFee.toFixed(2)} MAD`;
+      
+      if (reservation.haaniMaxSelected) {
+        haaniMaxFee = reservation.haaniMaxFee || (amount * 0.03); // Default to 3% if not specified
+        notes += `, Haani Max fee: ${haaniMaxFee.toFixed(2)} MAD (retained by Kaari)`;
+        console.log(`Reservation has Haani Max fee of ${haaniMaxFee} MAD (not added to advertiser payout)`);
+      }
       
       // Check if a payout already exists for this reservation
       const payoutsRef = collection(db, PAYOUTS_COLLECTION);
@@ -1098,7 +1107,8 @@ async getAllPayouts(limit2: number = 50, lastDocId?: string): Promise<{
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         createdBy: 'system',
-        notes: `Platform fee: ${platformFee} MAD`
+        notes: notes,
+        haaniMaxFee: haaniMaxFee > 0 ? haaniMaxFee : undefined
       });
       
       console.log(`Created payout ${newPayoutRef.id} for reservation ${reservationId} with amount ${payoutAmount}`);

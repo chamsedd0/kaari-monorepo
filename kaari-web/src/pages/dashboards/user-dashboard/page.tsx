@@ -1,175 +1,105 @@
 import React, { useState, useEffect } from 'react';
-import { NavigationPannel } from '../../../components/skeletons/constructed/dashboard-navigation-pannel/navigation-pannel';
 import { UserDashboardStyle } from './styles';
-import LoadingScreen from '../../../components/loading/LoadingScreen';
-import { useNavigate, useLocation, Routes, Route } from 'react-router-dom';
-import DashboardFooter from '../../../components/skeletons/constructed/footer/dashboard-footer';
+import { Outlet, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { getClientStatistics } from '../../../backend/server-actions/ClientServerActions';
+import { usePaymentMethod } from '../../../components/PaymentMethodProvider';
 
-// Import all section pages
-import ProfilePage from './profile/page';
-import MessagesPage from './messages/page';
-import ReservationsPage from './reservations/page';
-import ReviewsPage from './reviews/page';
-import WriteReviewPage from './reviews/write/page';
-import MyReviewsPage from './reviews/my-reviews/page';
-import PaymentsPage from './payments/page';
-import SettingsPage from './settings/page';
-import ContactsPage from './contacts/page';
-import FAQsPage from './FAQs/page';
-import ReservationStatusPage from './reservation-status/page';
+const UserDashboard = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [statistics, setStatistics] = useState({
+    reservationsCount: 0,
+    pendingReservations: 0,
+    approvedReservations: 0,
+    rejectedReservations: 0,
+    paidReservations: 0,
+    movedInReservations: 0,
+    refundedReservations: 0,
+    cancelledReservations: 0,
+    underReviewReservations: 0,
+    savedPropertiesCount: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const { hasPaymentMethod, openModal } = usePaymentMethod();
 
-type Section = 'profile' | 'messages' | 'reservations' | 'reviews' | 'payments' | 'settings' | 'contacts' | 'faq' | 'reservation-status';
-
-// Map URL segments to section names for better readability in the URL
-const URL_TO_SECTION: Record<string, Section> = {
-    '': 'profile',
-    'profile': 'profile',
-    'messages': 'messages',
-    'reservations': 'reservations',
-    'reviews': 'reviews',
-    'payments': 'payments',
-    'settings': 'settings',
-    'contacts': 'contacts',
-    'faq': 'faq',
-    'reservation-status': 'reservation-status'
-};
-
-const UserDashboard: React.FC = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    
-    // Get the current section from the URL
-    const getInitialSection = (): Section => {
-        const path = location.pathname.split('/');
-        
-        // Special cases for nested routes
-        if (location.pathname.includes('/dashboard/user/reviews/')) {
-            return 'reviews';
-        }
-        
-        // Special case for the /account, /payments, and /reservations routes
-        if (location.pathname.startsWith('/account')) {
-            return 'profile';
-        }
-        if (location.pathname.startsWith('/payments')) {
-            return 'payments';
-        }
-        if (location.pathname.startsWith('/reservations')) {
-            return 'reservations';
-        }
-        
-        // For normal sections, get the last part of the URL
-        const sectionFromUrl = path[path.length - 1];
-        return URL_TO_SECTION[sectionFromUrl] || 'profile';
-    };
-    
-    const [activeSection, setActiveSection] = useState<Section>(getInitialSection());
-    const [isAnimating, setIsAnimating] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isSectionLoading, setIsSectionLoading] = useState(false);
-
-    // Update URL when section changes
-    const handleSectionChange = (section: Section) => {
-        // Handle direct routes
-        if (location.pathname.startsWith('/account') ||
-            location.pathname.startsWith('/payments') ||
-            location.pathname.startsWith('/reservations')) {
-            navigate(`/dashboard/user/${section}`);
-        } else {
-            navigate(`/dashboard/user/${section}`);
-        }
-        setActiveSection(section);
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        const stats = await getClientStatistics();
+        setStatistics(stats);
+      } catch (error) {
+        console.error('Error fetching statistics:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // Update active section when URL changes
-    useEffect(() => {
-        const newSection = getInitialSection();
-        if (newSection !== activeSection) {
-            setActiveSection(newSection);
-        }
-    }, [location.pathname]);
+    fetchStatistics();
+  }, []);
 
-    // Initial loading when the dashboard first loads
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 1500); // Show loading screen for 1.5 seconds
+  return (
+    <UserDashboardStyle>
+      <div className="dashboard-container">
+        <div className="sidebar">
+          <h2 className="sidebar-title">{t('user_dashboard.title', 'Dashboard')}</h2>
+          <nav className="sidebar-nav">
+            <ul>
+              <li>
+                <button onClick={() => navigate('/dashboard/user')}>
+                  {t('user_dashboard.overview', 'Overview')}
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate('/dashboard/user/reservations')}>
+                  {t('user_dashboard.reservations', 'Reservations')}
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate('/dashboard/user/favorites')}>
+                  {t('user_dashboard.favorites', 'Favorites')}
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate('/dashboard/user/profile')}>
+                  {t('user_dashboard.profile', 'Profile')}
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate('/dashboard/user/messages')}>
+                  {t('user_dashboard.messages', 'Messages')}
+                </button>
+              </li>
+              <li>
+                <button onClick={() => navigate('/dashboard/user/payments')}>
+                  {t('user_dashboard.payments', 'Payments & Refunds')}
+                </button>
+              </li>
+            </ul>
+          </nav>
+        </div>
         
-        return () => clearTimeout(timer);
-    }, []);
-
-    // Loading when switching between sections
-    useEffect(() => {
-        if (isLoading) return; // Skip if initial loading is still happening
-        
-        setIsSectionLoading(true);
-        setIsAnimating(true);
-        
-        const animationTimer = setTimeout(() => {
-            setIsAnimating(false);
-        }, 300);
-        
-        const loadingTimer = setTimeout(() => {
-            setIsSectionLoading(false);
-        }, 800); // Show section loading for 800ms
-        
-        return () => {
-            clearTimeout(animationTimer);
-            clearTimeout(loadingTimer);
-        };
-    }, [activeSection, isLoading]);
-
-    // Updated renderSection function to handle nested routes for reviews
-    const renderSection = () => {
-        // Special handling for review sub-pages
-        if (location.pathname.includes('/dashboard/user/reviews/write')) {
-            return <WriteReviewPage />;
-        } else if (location.pathname.includes('/dashboard/user/reviews/my-reviews')) {
-            return <MyReviewsPage />;
-        }
-        
-        // Default sections
-        switch (activeSection) {
-            case 'profile':
-                return <ProfilePage />;
-            case 'messages':
-                return <MessagesPage />;
-            case 'reservations':
-                return <ReservationsPage />;
-            case 'reviews':
-                return <ReviewsPage />;
-            case 'payments':
-                return <PaymentsPage />;
-            case 'settings':
-                return <SettingsPage />;
-            case 'contacts':
-                return <ContactsPage />;
-            case 'faq':
-                return <FAQsPage />;
-            case 'reservation-status':
-                return <ReservationStatusPage />;
-            default:
-                return <ProfilePage />;
-        }
-    };
-
-    return (
-        <>
-            <LoadingScreen isLoading={isLoading || isSectionLoading} />
-            <div style={{ display: 'flex', maxWidth: '1500px', margin: '0 auto' }}>
-                <NavigationPannel 
-                    activeSection={activeSection}
-                    onSectionChange={handleSectionChange}
-                />
-                <UserDashboardStyle>
-                    <div className={`section-container ${isAnimating ? 'animating' : ''}`}>
-                        {renderSection()}
-                    </div>
-                </UserDashboardStyle>
+        <div className="content">
+          {!hasPaymentMethod && (
+            <div className="payment-method-alert">
+              <div className="alert-content">
+                <h3>{t('user_dashboard.payment_method_required', 'Payment Method Required')}</h3>
+                <p>{t('user_dashboard.payment_method_description', 'To receive refunds, you need to add your bank account information.')}</p>
+              </div>
+              <button 
+                className="add-payment-method-btn"
+                onClick={openModal}
+              >
+                {t('user_dashboard.add_payment_method', 'Add Payment Method')}
+              </button>
             </div>
-            <DashboardFooter />
-        </>
-    );
+          )}
+          
+          <Outlet />
+        </div>
+      </div>
+    </UserDashboardStyle>
+  );
 };
 
 export default UserDashboard;
