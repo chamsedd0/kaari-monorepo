@@ -811,6 +811,190 @@ async getAllPayouts(limit2: number = 50, startAfter?: QueryDocumentSnapshot<Docu
     throw new Error('Failed to get payouts');
   }
 }
+
+  /**
+   * Create a payout directly for refunds (bypassing the request stage)
+   * @param userId The ID of the user receiving the refund
+   * @param refundAmount The amount to refund
+   * @param refundRequestId The ID of the refund request
+   * @param propertyId Optional property ID for context
+   */
+  async createRefundPayout(
+    userId: string, 
+    refundAmount: number, 
+    refundRequestId: string,
+    propertyId?: string
+  ): Promise<boolean> {
+    try {
+      // Get user details to determine payment method
+      const userRef = doc(db, USERS_COLLECTION, userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        console.error(`User ${userId} not found for refund payout`);
+        return false;
+      }
+      
+      const userData = userDoc.data();
+      
+      // Check if user has payment method
+      if (!userData.paymentMethod) {
+        console.error(`User ${userId} has no payment method for refund payout`);
+        return false;
+      }
+      
+      // Get user's name and phone for the payout record
+      const userName = userData.displayName || userData.name || 'Unknown User';
+      const userPhone = userData.phoneNumber || 'No phone';
+      
+      // Create a new payout document
+      const payoutsRef = collection(db, PAYOUTS_COLLECTION);
+      const newPayoutRef = doc(payoutsRef);
+      
+      await setDoc(newPayoutRef, {
+        payeeId: userId,
+        payeeName: userName,
+        payeePhone: userPhone,
+        payeeType: 'client', // Refunds are always to tenants/clients
+        paymentMethod: {
+          bankName: userData.paymentMethod.bankName || 'Unknown Bank',
+          accountLast4: userData.paymentMethod.accountNumber ? 
+            userData.paymentMethod.accountNumber.slice(-4) : '****',
+          type: userData.paymentMethod.type || 'IBAN'
+        },
+        reason: 'Tenant Refund',
+        amount: refundAmount,
+        currency: 'MAD',
+        status: 'pending',
+        sourceId: refundRequestId,
+        sourceType: 'refund',
+        propertyId: propertyId || null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        createdBy: 'system'
+      });
+      
+      console.log(`Created payout ${newPayoutRef.id} for refund ${refundRequestId} with amount ${refundAmount}`);
+      return true;
+    } catch (error) {
+      console.error('Error creating refund payout:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Create a payout directly for rent after safety window closes (bypassing the request stage)
+   * @param reservationId The ID of the reservation/booking
+   */
+  async createRentPayout(reservationId: string): Promise<boolean> {
+    try {
+      // Get the reservation
+      const reservationRef = doc(db, REQUESTS_COLLECTION, reservationId);
+      const reservationDoc = await getDoc(reservationRef);
+      
+      if (!reservationDoc.exists()) {
+        console.error(`Reservation ${reservationId} not found for rent payout`);
+        return false;
+      }
+      
+      const reservation = reservationDoc.data();
+      
+      // Verify that the reservation is in 'movedIn' or 'paid' status
+      if (reservation.status !== 'movedIn' && reservation.status !== 'paid') {
+        console.error(`Cannot create payout for reservation ${reservationId} with status ${reservation.status}`);
+        return false;
+      }
+      
+      // Get advertiser details
+      const advertiserId = reservation.advertiserId;
+      if (!advertiserId) {
+        console.error(`No advertiser ID found for reservation ${reservationId}`);
+        return false;
+      }
+      
+      const advertiserRef = doc(db, USERS_COLLECTION, advertiserId);
+      const advertiserDoc = await getDoc(advertiserRef);
+      
+      if (!advertiserDoc.exists()) {
+        console.error(`Advertiser ${advertiserId} not found for rent payout`);
+        return false;
+      }
+      
+      const advertiserData = advertiserDoc.data();
+      
+      // Check if advertiser has payment method
+      if (!advertiserData.paymentMethod) {
+        console.error(`Advertiser ${advertiserId} has no payment method for rent payout`);
+        return false;
+      }
+      
+      // Get advertiser's name and phone for the payout record
+      const advertiserName = advertiserData.displayName || advertiserData.name || 'Unknown Advertiser';
+      const advertiserPhone = advertiserData.phoneNumber || 'No phone';
+      
+      // Calculate amount (this would be the advertiser's share of the payment)
+      // In a real implementation, this would account for platform fees, etc.
+      const amount = reservation.totalPrice || 0;
+      const platformFee = amount * 0.05; // 5% platform fee
+      const payoutAmount = amount - platformFee;
+      
+      // Check if a payout already exists for this reservation
+      const payoutsRef = collection(db, PAYOUTS_COLLECTION);
+      const q = query(
+        payoutsRef,
+        where('sourceId', '==', reservationId),
+        where('sourceType', '==', 'rent')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        console.error(`A payout already exists for reservation ${reservationId}`);
+        return false;
+      }
+      
+      // Create a new payout document
+      const newPayoutRef = doc(payoutsRef);
+      
+      await setDoc(newPayoutRef, {
+        payeeId: advertiserId,
+        payeeName: advertiserName,
+        payeePhone: advertiserPhone,
+        payeeType: 'advertiser',
+        paymentMethod: {
+          bankName: advertiserData.paymentMethod.bankName || 'Unknown Bank',
+          accountLast4: advertiserData.paymentMethod.accountNumber ? 
+            advertiserData.paymentMethod.accountNumber.slice(-4) : '****',
+          type: advertiserData.paymentMethod.type || 'IBAN'
+        },
+        reason: 'Rent – Move-in',
+        amount: payoutAmount,
+        currency: 'MAD',
+        status: 'pending',
+        sourceId: reservationId,
+        sourceType: 'rent',
+        propertyId: reservation.propertyId || null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        createdBy: 'system',
+        notes: `Platform fee: ${platformFee} MAD`
+      });
+      
+      console.log(`Created payout ${newPayoutRef.id} for reservation ${reservationId} with amount ${payoutAmount}`);
+      
+      // Update the reservation to indicate that payout has been created
+      await updateDoc(reservationRef, {
+        payoutCreated: true,
+        payoutId: newPayoutRef.id,
+        payoutCreatedAt: serverTimestamp()
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error creating rent payout:', error);
+      return false;
+    }
+  }
 }
 
 export default new PayoutsService(); 

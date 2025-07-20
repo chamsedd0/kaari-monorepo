@@ -15,7 +15,8 @@ import {
   FaHandshake,
   FaComments,
   FaCreditCard,
-  FaHistory
+  FaHistory,
+  FaVial
 } from 'react-icons/fa';
 import { 
   MdDashboard, 
@@ -64,6 +65,7 @@ import MessagesPage from './messages/page';
 import ConversationPage from './messages/conversation';
 import PendingPayoutsPage from './pending-payouts/page';
 import PayoutsHistoryPage from './payouts-history/page';
+import PayoutsTestPage from './payouts-test-basic';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -174,6 +176,13 @@ const AdminDashboard: React.FC = () => {
         </NavItem>
         
         <NavItem 
+          $active={activePage === 'payouts-test'} 
+          onClick={() => handleNavigation('payouts-test')}
+        >
+          <FaVial /> Payouts Test
+        </NavItem>
+        
+        <NavItem 
           $active={activePage === 'photoshoot-bookings'} 
           onClick={() => handleNavigation('photoshoot-bookings')}
         >
@@ -263,6 +272,7 @@ const AdminDashboard: React.FC = () => {
           <Route path="messages/:id" element={<ConversationPage />} />
           <Route path="pending-payouts" element={<PendingPayoutsPage />} />
           <Route path="payouts-history" element={<PayoutsHistoryPage />} />
+          <Route path="payouts-test" element={<PayoutsTestPage />} />
           <Route path="photoshoot-bookings" element={<PhotoshootBookings />} />
           <Route path="photoshoot-bookings/view/:id" element={<PhotoshootBookingDetail onUpdateBooking={() => {}} />} />
           <Route path="teams" element={<TeamsPage />} />

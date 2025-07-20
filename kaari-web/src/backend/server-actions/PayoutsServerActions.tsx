@@ -658,3 +658,41 @@ export async function createRentPayout(reservationId: string): Promise<boolean> 
     return false;
   }
 } 
+
+/**
+ * Process safety window closures and create payouts for eligible bookings
+ */
+export async function processSafetyWindowClosures(): Promise<{
+  processed: number;
+  errors: number;
+  payoutsCreated: number;
+}> {
+  try {
+    const ExpirationService = (await import('../../services/ExpirationService')).default;
+    return await ExpirationService.processSafetyWindowClosures();
+  } catch (error) {
+    console.error('Error processing safety window closures:', error);
+    throw new Error('Failed to process safety window closures');
+  }
+}
+
+/**
+ * Check and process safety window for a specific booking
+ */
+export async function checkAndProcessSafetyWindow(bookingId: string): Promise<{
+  processed: boolean;
+  payoutCreated: boolean;
+  error?: string;
+}> {
+  try {
+    const ExpirationService = (await import('../../services/ExpirationService')).default;
+    return await ExpirationService.checkAndProcessSafetyWindow(bookingId);
+  } catch (error) {
+    console.error(`Error checking safety window for booking ${bookingId}:`, error);
+    return {
+      processed: false,
+      payoutCreated: false,
+      error: `Error: ${error instanceof Error ? error.message : String(error)}`
+    };
+  }
+} 
