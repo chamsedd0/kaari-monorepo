@@ -3,14 +3,13 @@ import { PaymentsPageStyle } from "./styles";
 import SelectFieldBaseModelVariant1 from '../../../../components/skeletons/inputs/select-fields/select-field-base-model-variant-2';
 import { useTranslation } from 'react-i18next';
 import { getAdvertiserPayments, getAdvertiserPaymentStats } from '../../../../backend/server-actions/PaymentServerActions';
-import { getCurrentUserPayoutRequests, requestRentPayout, getCurrentUserPayoutHistory } from '../../../../backend/server-actions/PayoutsServerActions';
+import { getCurrentUserPayoutRequests, requestRentPayout, getCurrentUserPayoutHistory, requestReferralPayout } from '../../../../backend/server-actions/PayoutsServerActions';
 import { formatDate } from '../../../../utils/date-utils';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import { BorderPurpleLB40 } from '../../../../components/skeletons/buttons/border_purple_LB40';
 import { PayoutRequest, Payout } from '../../../../services/PayoutsService';
 import { usePaymentMethod } from '../../../../components/PaymentMethodProvider';
 import { toast } from 'react-toastify';
-import { requestReferralPayout } from '../../../../backend/server-actions/ReferralServerActions';
 
 const PaymentsPage = () => {
   const { t } = useTranslation();
@@ -35,32 +34,33 @@ const PaymentsPage = () => {
 
   // Load advertiser payments and stats
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Fetch payments data
-        const paymentsData = await getAdvertiserPayments();
-        setPayments(paymentsData);
-        
-        // Fetch payment statistics
-        const stats = await getAdvertiserPaymentStats();
-        setPaymentStats(stats);
-        
-        // Fetch payout requests
-        const requests = await getCurrentUserPayoutRequests();
-        setPayoutRequests(requests);
-        
-        setError(null);
-      } catch (err: any) {
-        console.error('Error loading payment data:', err);
-        setError(err.message || 'Failed to load payment data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    loadPayments();
   }, []);
+  
+  // Function to load payments data
+  const loadPayments = async () => {
+    try {
+      setLoading(true);
+      // Fetch payments data
+      const paymentsData = await getAdvertiserPayments();
+      setPayments(paymentsData);
+      
+      // Fetch payment statistics
+      const stats = await getAdvertiserPaymentStats();
+      setPaymentStats(stats);
+      
+      // Fetch payout requests
+      const requests = await getCurrentUserPayoutRequests();
+      setPayoutRequests(requests);
+      
+      setError(null);
+    } catch (err: any) {
+      console.error('Error loading payment data:', err);
+      setError(err.message || 'Failed to load payment data');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Load payout history
   useEffect(() => {
