@@ -485,9 +485,9 @@ const BookingDetail: React.FC = () => {
   if (error || !booking) {
     return (
       <DetailContainer>
-        <BackButton onClick={handleBack}>
-          <FaArrowLeft /> Back to Bookings
-        </BackButton>
+          <BackButton onClick={handleBack}>
+            <FaArrowLeft /> Back to Bookings
+          </BackButton>
         <ErrorMessage>{error || 'Booking not found'}</ErrorMessage>
       </DetailContainer>
     );
@@ -495,19 +495,19 @@ const BookingDetail: React.FC = () => {
   
   return (
     <DetailContainer>
-      <BackButton onClick={handleBack}>
-        <FaArrowLeft /> Back to Bookings
-      </BackButton>
-      
-      <DetailHeader>
-        <BookingId>{booking.bookingId}</BookingId>
-        <StatusBadge $status={booking.status}>{booking.status}</StatusBadge>
+        <BackButton onClick={handleBack}>
+          <FaArrowLeft /> Back to Bookings
+        </BackButton>
+        
+        <DetailHeader>
+          <BookingId>{booking.bookingId}</BookingId>
+          <StatusBadge $status={booking.status}>{booking.status}</StatusBadge>
         <PaymentStateBadge $state={booking.paymentState}>{booking.paymentState}</PaymentStateBadge>
         {booking.status === 'Await-Advertiser' && (
-          <CountdownTimer updatedAt={booking.updatedAt} />
-        )}
-      </DetailHeader>
-      
+            <CountdownTimer updatedAt={booking.updatedAt} />
+          )}
+        </DetailHeader>
+        
       <DetailGrid>
         {/* Property Section */}
         <DetailSection>
@@ -668,7 +668,7 @@ const BookingDetail: React.FC = () => {
             ))
           )}
         </DetailSection>
-      </DetailGrid>
+        </DetailGrid>
     </DetailContainer>
   );
 };

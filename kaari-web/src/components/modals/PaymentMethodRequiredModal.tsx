@@ -1,196 +1,176 @@
 import React, { useState } from 'react';
-import { 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
-  DialogActions, 
-  Button, 
-  TextField, 
-  Typography, 
-  Box,
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  FormHelperText,
-  CircularProgress
+  Typography,
+  Box,
+  CircularProgress,
+  Alert
 } from '@mui/material';
-import { Theme } from '../../theme/theme';
-import { updateUserPaymentMethod } from '../../backend/server-actions/UserServerActions';
-import { useStore } from '../../backend/store';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../backend/firebase/config';
+import { getAuth } from 'firebase/auth';
 
 interface PaymentMethodRequiredModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  requiredFor?: 'refund' | 'payout';
 }
 
-const PaymentMethodRequiredModal: React.FC<PaymentMethodRequiredModalProps> = ({ 
-  open, 
+export default function PaymentMethodRequiredModal({
+  open,
   onClose,
-  onSuccess,
-  requiredFor = 'payout'
-}) => {
-  const { user } = useStore();
+  onSuccess
+}: PaymentMethodRequiredModalProps) {
   const [bankName, setBankName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
-  const [accountType, setAccountType] = useState<'RIB' | 'IBAN'>('RIB');
+  const [type, setType] = useState<'RIB' | 'IBAN'>('RIB');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{
-    bankName?: string;
-    accountNumber?: string;
-  }>({});
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
-  const validateForm = () => {
-    const newErrors: {
-      bankName?: string;
-      accountNumber?: string;
-    } = {};
-    
-    if (!bankName.trim()) {
-      newErrors.bankName = 'Bank name is required';
-    }
-    
-    if (!accountNumber.trim()) {
-      newErrors.accountNumber = 'Account number is required';
-    } else if (accountType === 'RIB' && !/^\d{20}$/.test(accountNumber.replace(/\s/g, ''))) {
-      newErrors.accountNumber = 'RIB must be 20 digits';
-    } else if (accountType === 'IBAN' && !/^[A-Z]{2}\d{2}[A-Z0-9]{4}\d{16}$/i.test(accountNumber.replace(/\s/g, ''))) {
-      newErrors.accountNumber = 'Invalid IBAN format';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
-    
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
+    setError(null);
+    
     try {
-      await updateUserPaymentMethod({
+      const auth = getAuth();
+      const user = auth.currentUser;
+      
+      if (!user) {
+        throw new Error('You must be logged in to add a payment method');
+      }
+      
+      console.log('Adding payment method for user:', user.uid);
+      
+      // Add to payoutMethods collection
+      const docRef = await addDoc(collection(db, 'payoutMethods'), {
+        userId: user.uid,
         bankName,
-        accountNumber: accountNumber.replace(/\s/g, ''),
-        type: accountType
+        accountNumber,
+        type,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isVerified: false // Admin will need to verify this
       });
       
+      console.log('Payment method added with ID:', docRef.id);
+      
+      setSuccess(true);
+      
+      // Reset form
+      setBankName('');
+      setAccountNumber('');
+      setType('RIB');
+      
+      // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess();
       }
       
-      onClose();
-    } catch (error) {
-      console.error('Error updating payment method:', error);
-      // Show error message
+      // Close modal after a short delay
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (err) {
+      console.error('Error adding payment method:', err);
+      setError(err instanceof Error ? err.message : 'Failed to add payment method');
     } finally {
       setLoading(false);
     }
   };
 
-  const getTitle = () => {
-    if (requiredFor === 'refund') {
-      return 'Add Payment Method for Refund';
-    }
-    return 'Add Payment Method for Payouts';
-  };
-
-  const getMessage = () => {
-    if (requiredFor === 'refund') {
-      return 'To process your refund, we need your bank account information. Please provide your bank details below.';
-    }
-    return 'To receive payments for your bookings, we need your bank account information. Please provide your bank details below.';
-  };
-
   return (
-    <Dialog 
-      open={open} 
-      onClose={loading ? undefined : onClose}
-      maxWidth="sm"
-      fullWidth
-    >
-      <DialogTitle sx={{ 
-        bgcolor: Theme.colors.secondary,
-        color: 'white',
-        fontWeight: 'bold'
-      }}>
-        {getTitle()}
+    <Dialog open={open} onClose={loading ? undefined : onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>
+        Add Payment Method
       </DialogTitle>
-      
-      <DialogContent sx={{ pt: 3 }}>
-        <Typography variant="body1" paragraph>
-          {getMessage()}
-        </Typography>
+      <DialogContent>
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body1" gutterBottom>
+            A payment method is required to receive payments from Kaari.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Please provide your bank account details below. This information will be used for all future payouts.
+          </Typography>
+        </Box>
         
-        <Box sx={{ mb: 3 }}>
-          <FormControl fullWidth variant="outlined" sx={{ mb: 2 }}>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            Payment method added successfully!
+          </Alert>
+        )}
+        
+        <form onSubmit={handleSubmit}>
+          <TextField
+            label="Bank Name"
+            value={bankName}
+            onChange={(e) => setBankName(e.target.value)}
+            fullWidth
+            margin="normal"
+            required
+            disabled={loading || success}
+          />
+          
+          <FormControl fullWidth margin="normal" required>
             <InputLabel>Account Type</InputLabel>
             <Select
-              value={accountType}
-              onChange={(e) => setAccountType(e.target.value as 'RIB' | 'IBAN')}
+              value={type}
+              onChange={(e) => setType(e.target.value as 'RIB' | 'IBAN')}
               label="Account Type"
-              disabled={loading}
+              disabled={loading || success}
             >
-              <MenuItem value="RIB">RIB (Moroccan Bank Account)</MenuItem>
-              <MenuItem value="IBAN">IBAN (International Bank Account)</MenuItem>
+              <MenuItem value="RIB">RIB</MenuItem>
+              <MenuItem value="IBAN">IBAN</MenuItem>
             </Select>
           </FormControl>
           
           <TextField
-            label="Bank Name"
-            variant="outlined"
-            fullWidth
-            value={bankName}
-            onChange={(e) => setBankName(e.target.value)}
-            error={!!errors.bankName}
-            helperText={errors.bankName}
-            disabled={loading}
-            sx={{ mb: 2 }}
-          />
-          
-          <TextField
-            label={accountType === 'RIB' ? 'RIB Number' : 'IBAN Number'}
-            variant="outlined"
-            fullWidth
+            label="Account Number"
             value={accountNumber}
             onChange={(e) => setAccountNumber(e.target.value)}
-            error={!!errors.accountNumber}
-            helperText={errors.accountNumber || (
-              accountType === 'RIB' 
-                ? '20-digit number without spaces' 
-                : 'Format: XX00XXXX0000000000000000'
-            )}
-            disabled={loading}
+            fullWidth
+            margin="normal"
+            required
+            disabled={loading || success}
+            helperText={`Please enter your ${type} number`}
           />
-        </Box>
-        
-        <Typography variant="caption" color="textSecondary">
-          Your bank details are securely stored and will only be used for processing payments.
-        </Typography>
+          
+          <DialogActions sx={{ px: 0, pt: 2 }}>
+            <Button 
+              onClick={onClose} 
+              disabled={loading}
+              color="inherit"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              variant="contained" 
+              color="primary"
+              disabled={loading || success || !bankName || !accountNumber}
+              startIcon={loading && <CircularProgress size={20} color="inherit" />}
+            >
+              {loading ? 'Saving...' : success ? 'Saved!' : 'Save Payment Method'}
+            </Button>
+          </DialogActions>
+        </form>
       </DialogContent>
-      
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button 
-          onClick={onClose} 
-          color="inherit"
-          disabled={loading}
-        >
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleSubmit} 
-          variant="contained" 
-          color="secondary"
-          disabled={loading}
-          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
-        >
-          {loading ? 'Saving...' : 'Save Payment Method'}
-        </Button>
-      </DialogActions>
     </Dialog>
   );
-};
-
-export default PaymentMethodRequiredModal; 
+} 

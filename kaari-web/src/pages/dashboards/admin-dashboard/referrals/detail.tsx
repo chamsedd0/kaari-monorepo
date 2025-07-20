@@ -635,7 +635,7 @@ const ReferralDetailPage: React.FC = () => {
                 </ContactItem>
               )}
               
-              <ContactItem>
+            <ContactItem>
                 <ContactLabel>Requirements</ContactLabel>
                 <PassRequirementsList>
                   <PassRequirementItem 
@@ -655,7 +655,7 @@ const ReferralDetailPage: React.FC = () => {
                     Listings: {advertiser.referralPass.listingsSincePass} / {advertiser.referralPass.listingRequirement}
                   </PassRequirementItem>
                 </PassRequirementsList>
-              </ContactItem>
+            </ContactItem>
             </>
           ) : (
             <WarningMessage>
@@ -693,8 +693,8 @@ const ReferralDetailPage: React.FC = () => {
         <DetailSection>
           <SectionTitle>Admin Notes</SectionTitle>
           
-          <NoteTextArea 
-            value={note} 
+          <NoteTextArea
+            value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Add internal notes about this advertiser..."
           />
@@ -714,44 +714,44 @@ const ReferralDetailPage: React.FC = () => {
           {bookings.length === 0 ? (
             <NoDataMessage>No referral bookings found for this advertiser.</NoDataMessage>
           ) : (
-            <BookingsTable>
-              <BookingsTableHead>
+              <BookingsTable>
+                <BookingsTableHead>
                 <tr>
-                  <BookingsTableHeader>Property</BookingsTableHeader>
-                  <BookingsTableHeader>Tenant</BookingsTableHeader>
-                  <BookingsTableHeader>Date</BookingsTableHeader>
+                    <BookingsTableHeader>Property</BookingsTableHeader>
+                    <BookingsTableHeader>Tenant</BookingsTableHeader>
+                    <BookingsTableHeader>Date</BookingsTableHeader>
                   <BookingsTableHeader>Amount</BookingsTableHeader>
-                  <BookingsTableHeader>Status</BookingsTableHeader>
+                    <BookingsTableHeader>Status</BookingsTableHeader>
                 </tr>
-              </BookingsTableHead>
-              <tbody>
+                </BookingsTableHead>
+                <tbody>
                 {bookings.map((booking, index) => (
                   <BookingsTableRow key={index}>
-                    <BookingsTableCell>
-                      <PropertyInfo>
-                        <PropertyThumbnail 
-                          src={booking.propertyThumbnail || getPlaceholderImage(booking.propertyTitle)}
-                          alt={booking.propertyTitle}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = getPlaceholderImage(booking.propertyTitle);
-                          }}
-                        />
-                        <PropertyTitle>{booking.propertyTitle}</PropertyTitle>
-                      </PropertyInfo>
-                    </BookingsTableCell>
-                    <BookingsTableCell>{booking.tenantName}</BookingsTableCell>
-                    <BookingsTableCell>{formatDate(booking.date)}</BookingsTableCell>
+                      <BookingsTableCell>
+                        <PropertyInfo>
+                          <PropertyThumbnail 
+                            src={booking.propertyThumbnail || getPlaceholderImage(booking.propertyTitle)} 
+                            alt={booking.propertyTitle} 
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = getPlaceholderImage(booking.propertyTitle);
+                            }}
+                          />
+                          <PropertyTitle>{booking.propertyTitle}</PropertyTitle>
+                        </PropertyInfo>
+                      </BookingsTableCell>
+                      <BookingsTableCell>{booking.tenantName}</BookingsTableCell>
+                      <BookingsTableCell>{formatDate(booking.date)}</BookingsTableCell>
                     <BookingsTableCell>{formatCurrency(booking.amount)}</BookingsTableCell>
-                    <BookingsTableCell>
+                      <BookingsTableCell>
                       <StatusBadge $status={booking.status}>
                         {booking.status === 'pending' ? 'Pending' : 
                          booking.status === 'paid' ? 'Paid' : 'Completed'}
                       </StatusBadge>
-                    </BookingsTableCell>
-                  </BookingsTableRow>
-                ))}
-              </tbody>
-            </BookingsTable>
+                      </BookingsTableCell>
+                    </BookingsTableRow>
+                  ))}
+                </tbody>
+              </BookingsTable>
           )}
         </DetailSection>
       </DetailGrid>

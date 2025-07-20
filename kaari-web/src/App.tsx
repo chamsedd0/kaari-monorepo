@@ -696,12 +696,14 @@ function App() {
   // Profile reminder has been removed as requested by the owner
   // This was previously used to remind users to complete their profile
   
+  // Wrapper component for all providers
   const Wrapper = () => {
     // Check if the current path is part of the isolated advertiser signup flow
     const currentPath = window.location.pathname;
     const isAdvertiserSignupFlow = 
       currentPath === '/advertiser-signup' || 
       currentPath === '/advertiser-signup/form' ||
+      currentPath === '/advertiser-signup/founding-partners' ||
       currentPath === '/become-advertiser' || 
       currentPath === '/become-advertiser/thank-you' ||
       currentPath === '/email-verification' ||
@@ -715,7 +717,7 @@ function App() {
         <ToastProvider>
           <NotificationProvider>
             <ChecklistProvider>
-              <PaymentMethodProvider checkOnMount={isAuthenticated}>
+              <PaymentMethodProvider>
                 <ScrollToTop />
                 {routes}
               </PaymentMethodProvider>
@@ -728,12 +730,16 @@ function App() {
     // Otherwise use MainLayout
     return (
       <ToastProvider>
-        <PaymentMethodProvider checkOnMount={isAuthenticated}>
-          <ScrollToTop />
-          <MainLayout>
-            {routes}
-          </MainLayout>
-        </PaymentMethodProvider>
+        <NotificationProvider>
+          <ChecklistProvider>
+            <PaymentMethodProvider>
+              <ScrollToTop />
+              <MainLayout>
+                {routes}
+              </MainLayout>
+            </PaymentMethodProvider>
+          </ChecklistProvider>
+        </NotificationProvider>
       </ToastProvider>
     );
   };

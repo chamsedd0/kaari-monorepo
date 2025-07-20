@@ -1,69 +1,62 @@
-import React, { createContext, useContext } from 'react';
-import { usePaymentMethodModal } from '../hooks/usePaymentMethodModal';
+import React, { createContext, useContext, ReactNode } from 'react';
+import usePaymentMethodModal, { UsePaymentMethodModalResult } from '../hooks/usePaymentMethodModal';
 import PaymentMethodRequiredModal from './modals/PaymentMethodRequiredModal';
 
-// Create a context for the payment method
-interface PaymentMethodContextType {
-  isModalOpen: boolean;
-  openModal: () => void;
-  closeModal: () => void;
-  hasPaymentMethod: boolean | null;
-  isLoading: boolean;
-  checkPaymentMethod: () => Promise<boolean>;
-  ensurePaymentMethod: () => Promise<boolean>;
+// Extended interface with ensurePaymentMethod
+export interface PaymentMethodContextType extends UsePaymentMethodModalResult {
+  ensurePaymentMethod: (callback: () => void) => Promise<void>;
 }
 
-const PaymentMethodContext = createContext<PaymentMethodContextType | null>(null);
+// Create context
+const PaymentMethodContext = createContext<PaymentMethodContextType | undefined>(undefined);
 
-// Hook to use the payment method context
-export function usePaymentMethod() {
+// Hook to use the context
+export function usePaymentMethod(): PaymentMethodContextType {
   const context = useContext(PaymentMethodContext);
-  if (!context) {
+  
+  if (context === undefined) {
     throw new Error('usePaymentMethod must be used within a PaymentMethodProvider');
   }
+  
   return context;
 }
 
 interface PaymentMethodProviderProps {
-  children: React.ReactNode;
-  checkOnMount?: boolean;
+  children: ReactNode;
 }
 
-// Provider component
-export function PaymentMethodProvider({ children, checkOnMount = false }: PaymentMethodProviderProps) {
-  const {
-    isModalOpen,
-    openModal,
-    closeModal,
-    hasPaymentMethod,
-    isLoading,
-    checkPaymentMethod,
-    ensurePaymentMethod,
-    handlePaymentMethodAdded,
-    requiredFor
-  } = usePaymentMethodModal({
-    checkOnMount
-  });
-
-  const contextValue = {
-    isModalOpen,
-    openModal,
-    closeModal,
-    hasPaymentMethod,
-    isLoading,
-    checkPaymentMethod,
+export function PaymentMethodProvider({ children }: PaymentMethodProviderProps) {
+  const paymentMethodModal = usePaymentMethodModal();
+  
+  // Helper function to ensure a payment method exists before proceeding
+  const ensurePaymentMethod = async (callback: () => void) => {
+    const hasMethod = await paymentMethodModal.checkPaymentMethod();
+    
+    if (hasMethod) {
+      callback();
+    } else {
+      paymentMethodModal.openModal();
+    }
+  };
+  
+  // Create the context value with all properties
+  const contextValue: PaymentMethodContextType = {
+    ...paymentMethodModal,
     ensurePaymentMethod
   };
-
+  
   return (
     <PaymentMethodContext.Provider value={contextValue}>
       {children}
+      
       <PaymentMethodRequiredModal
-        open={isModalOpen}
-        onClose={closeModal}
-        onSuccess={handlePaymentMethodAdded}
-        requiredFor={requiredFor}
+        open={paymentMethodModal.isModalOpen}
+        onClose={paymentMethodModal.closeModal}
+        onSuccess={paymentMethodModal.checkPaymentMethod}
       />
     </PaymentMethodContext.Provider>
   );
-} 
+}
+
+// Default export for backward compatibility
+export default PaymentMethodProvider; 

@@ -30,7 +30,7 @@ const PaymentsPage = () => {
   const [payoutSuccess, setPayoutSuccess] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>('date');
   const [activeTab, setActiveTab] = useState<'payments' | 'payouts' | 'history'>('payments');
-  const { ensurePaymentMethod } = usePaymentMethod();
+  const { isModalOpen, openModal, closeModal, hasPaymentMethod, checkPaymentMethod, ensurePaymentMethod } = usePaymentMethod();
 
   // Load advertiser payments and stats
   useEffect(() => {
@@ -106,32 +106,41 @@ const PaymentsPage = () => {
   // Handle request payout
   const handleRequestPayout = async (type: string, id: string) => {
     // First check if the user has a payment method
-    const hasPaymentMethod = await ensurePaymentMethod();
-    if (!hasPaymentMethod) {
-      // The modal will be shown automatically by the ensurePaymentMethod function
-      return;
-    }
-    
-    // Continue with the payout request
-    try {
-      setLoading(true);
-      
-      if (type === 'rent') {
-        await requestRentPayout(id);
-        toast.success('Rent payout requested successfully');
-      } else if (type === 'referral') {
-        await requestReferralPayout(id);
-        toast.success('Referral payout requested successfully');
+    ensurePaymentMethod(async () => {
+      // This callback will only run if the user has a payment method
+      try {
+        setPayoutLoading(true);
+        setPayoutError(null);
+        setPayoutSuccess(null);
+        
+        if (type === 'rent') {
+          const success = await requestRentPayout(id);
+          if (success) {
+            setPayoutSuccess('Rent payout requested successfully');
+            toast.success('Rent payout requested successfully');
+          } else {
+            throw new Error('Failed to request rent payout');
+          }
+        } else if (type === 'referral') {
+          const success = await requestReferralPayout(id);
+          if (success) {
+            setPayoutSuccess('Referral payout requested successfully');
+            toast.success('Referral payout requested successfully');
+          } else {
+            throw new Error('Failed to request referral payout');
+          }
+        }
+        
+        // Refresh data
+        await loadPayments();
+      } catch (err: any) {
+        console.error('Error requesting payout:', err);
+        setPayoutError(err.message || 'Failed to request payout');
+        toast.error('Failed to request payout');
+      } finally {
+        setPayoutLoading(false);
       }
-      
-      // Refresh data
-      await loadPayments();
-    } catch (error) {
-      console.error('Error requesting payout:', error);
-      toast.error('Failed to request payout');
-    } finally {
-      setLoading(false);
-    }
+    });
   };
   
   // Check if a payout request exists for a reservation
@@ -178,6 +187,21 @@ const PaymentsPage = () => {
   return (
     <PaymentsPageStyle>
       <h1 className="title">{t('advertiser_dashboard.payments.title', 'Payments')}</h1>
+      
+      {!hasPaymentMethod && (
+        <div className="payment-method-alert">
+          <div className="alert-content">
+            <h3>{t('advertiser_dashboard.payments.payment_method_required', 'Payment Method Required')}</h3>
+            <p>{t('advertiser_dashboard.payments.payment_method_description', 'To receive payments, you need to add your bank account information.')}</p>
+          </div>
+          <button 
+            className="add-payment-method-btn"
+            onClick={openModal}
+          >
+            {t('advertiser_dashboard.payments.add_payment_method', 'Add Payment Method')}
+          </button>
+        </div>
+      )}
       
       <div className="payments-stats">
         <div className="payment-stat border-container">

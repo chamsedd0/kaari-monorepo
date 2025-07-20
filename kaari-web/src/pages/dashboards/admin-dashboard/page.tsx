@@ -66,6 +66,7 @@ import ConversationPage from './messages/conversation';
 import PendingPayoutsPage from './pending-payouts/page';
 import PayoutsHistoryPage from './payouts-history/page';
 import PayoutsTestPage from './payouts-test-basic';
+import PayoutsTestScript from './payouts-test-script';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -183,6 +184,13 @@ const AdminDashboard: React.FC = () => {
         </NavItem>
         
         <NavItem 
+          $active={activePage === 'payouts-test-script'} 
+          onClick={() => handleNavigation('payouts-test-script')}
+        >
+          <FaVial /> Payouts Debug
+        </NavItem>
+        
+        <NavItem 
           $active={activePage === 'photoshoot-bookings'} 
           onClick={() => handleNavigation('photoshoot-bookings')}
         >
@@ -273,6 +281,7 @@ const AdminDashboard: React.FC = () => {
           <Route path="pending-payouts" element={<PendingPayoutsPage />} />
           <Route path="payouts-history" element={<PayoutsHistoryPage />} />
           <Route path="payouts-test" element={<PayoutsTestPage />} />
+          <Route path="payouts-test-script" element={<PayoutsTestScript />} />
           <Route path="photoshoot-bookings" element={<PhotoshootBookings />} />
           <Route path="photoshoot-bookings/view/:id" element={<PhotoshootBookingDetail onUpdateBooking={() => {}} />} />
           <Route path="teams" element={<TeamsPage />} />

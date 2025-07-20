@@ -377,7 +377,7 @@ const SafetyWindowTimer: React.FC<{ moveInDate: Date; status: MoveInStatus }> = 
     if (status === 'Move-in Upcoming' || status === 'Safety Window Open') {
       calculateTimeLeft();
       const timer = setInterval(calculateTimeLeft, 1000);
-      return () => clearInterval(timer);
+    return () => clearInterval(timer);
     } else {
       setTimeLeft('');
       setIsActive(false);
@@ -561,7 +561,7 @@ const MoveInDetailPage: React.FC = () => {
       
       <DetailGrid>
         {/* Property Section */}
-        <DetailSection>
+      <DetailSection>
           <SectionTitle><FaHome /> Property Details</SectionTitle>
           
           <PropertyImage 
@@ -580,8 +580,8 @@ const MoveInDetailPage: React.FC = () => {
               <AmenityTag key={index}>{amenity}</AmenityTag>
             ))}
           </AmenitiesList>
-        </DetailSection>
-        
+      </DetailSection>
+      
         {/* Tenant Section */}
         <DetailSection>
           <SectionTitle><FaUser /> Tenant Information</SectionTitle>
@@ -680,12 +680,12 @@ const MoveInDetailPage: React.FC = () => {
         </DetailSection>
         
         {/* Admin Notes Section */}
-        <DetailSection>
+      <DetailSection>
           <SectionTitle><FaFileAlt /> Admin Notes</SectionTitle>
-          
-          <NoteTextArea 
-            value={note} 
-            onChange={(e) => setNote(e.target.value)}
+        
+        <NoteTextArea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
             placeholder="Add internal notes about this move-in booking..."
           />
           
@@ -723,7 +723,7 @@ const MoveInDetailPage: React.FC = () => {
                 </TimelineItem>
               ))
             )}
-          </DetailSection>
+      </DetailSection>
         </TimelineContainer>
       </DetailGrid>
     </DetailContainer>

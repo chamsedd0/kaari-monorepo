@@ -14,7 +14,8 @@ import {
   limit,
   startAfter,
   DocumentData,
-  QueryDocumentSnapshot
+  QueryDocumentSnapshot,
+  deleteDoc
 } from 'firebase/firestore';
 import { db } from '../backend/firebase/config';
 import { getAuth } from 'firebase/auth';
@@ -100,30 +101,103 @@ class PayoutsService {
    */
   async requestRentPayout(reservationId: string): Promise<boolean> {
     try {
+      console.log(`[DEBUG] Starting requestRentPayout for reservation: ${reservationId}`);
+      
+      // Ensure collections exist first
+      await this.ensureCollectionsExist();
+      
       const auth = getAuth();
       const user = auth.currentUser;
       
       if (!user) {
+        console.error('[DEBUG] User not authenticated');
         throw new Error('User not authenticated');
       }
+      
+      console.log(`[DEBUG] Authenticated user ID: ${user.uid}`);
       
       // Get the reservation
       const reservationRef = doc(db, REQUESTS_COLLECTION, reservationId);
       const reservationDoc = await getDoc(reservationRef);
       
       if (!reservationDoc.exists()) {
+        console.error(`[DEBUG] Reservation not found: ${reservationId}`);
         throw new Error('Reservation not found');
       }
       
       const reservation = reservationDoc.data();
+      console.log(`[DEBUG] Reservation data:`, JSON.stringify(reservation, null, 2));
       
-      // Verify that the reservation belongs to the current user (advertiser)
-      if (reservation.advertiserId !== user.uid) {
+      // Get advertiserId - either directly from reservation or by looking up the property
+      let advertiserId = reservation.advertiserId;
+      
+      // If advertiserId is undefined, try to get it from the property
+      if (!advertiserId && reservation.propertyId) {
+        console.log(`[DEBUG] AdvertiserId not found in reservation, looking up property: ${reservation.propertyId}`);
+        
+        // First try to get advertiserId directly from property
+        const propertyRef = doc(db, 'properties', reservation.propertyId);
+        const propertyDoc = await getDoc(propertyRef);
+        
+        if (propertyDoc.exists()) {
+          const propertyData = propertyDoc.data();
+          advertiserId = propertyData.advertiserId;
+          console.log(`[DEBUG] Direct property lookup result - advertiserId: ${advertiserId}`);
+        }
+        
+        // If still no advertiserId, search through all advertisers
+        if (!advertiserId) {
+          console.log(`[DEBUG] No advertiserId in property, searching through all advertisers...`);
+          
+          // Query all users with role 'advertiser'
+          const usersRef = collection(db, USERS_COLLECTION);
+          const q = query(usersRef, where('role', '==', 'advertiser'));
+          const querySnapshot = await getDocs(q);
+          
+          // Loop through advertisers to find one with this property
+          for (const advertiserDoc of querySnapshot.docs) {
+            const advertiserData = advertiserDoc.data();
+            
+            // Check if this advertiser has the property in their properties array
+            if (advertiserData.properties && 
+                Array.isArray(advertiserData.properties) && 
+                advertiserData.properties.includes(reservation.propertyId)) {
+              advertiserId = advertiserDoc.id;
+              console.log(`[DEBUG] Found advertiser ${advertiserId} with property in their properties array`);
+              break;
+            }
+          }
+        }
+        
+        if (advertiserId) {
+          console.log(`[DEBUG] Found advertiserId from searches: ${advertiserId}`);
+        } else {
+          console.error(`[DEBUG] Could not find advertiser for property: ${reservation.propertyId}`);
+        }
+      }
+      
+      // Check if the current user is an admin
+      const userRef = doc(db, USERS_COLLECTION, user.uid);
+      const userDoc = await getDoc(userRef);
+      
+      if (!userDoc.exists()) {
+        console.error(`[DEBUG] User profile not found: ${user.uid}`);
+        throw new Error('User profile not found');
+      }
+      
+      const userData = userDoc.data();
+      const isAdmin = userData.role === 'admin';
+      console.log(`[DEBUG] User role: ${userData.role}, isAdmin: ${isAdmin}`);
+      
+      // Verify that the reservation belongs to the current user (advertiser) or user is admin
+      if (advertiserId !== user.uid && !isAdmin) {
+        console.error(`[DEBUG] Not authorized. Reservation advertiser ID: ${advertiserId}, User ID: ${user.uid}, Is Admin: ${isAdmin}`);
         throw new Error('Not authorized to request payout for this reservation');
       }
       
       // Verify that the reservation is in 'movedIn' status
       if (reservation.status !== 'movedIn') {
+        console.error(`[DEBUG] Invalid reservation status: ${reservation.status}`);
         throw new Error('Cannot request payout for a reservation that is not in moved-in status');
       }
       
@@ -135,33 +209,63 @@ class PayoutsService {
         where('sourceType', '==', 'rent')
       );
       
+      console.log(`[DEBUG] Checking for existing payout requests`);
       const querySnapshot = await getDocs(q);
       
       if (!querySnapshot.empty) {
+        console.error(`[DEBUG] Payout request already exists. Count: ${querySnapshot.size}`);
         throw new Error('A payout request already exists for this reservation');
       }
       
-      // Get user's payment method
-      const userRef = doc(db, USERS_COLLECTION, user.uid);
-      const userDoc = await getDoc(userRef);
+      // Determine which user to create the payout for
+      const payoutUserId = isAdmin ? advertiserId : user.uid;
+      console.log(`[DEBUG] Creating payout for user: ${payoutUserId}`);
       
-      if (!userDoc.exists()) {
-        throw new Error('User profile not found');
+      // Get payment method for the payout user from payoutMethods collection
+      const payoutMethodsRef = collection(db, 'payoutMethods');
+      const payoutMethodQuery = query(payoutMethodsRef, where('userId', '==', payoutUserId), limit(1));
+      const payoutMethodSnapshot = await getDocs(payoutMethodQuery);
+      
+      let paymentMethod = null;
+      
+      if (!payoutMethodSnapshot.empty) {
+        const payoutMethodDoc = payoutMethodSnapshot.docs[0];
+        paymentMethod = payoutMethodDoc.data();
+        console.log(`[DEBUG] Found payment method in payoutMethods collection:`, JSON.stringify({
+          id: payoutMethodDoc.id,
+          type: paymentMethod.type,
+          bankName: paymentMethod.bankName,
+          hasAccountNumber: !!paymentMethod.accountNumber
+        }, null, 2));
+      } else {
+        // Fallback to check in user document
+        console.log(`[DEBUG] No payment method found in payoutMethods collection, checking user document...`);
+        const payoutUserRef = doc(db, USERS_COLLECTION, payoutUserId);
+        const payoutUserDoc = await getDoc(payoutUserRef);
+        
+        if (payoutUserDoc.exists()) {
+          const payoutUserData = payoutUserDoc.data();
+          if (payoutUserData.paymentMethod) {
+            paymentMethod = payoutUserData.paymentMethod;
+            console.log(`[DEBUG] Found payment method in user document`);
+          }
+        }
       }
       
-      const userData = userDoc.data();
-      
-      if (!userData.paymentMethod) {
-        throw new Error('No payment method found. Please add a payment method to your profile.');
+      if (!paymentMethod) {
+        console.error(`[DEBUG] No payment method found for payout user: ${payoutUserId}`);
+        throw new Error(`No payment method found for ${isAdmin ? 'advertiser' : 'user'}. Please add a payment method to the profile.`);
       }
       
       // Calculate amount (this would be the advertiser's share of the payment)
       // In a real implementation, this would account for platform fees, etc.
       const amount = reservation.totalPrice || 0;
+      console.log(`[DEBUG] Calculated payout amount: ${amount}`);
       
       // Create payout request
-      await addDoc(collection(db, PAYOUT_REQUESTS_COLLECTION), {
-        userId: user.uid,
+      console.log(`[DEBUG] Creating payout request document`);
+      const payoutRequestRef = await addDoc(collection(db, PAYOUT_REQUESTS_COLLECTION), {
+        userId: payoutUserId,
         userType: 'advertiser',
         amount,
         currency: 'MAD',
@@ -170,19 +274,22 @@ class PayoutsService {
         status: 'pending',
         reason: 'Rent – Move-in',
         paymentMethod: {
-          type: userData.paymentMethod.type || 'IBAN',
-          bankName: userData.paymentMethod.bankName || '',
-          accountNumber: userData.paymentMethod.accountNumber || '',
-          accountLast4: userData.paymentMethod.accountNumber ? 
-            userData.paymentMethod.accountNumber.slice(-4) : '****'
+          type: paymentMethod.type || 'IBAN',
+          bankName: paymentMethod.bankName || '',
+          accountNumber: paymentMethod.accountNumber || '',
+          accountLast4: paymentMethod.accountNumber ? 
+            paymentMethod.accountNumber.slice(-4) : '****'
         },
         createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
+        updatedAt: Timestamp.now(),
+        createdBy: user.uid,
+        isAdminCreated: isAdmin
       });
       
+      console.log(`[DEBUG] Successfully created payout request with ID: ${payoutRequestRef.id}`);
       return true;
     } catch (error) {
-      console.error('Error requesting rent payout:', error);
+      console.error('[DEBUG] Error requesting rent payout:', error);
       return false;
     }
   }
@@ -193,33 +300,49 @@ class PayoutsService {
    */
   async requestReferralPayout(referralId: string): Promise<boolean> {
     try {
+      console.log(`[DEBUG] Starting requestReferralPayout for referral: ${referralId}`);
+      
+      // Ensure collections exist first
+      await this.ensureCollectionsExist();
+      
       const auth = getAuth();
       const user = auth.currentUser;
       
       if (!user) {
+        console.error('[DEBUG] User not authenticated');
         throw new Error('User not authenticated');
       }
+      
+      console.log(`[DEBUG] Authenticated user ID: ${user.uid}`);
       
       // Get the referral data
       const referralRef = doc(db, REFERRALS_COLLECTION, referralId);
       const referralDoc = await getDoc(referralRef);
       
       if (!referralDoc.exists()) {
+        console.error(`[DEBUG] Referral record not found: ${referralId}`);
         throw new Error('Referral record not found');
       }
       
       const referralData = referralDoc.data();
+      console.log(`[DEBUG] Referral data:`, JSON.stringify({
+        advertiserId: referralData.advertiserId,
+        referralId: referralId
+      }, null, 2));
       
       // Verify that the referral belongs to the current user
       if (referralData.advertiserId !== user.uid) {
+        console.error(`[DEBUG] Not authorized. Referral advertiser ID: ${referralData.advertiserId}, User ID: ${user.uid}`);
         throw new Error('Not authorized to request payout for this referral');
       }
       
       // Calculate available earnings
       const referralStats = referralData.referralStats || {};
       const availableEarnings = referralStats.monthlyEarnings || 0;
+      console.log(`[DEBUG] Available earnings: ${availableEarnings}`);
       
       if (availableEarnings <= 0) {
+        console.error(`[DEBUG] No earnings available for payout`);
         throw new Error('No earnings available for payout');
       }
       
@@ -232,9 +355,11 @@ class PayoutsService {
         where('status', '==', 'pending')
       );
       
+      console.log(`[DEBUG] Checking for existing payout requests`);
       const querySnapshot = await getDocs(q);
       
       if (!querySnapshot.empty) {
+        console.error(`[DEBUG] Payout request already exists. Count: ${querySnapshot.size}`);
         throw new Error('A pending payout request already exists for this referral');
       }
       
@@ -243,17 +368,24 @@ class PayoutsService {
       const userDoc = await getDoc(userRef);
       
       if (!userDoc.exists()) {
+        console.error(`[DEBUG] User profile not found: ${user.uid}`);
         throw new Error('User profile not found');
       }
       
       const userData = userDoc.data();
+      console.log(`[DEBUG] User data:`, JSON.stringify({
+        hasPaymentMethod: !!userData.paymentMethod,
+        userId: user.uid
+      }, null, 2));
       
       if (!userData.paymentMethod) {
+        console.error(`[DEBUG] No payment method found for user: ${user.uid}`);
         throw new Error('No payment method found. Please add a payment method to your profile.');
       }
       
       // Create payout request
-      await addDoc(collection(db, PAYOUT_REQUESTS_COLLECTION), {
+      console.log(`[DEBUG] Creating payout request document`);
+      const payoutRequestRef = await addDoc(collection(db, PAYOUT_REQUESTS_COLLECTION), {
         userId: user.uid,
         userType: 'advertiser',
         amount: availableEarnings,
@@ -273,15 +405,10 @@ class PayoutsService {
         updatedAt: Timestamp.now()
       });
       
-      // Reset monthly earnings to 0 after requesting payout
-      await updateDoc(referralRef, {
-        'referralStats.monthlyEarnings': 0,
-        updatedAt: Timestamp.now()
-      });
-      
+      console.log(`[DEBUG] Successfully created payout request with ID: ${payoutRequestRef.id}`);
       return true;
     } catch (error) {
-      console.error('Error requesting referral payout:', error);
+      console.error('[DEBUG] Error requesting referral payout:', error);
       return false;
     }
   }
@@ -736,47 +863,37 @@ async getUserPayoutHistory(userId: string): Promise<Payout[]> {
  * @param limit2 Maximum number of payouts to return
  * @param startAfter Document to start after for pagination
  */
-async getAllPayouts(limit2: number = 50, startAfter?: QueryDocumentSnapshot<DocumentData>): Promise<{
+async getAllPayouts(limit2: number = 50, lastDocId?: string): Promise<{
   payouts: Payout[];
   lastDoc: QueryDocumentSnapshot<DocumentData> | null;
   hasMore: boolean;
 }> {
   try {
-    let q;
+    const payoutsRef = collection(db, PAYOUTS_COLLECTION);
+    let q = query(
+      payoutsRef,
+      orderBy('createdAt', 'desc'),
+      limit(limit2)
+    );
     
-    if (startAfter) {
-      q = query(
-        collection(db, PAYOUTS_COLLECTION),
-        orderBy('createdAt', 'desc'),
-        startAfter(startAfter),
-        limit(limit2 + 1) // Get one extra to check if there are more
-      );
-    } else {
-      q = query(
-        collection(db, PAYOUTS_COLLECTION),
-        orderBy('createdAt', 'desc'),
-        limit(limit2 + 1) // Get one extra to check if there are more
-      );
+    // If lastDocId is provided, start after that document
+    if (lastDocId) {
+      const lastDocRef = doc(db, PAYOUTS_COLLECTION, lastDocId);
+      const lastDocSnapshot = await getDoc(lastDocRef);
+      
+      if (lastDocSnapshot.exists()) {
+        q = query(
+          payoutsRef,
+          orderBy('createdAt', 'desc'),
+          startAfter(lastDocSnapshot),
+          limit(limit2)
+        );
+      }
     }
     
     const querySnapshot = await getDocs(q);
     const payouts: Payout[] = [];
-    let lastDoc: QueryDocumentSnapshot<DocumentData> | null = null;
-    let hasMore = false;
     
-    // Check if we have more documents
-    if (querySnapshot.docs.length > limit2) {
-      hasMore = true;
-      // Remove the extra document
-      querySnapshot.docs.pop();
-    }
-    
-    // Get the last document for pagination
-    if (querySnapshot.docs.length > 0) {
-      lastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-    }
-    
-    // Process the documents
     for (const docSnapshot of querySnapshot.docs) {
       const data = docSnapshot.data();
       
@@ -803,12 +920,16 @@ async getAllPayouts(limit2: number = 50, startAfter?: QueryDocumentSnapshot<Docu
     
     return {
       payouts,
-      lastDoc,
-      hasMore
+      lastDoc: querySnapshot.docs.length > 0 ? querySnapshot.docs[querySnapshot.docs.length - 1] : null,
+      hasMore: querySnapshot.docs.length === limit2
     };
   } catch (error) {
-    console.error('Error getting all payouts:', error);
-    throw new Error('Failed to get payouts');
+    console.error('Error fetching all payouts:', error);
+    return {
+      payouts: [],
+      lastDoc: null,
+      hasMore: false
+    };
   }
 }
 
@@ -993,6 +1114,60 @@ async getAllPayouts(limit2: number = 50, startAfter?: QueryDocumentSnapshot<Docu
     } catch (error) {
       console.error('Error creating rent payout:', error);
       return false;
+    }
+  }
+
+  /**
+   * Ensure that the necessary collections exist
+   * This is a workaround for Firestore's behavior where collections don't exist until documents are added
+   */
+  async ensureCollectionsExist(): Promise<void> {
+    try {
+      console.log('[DEBUG] Ensuring collections exist...');
+      
+      // Check if payoutRequests collection exists by trying to get a document
+      const payoutRequestsRef = collection(db, PAYOUT_REQUESTS_COLLECTION);
+      const payoutRequestsQuery = query(payoutRequestsRef, limit(1));
+      const payoutRequestsSnapshot = await getDocs(payoutRequestsQuery);
+      
+      console.log(`[DEBUG] Found ${payoutRequestsSnapshot.size} documents in payoutRequests collection`);
+      
+      // If collection is empty, create a dummy document and then delete it
+      if (payoutRequestsSnapshot.empty) {
+        console.log('[DEBUG] Creating dummy document in payoutRequests collection');
+        const dummyRef = await addDoc(payoutRequestsRef, {
+          _dummy: true,
+          createdAt: Timestamp.now()
+        });
+        
+        // Delete the dummy document
+        await deleteDoc(dummyRef);
+        console.log('[DEBUG] Deleted dummy document from payoutRequests collection');
+      }
+      
+      // Check if payouts collection exists
+      const payoutsRef = collection(db, PAYOUTS_COLLECTION);
+      const payoutsQuery = query(payoutsRef, limit(1));
+      const payoutsSnapshot = await getDocs(payoutsQuery);
+      
+      console.log(`[DEBUG] Found ${payoutsSnapshot.size} documents in payouts collection`);
+      
+      // If collection is empty, create a dummy document and then delete it
+      if (payoutsSnapshot.empty) {
+        console.log('[DEBUG] Creating dummy document in payouts collection');
+        const dummyRef = await addDoc(payoutsRef, {
+          _dummy: true,
+          createdAt: Timestamp.now()
+        });
+        
+        // Delete the dummy document
+        await deleteDoc(dummyRef);
+        console.log('[DEBUG] Deleted dummy document from payouts collection');
+      }
+      
+      console.log('[DEBUG] Collections exist check complete');
+    } catch (error) {
+      console.error('[DEBUG] Error ensuring collections exist:', error);
     }
   }
 }
