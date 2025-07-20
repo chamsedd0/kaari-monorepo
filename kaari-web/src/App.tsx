@@ -68,6 +68,7 @@ import { ClaimDiscountPage, ReferralSignupPage } from './pages/referral';
 import { checkAndFixLanguage } from './utils/language-utils';
 import PaymentCallback from './pages/payment-callback';
 import PaymentSuccess from './pages/payment-success';
+import { PaymentMethodProvider } from './components/PaymentMethodProvider';
 
 // Function to ensure French is the default language
 const ensureFrenchAsDefault = () => {
@@ -714,8 +715,10 @@ function App() {
         <ToastProvider>
           <NotificationProvider>
             <ChecklistProvider>
-              <ScrollToTop />
-              {routes}
+              <PaymentMethodProvider checkOnMount={isAuthenticated}>
+                <ScrollToTop />
+                {routes}
+              </PaymentMethodProvider>
             </ChecklistProvider>
           </NotificationProvider>
         </ToastProvider>
@@ -725,10 +728,12 @@ function App() {
     // Otherwise use MainLayout
     return (
       <ToastProvider>
-        <ScrollToTop />
-        <MainLayout>
-          {routes}
-        </MainLayout>
+        <PaymentMethodProvider checkOnMount={isAuthenticated}>
+          <ScrollToTop />
+          <MainLayout>
+            {routes}
+          </MainLayout>
+        </PaymentMethodProvider>
       </ToastProvider>
     );
   };

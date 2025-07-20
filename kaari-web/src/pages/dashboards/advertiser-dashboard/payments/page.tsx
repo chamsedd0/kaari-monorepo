@@ -8,6 +8,9 @@ import { formatDate } from '../../../../utils/date-utils';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import { BorderPurpleLB40 } from '../../../../components/skeletons/buttons/border_purple_LB40';
 import { PayoutRequest, Payout } from '../../../../services/PayoutsService';
+import { usePaymentMethod } from '../../../../components/PaymentMethodProvider';
+import { toast } from 'react-toastify';
+import { requestReferralPayout } from '../../../../backend/server-actions/ReferralServerActions';
 
 const PaymentsPage = () => {
   const { t } = useTranslation();
@@ -28,6 +31,7 @@ const PaymentsPage = () => {
   const [payoutSuccess, setPayoutSuccess] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string>('date');
   const [activeTab, setActiveTab] = useState<'payments' | 'payouts' | 'history'>('payments');
+  const { ensurePaymentMethod } = usePaymentMethod();
 
   // Load advertiser payments and stats
   useEffect(() => {
@@ -100,28 +104,33 @@ const PaymentsPage = () => {
   };
   
   // Handle request payout
-  const handleRequestPayout = async (reservationId: string) => {
+  const handleRequestPayout = async (type: string, id: string) => {
+    // First check if the user has a payment method
+    const hasPaymentMethod = await ensurePaymentMethod();
+    if (!hasPaymentMethod) {
+      // The modal will be shown automatically by the ensurePaymentMethod function
+      return;
+    }
+    
+    // Continue with the payout request
     try {
-      setPayoutLoading(true);
-      setPayoutError(null);
-      setPayoutSuccess(null);
+      setLoading(true);
       
-      const success = await requestRentPayout(reservationId);
-      
-      if (success) {
-        setPayoutSuccess('Payout request submitted successfully. It will be processed within 1-3 business days.');
-        
-        // Refresh payout requests
-        const requests = await getCurrentUserPayoutRequests();
-        setPayoutRequests(requests);
-      } else {
-        setPayoutError('Failed to submit payout request. Please try again.');
+      if (type === 'rent') {
+        await requestRentPayout(id);
+        toast.success('Rent payout requested successfully');
+      } else if (type === 'referral') {
+        await requestReferralPayout(id);
+        toast.success('Referral payout requested successfully');
       }
-    } catch (err: any) {
-      console.error('Error requesting payout:', err);
-      setPayoutError(err.message || 'Failed to request payout');
+      
+      // Refresh data
+      await loadPayments();
+    } catch (error) {
+      console.error('Error requesting payout:', error);
+      toast.error('Failed to request payout');
     } finally {
-      setPayoutLoading(false);
+      setLoading(false);
     }
   };
   
@@ -287,7 +296,7 @@ const PaymentsPage = () => {
                           {paymentItem.payment.status === 'completed' && paymentItem.reservation?.status === 'movedIn' && !hasPayoutRequest(paymentItem.reservation.id) ? (
                             <button 
                               className="request-payout-button"
-                              onClick={() => handleRequestPayout(paymentItem.reservation.id)}
+                              onClick={() => handleRequestPayout('rent', paymentItem.reservation.id)}
                               disabled={payoutLoading}
                             >
                               {payoutLoading ? 'Processing...' : 'Request Payout'}

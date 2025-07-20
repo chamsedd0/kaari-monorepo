@@ -98,6 +98,55 @@ export async function cancelReservation(reservationId: string): Promise<void> {
       updatedAt: new Date()
     });
     
+    // Create an automatic refund payout for the user
+    try {
+      // Calculate refund amount - in early cancellation, refund the full amount
+      const refundAmount = reservation.totalPrice || 0;
+      
+      // Import PayoutsServerActions dynamically to avoid circular dependencies
+      const { createRefundPayout } = await import('./PayoutsServerActions');
+      
+      // Create a refund request record first
+      const refundRequestRef = await createDocument(REFUND_REQUESTS_COLLECTION, {
+        reservationId,
+        userId: currentUser.id,
+        reason: 'Early cancellation - automatic refund',
+        amount: refundAmount,
+        originalAmount: refundAmount,
+        serviceFee: 0, // No service fee deduction for early cancellations
+        propertyId: reservation.propertyId,
+        status: 'approved', // Auto-approved
+        autoApproved: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        approvedAt: new Date(),
+        approvedBy: 'system'
+      });
+      
+      // Create the refund payout
+      if (refundRequestRef && refundRequestRef.id) {
+        await createRefundPayout(
+          currentUser.id,
+          refundAmount,
+          refundRequestRef.id,
+          reservation.propertyId
+        );
+        
+        console.log(`Automatic refund payout created for reservation ${reservationId} with amount ${refundAmount}`);
+      }
+    } catch (payoutError) {
+      console.error('Error creating automatic refund payout:', payoutError);
+      // Don't throw error, just log it (non-critical)
+    }
+    
+    // If property exists, update its status to available
+    if (reservation.propertyId) {
+      await updateDocument<Property>(PROPERTIES_COLLECTION, reservation.propertyId, {
+        status: 'available',
+        updatedAt: new Date()
+      });
+    }
+    
     // Send notification to the advertiser about the cancellation
     try {
       if (reservation.propertyId) {
@@ -123,6 +172,14 @@ export async function cancelReservation(reservationId: string): Promise<void> {
           await advertiserNotifications.reservationCancelled(
             property.ownerId,
             reservationForNotification as any
+          );
+          
+          // Send notification to the client about automatic refund
+          await userNotifications.refundRequestHandled(
+            currentUser.id,
+            reservationForNotification as any,
+            true, // approved
+            'Your early cancellation has been processed with a full refund.'
           );
           
           console.log(`Cancellation notification sent to advertiser: ${property.ownerId}`);
