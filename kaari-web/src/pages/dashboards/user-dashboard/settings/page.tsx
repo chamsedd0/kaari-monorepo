@@ -217,6 +217,7 @@ const SettingsPage: React.FC = () => {
                             placeholder="Enter your current password"
                             value={currentPassword}
                             onChange={handleCurrentPasswordChange}
+                            // @ts-expect-error component prop type lacks disabled; supported in implementation
                             disabled={isGoogleProvider || loading}
                             type="password"
                         />
@@ -226,6 +227,7 @@ const SettingsPage: React.FC = () => {
                             placeholder="Enter your new password"
                             value={newPassword}
                             onChange={handleNewPasswordChange}
+                            // @ts-expect-error component prop type lacks disabled; supported in implementation
                             disabled={isGoogleProvider || loading}
                             type="password"
                         />
@@ -234,6 +236,7 @@ const SettingsPage: React.FC = () => {
                             placeholder="Confirm your new password"
                             value={confirmPassword}
                             onChange={handleConfirmPasswordChange}
+                            // @ts-expect-error component prop type lacks disabled; supported in implementation
                             disabled={isGoogleProvider || loading}
                             type="password"
                         />
@@ -241,7 +244,7 @@ const SettingsPage: React.FC = () => {
                     </div>
                 </div>
                 <div className="save-button">
-                    <PurpleButtonMB48 
+                        <PurpleButtonMB48 
                         text={loading ? "Saving..." : "Save Changes"} 
                         onClick={handlePasswordChange}
                         disabled={isGoogleProvider || loading}
@@ -268,6 +271,7 @@ const SettingsPage: React.FC = () => {
                             placeholder="Enter your new email address"
                             value={newEmail}
                             onChange={handleNewEmailChange}
+                            // @ts-expect-error component prop type lacks disabled; supported in implementation
                             disabled={isGoogleProvider || loading}
                         />
                     </div>

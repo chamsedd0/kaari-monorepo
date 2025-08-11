@@ -153,7 +153,7 @@ const ApplicationContainer = styled.div<{step: number}>`
       padding: 1.5rem;
       
       .property-title {
-        font: ${Theme.typography.fonts.h5B};
+        font: ${Theme.typography.fonts.h4B};
         color: ${Theme.colors.black};
         margin-bottom: 0.75rem;
       }
@@ -511,7 +511,7 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ userData, propert
       setCurrentStep(2);
       // Emit event for scroll to top component
       import('../../utils/event-bus').then(({ default: eventBus, EventType }) => {
-        eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
+        eventBus.emit(EventType.CHECKOUT_STEP_CHANGED, {} as any);
       });
     }
   };
@@ -520,7 +520,7 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ userData, propert
     setCurrentStep(1);
     // Emit event for scroll to top component
     import('../../utils/event-bus').then(({ default: eventBus, EventType }) => {
-      eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
+      eventBus.emit(EventType.CHECKOUT_STEP_CHANGED, {} as any);
     });
   };
   
@@ -534,7 +534,7 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ userData, propert
     setIsSubmitting(true);
     
     // Try to get the existing rental data to preserve scheduledDate if set
-    let existingData = {};
+    let existingData: any = {};
     try {
       const savedData = localStorage.getItem('rentalApplicationData');
       if (savedData) {
@@ -566,7 +566,7 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ userData, propert
       aboutMe: stayInfo.aboutMe,
       leavingDate: stayInfo.leavingDate,
       // Only set scheduledDate if it's not already set in existingData
-      scheduledDate: existingData.scheduledDate || new Date().toISOString().split('T')[0]
+      scheduledDate: (existingData as any)?.scheduledDate || new Date().toISOString().split('T')[0]
     };
     
     // Save combined data to localStorage
@@ -581,7 +581,7 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ userData, propert
       
       // Explicitly trigger scroll to top event
       import('../../utils/event-bus').then(({ default: eventBus, EventType }) => {
-        eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
+        eventBus.emit(EventType.CHECKOUT_STEP_CHANGED, {} as any);
       });
     }, 500);
   };

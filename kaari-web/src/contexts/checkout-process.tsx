@@ -4,7 +4,7 @@ interface PaymentMethodDetails {
   id: string;
   type: string;
   details: any;
-  protectionOption?: 'haani' | 'haaniMax';
+  protectionOption?: 'haani';
   additionalCost?: number;
 }
 

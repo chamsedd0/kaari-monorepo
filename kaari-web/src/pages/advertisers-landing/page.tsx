@@ -155,7 +155,7 @@ const AdvertisersLanding: React.FC = () => {
               <PhotoshootCardEnum
                 title="Book a photoshoot"
                 description="Schedule a free photoshoot with our professional photographers who will capture quality images of your property for an accurate showcase."
-                onClick={() => navigate('/photoshoot-booking')}
+                number={1}
                 image={Photoshoot1}
               />
             </div>

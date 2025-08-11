@@ -30,7 +30,7 @@ export type ReservationStatus =
 
 // Define reservation interface
 export interface Reservation {
-  id?: string;
+  id: string;
   propertyId: string;
   propertyTitle: string;
   advertiserId: string;
@@ -54,6 +54,22 @@ export interface Reservation {
 
 class ReservationService {
   private collection = 'reservations';
+
+  private convertToNotificationReservation(reservation: Reservation) {
+    return {
+      id: reservation.id,
+      propertyId: reservation.propertyId,
+      propertyTitle: reservation.propertyTitle,
+      advertiserId: reservation.advertiserId,
+      clientId: reservation.clientId,
+      clientName: reservation.clientName,
+      startDate: reservation.startDate instanceof Timestamp ? reservation.startDate.toDate() : new Date(reservation.startDate as any),
+      endDate: reservation.endDate instanceof Timestamp ? reservation.endDate.toDate() : new Date(reservation.endDate as any),
+      status: reservation.status,
+      totalPrice: reservation.totalPrice,
+      currency: reservation.currency
+    } as any;
+  }
 
   // Create a new reservation
   async createReservation(reservationData: Omit<Reservation, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
@@ -96,13 +112,13 @@ class ReservationService {
       
       // Send notification to advertiser
       try {
+        const notifReservation = this.convertToNotificationReservation({
+          id: docRef.id,
+          ...newReservation
+        } as Reservation);
         await advertiserNotifications.reservationRequest(
           reservationData.advertiserId,
-          {
-            id: docRef.id,
-            ...reservationData,
-            status: 'pending'
-          } as Reservation
+          notifReservation
         );
         console.log(`Reservation notification sent to advertiser: ${reservationData.advertiserId}`);
       } catch (notifError) {
@@ -174,12 +190,13 @@ class ReservationService {
     reason?: string
   ): Promise<void> {
     try {
+      const notifReservation = this.convertToNotificationReservation(reservation);
       switch (newStatus) {
         case 'accepted':
           // Notify user that reservation was accepted
           await userNotifications.reservationAccepted(
             reservation.clientId,
-            reservation as Reservation
+            notifReservation
           );
           break;
           
@@ -187,7 +204,7 @@ class ReservationService {
           // Notify user that reservation was rejected
           await userNotifications.reservationRejected(
             reservation.clientId,
-            reservation as Reservation,
+            notifReservation,
             reason
           );
           break;
@@ -196,15 +213,15 @@ class ReservationService {
           // Notify advertiser that user cancelled
           await advertiserNotifications.reservationCancelled(
             reservation.advertiserId,
-            reservation as Reservation
+            notifReservation
           );
           break;
           
         case 'paid':
           // Notify user about payment
-          await userNotifications.paymentConfirmed(
+          await userNotifications.paymentConfirmation(
             reservation.clientId,
-            reservation
+            notifReservation
           );
           break;
           
@@ -212,23 +229,25 @@ class ReservationService {
           // Notify advertiser about move-in
           await advertiserNotifications.clientMovedIn(
             reservation.advertiserId,
-            reservation
+            notifReservation
           );
           break;
           
         case 'refundComplete':
           // Notify user about refund
-          await userNotifications.refundComplete(
+          await userNotifications.refundRequestHandled(
             reservation.clientId,
-            reservation
+            notifReservation,
+            true
           );
           break;
           
         case 'refundFailed':
           // Notify user about refund failure
-          await userNotifications.refundFailed(
+          await userNotifications.refundRequestHandled(
             reservation.clientId,
-            reservation
+            notifReservation,
+            false
           );
           break;
           
@@ -236,7 +255,7 @@ class ReservationService {
           // Notify advertiser about cancellation under review
           await advertiserNotifications.cancellationUnderReview(
             reservation.advertiserId,
-            reservation
+            notifReservation
           );
           break;
           
@@ -244,7 +263,7 @@ class ReservationService {
           // Notify user about reservation request expired
           await userNotifications.reservationExpired(
             reservation.clientId,
-            reservation
+            notifReservation
           );
           break;
           
@@ -280,21 +299,7 @@ class ReservationService {
       // Notify advertiser about payment
       await advertiserNotifications.paymentConfirmed(
         reservation.advertiserId,
-        {
-          id: reservationId,
-          amount: reservation.totalPrice,
-          currency: reservation.currency,
-          status: 'paid',
-          reservationId: reservationId
-        },
-        {
-          id: reservation.propertyId,
-          title: reservation.propertyTitle
-        },
-        {
-          id: reservation.clientId,
-          name: reservation.clientName
-        }
+        this.convertToNotificationReservation(reservation)
       );
     } catch (error) {
       console.error('Error confirming payment:', error);
@@ -323,7 +328,7 @@ class ReservationService {
       // Send payment reminder notification
       await userNotifications.paymentReminder(
         reservation.clientId,
-        reservation,
+        this.convertToNotificationReservation(reservation),
         dueDate
       );
     } catch (error) {
@@ -353,13 +358,13 @@ class ReservationService {
       // Notify advertiser about move-in
       await advertiserNotifications.clientMovedIn(
         reservation.advertiserId,
-        reservation
+        this.convertToNotificationReservation(reservation)
       );
       
       // Notify user about move-in confirmation
       await userNotifications.moveInConfirmation(
         reservation.clientId,
-        reservation
+        this.convertToNotificationReservation(reservation)
       );
     } catch (error) {
       console.error('Error confirming move-in:', error);
@@ -383,7 +388,7 @@ class ReservationService {
       // Send move-in reminder notification
       await userNotifications.moveInReminder(
         reservation.clientId,
-        reservation
+        this.convertToNotificationReservation(reservation)
       );
     } catch (error) {
       console.error('Error sending move-in reminder:', error);
@@ -413,7 +418,7 @@ class ReservationService {
       // Notify user about refund request result
       await userNotifications.refundRequestHandled(
         reservation.clientId,
-        reservation,
+        this.convertToNotificationReservation(reservation),
         approved,
         reason
       );
@@ -448,7 +453,7 @@ class ReservationService {
       // Notify user about cancellation request result
       await userNotifications.cancellationRequestHandled(
         reservation.clientId,
-        reservation,
+        this.convertToNotificationReservation(reservation),
         approved,
         reason
       );
@@ -457,7 +462,7 @@ class ReservationService {
       if (approved) {
         await advertiserNotifications.reservationCancelled(
           reservation.advertiserId,
-          reservation
+          this.convertToNotificationReservation(reservation)
         );
       }
     } catch (error) {
@@ -561,12 +566,12 @@ class ReservationService {
           if (reservation.status === 'pending') {
             await userNotifications.reservationExpired(
               reservation.clientId,
-              reservation
+              this.convertToNotificationReservation(reservation)
             );
           } else if (reservation.status === 'accepted') {
             await userNotifications.paymentExpired(
               reservation.clientId,
-              reservation
+              this.convertToNotificationReservation(reservation)
             );
           }
         } catch (notifError) {

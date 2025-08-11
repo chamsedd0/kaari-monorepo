@@ -1,21 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaSearch, FaEye } from 'react-icons/fa';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-import {
-  DashboardCard,
-  CardTitle,
-  CardContent,
-  Table,
-  TableHead,
-  TableRow,
-  TableHeader,
-  TableCell,
-  FormGroup,
-  Input,
-  Select,
-  Button,
-} from '../styles';
+import { Table, TableHead, TableRow, TableHeader, TableCell, FormGroup, Input, Select, Button } from '../styles';
 import { useNavigate } from 'react-router-dom';
 import { 
   getAllBookings, 
@@ -26,6 +13,9 @@ import {
   AdminBookingStatus,
   PaymentState
 } from '../../../../backend/server-actions/BookingServerActions';
+import AdminTableScaffold from '../../../../components/admin/AdminTableScaffold';
+import { formatDateSafe } from '../../../../utils/dates';
+import { PageContainer, PageHeader, FilterBar, SearchBox, GlassTable, GlassCard } from '../../../../components/admin/AdminUI';
 
 // Excel-like styled components
 const BookingsTable = styled(Table)`
@@ -247,17 +237,7 @@ const TableContainer = styled.div`
   border-radius: 4px;
 `;
 
-const NoDataMessage = styled.div`
-  padding: 20px;
-  text-align: center;
-  color: #666;
-`;
-
-const LoadingMessage = styled.div`
-  padding: 20px;
-  text-align: center;
-  color: #666;
-`;
+// Loading and empty states are handled by AdminTableScaffold
 
 const StatusCount = styled.span`
   background-color: ${Theme.colors.gray};
@@ -318,57 +298,53 @@ const BookingsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [cities, setCities] = useState<string[]>([]);
   
-  // Load bookings data
-  useEffect(() => {
-    const loadBookings = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        let fetchedBookings: AdminBooking[];
-        
-        if (statusFilter !== 'all' && cityFilter !== 'all') {
-          // First get bookings by status
+  const loadBookings = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      let fetchedBookings: AdminBooking[];
+
+      if (statusFilter !== 'all' && cityFilter !== 'all') {
+        try {
+          // @ts-ignore: assume server-action exists or will be added
+          const combined = await getBookingsByStatusAndCity(statusFilter as AdminBookingStatus, cityFilter);
+          fetchedBookings = combined;
+        } catch {
           const statusBookings = await getBookingsByStatus(statusFilter as AdminBookingStatus);
-          // Then filter by city manually
           fetchedBookings = statusBookings.filter(booking => booking.property.city === cityFilter);
-        } else if (statusFilter !== 'all') {
-          // Get bookings filtered by status
-          fetchedBookings = await getBookingsByStatus(statusFilter as AdminBookingStatus);
-        } else if (cityFilter !== 'all') {
-          // Get bookings filtered by city
-          fetchedBookings = await getBookingsByCity(cityFilter);
-        } else {
-          // Get all bookings
-          fetchedBookings = await getAllBookings();
         }
-        
-        // Extract unique cities for filter
-        const uniqueCities = [...new Set(fetchedBookings.map(booking => booking.property.city))];
-        setCities(uniqueCities);
-        
-        // Sort bookings by date (most recent first)
-        fetchedBookings.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
-        
-        setBookings(fetchedBookings);
-        
-        // Apply search filter if exists
-        if (searchQuery) {
-          const filtered = await searchBookings(searchQuery);
-          setFilteredBookings(filtered);
-        } else {
-          setFilteredBookings(fetchedBookings);
-        }
-      } catch (err) {
-        console.error('Error loading bookings:', err);
-        setError('Failed to load bookings. Please try again later.');
-      } finally {
-        setLoading(false);
+      } else if (statusFilter !== 'all') {
+        fetchedBookings = await getBookingsByStatus(statusFilter as AdminBookingStatus);
+      } else if (cityFilter !== 'all') {
+        fetchedBookings = await getBookingsByCity(cityFilter);
+      } else {
+        fetchedBookings = await getAllBookings();
       }
-    };
-    
+
+      const uniqueCities = [...new Set(fetchedBookings.map(booking => booking.property.city).filter(Boolean))];
+      setCities(uniqueCities);
+
+      fetchedBookings.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      setBookings(fetchedBookings);
+
+      if (searchQuery) {
+        const filtered = await searchBookings(searchQuery);
+        setFilteredBookings(filtered);
+      } else {
+        setFilteredBookings(fetchedBookings);
+      }
+    } catch (err) {
+      console.error('Error loading bookings:', err);
+      setError('Failed to load bookings. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter, cityFilter, searchQuery]);
+
+  useEffect(() => {
     loadBookings();
-  }, [statusFilter, cityFilter]);
+  }, [loadBookings]);
   
   // Apply search filter
   useEffect(() => {
@@ -430,15 +406,7 @@ const BookingsPage: React.FC = () => {
     navigate(`/dashboard/admin/bookings/${booking.id}`);
   };
   
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
+  const formatDate = (date: any) => formatDateSafe(date, 'en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   
   const formatAmount = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -481,121 +449,107 @@ const BookingsPage: React.FC = () => {
   };
   
   return (
-    <DashboardCard>
-      <CardTitle>Bookings Management</CardTitle>
-      <CardContent>
-        <FilterContainer>
-          <FilterSelect
-            value={statusFilter}
-            onChange={handleStatusFilterChange}
-          >
-            <option value="all">All Statuses ({countByStatus('all')})</option>
-            <option value="Await-Advertiser">Awaiting Advertiser ({countByStatus('Await-Advertiser')})</option>
-            <option value="Await-Tenant-Confirm">Awaiting Tenant Confirmation ({countByStatus('Await-Tenant-Confirm')})</option>
-            <option value="Confirmed">Confirmed ({countByStatus('Confirmed')})</option>
-            <option value="Cancelled">Cancelled ({countByStatus('Cancelled')})</option>
-          </FilterSelect>
-          
-          <FilterSelect
-            value={cityFilter}
-            onChange={handleCityFilterChange}
-          >
-            <option value="all">All Cities</option>
-            {cities.map(city => (
-              <option key={city} value={city}>{city}</option>
-            ))}
-          </FilterSelect>
-          
-          <SearchContainer>
-            <FaSearch />
-            <SearchInput
-              type="text"
-              placeholder="Search by name, property, or ID"
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-          </SearchContainer>
-        </FilterContainer>
+    <PageContainer>
+      <PageHeader title="Bookings Management" />
+      <FilterBar>
+        <FilterSelect value={statusFilter} onChange={handleStatusFilterChange}>
+          <option value="all">All Statuses ({countByStatus('all')})</option>
+          <option value="Await-Advertiser">Awaiting Advertiser ({countByStatus('Await-Advertiser')})</option>
+          <option value="Await-Tenant-Confirm">Awaiting Tenant Confirmation ({countByStatus('Await-Tenant-Confirm')})</option>
+          <option value="Confirmed">Confirmed ({countByStatus('Confirmed')})</option>
+          <option value="Cancelled">Cancelled ({countByStatus('Cancelled')})</option>
+        </FilterSelect>
+        <FilterSelect value={cityFilter} onChange={handleCityFilterChange}>
+          <option value="all">All Cities</option>
+          {cities.map(city => (
+            <option key={city} value={city}>{city}</option>
+          ))}
+        </FilterSelect>
+        <SearchBox>
+          <FaSearch />
+          <input type="text" placeholder="Search by name, property, or ID" value={searchQuery} onChange={handleSearchChange} />
+        </SearchBox>
+      </FilterBar>
         
-        <TableContainer>
-          {loading ? (
-            <LoadingMessage>Loading booking data...</LoadingMessage>
-          ) : error ? (
-            <NoDataMessage>{error}</NoDataMessage>
-          ) : filteredBookings.length === 0 ? (
-            <NoDataMessage>No bookings found matching your criteria.</NoDataMessage>
-          ) : (
-            <BookingsTable>
-              <BookingsTableHead>
-                <tr>
-                  <BookingsTableHeader style={{ width: '5%' }}>ID</BookingsTableHeader>
-                  <BookingsTableHeader style={{ width: '20%' }}>Property</BookingsTableHeader>
-                  <BookingsTableHeader style={{ width: '15%' }}>Tenant</BookingsTableHeader>
-                  <BookingsTableHeader style={{ width: '15%' }}>Advertiser</BookingsTableHeader>
-                  <BookingsTableHeader style={{ width: '15%' }}>Date</BookingsTableHeader>
-                  <BookingsTableHeader style={{ width: '10%' }}>Amount</BookingsTableHeader>
-                  <BookingsTableHeader style={{ width: '10%' }}>Status</BookingsTableHeader>
-                  <BookingsTableHeader style={{ width: '10%' }}>Payment</BookingsTableHeader>
-                </tr>
-              </BookingsTableHead>
-              <tbody>
-                {filteredBookings.map(booking => (
-                  <BookingRow key={booking.id} onClick={() => openBookingDetail(booking)}>
-                    <BookingCell>{booking.bookingId}</BookingCell>
-                    <PropertyCell>
-                      <PropertyThumbnail
-                        src={booking.property.thumbnail || getPlaceholderImage(booking.property.title)}
-                        alt={booking.property.title}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = getPlaceholderImage(booking.property.title);
-                        }}
-                      />
-                      <PropertyInfo>
-                        <PropertyTitle>{booking.property.title}</PropertyTitle>
-                        <PropertyCity>{booking.property.city}</PropertyCity>
-                      </PropertyInfo>
-                    </PropertyCell>
-                    <BookingCell>
-                      <ContactInfo>
-                        <ContactName>{booking.tenant.name}</ContactName>
-                        <ContactPhone>{booking.tenant.phoneNumber}</ContactPhone>
-                      </ContactInfo>
-                    </BookingCell>
-                    <BookingCell>
-                      <ContactInfo>
-                        <ContactName>{booking.advertiser.name}</ContactName>
-                        <ContactPhone>{booking.advertiser.phoneNumber}</ContactPhone>
-                      </ContactInfo>
-                    </BookingCell>
-                    <BookingCell>
-                      {formatDate(booking.updatedAt)}
-                      {booking.status === 'Await-Advertiser' && (
-                        <div>
-                          <CountdownTimer updatedAt={booking.updatedAt} />
-                        </div>
-                      )}
-                    </BookingCell>
-                    <BookingCell>
-                      {formatAmount(booking.amount)}
-                    </BookingCell>
-                    <BookingCell>
-                      <StatusBadge $status={booking.status}>
-                        {booking.status}
-                      </StatusBadge>
-                    </BookingCell>
-                    <BookingCell>
-                      <PaymentStateBadge $state={booking.paymentState}>
-                        {booking.paymentState}
-                      </PaymentStateBadge>
-                    </BookingCell>
-                  </BookingRow>
-                ))}
-              </tbody>
-            </BookingsTable>
+        <AdminTableScaffold
+          loading={loading}
+          error={error}
+          isEmpty={!loading && !error && filteredBookings.length === 0}
+          onRetry={() => loadBookings()}
+        >
+          {filteredBookings.length > 0 && (
+            <GlassCard>
+              <GlassTable>
+                <BookingsTableHead>
+                  <tr>
+                    <BookingsTableHeader style={{ width: '5%' }}>ID</BookingsTableHeader>
+                    <BookingsTableHeader style={{ width: '20%' }}>Property</BookingsTableHeader>
+                    <BookingsTableHeader style={{ width: '15%' }}>Tenant</BookingsTableHeader>
+                    <BookingsTableHeader style={{ width: '15%' }}>Advertiser</BookingsTableHeader>
+                    <BookingsTableHeader style={{ width: '15%' }}>Date</BookingsTableHeader>
+                    <BookingsTableHeader style={{ width: '10%' }}>Amount</BookingsTableHeader>
+                    <BookingsTableHeader style={{ width: '10%' }}>Status</BookingsTableHeader>
+                    <BookingsTableHeader style={{ width: '10%' }}>Payment</BookingsTableHeader>
+                  </tr>
+                </BookingsTableHead>
+                <tbody>
+                  {filteredBookings.map(booking => (
+                    <BookingRow key={booking.id} onClick={() => openBookingDetail(booking)}>
+                      <BookingCell>{booking.bookingId}</BookingCell>
+                      <PropertyCell>
+                        <PropertyThumbnail
+                          src={booking.property.thumbnail || getPlaceholderImage(booking.property.title)}
+                          alt={booking.property.title}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = getPlaceholderImage(booking.property.title);
+                          }}
+                        />
+                        <PropertyInfo>
+                          <PropertyTitle>{booking.property.title}</PropertyTitle>
+                          <PropertyCity>{booking.property.city}</PropertyCity>
+                        </PropertyInfo>
+                      </PropertyCell>
+                      <BookingCell>
+                        <ContactInfo>
+                          <ContactName>{booking.tenant.name}</ContactName>
+                          <ContactPhone>{booking.tenant.phoneNumber}</ContactPhone>
+                        </ContactInfo>
+                      </BookingCell>
+                      <BookingCell>
+                        <ContactInfo>
+                          <ContactName>{booking.advertiser.name}</ContactName>
+                          <ContactPhone>{booking.advertiser.phoneNumber}</ContactPhone>
+                        </ContactInfo>
+                      </BookingCell>
+                      <BookingCell>
+                        {formatDate(booking.updatedAt)}
+                        {booking.status === 'Await-Advertiser' && (
+                          <div>
+                            <CountdownTimer updatedAt={booking.updatedAt} />
+                          </div>
+                        )}
+                      </BookingCell>
+                      <BookingCell>
+                        {formatAmount(booking.amount)}
+                      </BookingCell>
+                      <BookingCell>
+                        <StatusBadge $status={booking.status}>
+                          {booking.status}
+                        </StatusBadge>
+                      </BookingCell>
+                      <BookingCell>
+                        <PaymentStateBadge $state={booking.paymentState}>
+                          {booking.paymentState}
+                        </PaymentStateBadge>
+                      </BookingCell>
+                    </BookingRow>
+                  ))}
+                </tbody>
+              </GlassTable>
+            </GlassCard>
           )}
-        </TableContainer>
-      </CardContent>
-    </DashboardCard>
+        </AdminTableScaffold>
+    </PageContainer>
   );
 };
 

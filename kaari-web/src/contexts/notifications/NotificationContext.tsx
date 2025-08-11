@@ -36,9 +36,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       setLoading(true);
       
-      // Ensure userType consistency
-      // @ts-ignore - Add userType if not present
-      const userType = user.userType || user.role || 'user';
+      // Ensure userType consistency, map 'client' to 'user' expected by NotificationService
+      const rawType = (user as any).userType || user.role || 'user';
+      const userType: 'user' | 'advertiser' | 'admin' = rawType === 'client' ? 'user' : rawType;
       
       // Get the actual notifications
       const refreshedNotifications = await NotificationService.getNotifications(user.id, userType);
@@ -66,8 +66,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           
           // Subscribe to notifications
           try {
-            // @ts-ignore - TypeScript doesn't know about userType
-            const userType = user.userType || user.role || 'user';
+            const rawType = (user as any).userType || user.role || 'user';
+            const userType: 'user' | 'advertiser' | 'admin' = rawType === 'client' ? 'user' : rawType;
             
             unsubscribe = NotificationService.subscribeToNotifications(
               user.id,
@@ -138,7 +138,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!user || !user.id) return;
     
     try {
-      const userType = user.userType || 'user';
+      const rawType = (user as any).userType || user.role || 'user';
+      const userType: 'user' | 'advertiser' | 'admin' = rawType === 'client' ? 'user' : rawType;
       await NotificationService.markAllAsRead(user.id, userType);
       
       // Update local state

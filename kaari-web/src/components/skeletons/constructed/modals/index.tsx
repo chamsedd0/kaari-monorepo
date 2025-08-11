@@ -4,6 +4,6 @@ export { default as ConfirmationModal } from './confirmation-modal';
 export { default as CardDetailsModal } from './card-details-modal';
 export { default as SpokenLanguagesModal } from './spoken-languages-modal';
 export { default as MessagingModal } from './messaging-modal';
-export { default as SignOutConfirmationModal } from './signout-confirmation-modal';
+export { SignOutConfirmationModal } from './signout-confirmation-modal';
 export { default as ForgotPasswordModal } from './forgot-password-modal';
 export { default as LogoutConfirmationModal } from './logout-confirmation-modal'; 

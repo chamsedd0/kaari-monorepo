@@ -36,6 +36,7 @@ import { getAdvertiserReferralData } from '../../../../backend/server-actions/Ad
 import { getPropertiesByAdvertiserId } from '../../../../backend/server-actions/PropertyServerActions';
 import { getPhotoshootsByAdvertiserId } from '../../../../backend/server-actions/PhotoshootBookingServerActions';
 import { Theme } from '../../../../theme/theme';
+import { PageContainer, PageHeader, GlassCard, GlassTable, FilterBar as GlassFilterBar, Button as AdminUIButton, IconButton, Pill } from '../../../../components/admin/AdminUI';
 
 // Types
 interface Advertiser {
@@ -302,10 +303,12 @@ const AdvertiserModerationPage: React.FC = () => {
 
   // Render advertiser list (overview)
   const renderAdvertiserList = () => (
-    <Container>
-      <h2>Advertiser Moderation</h2>
+    <PageContainer>
+      <PageHeader title="Advertiser Moderation" />
+      <GlassCard>
+      <Container>
       
-      <FilterBar>
+      <GlassFilterBar>
         <SearchInput>
           <FaSearch />
           <input
@@ -334,7 +337,7 @@ const AdvertiserModerationPage: React.FC = () => {
           <option value="active">Active</option>
           <option value="suspended">Suspended</option>
         </FilterSelect>
-      </FilterBar>
+      </GlassFilterBar>
       
       {error && <div style={{ color: 'red', marginBottom: '15px' }}>{error}</div>}
       
@@ -346,7 +349,7 @@ const AdvertiserModerationPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <AdvertiserTable>
+          <GlassTable>
             <thead>
               <tr>
                 <th>Name</th>
@@ -375,7 +378,7 @@ const AdvertiserModerationPage: React.FC = () => {
                 </TableRow>
               ))}
             </tbody>
-          </AdvertiserTable>
+          </GlassTable>
           
           {totalPages > 1 && (
             <Pagination>
@@ -396,7 +399,9 @@ const AdvertiserModerationPage: React.FC = () => {
           )}
         </>
       )}
-    </Container>
+      </Container>
+      </GlassCard>
+    </PageContainer>
   );
 
   // Render advertiser detail
@@ -406,10 +411,13 @@ const AdvertiserModerationPage: React.FC = () => {
     }
 
     return (
-      <DetailContainer>
-        <BackButton onClick={handleBackClick}>
-          <FaArrowLeft /> Back to Advertisers
-        </BackButton>
+      <PageContainer>
+        <PageHeader title="Advertiser Detail" />
+        <GlassCard>
+        <DetailContainer>
+          <AdminUIButton $variant="outline" onClick={handleBackClick}>
+            <FaArrowLeft /> Back to Advertisers
+          </AdminUIButton>
         
         {success && <div style={{ color: 'green', marginBottom: '15px' }}>{success}</div>}
         {error && <div style={{ color: 'red', marginBottom: '15px' }}>{error}</div>}
@@ -461,30 +469,18 @@ const AdvertiserModerationPage: React.FC = () => {
             
             <TabContainer>
               <div className="tabs">
-                <Tab 
-                  className={activeTab === 'properties' ? 'active' : ''} 
-                  onClick={() => handleTabChange('properties')}
-                >
-                  Properties
-                </Tab>
-                <Tab 
-                  className={activeTab === 'bookings' ? 'active' : ''} 
-                  onClick={() => handleTabChange('bookings')}
-                >
-                  Bookings
-                </Tab>
-                <Tab 
-                  className={activeTab === 'photoshoots' ? 'active' : ''} 
-                  onClick={() => handleTabChange('photoshoots')}
-                >
-                  Photoshoots
-                </Tab>
-                <Tab 
-                  className={activeTab === 'referrals' ? 'active' : ''} 
-                  onClick={() => handleTabChange('referrals')}
-                >
-                  Referrals
-                </Tab>
+                {(['properties','bookings','photoshoots','referrals'] as const).map(k => (
+                  <Pill key={k}
+                    onClick={() => handleTabChange(k)}
+                    style={{
+                      cursor: 'pointer',
+                      background: activeTab === k ? `${Theme.colors.tertiary}30` : '#fff',
+                      borderColor: activeTab === k ? Theme.colors.tertiary : `${Theme.colors.tertiary}80`
+                    }}
+                  >
+                    {k.charAt(0).toUpperCase() + k.slice(1)}
+                  </Pill>
+                ))}
               </div>
               
               <TabContent className={activeTab === 'properties' ? 'active' : ''}>
@@ -493,7 +489,7 @@ const AdvertiserModerationPage: React.FC = () => {
                     No properties found for this advertiser.
                   </div>
                 ) : (
-                  <AdvertiserTable>
+                  <GlassTable>
                     <thead>
                       <tr>
                         <th>Property</th>
@@ -528,7 +524,7 @@ const AdvertiserModerationPage: React.FC = () => {
                         </TableRow>
                       ))}
                     </tbody>
-                  </AdvertiserTable>
+                  </GlassTable>
                 )}
               </TabContent>
               
@@ -538,7 +534,7 @@ const AdvertiserModerationPage: React.FC = () => {
                     No bookings found for this advertiser.
                   </div>
                 ) : (
-                  <AdvertiserTable>
+                  <GlassTable>
                     <thead>
                       <tr>
                         <th>Tenant</th>
@@ -562,7 +558,7 @@ const AdvertiserModerationPage: React.FC = () => {
                         </TableRow>
                       ))}
                     </tbody>
-                  </AdvertiserTable>
+                  </GlassTable>
                 )}
               </TabContent>
               
@@ -572,7 +568,7 @@ const AdvertiserModerationPage: React.FC = () => {
                     No photoshoot requests found for this advertiser.
                   </div>
                 ) : (
-                  <AdvertiserTable>
+                  <GlassTable>
                     <thead>
                       <tr>
                         <th>Property</th>
@@ -595,7 +591,7 @@ const AdvertiserModerationPage: React.FC = () => {
                         </TableRow>
                       ))}
                     </tbody>
-                  </AdvertiserTable>
+                  </GlassTable>
                 )}
               </TabContent>
               
@@ -619,17 +615,9 @@ const AdvertiserModerationPage: React.FC = () => {
                         fontSize: '1.2rem'
                       }}>
                         {referralData.code}
-                        <button 
-                          onClick={() => copyToClipboard(referralData.code)}
-                          style={{ 
-                            background: 'none', 
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: Theme.colors.secondary
-                          }}
-                        >
+                        <IconButton onClick={() => copyToClipboard(referralData.code)}>
                           <FaCopy />
-                        </button>
+                        </IconButton>
                       </div>
                     </div>
                     
@@ -657,7 +645,9 @@ const AdvertiserModerationPage: React.FC = () => {
             </TabContainer>
           </>
         )}
-      </DetailContainer>
+        </DetailContainer>
+        </GlassCard>
+      </PageContainer>
     );
   };
 

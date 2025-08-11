@@ -496,10 +496,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     if (isAdvertiserMode && !showNameField) {
       try {
         // Try to sign in first to check if account exists
-        const userCredential = await signIn(email, password, true); // true flag for check-only mode
+        const userCredential = await signIn(email, password);
         
         // If we get here and it's not an advertiser account, show error
-        if (!userCredential?.user?.isAdvertiser) {
+        if (!(userCredential as any)?.user?.isAdvertiser) {
           setErrorMessage('This email is registered as a client account. Please use a different email for your advertiser account.');
           return;
         }
@@ -582,7 +582,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           if (name.trim()) {
             await signUp(email, password, name, 'client', currentReferralCode);
             toast.auth.registrationSuccess();
-            toast.custom('200 MAD discount applied to your account!', { type: 'success' });
+            toast.showToast('success', 'Referral', '200 MAD discount applied to your account!', true, 5000);
           } else {
             setErrorMessage('Please enter your full name');
             setIsSubmitting(false);
@@ -838,7 +838,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       : "Cancel"
                     : "Continue"
               }
-              onClick={handleButtonClick}
+              onClick={(e) => handleButtonClick(e as any)}
               disabled={isSubmitting || loading}
               aria-busy={isSubmitting || loading ? 'true' : 'false'}
             />

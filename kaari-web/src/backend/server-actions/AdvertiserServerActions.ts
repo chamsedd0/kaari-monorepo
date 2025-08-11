@@ -534,10 +534,16 @@ export async function rejectReservationRequest(requestId: string): Promise<boole
       return false;
     }
     
-    // Update the reservation status to 'rejected'
+    // If rejecting due to move-in far reason, set counter-offer pending and attach suggested date
+    // Otherwise set rejected
+    const existingReason = reservationData?.rejectionReason as string | undefined;
+    const suggestedMoveInDate = (reservationData as any)?.suggestedMoveInDate as Date | undefined;
+    const isCounterOfferFlow = existingReason === 'move_in_date_too_far' && !!suggestedMoveInDate;
+
     await updateDoc(reservationRef, {
-      status: 'rejected',
-      updatedAt: new Date()
+      status: isCounterOfferFlow ? 'counter_offer_pending_tenant' : 'rejected',
+      updatedAt: new Date(),
+      ...(isCounterOfferFlow ? { counterOfferMoveInDate: suggestedMoveInDate } : {})
     });
     
     // Notify the user (this would be implemented in a separate service)

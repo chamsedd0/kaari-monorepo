@@ -273,7 +273,7 @@ export async function createCheckoutReservation(data: {
       } : null
     };
     
-    // Create the request in the database
+    // Concurrency heads-up: this allows multiple pending requests to coexist; UI shows notice at step 1
     const request = await createDocument<Request>(REQUESTS_COLLECTION, requestData as Omit<Request, 'id'>);
     
     // Get property details to include in notifications
@@ -358,7 +358,7 @@ export async function processPayment(reservationId: string): Promise<boolean> {
     }
     
     // Get property details for payment
-    const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
+    const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId as string);
     if (!property) {
       throw new Error('Property not found');
     }
@@ -389,20 +389,21 @@ export async function processPayment(reservationId: string): Promise<boolean> {
     
     // Initiate payment with our payment gateway
     const paymentResponse = await PaymentGatewayService.initiatePayment(paymentData);
-    
-    if (!paymentResponse.success || !paymentResponse.paymentUrl) {
+
+    // Expect HTML form flow; handle error otherwise
+    if (!paymentResponse.success || !paymentResponse.htmlForm) {
       throw new Error(paymentResponse.error || 'Failed to initiate payment');
     }
-    
+
     // Update the reservation with payment information
     await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
       paymentOrderId: orderID,
       paymentStatus: 'pending',
       updatedAt: new Date()
-    });
+    } as Partial<Request>);
     
-    // Redirect the user to the payment gateway page
-    window.location.href = paymentResponse.paymentUrl;
+    // Redirect the user by injecting and submitting the HTML form
+    PaymentGatewayService.redirectToPaymentPage(paymentResponse.htmlForm);
     
     return true;
   } catch (error) {

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { User, Property, Listing, Request } from './entities';
+import { User, Property, Request } from './entities';
 import { 
   signInWithEmail, 
   signInWithGoogle, 
@@ -24,8 +24,8 @@ interface StoreState {
   propertiesLoading: boolean;
   
   // Listing state
-  listings: Listing[];
-  selectedListing: Listing | null;
+  listings: any[];
+  selectedListing: any | null;
   listingsLoading: boolean;
   
   // Request state
@@ -38,8 +38,8 @@ interface StoreState {
   setIsAuthenticated: (isAuthenticated: boolean) => void;
   setProperties: (properties: Property[]) => void;
   setSelectedProperty: (property: Property | null) => void;
-  setListings: (listings: Listing[]) => void;
-  setSelectedListing: (listing: Listing | null) => void;
+  setListings: (listings: any[]) => void;
+  setSelectedListing: (listing: any | null) => void;
   setRequests: (requests: Request[]) => void;
   setSelectedRequest: (request: Request | null) => void;
   
@@ -216,8 +216,8 @@ export const useStore = create<StoreState>()(
               }
             });
             
-            // Return function to unsubscribe - though we typically want this to persist for app lifetime
-            return unsubscribe;
+            // No return value to satisfy Promise<void>
+            return;
           } catch (error) {
             set({ authLoading: false });
             console.error('Error initializing auth:', error);

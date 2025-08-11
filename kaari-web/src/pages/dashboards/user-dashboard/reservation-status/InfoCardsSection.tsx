@@ -11,7 +11,7 @@ const InfoCardsContainer = styled.div`
 `;
 
 const Title = styled.h3`
-  font: ${Theme.typography.fonts.h5B};
+  font: ${Theme.typography.fonts.h4B};
   color: ${Theme.colors.black};
   margin-bottom: 1.5rem;
 `;

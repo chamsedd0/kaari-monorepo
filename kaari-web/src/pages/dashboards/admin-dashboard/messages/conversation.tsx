@@ -3,11 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaPaperPlane } from 'react-icons/fa';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-import {
-  DashboardCard,
-  CardTitle,
-  CardContent,
-} from '../styles';
+import { PageContainer, PageHeader, GlassCard } from '../../../../components/admin/AdminUI';
 import { 
   getConversationById,
   getMessagesByConversationId,
@@ -314,9 +310,9 @@ const ConversationPage: React.FC = () => {
   };
   
   return (
-    <DashboardCard>
-      <CardTitle>Conversation</CardTitle>
-      <CardContent>
+    <PageContainer>
+      <PageHeader title="Conversation" />
+      <GlassCard>
         <ConversationContainer>
           {loading ? (
             <LoadingState>Loading conversation...</LoadingState>
@@ -391,14 +387,14 @@ const ConversationPage: React.FC = () => {
                   onClick={handleSendMessage} 
                   $disabled={!newMessage.trim() || sending}
                 >
-                  <FaPaperPlane size={16} />
+                  {sending ? '...' : <FaPaperPlane size={16} />}
                 </SendButton>
               </InputContainer>
             </>
           )}
         </ConversationContainer>
-      </CardContent>
-    </DashboardCard>
+      </GlassCard>
+    </PageContainer>
   );
 };
 

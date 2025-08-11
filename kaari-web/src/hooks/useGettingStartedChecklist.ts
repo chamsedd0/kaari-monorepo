@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../backend/store';
 import { getAdvertiserChecklist, updateAdvertiserChecklistItem } from '../backend/server-actions/AdvertiserServerActions';
-import { ChecklistItem } from '../backend/entities';
+import type { ChecklistItem as FirestoreChecklistItem } from '../backend/entities';
 
 // Define the checklist item type
 export interface ChecklistItem {

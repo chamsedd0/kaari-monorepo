@@ -18,18 +18,8 @@ import {
   FaTimes, 
   FaIdCard
 } from 'react-icons/fa';
-import { 
-  DashboardCard, 
-  CardTitle, 
-  CardContent, 
-  Button, 
-  StatusBadge,
-  FormGroup,
-  Label,
-  Input,
-  Select,
-  TextArea
-} from './styles';
+import { PageContainer, PageHeader, GlassCard, PrimaryButton, SecondaryButton, IconButton } from '../../../components/admin/AdminUI';
+import { Button, StatusBadge, FormGroup, Label, Input, Select, TextArea } from './styles';
 import { 
   getUserById, 
   blockUser, 
@@ -498,49 +488,33 @@ const UserDetailPage = () => {
   
   if (loading) {
     return (
-      <DashboardCard>
-        <CardTitle>
-          <h2>User Details</h2>
-        </CardTitle>
-        <CardContent>
+      <PageContainer>
+        <PageHeader title="User Details" />
+        <GlassCard>
           <div>Loading user details...</div>
-        </CardContent>
-      </DashboardCard>
+        </GlassCard>
+      </PageContainer>
     );
   }
   
   if (error || !user) {
     return (
-      <DashboardCard>
-        <CardTitle>
-          <h2>User Details</h2>
-        </CardTitle>
-        <CardContent>
+      <PageContainer>
+        <PageHeader title="User Details" />
+        <GlassCard>
           <div>Error: {error || 'User not found'}</div>
-          <Button onClick={handleBackClick}>
+          <SecondaryButton onClick={handleBackClick}>
             <FaArrowLeft /> Back to Users
-          </Button>
-        </CardContent>
-      </DashboardCard>
+          </SecondaryButton>
+        </GlassCard>
+      </PageContainer>
     );
   }
   
   return (
-    <DashboardCard>
-      <CardTitle>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <Button onClick={handleBackClick} style={{ padding: '0.5rem' }}>
-            <FaArrowLeft />
-          </Button>
-          <h2>User Details</h2>
-        </div>
-        
-        <StatusBadge status={user.isBlocked ? 'blocked' : 'active'}>
-          {user.isBlocked ? 'Blocked' : 'Active'}
-        </StatusBadge>
-      </CardTitle>
-      
-      <CardContent>
+    <PageContainer>
+      <PageHeader title="User Details" />
+      <GlassCard>
         <DetailContainer>
           {/* User Info Sidebar */}
           <UserInfo>
@@ -610,10 +584,7 @@ const UserDetailPage = () => {
             </div>
             
             <div className="actions">
-              <Button 
-                className={user.isBlocked ? "unblock" : "block"} 
-                onClick={handleBlockUser}
-              >
+              <PrimaryButton onClick={handleBlockUser}>
                 {user.isBlocked ? (
                   <>
                     <FaUnlock /> Unblock User
@@ -623,14 +594,10 @@ const UserDetailPage = () => {
                     <FaBan /> Block User
                   </>
                 )}
-              </Button>
-              
-              <Button 
-                className="delete" 
-                onClick={handleDeleteUser}
-              >
+              </PrimaryButton>
+              <SecondaryButton onClick={handleDeleteUser}>
                 <FaTrash /> Delete User
-              </Button>
+              </SecondaryButton>
             </div>
           </UserInfo>
           
@@ -888,8 +855,8 @@ const UserDetailPage = () => {
             </MetaSection>
           </div>
         </DetailContainer>
-      </CardContent>
-    </DashboardCard>
+      </GlassCard>
+    </PageContainer>
   );
 };
 

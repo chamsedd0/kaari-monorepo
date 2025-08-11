@@ -3,11 +3,11 @@ import { TenantsPageStyle } from './styles';
 import tenantAvatar from '../../../../assets/images/HeroImage.png';
 import emptyBox from '../../../../assets/images/emptybox.svg';
 import { getAdvertiserReservationRequests } from '../../../../backend/server-actions/AdvertiserServerActions';
-import { Request, Listing, Property, User } from '../../../../backend/entities';
+import { Request, Property, User } from '../../../../backend/entities';
 
 interface ReservationWithDetails {
   reservation: Request;
-  listing?: Listing | null;
+  // listing omitted in this view
   property?: Property | null;
   client?: User | null;
 }
@@ -28,7 +28,7 @@ const TenantsPage: React.FC = () => {
         // Filter tenants - show completed or moved-in reservations
         // Both 'completed' and 'movedIn' statuses represent active tenants
         const filteredTenants = data.filter(res => 
-          res.reservation.status === 'completed' || res.reservation.status === 'movedIn'
+          (res.reservation.status as any) === 'completed' || res.reservation.status === 'movedIn'
         );
         
         console.log('Filtered tenant data:', filteredTenants.length, 'active tenants found');
@@ -38,8 +38,8 @@ const TenantsPage: React.FC = () => {
           console.log(`Tenant ${index + 1} date fields:`, {
             moveInAt: tenant.reservation.movedInAt,
             moveInAtType: tenant.reservation.movedInAt ? typeof tenant.reservation.movedInAt : 'not set',
-            movingDate: tenant.reservation.movingDate,
-            movingDateType: tenant.reservation.movingDate ? typeof tenant.reservation.movingDate : 'not set',
+            movingDate: (tenant.reservation as any).movingDate,
+            movingDateType: (tenant.reservation as any).movingDate ? typeof (tenant.reservation as any).movingDate : 'not set',
             scheduledDate: tenant.reservation.scheduledDate, 
             scheduledDateType: tenant.reservation.scheduledDate ? typeof tenant.reservation.scheduledDate : 'not set',
             leavingDate: tenant.reservation.leavingDate,
@@ -192,7 +192,7 @@ const TenantsPage: React.FC = () => {
     if (movedInAt) return movedInAt;
     
     // Next try movingDate from the rental application
-    const movingDate = parseDateSafely(tenant.reservation.movingDate);
+    const movingDate = parseDateSafely((tenant.reservation as any).movingDate);
     if (movingDate) return movingDate;
     
     // Finally fall back to scheduledDate

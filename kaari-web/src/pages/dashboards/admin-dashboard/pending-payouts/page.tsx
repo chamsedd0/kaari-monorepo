@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FaCheck, FaSpinner, FaMoneyBillWave, FaFileInvoiceDollar, FaInbox, FaSync, FaFilter, FaSearch } from 'react-icons/fa';
 import { Theme } from '../../../../theme/theme';
-import {
-  DashboardCard,
-  CardTitle,
-  CardContent,
-} from '../styles';
+import { PageContainer, PageHeader, FilterBar, SearchBox as GlassSearchBox, GlassCard, GlassTable, StatusBadge as GlassStatusBadge, Button as AdminUIButton, Pill } from '../../../../components/admin/AdminUI';
 import { 
   getAllPendingPayouts, 
   markPayoutAsPaid, 
@@ -17,18 +13,18 @@ import {
 import { PayoutRequest } from '../../../../services/PayoutsService';
 
 // Types
-interface Payout {
+  interface Payout {
   id: string;
   payeeId: string;
   payeeName: string;
   payeePhone: string;
-  payeeType: 'advertiser' | 'tenant';
+    payeeType: 'advertiser' | 'tenant' | 'client';
   paymentMethod: {
     bankName: string;
     accountLast4: string;
     type: 'RIB' | 'IBAN';
   };
-  reason: 'Rent – Move-in' | 'Cushion – Pre-move Cancel' | 'Cushion – Haani Max Cancel' | 'Referral Commission' | 'Tenant Refund';
+  reason: 'Rent – Move-in' | 'Cushion – Pre-move Cancel' | 'Referral Commission' | 'Tenant Refund';
   amount: number;
   currency: string;
   status: 'pending' | 'paid';
@@ -119,11 +115,7 @@ const ReasonBadge = styled.span<{ $type: string }>`
           background-color: #fff8e1;
           color: #ff8f00;
         `;
-      case 'Cushion – Haani Max Cancel':
-        return `
-          background-color: #fce4ec;
-          color: #c2185b;
-        `;
+      // Haani Max retired
       case 'Referral Commission':
         return `
           background-color: #e8f5e9;
@@ -148,33 +140,8 @@ const Amount = styled.span`
   font-size: 1.1rem;
 `;
 
-const ActionButton = styled.button<{ $disabled?: boolean; $variant?: 'primary' | 'danger' }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  background-color: ${props => {
-    if (props.$disabled) return Theme.colors.gray;
-    return props.$variant === 'danger' ? Theme.colors.error : Theme.colors.primary;
-  }};
-  color: white;
-  font-weight: 500;
-  cursor: ${props => props.$disabled ? 'not-allowed' : 'pointer'};
-  transition: background-color 0.2s;
-  margin-right: 8px;
-  
-  &:hover {
-    background-color: ${props => {
-      if (props.$disabled) return Theme.colors.gray;
-      return props.$variant === 'danger' ? '#d32f2f' : Theme.colors.secondary;
-    }};
-  }
-  
-  svg {
-    margin-right: 6px;
-  }
+const ActionButton = styled(AdminUIButton).attrs<{ $variant?: 'default' | 'secondary' | 'outline' | 'ghost' | 'destructive' }>(({ $variant }) => ({ $variant: $variant || 'secondary' }))<{$variant?: 'default' | 'secondary' | 'outline' | 'ghost' | 'destructive'}>`
+  min-width: 120px;
 `;
 
 const ActionButtonsContainer = styled.div`
@@ -263,20 +230,7 @@ const FilterGroup = styled.div`
   gap: 10px;
 `;
 
-const FilterButton = styled.button<{ $active?: boolean }>`
-  padding: 8px 12px;
-  border: 1px solid ${props => props.$active ? Theme.colors.secondary : Theme.colors.gray};
-  border-radius: 4px;
-  background-color: ${props => props.$active ? Theme.colors.secondary : 'white'};
-  color: ${props => props.$active ? 'white' : Theme.colors.gray2};
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  
-  &:hover {
-    background-color: ${props => props.$active ? Theme.colors.secondary : '#f5f5f5'};
-  }
-`;
+// Replace with shared Pill in render
 
 const TotalAmount = styled.div`
   font-size: 1.1rem;
@@ -379,8 +333,8 @@ const PendingPayoutsPage: React.FC = () => {
         try {
         // Get pending payouts
           const allPayouts = await getAllPendingPayouts();
-            setPayouts(allPayouts);
-            setFilteredPayouts(allPayouts);
+            setPayouts(allPayouts as unknown as Payout[]);
+            setFilteredPayouts(allPayouts as unknown as Payout[]);
         
         // Get pending payout requests
         const allPayoutRequests = await getAllPendingPayoutRequests();
@@ -409,12 +363,14 @@ const PendingPayoutsPage: React.FC = () => {
   
   // Handle filter change
   useEffect(() => {
+    const mapFilter = (f: 'all' | 'advertiser' | 'tenant') => (f === 'tenant' ? 'client' : f);
     if (filter === 'all') {
       setFilteredPayouts(payouts);
       setFilteredPayoutRequests(payoutRequests);
     } else {
-      setFilteredPayouts(payouts.filter(payout => payout.payeeType === filter));
-      setFilteredPayoutRequests(payoutRequests.filter(request => request.userType === filter));
+      const mapped = mapFilter(filter) as 'advertiser' | 'client';
+      setFilteredPayouts(payouts.filter(payout => payout.payeeType === mapped));
+      setFilteredPayoutRequests(payoutRequests.filter(request => request.userType === mapped));
     }
   }, [filter, payouts, payoutRequests]);
   
@@ -426,8 +382,9 @@ const PendingPayoutsPage: React.FC = () => {
         setFilteredPayouts(payouts);
         setFilteredPayoutRequests(payoutRequests);
       } else {
-        setFilteredPayouts(payouts.filter(payout => payout.payeeType === filter));
-        setFilteredPayoutRequests(payoutRequests.filter(request => request.userType === filter));
+        const mapped = filter === 'tenant' ? 'client' : filter;
+        setFilteredPayouts(payouts.filter(payout => payout.payeeType === mapped));
+        setFilteredPayoutRequests(payoutRequests.filter(request => request.userType === mapped));
       }
       return;
     }
@@ -454,8 +411,9 @@ const PendingPayoutsPage: React.FC = () => {
     
     // Apply both search and type filter
     if (filter !== 'all') {
-      setFilteredPayouts(matchedPayouts.filter(payout => payout.payeeType === filter));
-      setFilteredPayoutRequests(matchedRequests.filter(request => request.userType === filter));
+      const mapped = filter === 'tenant' ? 'client' : filter;
+      setFilteredPayouts(matchedPayouts.filter(payout => payout.payeeType === mapped));
+      setFilteredPayoutRequests(matchedRequests.filter(request => request.userType === mapped));
     } else {
       setFilteredPayouts(matchedPayouts);
       setFilteredPayoutRequests(matchedRequests);
@@ -475,13 +433,11 @@ const PendingPayoutsPage: React.FC = () => {
         throw err; // Rethrow to handle in the catch block below
       }
       
-      // Update local state
-      setPayouts(prevPayouts => 
-        prevPayouts.filter(payout => payout.id !== payoutId)
-      );
-      setFilteredPayouts(prevPayouts => 
-        prevPayouts.filter(payout => payout.id !== payoutId)
-      );
+      // Update local state and ensure counts reflect change
+      setPayouts(prevPayouts => prevPayouts.filter(payout => payout.id !== payoutId));
+      setFilteredPayouts(prevPayouts => prevPayouts.filter(payout => payout.id !== payoutId));
+      // Optionally reload to sync with server
+      // await loadData();
     } catch (err) {
       console.error('Error marking payout as paid:', err);
       setError('Failed to mark payout as paid. Please try again later.');
@@ -512,7 +468,7 @@ const PendingPayoutsPage: React.FC = () => {
       );
       
       // Refresh payouts list to show the newly created payout
-      loadData();
+      await loadData();
     } catch (err) {
       console.error('Error approving payout request:', err);
       setError('Failed to approve payout request. Please try again later.');
@@ -567,9 +523,8 @@ const PendingPayoutsPage: React.FC = () => {
   };
   
   return (
-    <DashboardCard>
-      <CardTitle>Pending Payouts</CardTitle>
-      <CardContent>
+    <PageContainer>
+      <PageHeader title="Pending Payouts" />
         <TabsContainer>
           <Tab 
             $active={activeTab === 'requests'} 
@@ -585,30 +540,24 @@ const PendingPayoutsPage: React.FC = () => {
           </Tab>
         </TabsContainer>
         
-        <FilterContainer>
+        <FilterBar>
           <FilterGroup>
-            <FilterButton 
-              $active={filter === 'all'} 
-              onClick={() => setFilter('all')}
-            >
-              All
-            </FilterButton>
-            <FilterButton 
-              $active={filter === 'advertiser'} 
-              onClick={() => setFilter('advertiser')}
-            >
-              Advertisers
-            </FilterButton>
-            <FilterButton 
-              $active={filter === 'tenant'} 
-              onClick={() => setFilter('tenant')}
-            >
-              Tenants
-            </FilterButton>
+            {(['all','advertiser','tenant'] as const).map(k => (
+              <Pill key={k}
+                onClick={() => setFilter(k)}
+                style={{
+                  cursor: 'pointer',
+                  background: filter === k ? `${Theme.colors.tertiary}30` : Theme.colors.white,
+                  borderColor: filter === k ? Theme.colors.tertiary : `${Theme.colors.tertiary}80`
+                }}
+              >
+                {k === 'all' ? 'All' : k === 'advertiser' ? 'Advertisers' : 'Tenants'}
+              </Pill>
+            ))}
           </FilterGroup>
           
           <FilterGroup>
-            <SearchBox>
+            <GlassSearchBox>
               <FaSearch />
               <input 
                 type="text" 
@@ -616,12 +565,12 @@ const PendingPayoutsPage: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-            </SearchBox>
+            </GlassSearchBox>
             <RefreshButton onClick={loadData}>
               <FaSync /> Refresh
             </RefreshButton>
           </FilterGroup>
-        </FilterContainer>
+        </FilterBar>
         
         {loading ? (
           <LoadingState>
@@ -641,27 +590,28 @@ const PendingPayoutsPage: React.FC = () => {
             </EmptyState>
           ) : (
             <>
-              <Table>
-                <TableHead>
-                  <tr>
-                    <TableHeader>User ID</TableHeader>
-                    <TableHeader>User Type</TableHeader>
-                    <TableHeader>Reason</TableHeader>
-                    <TableHeader>Source</TableHeader>
-                    <TableHeader>Amount</TableHeader>
-                    <TableHeader>Date Requested</TableHeader>
-                    <TableHeader>Payment Method</TableHeader>
-                    <TableHeader>Actions</TableHeader>
-                  </tr>
-                </TableHead>
-                <tbody>
+              <GlassCard>
+                <GlassTable>
+                  <thead>
+                    <tr>
+                      <th>User ID</th>
+                      <th>User Type</th>
+                      <th>Reason</th>
+                      <th>Source</th>
+                      <th>Amount</th>
+                      <th>Date Requested</th>
+                      <th>Payment Method</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                   {filteredPayoutRequests.map(request => (
                     <TableRow key={request.id} $isPending={true}>
                       <TableCell>{request.userId}</TableCell>
                       <TableCell>
-                        <StatusBadge $status={request.userType}>
+                        <GlassStatusBadge status={request.userType}>
                           {request.userType === 'advertiser' ? 'Advertiser' : 'Tenant'}
-                        </StatusBadge>
+                        </GlassStatusBadge>
                       </TableCell>
                       <TableCell>{request.reason}</TableCell>
                       <TableCell>
@@ -689,7 +639,7 @@ const PendingPayoutsPage: React.FC = () => {
                         <ActionButtonsContainer>
                           <ActionButton
                             onClick={() => handleApproveRequest(request.id)}
-                            $disabled={processingPayouts[request.id]}
+                            disabled={processingPayouts[request.id]}
                           >
                             {processingPayouts[request.id] ? (
                               <FaSpinner />
@@ -700,13 +650,13 @@ const PendingPayoutsPage: React.FC = () => {
                           </ActionButton>
                           <ActionButton
                             onClick={() => handleRejectRequest(request.id)}
-                            $disabled={processingPayouts[request.id]}
-                            $variant="danger"
+                            disabled={processingPayouts[request.id]}
+                            $variant="destructive"
                           >
                             {processingPayouts[request.id] ? (
                               <FaSpinner />
                             ) : (
-                              <FaCheck />
+                              <FaFilter />
                             )}
                             Reject
                           </ActionButton>
@@ -714,8 +664,9 @@ const PendingPayoutsPage: React.FC = () => {
                       </TableCell>
                     </TableRow>
                   ))}
-                </tbody>
-              </Table>
+                  </tbody>
+                </GlassTable>
+              </GlassCard>
               
               <TotalAmount>
                 Total Requested: {formatCurrency(totalRequestAmount)}
@@ -732,17 +683,18 @@ const PendingPayoutsPage: React.FC = () => {
           </EmptyState>
         ) : (
           <>
-            <Table>
-              <TableHead>
-                <tr>
-                  <TableHeader>Payee</TableHeader>
-                  <TableHeader>Pay-out Method</TableHeader>
-                  <TableHeader>Reason</TableHeader>
-                  <TableHeader>Amount</TableHeader>
-                  <TableHeader>Status / Action</TableHeader>
-                </tr>
-              </TableHead>
-              <tbody>
+            <GlassCard>
+              <GlassTable>
+                <thead>
+                  <tr>
+                    <th>Payee</th>
+                    <th>Pay-out Method</th>
+                    <th>Reason</th>
+                    <th>Amount</th>
+                    <th>Status / Action</th>
+                  </tr>
+                </thead>
+                <tbody>
                 {filteredPayouts.map(payout => (
                   <TableRow key={payout.id} $isPending={payout.status === 'pending'}>
                     <TableCell>
@@ -771,7 +723,7 @@ const PendingPayoutsPage: React.FC = () => {
                       {payout.status === 'pending' ? (
                         <ActionButton
                           onClick={() => handleMarkAsPaid(payout.id)}
-                          $disabled={processingPayouts[payout.id]}
+                          disabled={processingPayouts[payout.id]}
                         >
                           {processingPayouts[payout.id] ? (
                             <FaSpinner />
@@ -781,15 +733,16 @@ const PendingPayoutsPage: React.FC = () => {
                           Mark as Paid
                         </ActionButton>
                       ) : (
-                        <StatusBadge $status={payout.status}>
+                        <GlassStatusBadge status={payout.status}>
                           Paid
-                        </StatusBadge>
+                        </GlassStatusBadge>
                       )}
                     </TableCell>
                   </TableRow>
                 ))}
-              </tbody>
-            </Table>
+                </tbody>
+              </GlassTable>
+            </GlassCard>
             
             <TotalAmount>
                 Total: {formatCurrency(totalPayoutAmount)}
@@ -797,8 +750,7 @@ const PendingPayoutsPage: React.FC = () => {
           </>
           )
         )}
-      </CardContent>
-    </DashboardCard>
+    </PageContainer>
   );
 };
 

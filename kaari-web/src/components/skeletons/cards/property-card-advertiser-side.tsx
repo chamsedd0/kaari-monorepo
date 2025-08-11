@@ -32,7 +32,7 @@ interface PropertyCardProps {
 }
 
 // Styled component for the refresh indicator
-const RefreshIndicator = styled.button<{ status: 'needs_refresh' | 'recently_refreshed' | 'never_refreshed' }>`
+const RefreshIndicator = styled.button<{ $status: 'needs_refresh' | 'recently_refreshed' | 'never_refreshed' }>`
   position: absolute;
   top: 12px;
   right: 12px;
@@ -48,8 +48,8 @@ const RefreshIndicator = styled.button<{ status: 'needs_refresh' | 'recently_ref
   transition: all 0.2s ease;
   z-index: 2;
   
-  ${({ status }) => {
-    switch (status) {
+  ${({ $status }) => {
+    switch ($status) {
       case 'needs_refresh':
         return `
           border-color: #ef4444;
@@ -72,7 +72,7 @@ const RefreshIndicator = styled.button<{ status: 'needs_refresh' | 'recently_ref
             transform: scale(1.05);
           }
         `;
-      case 'recent':
+      case 'recently_refreshed':
         return `
           border-color: #10b981;
           color: #10b981;
@@ -223,7 +223,7 @@ const PropertyCardAdvertiserSide: React.FC<PropertyCardProps> = ({
           {/* Refresh Indicator */}
           {refreshStatus && (
             <RefreshIndicator
-              status={refreshStatus.status}
+              $status={refreshStatus.status as any}
               onClick={handleRefreshClick}
               disabled={isRefreshDisabled}
               onMouseEnter={() => setShowTooltip(true)}
@@ -324,12 +324,7 @@ const PropertyCardAdvertiserSide: React.FC<PropertyCardProps> = ({
             </div>
         </div>
         
-        <style jsx>{`
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
+        {/* spin keyframes not needed in this component; using inline style where needed */}
     </CardBaseModelStyle2>
   );
 };

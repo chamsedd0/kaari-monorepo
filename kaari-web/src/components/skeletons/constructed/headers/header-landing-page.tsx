@@ -123,6 +123,7 @@ export const HeaderLandingPage: React.FC<HeaderLandingPageProps> = ({ onLanguage
                   </div>
                   
                   <ProfileDropdown
+                    // @ts-expect-error legacy prop
                     isOpen={showProfileDropdown}
                     onClose={() => setShowProfileDropdown(false)}
                     userName={userName}

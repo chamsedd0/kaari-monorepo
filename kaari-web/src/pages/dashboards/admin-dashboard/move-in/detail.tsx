@@ -3,11 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaClock, FaUser, FaHome, FaFileAlt, FaPhone, FaEnvelope, FaCopy } from 'react-icons/fa';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-import {
-  DashboardCard,
-  CardTitle,
-  CardContent,
-} from '../styles';
+import { PageContainer, PageHeader, GlassCard } from '../../../../components/admin/AdminUI';
 import { 
   getMoveInBookingById, 
   getMoveInEvents,
@@ -521,212 +517,227 @@ const MoveInDetailPage: React.FC = () => {
   
   if (loading) {
     return (
-      <DetailContainer>
-        <BackButton onClick={() => navigate('/dashboard/admin/move-in')}>
-          <FaArrowLeft /> Back to Move-In Management
-        </BackButton>
-        <LoadingMessage>Loading booking details...</LoadingMessage>
-      </DetailContainer>
+      <PageContainer>
+        <PageHeader title="Move-In Detail" />
+        <GlassCard>
+          <DetailContainer>
+            <BackButton onClick={() => navigate('/dashboard/admin/move-in')}>
+              <FaArrowLeft /> Back to Move-In Management
+            </BackButton>
+            <LoadingMessage>Loading booking details...</LoadingMessage>
+          </DetailContainer>
+        </GlassCard>
+      </PageContainer>
     );
   }
   
   if (error || !booking) {
     return (
-      <DetailContainer>
-        <BackButton onClick={() => navigate('/dashboard/admin/move-in')}>
-          <FaArrowLeft /> Back to Move-In Management
-        </BackButton>
-        <ErrorMessage>{error || 'Booking not found'}</ErrorMessage>
-      </DetailContainer>
+      <PageContainer>
+        <PageHeader title="Move-In Detail" />
+        <GlassCard>
+          <DetailContainer>
+            <BackButton onClick={() => navigate('/dashboard/admin/move-in')}>
+              <FaArrowLeft /> Back to Move-In Management
+            </BackButton>
+            <ErrorMessage>{error || 'Booking not found'}</ErrorMessage>
+          </DetailContainer>
+        </GlassCard>
+      </PageContainer>
     );
   }
   
   return (
-    <DetailContainer>
-      <BackButton onClick={() => navigate('/dashboard/admin/move-in')}>
-        <FaArrowLeft /> Back to Move-In Management
-      </BackButton>
-      
-      <DetailHeader>
-        <HeaderLeft>
-          <BookingId>{booking.bookingId}</BookingId>
-          <StatusBadge $status={booking.status}>{booking.status}</StatusBadge>
-          {booking.reason !== 'None' && (
-            <span style={{ color: '#666' }}>{booking.reason}</span>
-          )}
-        </HeaderLeft>
-        
-        <SafetyWindowTimer moveInDate={booking.moveInDate} status={booking.status} />
-      </DetailHeader>
-      
-      <DetailGrid>
-        {/* Property Section */}
-      <DetailSection>
-          <SectionTitle><FaHome /> Property Details</SectionTitle>
+    <PageContainer>
+      <PageHeader title="Move-In Detail" />
+      <GlassCard>
+        <DetailContainer>
+          <BackButton onClick={() => navigate('/dashboard/admin/move-in')}>
+            <FaArrowLeft /> Back to Move-In Management
+          </BackButton>
           
-          <PropertyImage 
-            src={booking.property.thumbnail || getPlaceholderImage(booking.property.title)} 
-            alt={booking.property.title}
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = getPlaceholderImage(booking.property.title);
-            }}
-          />
+          <DetailHeader>
+            <HeaderLeft>
+              <BookingId>{booking.bookingId}</BookingId>
+              <StatusBadge $status={booking.status}>{booking.status}</StatusBadge>
+              {booking.reason !== 'None' && (
+                <span style={{ color: '#666' }}>{booking.reason}</span>
+              )}
+            </HeaderLeft>
+            
+            <SafetyWindowTimer moveInDate={booking.moveInDate} status={booking.status} />
+          </DetailHeader>
           
-          <h4 style={{ margin: '0 0 10px 0' }}>{booking.property.title}</h4>
-          <PropertyAddress>{booking.property.address}</PropertyAddress>
+          <DetailGrid>
+            {/* Property Section */}
+          <DetailSection>
+              <SectionTitle><FaHome /> Property Details</SectionTitle>
+              
+              <PropertyImage 
+                src={booking.property.thumbnail || getPlaceholderImage(booking.property.title)} 
+                alt={booking.property.title}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = getPlaceholderImage(booking.property.title);
+                }}
+              />
+              
+              <h4 style={{ margin: '0 0 10px 0' }}>{booking.property.title}</h4>
+              <PropertyAddress>{booking.property.address}</PropertyAddress>
+              
+              <AmenitiesList>
+                {booking.property.amenities.map((amenity, index) => (
+                  <AmenityTag key={index}>{amenity}</AmenityTag>
+                ))}
+              </AmenitiesList>
+          </DetailSection>
           
-          <AmenitiesList>
-            {booking.property.amenities.map((amenity, index) => (
-              <AmenityTag key={index}>{amenity}</AmenityTag>
-            ))}
-          </AmenitiesList>
-      </DetailSection>
-      
-        {/* Tenant Section */}
-        <DetailSection>
-          <SectionTitle><FaUser /> Tenant Information</SectionTitle>
-          
-          <ContactItem>
-            <ContactLabel>Name</ContactLabel>
-            <ContactValue>{booking.tenant.name}</ContactValue>
-          </ContactItem>
-          
-          <ContactItem>
-            <ContactLabel>Phone Number</ContactLabel>
-            <ContactValue>
-              {booking.tenant.phoneNumber}
-              <CopyButton onClick={() => copyToClipboard(booking.tenant.phoneNumber)}>
-                <FaCopy size={14} />
-              </CopyButton>
-            </ContactValue>
-          </ContactItem>
-          
-          {booking.tenant.email && (
-            <ContactItem>
-              <ContactLabel>Email</ContactLabel>
-              <ContactValue>
-                {booking.tenant.email}
-                <CopyButton onClick={() => copyToClipboard(booking.tenant.email!)}>
-                  <FaCopy size={14} />
-                </CopyButton>
-              </ContactValue>
-            </ContactItem>
-          )}
-          
-          {booking.tenant.bankLastFour && (
-            <ContactItem>
-              <ContactLabel>Bank Account (Last 4)</ContactLabel>
-              <ContactValue>•••• {booking.tenant.bankLastFour}</ContactValue>
-            </ContactItem>
-          )}
-          
-          <PaymentInfo>
-            <PaymentRow>
-              <PaymentLabel>Move-In Date</PaymentLabel>
-              <PaymentValue>{booking.moveInDate ? formatDateTime(booking.moveInDate) : 'Not set'}</PaymentValue>
-            </PaymentRow>
-            <PaymentRow>
-              <PaymentLabel>Payment Captured</PaymentLabel>
-              <PaymentValue>{booking.paymentCapturedAt ? formatDateTime(booking.paymentCapturedAt) : 'Not captured'}</PaymentValue>
-            </PaymentRow>
-            {booking.gatewayReference && (
-              <PaymentRow>
-                <PaymentLabel>Payment Reference</PaymentLabel>
-                <PaymentValue>
-                  {booking.gatewayReference}
-                  <CopyButton onClick={() => copyToClipboard(booking.gatewayReference!)}>
+            {/* Tenant Section */}
+            <DetailSection>
+              <SectionTitle><FaUser /> Tenant Information</SectionTitle>
+              
+              <ContactItem>
+                <ContactLabel>Name</ContactLabel>
+                <ContactValue>{booking.tenant.name}</ContactValue>
+              </ContactItem>
+              
+              <ContactItem>
+                <ContactLabel>Phone Number</ContactLabel>
+                <ContactValue>
+                  {booking.tenant.phoneNumber}
+                  <CopyButton onClick={() => copyToClipboard(booking.tenant.phoneNumber)}>
                     <FaCopy size={14} />
                   </CopyButton>
-                </PaymentValue>
-              </PaymentRow>
-            )}
-            <PaymentRow>
-              <PaymentLabel>Amount</PaymentLabel>
-              <PaymentValue>{formatAmount(booking.amount)}</PaymentValue>
-            </PaymentRow>
-          </PaymentInfo>
-        </DetailSection>
-        
-        {/* Advertiser Section */}
-        <DetailSection>
-          <SectionTitle><FaUser /> Advertiser Information</SectionTitle>
-          
-          <ContactItem>
-            <ContactLabel>Name</ContactLabel>
-            <ContactValue>{booking.advertiser.name}</ContactValue>
-          </ContactItem>
-          
-          <ContactItem>
-            <ContactLabel>Phone Number</ContactLabel>
-            <ContactValue>
-              {booking.advertiser.phoneNumber}
-              <CopyButton onClick={() => copyToClipboard(booking.advertiser.phoneNumber)}>
-                <FaCopy size={14} />
-              </CopyButton>
-            </ContactValue>
-          </ContactItem>
-          
-          {booking.advertiser.email && (
-            <ContactItem>
-              <ContactLabel>Email</ContactLabel>
-              <ContactValue>
-                {booking.advertiser.email}
-                <CopyButton onClick={() => copyToClipboard(booking.advertiser.email!)}>
-                  <FaCopy size={14} />
-                </CopyButton>
-              </ContactValue>
-            </ContactItem>
-          )}
-        </DetailSection>
-        
-        {/* Admin Notes Section */}
-      <DetailSection>
-          <SectionTitle><FaFileAlt /> Admin Notes</SectionTitle>
-        
-        <NoteTextArea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-            placeholder="Add internal notes about this move-in booking..."
-          />
-          
-          <SaveNoteButton 
-            onClick={handleSaveNote} 
-            disabled={savingNote}
-          >
-            {savingNote ? 'Saving...' : 'Save Note'}
-          </SaveNoteButton>
-        </DetailSection>
-        
-        {/* Timeline Section */}
-        <TimelineContainer>
-          <DetailSection>
-            <SectionTitle><FaClock /> Timeline</SectionTitle>
+                </ContactValue>
+              </ContactItem>
+              
+              {booking.tenant.email && (
+                <ContactItem>
+                  <ContactLabel>Email</ContactLabel>
+                  <ContactValue>
+                    {booking.tenant.email}
+                    <CopyButton onClick={() => copyToClipboard(booking.tenant.email!)}>
+                      <FaCopy size={14} />
+                    </CopyButton>
+                  </ContactValue>
+                </ContactItem>
+              )}
+              
+              {booking.tenant.bankLastFour && (
+                <ContactItem>
+                  <ContactLabel>Bank Account (Last 4)</ContactLabel>
+                  <ContactValue>•••• {booking.tenant.bankLastFour}</ContactValue>
+                </ContactItem>
+              )}
+              
+              <PaymentInfo>
+                <PaymentRow>
+                  <PaymentLabel>Move-In Date</PaymentLabel>
+                  <PaymentValue>{booking.moveInDate ? formatDateTime(booking.moveInDate) : 'Not set'}</PaymentValue>
+                </PaymentRow>
+                <PaymentRow>
+                  <PaymentLabel>Payment Captured</PaymentLabel>
+                  <PaymentValue>{booking.paymentCapturedAt ? formatDateTime(booking.paymentCapturedAt) : 'Not captured'}</PaymentValue>
+                </PaymentRow>
+                {booking.gatewayReference && (
+                  <PaymentRow>
+                    <PaymentLabel>Payment Reference</PaymentLabel>
+                    <PaymentValue>
+                      {booking.gatewayReference}
+                      <CopyButton onClick={() => copyToClipboard(booking.gatewayReference!)}>
+                        <FaCopy size={14} />
+                      </CopyButton>
+                    </PaymentValue>
+                  </PaymentRow>
+                )}
+                <PaymentRow>
+                  <PaymentLabel>Amount</PaymentLabel>
+                  <PaymentValue>{formatAmount(booking.amount)}</PaymentValue>
+                </PaymentRow>
+              </PaymentInfo>
+            </DetailSection>
             
-            {events.length === 0 ? (
-              <div style={{ color: '#666', fontStyle: 'italic' }}>No events recorded for this booking.</div>
-            ) : (
-              events.map((event, index) => (
-                <TimelineItem key={index}>
-                  <TimelineDot />
-                  <TimelineContent>
-                    <TimelineTime>
-                      {formatDateTime(event.timestamp instanceof Date ? event.timestamp : 
-                        (event.timestamp && typeof event.timestamp.toDate === 'function') ? 
-                          event.timestamp.toDate() : 
-                          new Date())}
-                    </TimelineTime>
-                    <TimelineDescription>
-                      {event.description}
-                      {event.userName && ` by ${event.userName}`}
-                    </TimelineDescription>
-                  </TimelineContent>
-                </TimelineItem>
-              ))
-            )}
-      </DetailSection>
-        </TimelineContainer>
-      </DetailGrid>
-    </DetailContainer>
+            {/* Advertiser Section */}
+            <DetailSection>
+              <SectionTitle><FaUser /> Advertiser Information</SectionTitle>
+              
+              <ContactItem>
+                <ContactLabel>Name</ContactLabel>
+                <ContactValue>{booking.advertiser.name}</ContactValue>
+              </ContactItem>
+              
+              <ContactItem>
+                <ContactLabel>Phone Number</ContactLabel>
+                <ContactValue>
+                  {booking.advertiser.phoneNumber}
+                  <CopyButton onClick={() => copyToClipboard(booking.advertiser.phoneNumber)}>
+                    <FaCopy size={14} />
+                  </CopyButton>
+                </ContactValue>
+              </ContactItem>
+              
+              {booking.advertiser.email && (
+                <ContactItem>
+                  <ContactLabel>Email</ContactLabel>
+                  <ContactValue>
+                    {booking.advertiser.email}
+                    <CopyButton onClick={() => copyToClipboard(booking.advertiser.email!)}>
+                      <FaCopy size={14} />
+                    </CopyButton>
+                  </ContactValue>
+                </ContactItem>
+              )}
+            </DetailSection>
+            
+            {/* Admin Notes Section */}
+          <DetailSection>
+              <SectionTitle><FaFileAlt /> Admin Notes</SectionTitle>
+            
+            <NoteTextArea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+                placeholder="Add internal notes about this move-in booking..."
+              />
+              
+              <SaveNoteButton 
+                onClick={handleSaveNote} 
+                disabled={savingNote}
+              >
+                {savingNote ? 'Saving...' : 'Save Note'}
+              </SaveNoteButton>
+            </DetailSection>
+            
+            {/* Timeline Section */}
+            <TimelineContainer>
+              <DetailSection>
+                <SectionTitle><FaClock /> Timeline</SectionTitle>
+                
+                {events.length === 0 ? (
+                  <div style={{ color: '#666', fontStyle: 'italic' }}>No events recorded for this booking.</div>
+                ) : (
+                  events.map((event, index) => (
+                    <TimelineItem key={index}>
+                      <TimelineDot />
+                      <TimelineContent>
+                        <TimelineTime>
+                          {formatDateTime(event.timestamp instanceof Date ? event.timestamp : 
+                            (event.timestamp && typeof event.timestamp.toDate === 'function') ? 
+                              event.timestamp.toDate() : 
+                              new Date())}
+                        </TimelineTime>
+                        <TimelineDescription>
+                          {event.description}
+                          {event.userName && ` by ${event.userName}`}
+                        </TimelineDescription>
+                      </TimelineContent>
+                    </TimelineItem>
+                  ))
+                )}
+          </DetailSection>
+            </TimelineContainer>
+          </DetailGrid>
+        </DetailContainer>
+      </GlassCard>
+    </PageContainer>
   );
 };
 

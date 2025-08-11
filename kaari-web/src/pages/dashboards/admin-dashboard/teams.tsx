@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { FaPlus, FaSearch, FaEdit, FaTrash, FaUsers } from 'react-icons/fa';
+import { PageContainer, PageHeader, GlassCard } from '../../../components/admin/AdminUI';
 import {
-  DashboardCard,
-  CardTitle,
-  CardContent,
   Table,
   TableHead,
   TableRow,
@@ -195,10 +193,9 @@ const TeamsPage: React.FC = () => {
   };
   
   return (
-    <div>
-      <DashboardCard>
-        <CardTitle>Teams Management</CardTitle>
-        <CardContent>
+    <PageContainer>
+      <PageHeader title="Teams Management" />
+      <GlassCard>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
             <FormGroup style={{ width: '300px', margin: 0 }}>
               <div style={{ position: 'relative' }}>
@@ -275,8 +272,7 @@ const TeamsPage: React.FC = () => {
           ) : (
             <p>No teams found.</p>
           )}
-        </CardContent>
-      </DashboardCard>
+      </GlassCard>
       
       {/* Team Modal */}
       {showTeamModal && (
@@ -408,7 +404,7 @@ const TeamsPage: React.FC = () => {
           </ModalContent>
         </Modal>
       )}
-    </div>
+    </PageContainer>
   );
 };
 

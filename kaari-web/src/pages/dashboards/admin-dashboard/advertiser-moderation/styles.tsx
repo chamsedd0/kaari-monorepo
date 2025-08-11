@@ -333,6 +333,6 @@ export const SaveNoteButton = styled.button`
   cursor: pointer;
   
   &:hover {
-    background-color: ${Theme.colors.secondaryDark};
+    background-color: ${Theme.colors.secondary};
   }
 `; 

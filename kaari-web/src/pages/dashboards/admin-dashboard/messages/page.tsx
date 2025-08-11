@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaSearch, FaComments } from 'react-icons/fa';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-import {
-  DashboardCard,
-  CardTitle,
-  CardContent,
-} from '../styles';
+import { PageContainer, PageHeader, FilterBar as GlassFilterBar, SearchBox as GlassSearchBox, GlassCard } from '../../../../components/admin/AdminUI';
 import { useNavigate } from 'react-router-dom';
 import { 
   getAllConversations,
@@ -18,45 +14,17 @@ import {
 // Styled components
 const MessagesContainer = styled.div`
   display: flex;
-  height: calc(100vh - 200px);
-  border: 1px solid ${Theme.colors.gray};
-  border-radius: 4px;
+  height: calc(100vh - 240px);
   overflow: hidden;
 `;
 
 const ConversationsList = styled.div`
   width: 100%;
-  background-color: white;
-  border-right: 1px solid ${Theme.colors.gray};
+  background-color: transparent;
   overflow-y: auto;
 `;
 
-const SearchContainer = styled.div`
-  position: relative;
-  padding: 15px;
-  border-bottom: 1px solid ${Theme.colors.gray};
-  
-  svg {
-    position: absolute;
-    left: 25px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: ${Theme.colors.gray2};
-  }
-`;
-
-const SearchInput = styled.input`
-  width: 100%;
-  padding: 10px 10px 10px 35px;
-  border: 1px solid ${Theme.colors.gray};
-  border-radius: 4px;
-  font: ${Theme.typography.fonts.smallM};
-  
-  &:focus {
-    outline: none;
-    border-color: ${Theme.colors.secondary};
-  }
-`;
+// Replaced with shared FilterBar + GlassSearchBox from AdminUI
 
 const ConversationItem = styled.div`
   padding: 15px;
@@ -211,20 +179,22 @@ const MessagesPage: React.FC = () => {
   };
   
   return (
-    <DashboardCard>
-      <CardTitle>Messages</CardTitle>
-      <CardContent>
+    <PageContainer>
+      <PageHeader title="Messages" />
+      <GlassCard>
         <MessagesContainer>
-          <ConversationsList>
-            <SearchContainer>
+          <GlassFilterBar>
+            <GlassSearchBox>
               <FaSearch />
-              <SearchInput 
-                type="text" 
-                placeholder="Search conversations..." 
+              <input
+                type="text"
+                placeholder="Search conversations..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-            </SearchContainer>
+            </GlassSearchBox>
+          </GlassFilterBar>
+          <ConversationsList>
             
             {loading ? (
               <LoadingState>Loading conversations...</LoadingState>
@@ -271,8 +241,8 @@ const MessagesPage: React.FC = () => {
             )}
           </ConversationsList>
         </MessagesContainer>
-      </CardContent>
-    </DashboardCard>
+      </GlassCard>
+    </PageContainer>
   );
 };
 

@@ -19,6 +19,8 @@ export class Theme {
     blockScreen: '#00000025',
     gray: '#D1D1D1',
     gray2: '#767676',
+    // Added commonly referenced alias for compatibility in static pages
+    gray3: '#B3B3B3',
   }
 
 
@@ -33,7 +35,9 @@ export class Theme {
       md: '12px',
       lg: '16px',
       extreme: '100px',
-      round: '50%'
+      round: '50%',
+      // Added alias referenced by static pages
+      full: '9999px'
     }
   };
 
@@ -44,6 +48,8 @@ export class Theme {
       h2: 'normal 900 48px Visby CF',
       h25: 'normal 800 40px Visby CF',
       h3: 'normal 700 32px Visby CF',
+      // Added h4 alias used by some pages
+      h4: 'normal 500 24px Visby CF',
       h4B: 'normal 700 24px Visby CF',
       h4DB: 'normal 600 24px Visby CF',
       extraLargeM: 'normal 500 20px Visby CF',

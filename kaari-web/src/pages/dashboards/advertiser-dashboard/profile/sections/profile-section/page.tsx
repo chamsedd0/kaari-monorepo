@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ProfileSectionStyle } from './styles';
 import { useStore } from '../../../../../../backend/store';
 import UserAvatar from "../../../../../../components/UserAvatar";
@@ -34,6 +34,7 @@ const ProfileSection: React.FC = () => {
     const [profilePicture, setProfilePicture] = useState<File | null>(null);
     const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
     const [languages, setLanguages] = useState<string[]>([]);
+    const [brokerExtraFeePercent, setBrokerExtraFeePercent] = useState<number>(0);
     const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
     
     // UI states
@@ -103,6 +104,7 @@ const ProfileSection: React.FC = () => {
             setNationality(user.nationality || '');
             setAboutMe(user.aboutMe || '');
             setLanguages(user.languages || []);
+            setBrokerExtraFeePercent(typeof (user as any).brokerExtraFeePercent === 'number' ? (user as any).brokerExtraFeePercent : 0);
         }
     }, [user]);
     
@@ -115,11 +117,23 @@ const ProfileSection: React.FC = () => {
     // Handle profile update
     const handleSaveProfile = async () => {
         if (!user) return;
-        
+
+        // Basic validation
+        if (!name.trim()) {
+            setError(t('common.check_inputs', 'Check inputs'));
+            toast.profile.updateError(t('advertiser_dashboard.profile.full_name_required', 'Full name is required'));
+            return;
+        }
+        if (phoneNumber && phoneNumber.replace(/[^\d]/g, '').length < 8) {
+            setError(t('common.invalid_phone', 'Please enter a valid phone number.'));
+            toast.profile.updateError(t('common.invalid_phone', 'Please enter a valid phone number.'));
+            return;
+        }
+
         setLoading(true);
         setError(null);
         setSuccess(false);
-        
+
         try {
             // Update profile data
             const updatedUser = await updateUserProfile(user.id, {
@@ -131,6 +145,7 @@ const ProfileSection: React.FC = () => {
                 nationality,
                 languages,
                 aboutMe,
+                brokerExtraFeePercent,
                 profilePicture
             });
             
@@ -167,6 +182,7 @@ const ProfileSection: React.FC = () => {
     };
     
     // Handle profile picture change
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const handleProfilePictureChange = (file: File) => {
         setProfilePicture(file);
         
@@ -185,32 +201,42 @@ const ProfileSection: React.FC = () => {
         <ProfileSectionStyle>
             <h1 className="section-title">{t('advertiser_dashboard.profile.section_title')}</h1>
             <div className="profile-image-container">
-                <div className="profile-image">
+                <div className={`profile-image ${user?.advertiserType ? `aura--${user.advertiserType}` : ''}`}>
                     <UserAvatar
                         name={name || user?.name || "User"}
                         profileImage={profilePicturePreview || user?.profilePicture}
                         size={120}
                     />
                 </div>
-                <UploadFieldModel
-                    label={t('advertiser_dashboard.profile.change_profile_picture')}
-                    onFileSelect={handleProfilePictureChange}
-                    isProfilePicture
-                />
+                <button className="edit-photo-btn" onClick={() => fileInputRef.current?.click()}>
+                    {t('advertiser_dashboard.profile.change_profile_picture', 'Edit Profile Picture')}
+                </button>
+                <input type="file" accept="image/*" ref={fileInputRef} style={{ display: 'none' }} onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleProfilePictureChange(f);
+                }} />
+                {user?.advertiserType && (
+                    <div className="role-badge" title={t('advertiser_dashboard.profile.role', 'Account type')}>
+                        {user.advertiserType === 'agency' ? 'Agency' : user.advertiserType === 'broker' ? 'Broker' : 'Landlord'}
+                    </div>
+                )}
             </div>
             <div className="profile-grid">
                 <InputVariant 
                     title={t('advertiser_dashboard.profile.full_name')}
+                    placeholder={t('advertiser_dashboard.profile.full_name_placeholder', 'e.g. Ahmed')}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                 />
                 <InputVariant 
                     title={t('advertiser_dashboard.profile.your_surname')}
+                    placeholder={t('advertiser_dashboard.profile.your_surname_placeholder', 'e.g. El Mansouri')}
                     value={surname}
                     onChange={(e) => setSurname(e.target.value)}
                 />
                 <InputVariant 
                     title={t('advertiser_dashboard.profile.phone_number')}
+                    placeholder={t('advertiser_dashboard.profile.phone_placeholder', '+212 6 12 34 56 78')}
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                 />
@@ -258,13 +284,30 @@ const ProfileSection: React.FC = () => {
            
             <SelectFieldBaseModel 
                 label={t('advertiser_dashboard.profile.nationality')}
-                options={['English', 'French', 'Spanish', 'German', 'Italian', 'Portuguese', 'Russian', 'Arabic', 'Chinese', 'Japanese', 'Korean', 'Vietnamese', 'Other']} 
-                value={nationality}
-                onChange={(value) => setNationality(value)}
+                options={[
+                    t('common.select_nationality', 'Select nationality...'),
+                    'Moroccan', 'French', 'Spanish', 'German', 'Italian', 'Portuguese', 'Turkish', 'American', 'British', 'Canadian', 'Other'
+                ]} 
+                value={nationality || ''}
+                onChange={(value) => setNationality(value === t('common.select_nationality', 'Select nationality...') ? '' : value)}
             />  
-           
+
+            {user?.advertiserType && (user.advertiserType === 'broker' || user.advertiserType === 'agency') && (
+                <SelectFieldBaseModel 
+                    label={t('advertiser_dashboard.profile.broker_fee', 'Broker/Agency Fee (% of 1st month, tenant-side, max 75%)')}
+                    options={[t('common.select_fee', 'Select fee...'), '0','5','10','15','20','25','30','35','40','45','50','55','60','65','70','75']}
+                    value={String(brokerExtraFeePercent)}
+                    onChange={(value) => {
+                        if (!value || value === t('common.select_fee', 'Select fee...')) return;
+                        const n = parseInt(value, 10);
+                        setBrokerExtraFeePercent(Math.min(75, Math.max(0, isNaN(n) ? 0 : n)));
+                    }}
+                />
+            )}
+
             <TextareaVariant 
                 title={t('advertiser_dashboard.profile.about_me')}
+                placeholder={t('advertiser_dashboard.profile.about_me_placeholder', 'Tell tenants a bit about yourself (experience, expectations, languages).')}
                 value={aboutMe}
                 onChange={(e) => setAboutMe(e.target.value)}
             />

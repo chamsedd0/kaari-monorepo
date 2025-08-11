@@ -35,7 +35,7 @@ export const ReviewsPageStyle = styled.div`
         flex-direction: column;
         gap: 24px;
         padding: 24px;
-        background-color: ${Theme.colors.background};
+        background-color: ${Theme.colors.white};
         border-radius: ${Theme.borders.radius.md};
         border: ${Theme.borders.primary};
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -48,7 +48,7 @@ export const ReviewsPageStyle = styled.div`
             align-items: center;
             justify-content: space-between;
             padding-bottom: 12px;
-            border-bottom: 1px solid ${Theme.colors.gray5};
+            border-bottom: 1px solid ${Theme.colors.gray3};
 
             .count-reviews {
                 display: inline-flex;

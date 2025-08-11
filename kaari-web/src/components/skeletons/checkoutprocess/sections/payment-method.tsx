@@ -3,7 +3,7 @@ import { useCheckoutContext } from '../../../../contexts/checkout-process';
 import { PaymentMethodContainer } from '../../../styles/checkoutprocess/checkout-process-sections-style';
 import { FaArrowLeft } from 'react-icons/fa';
 import { Theme } from '../../../../theme/theme';
-import HaaniOptions from '../../../checkout/haani-options';
+// Retired Haani Max: single HAANI plan only
 
 const ProtectionOptions: React.FC = () => {
   const { 
@@ -12,8 +12,8 @@ const ProtectionOptions: React.FC = () => {
     savePaymentMethod 
   } = useCheckoutContext();
   
-  // Add Haani options state
-  const [protectionOption, setProtectionOption] = useState<'haani' | 'haaniMax'>('haani');
+  // Single plan: HAANI
+  const [protectionOption] = useState<'haani'>('haani');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   // Add effect to make the back button more visible after page load
@@ -28,17 +28,15 @@ const ProtectionOptions: React.FC = () => {
   }, []);
   
   const handleProceed = () => {
-    // Save the selected protection option in the checkout context
+    // Save the selected protection option in the checkout context (no HAANI Max)
     savePaymentMethod({
       id: `protection_${Date.now()}`,
       type: 'protection',
       details: {
         protectionType: protectionOption
       },
-      // Include the protection option
       protectionOption: protectionOption,
-      // Include additional cost if Haani Max is selected
-      additionalCost: protectionOption === 'haaniMax' ? 250 : 0
+      additionalCost: 0
     });
     
     // Navigate to the next step
@@ -46,13 +44,13 @@ const ProtectionOptions: React.FC = () => {
   
     // Emit event for scroll to top component
     import('../../../../utils/event-bus').then(({ default: eventBus, EventType }) => {
-      eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
+      eventBus.emit(EventType.CHECKOUT_STEP_CHANGED, {} as any);
     });
   };
 
   return (
     <PaymentMethodContainer>
-      <h2>Protection Options</h2>
+      <h2>Protection Plan</h2>
       
       {errorMessage && (
         <div className="error-message">
@@ -60,12 +58,7 @@ const ProtectionOptions: React.FC = () => {
         </div>
       )}
       
-      <div className="payment-section">
-        <HaaniOptions 
-          selectedOption={protectionOption}
-          onSelectOption={setProtectionOption}
-        />
-      </div>
+      <div className="payment-section" style={{padding: '12px 0'}}>HAANI protection (48-hour mismatch guarantee) is included. No upgrades available.</div>
       
       <div className="actions-container">
         <button className="back-button" onClick={navigateToRentalApplication}>

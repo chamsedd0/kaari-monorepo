@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-import { getClientReservations, cancelReservation, completeReservation, requestRefund } from '../../../../backend/server-actions/ClientServerActions';
-import { processPayment } from '../../../../backend/server-actions/PaymentServerActions';
+import { getClientReservations, cancelReservation, requestRefund } from '../../../../backend/server-actions/ClientServerActions';
+import { handleMoveIn as confirmMoveInAction } from '../../../../backend/server-actions/PaymentServerActions';
+import { processPayment as initiateCheckoutPayment } from '../../../../backend/server-actions/CheckoutServerActions';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import { BpurpleButtonMB48 } from '../../../../components/skeletons/buttons/border_purple_MB48';
 import { CardBaseModelStyleLatestRequest } from '../../../../components/styles/cards/card-base-model-style-latest-request';
@@ -1024,12 +1025,9 @@ const ReservationsPage: React.FC = () => {
     
     try {
       setProcessingPayment(selectedReservation);
-      const result = await processPayment(selectedReservation);
-      
-      if (result.success) {
-        toast.showToast('success', 'Payment Processed', 'Your payment has been successfully processed');
-      } else {
-        toast.showToast('error', 'Payment Failed', result.error || 'Failed to process payment');
+      const ok = await initiateCheckoutPayment(selectedReservation);
+      if (!ok) {
+        toast.showToast('error', 'Payment Failed', 'Failed to initiate payment');
       }
       
       await loadReservations();
@@ -1179,7 +1177,10 @@ const ReservationsPage: React.FC = () => {
   // Handle move-in action
   const handleMoveIn = async (reservationId: string) => {
     try {
-      await completeReservation(reservationId);
+      const result = await confirmMoveInAction(reservationId);
+      if (!result?.success) {
+        setError(result?.error || 'Failed to process move-in');
+      }
       await loadReservations();
     } catch (err: any) {
       console.error('Error marking move-in:', err);

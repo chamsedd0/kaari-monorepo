@@ -16,13 +16,8 @@ import {
   FaTimes,
   FaExclamationTriangle
 } from 'react-icons/fa';
-import { 
-  DashboardCard, 
-  CardTitle, 
-  CardContent, 
-  Button, 
-  StatusBadge 
-} from './styles';
+import { PageContainer, PageHeader, GlassCard } from '../../../components/admin/AdminUI';
+import { Button, StatusBadge } from './styles';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
 
@@ -329,51 +324,38 @@ const UserManagementDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <DashboardCard>
-        <CardTitle>
+      <PageContainer>
+        <PageHeader title="User Details" />
+        <GlassCard>
           <BackButton onClick={handleBack}>
-            <FaArrowLeft />
-            Back to Users
+            <FaArrowLeft /> Back to Users
           </BackButton>
-          <h2>User Details</h2>
-        </CardTitle>
-        <CardContent>
           <LoadingState>Loading user data...</LoadingState>
-        </CardContent>
-      </DashboardCard>
+        </GlassCard>
+      </PageContainer>
     );
   }
 
   if (!user) {
     return (
-      <DashboardCard>
-        <CardTitle>
+      <PageContainer>
+        <PageHeader title="User Not Found" />
+        <GlassCard>
           <BackButton onClick={handleBack}>
-            <FaArrowLeft />
-            Back to Users
+            <FaArrowLeft /> Back to Users
           </BackButton>
-          <h2>User Not Found</h2>
-        </CardTitle>
-        <CardContent>
           <p>The requested user could not be found.</p>
-        </CardContent>
-      </DashboardCard>
+        </GlassCard>
+      </PageContainer>
     );
   }
 
   const advertiserTypeInfo = getAdvertiserTypeInfo(user);
 
   return (
-    <DashboardCard>
-      <CardTitle>
-        <BackButton onClick={handleBack}>
-          <FaArrowLeft />
-          Back to Users
-        </BackButton>
-        <h2>User Details</h2>
-      </CardTitle>
-      
-      <CardContent>
+    <PageContainer>
+      <PageHeader title="User Details" />
+      <GlassCard>
         <DetailContainer>
           {/* User Profile Section */}
           <ProfileSection>
@@ -564,8 +546,8 @@ const UserManagementDetailPage: React.FC = () => {
             </ProfileSection>
           )}
         </DetailContainer>
-      </CardContent>
-    </DashboardCard>
+      </GlassCard>
+    </PageContainer>
   );
 };
 

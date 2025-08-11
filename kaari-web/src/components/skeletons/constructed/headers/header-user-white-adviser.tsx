@@ -137,6 +137,7 @@ export const WhiteHeaderAdviser = ({advertiser}: {advertiser: boolean}) => {
                                 />
                                 {showProfileDropdown && (
                                     <ProfileDropdown
+                                        // @ts-expect-error legacy prop
                                         isOpen={showProfileDropdown}
                                         onClose={() => setShowProfileDropdown(false)}
                                         userName={userName}

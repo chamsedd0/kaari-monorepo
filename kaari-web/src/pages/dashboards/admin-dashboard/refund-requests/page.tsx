@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
+import { PageContainer, PageHeader, FilterBar, SearchBox, Button as AdminUIButton, Pill, IconButton } from '../../../../components/admin/AdminUI';
 import { 
   FaSearch, 
   FaFilter, 
@@ -18,6 +19,9 @@ import {
 } from 'react-icons/fa';
 import { useToastService } from '../../../../services/ToastService';
 import { getRefundRequests, approveRefundRequest, rejectRefundRequest, RefundRequest } from '../../../../backend/server-actions/AdminServerActions';
+import { formatDateSafe } from '../../../../utils/dates';
+import AdminTableScaffold from '../../../../components/admin/AdminTableScaffold';
+import { GlassCard, GlassTable, StatusBadge } from '../../../../components/admin/AdminUI';
 
 // Styled components
 const RefundRequestsContainer = styled.div`
@@ -367,15 +371,15 @@ const RefundRequests: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showStatusFilter, setShowStatusFilter] = useState(false);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [limit, setLimit] = useState<number>(50);
+  const [hasMore, setHasMore] = useState<boolean>(false);
   const toast = useToastService();
   
-  const fetchRefundRequests = useCallback(async () => {
+  const fetchRefundRequests = useCallback(async (reset: boolean = false) => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Fetching refund requests...');
       const data = await getRefundRequests();
-      console.log('Received refund requests:', data);
       
       // Update validation to match the actual refund request structure
       // Only filter out completely invalid requests, not ones with different structure
@@ -401,18 +405,18 @@ const RefundRequests: React.FC = () => {
         };
       });
       
-      setRefundRequests(normalizedRequests);
+      setRefundRequests(prev => (reset ? normalizedRequests : [...prev, ...normalizedRequests]));
+      setHasMore(normalizedRequests.length === limit);
     } catch (err: any) {
-      console.error('Error fetching refund requests:', err);
       setError(err.message || 'Failed to load refund requests');
       setRefundRequests([]); // Clear any partial data
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [limit]);
   
   useEffect(() => {
-    fetchRefundRequests();
+    fetchRefundRequests(true);
   }, [fetchRefundRequests]);
   
   // Define a type for our normalized refund request with guaranteed fields
@@ -438,73 +442,7 @@ const RefundRequests: React.FC = () => {
     return matchesSearch && matchesStatus;
   }) as NormalizedRefundRequest[]; // Assert that after filtering, these fields are defined
   
-  // Format date
-  const formatDate = (date: any) => {
-    if (!date) return 'Not set';
-    
-    try {
-      console.log('Formatting date:', date, typeof date);
-      
-      // Handle Firestore Timestamp
-      if (typeof date === 'object' && date !== null) {
-        // Check if it's a Firestore Timestamp (has seconds property)
-        if ('seconds' in date) {
-          console.log('Formatting Firestore Timestamp');
-          return new Date(date.seconds * 1000).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          });
-        }
-        
-        // Handle Date object
-        if (date instanceof Date) {
-          console.log('Formatting Date object');
-          return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          });
-        }
-        
-        // Handle server timestamp (special Firebase value)
-        if (date.toDate && typeof date.toDate === 'function') {
-          console.log('Formatting with toDate() method');
-          const jsDate = date.toDate();
-          return jsDate.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          });
-        }
-      }
-      
-      // Handle string (ISO date string)
-      if (typeof date === 'string') {
-        console.log('Formatting string date');
-        return new Date(date).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        });
-      }
-      
-      // Handle number (timestamp in milliseconds)
-      if (typeof date === 'number') {
-        console.log('Formatting number timestamp');
-        return new Date(date).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric'
-        });
-      }
-      
-      return 'Invalid date format';
-    } catch (error) {
-      console.error('Error formatting date:', error, date);
-      return 'Invalid date';
-    }
-  };
+  const formatDate = (date: any) => formatDateSafe(date);
   
   // Format amount with currency
   const formatAmount = (request: RefundRequest) => {
@@ -549,12 +487,12 @@ const RefundRequests: React.FC = () => {
       setProcessing(id);
       await approveRefundRequest(id);
       toast.showToast('success', 'Refund Approved', 'The refund request has been approved successfully');
-      
-      // Refresh the list
-      await fetchRefundRequests();
-      setProcessing(null);
+      // Refresh the list in reset mode to avoid duplicates
+      await fetchRefundRequests(true);
     } catch (err: any) {
       toast.showToast('error', 'Error', err.message || 'Failed to approve refund');
+    }
+    finally {
       setProcessing(null);
     }
   };
@@ -565,12 +503,12 @@ const RefundRequests: React.FC = () => {
       setProcessing(id);
       await rejectRefundRequest(id);
       toast.showToast('success', 'Refund Rejected', 'The refund request has been rejected');
-      
-      // Refresh the list
-      await fetchRefundRequests();
-      setProcessing(null);
+      // Refresh the list in reset mode to avoid duplicates
+      await fetchRefundRequests(true);
     } catch (err: any) {
       toast.showToast('error', 'Error', err.message || 'Failed to reject refund');
+    }
+    finally {
       setProcessing(null);
     }
   };
@@ -581,211 +519,124 @@ const RefundRequests: React.FC = () => {
     toast.showToast('info', 'View Details', `Viewing details for request ${id}`);
   };
   
-  if (loading) {
-    return (
-      <RefundRequestsContainer>
-        <h1>Refund Requests</h1>
-        <div className="loading">Loading refund requests...</div>
-      </RefundRequestsContainer>
-    );
-  }
-  
-  if (error) {
-    return (
-      <RefundRequestsContainer>
-        <h1>Refund Requests</h1>
-        <div className="empty-state">
-          <FaTimesCircle />
-          <h3>Error Loading Requests</h3>
-          <p>{error}</p>
-        </div>
-      </RefundRequestsContainer>
-    );
-  }
-  
   return (
-    <RefundRequestsContainer>
-      <h1>Refund Requests</h1>
-      
-      <div className="filter-bar">
-        <div className="search-box">
+    <PageContainer>
+      <PageHeader title="Refund Requests" />
+      <FilterBar>
+        <SearchBox>
           <FaSearch />
-          <input 
-            type="text" 
-            placeholder="Search by name, property or ID" 
+          <input
+            type="text"
+            placeholder="Search by name, property or ID"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+        </SearchBox>
+        <div className="filters" style={{ display: 'flex', gap: 8 }}>
+          {(['all','pending','approved','rejected'] as const).map(k => (
+            <Pill key={k}
+              onClick={() => setStatusFilter(k)}
+              style={{
+                cursor: 'pointer',
+                background: statusFilter === k ? `${Theme.colors.tertiary}30` : '#fff',
+                borderColor: statusFilter === k ? Theme.colors.tertiary : `${Theme.colors.tertiary}80`
+              }}
+            >
+              {k === 'all' ? 'All' : k.charAt(0).toUpperCase() + k.slice(1)}
+            </Pill>
+          ))}
         </div>
-        
-        <div className="filters">
-          <div className="filter-dropdown">
-            <div className="filter-button" onClick={() => setShowStatusFilter(!showStatusFilter)}>
-              <FaFilter />
-              <span>Status: {statusFilter === 'all' ? 'All' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}</span>
-            </div>
-            
-            {showStatusFilter && (
-              <div className="dropdown-content">
-                <div 
-                  className={`dropdown-item ${statusFilter === 'all' ? 'active' : ''}`}
-                  onClick={() => {
-                    setStatusFilter('all');
-                    setShowStatusFilter(false);
-                  }}
-                >
-                  All
-                </div>
-                <div 
-                  className={`dropdown-item ${statusFilter === 'pending' ? 'active' : ''}`}
-                  onClick={() => {
-                    setStatusFilter('pending');
-                    setShowStatusFilter(false);
-                  }}
-                >
-                  Pending
-                </div>
-                <div 
-                  className={`dropdown-item ${statusFilter === 'approved' ? 'active' : ''}`}
-                  onClick={() => {
-                    setStatusFilter('approved');
-                    setShowStatusFilter(false);
-                  }}
-                >
-                  Approved
-                </div>
-                <div 
-                  className={`dropdown-item ${statusFilter === 'rejected' ? 'active' : ''}`}
-                  onClick={() => {
-                    setStatusFilter('rejected');
-                    setShowStatusFilter(false);
-                  }}
-                >
-                  Rejected
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      
-      {loading ? (
-        <div className="loading-state">
-          <FaSpinner className="spinner" />
-          <p>Loading refund requests...</p>
-        </div>
-      ) : error ? (
-        <div className="error-state">
-          <FaExclamationCircle />
-          <h3>Error Loading Requests</h3>
-          <p>{error}</p>
-          <button onClick={() => window.location.reload()} className="retry-button">
-            <FaSync /> Retry
-          </button>
-        </div>
-      ) : filteredRequests.length === 0 ? (
-        <div className="empty-state">
-          <FaInbox />
-          <h3>No Refund Requests Found</h3>
-          <p>There are currently no refund requests matching your search criteria.</p>
-        </div>
-      ) : (
-        <div className="requests-table">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>User</th>
-                <th>Property</th>
-                <th>Reason</th>
-                <th>Amount</th>
-                <th>Request Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRequests.map(request => {
-                // Create safe access helpers for potentially undefined properties
-                const safeUserName = request.userName || 'Unknown User';
-                const safePropertyName = request.propertyName || 'Unknown Property';
-                
-                return (
-                  <tr key={request.id}>
-                    <td>{request.id}</td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <FaUserCircle />
-                        {safeUserName}
-                      </div>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <FaBuilding />
-                        {safePropertyName}
-                      </div>
-                    </td>
-                    <td>{getReasonText(request)}</td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <FaDollarSign />
-                        {formatAmount(request)}
-                      </div>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <FaCalendarAlt />
-                        {getRequestDate(request)}
-                      </div>
-                    </td>
-                    <td>
-                      <div className={`status ${request.status}`}>
-                        {request.status === 'pending' && <FaHourglassHalf />}
-                        {request.status === 'approved' && <FaCheckCircle />}
-                        {request.status === 'rejected' && <FaTimesCircle />}
-                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                      </div>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button 
-                          className="view" 
-                          onClick={() => handleViewDetails(request.id)}
-                          title="View Details"
-                        >
-                          <FaSearch />
-                        </button>
-                        
-                        {request.status === 'pending' && (
-                          <>
-                            <button 
-                              className="approve" 
-                              onClick={() => handleApprove(request.id)}
-                              disabled={processing === request.id}
-                              title="Approve Refund"
-                            >
-                              <FaCheckCircle />
-                            </button>
-                            <button 
-                              className="reject" 
-                              onClick={() => handleReject(request.id)}
-                              disabled={processing === request.id}
-                              title="Reject Refund"
-                            >
-                              <FaTimesCircle />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </RefundRequestsContainer>
+      </FilterBar>
+
+      <AdminTableScaffold
+        loading={loading}
+        error={error}
+        isEmpty={!loading && !error && filteredRequests.length === 0}
+        onRetry={() => fetchRefundRequests(true)}
+        hasMore={hasMore}
+        onLoadMore={() => fetchRefundRequests(false)}
+      >
+        {filteredRequests.length > 0 && (
+          <GlassCard>
+            <GlassTable>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>User</th>
+                  <th>Property</th>
+                  <th>Reason</th>
+                  <th>Amount</th>
+                  <th>Request Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRequests.map(request => {
+                  const safeUserName = request.userName || 'Unknown User';
+                  const safePropertyName = request.propertyName || 'Unknown Property';
+                  return (
+                    <tr key={request.id}>
+                      <td>{request.id}</td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <FaUserCircle />
+                          {safeUserName}
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <FaBuilding />
+                          {safePropertyName}
+                        </div>
+                      </td>
+                      <td>{getReasonText(request)}</td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <FaDollarSign />
+                          {formatAmount(request)}
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <FaCalendarAlt />
+                          {getRequestDate(request)}
+                        </div>
+                      </td>
+                      <td>
+                        <StatusBadge status={request.status}>
+                          {request.status === 'pending' && <FaHourglassHalf />}
+                          {request.status === 'approved' && <FaCheckCircle />}
+                          {request.status === 'rejected' && <FaTimesCircle />}
+                          {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                        </StatusBadge>
+                      </td>
+                      <td>
+                        <div className="action-buttons" style={{ display: 'flex', gap: 8 }}>
+                          <IconButton onClick={() => handleViewDetails(request.id)} title="View Details">
+                            <FaSearch />
+                          </IconButton>
+                          {request.status === 'pending' && (
+                            <>
+                              <IconButton onClick={() => handleApprove(request.id)} disabled={processing === request.id} title="Approve Refund">
+                                {processing === request.id ? <FaSpinner /> : <FaCheckCircle />}
+                              </IconButton>
+                              <IconButton onClick={() => handleReject(request.id)} disabled={processing === request.id} title="Reject Refund">
+                                {processing === request.id ? <FaSpinner /> : <FaTimesCircle />}
+                              </IconButton>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </GlassTable>
+          </GlassCard>
+        )}
+      </AdminTableScaffold>
+    </PageContainer>
   );
 };
 

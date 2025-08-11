@@ -12,7 +12,8 @@ import {
   orderBy,
   limit,
   DocumentData,
-  DocumentSnapshot
+  DocumentSnapshot,
+  setDoc
 } from "firebase/firestore";
 import { db } from "../backend/firebase/config";
 import { User } from '../backend/entities';

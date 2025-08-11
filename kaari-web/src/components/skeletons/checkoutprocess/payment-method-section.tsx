@@ -144,6 +144,7 @@ const PaymentMethodSection: React.FC<PaymentMethodSectionProps> = ({ onContinue 
       
       {showAddForm ? (
         <PaymentForm 
+          onSubmit={() => { /* noop */ }}
           onAddCard={handleAddCard} 
           onCancel={() => setShowAddForm(false)} 
         />

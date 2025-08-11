@@ -86,8 +86,8 @@ i18n
     returnEmptyString: false,
     returnNull: false,
     returnObjects: true,
-    joinArrays: true,
-    parseMissingKeyHandler: (key) => {
+    joinArrays: true as any,
+    parseMissingKeyHandler: (key: string) => {
       console.warn(`Missing translation key: ${key}`);
       return key;
     }

@@ -560,7 +560,7 @@ const MessagesPage: React.FC = () => {
     const fetchUser = async () => {
       if (!authUser) return;
       
-      const userDocRef = doc(db, 'users', authUser.id || authUser.uid || '');
+      const userDocRef = doc(db, 'users', authUser.id || '');
       
       try {
         // Update online status and last seen
@@ -570,10 +570,10 @@ const MessagesPage: React.FC = () => {
         }).catch(() => {
           // If update fails, the document might not exist yet
           return setDoc(userDocRef, {
-            id: authUser.id || authUser.uid || '',
-            name: authUser.name || authUser.displayName || 'Advertiser',
+            id: authUser.id || '',
+            name: authUser.name || 'Advertiser',
             email: authUser.email || '',
-            profilePicture: authUser.profilePicture || authUser.photoURL || undefined,
+            profilePicture: authUser.profilePicture || undefined,
             isOnline: true,
             lastSeen: serverTimestamp()
           });
@@ -587,7 +587,7 @@ const MessagesPage: React.FC = () => {
         
         // Set up presence cleanup
         const handleUserOffline = async () => {
-          const userRef = doc(db, 'users', authUser.id || authUser.uid || '');
+           const userRef = doc(db, 'users', authUser.id || '');
           await updateDoc(userRef, {
             isOnline: false,
             lastSeen: serverTimestamp()
@@ -826,10 +826,10 @@ const MessagesPage: React.FC = () => {
   useEffect(() => {
     if (authUser) {
       setCurrentUser({
-        id: authUser.id || authUser.uid || '',
-        name: authUser.name || authUser.displayName || 'Advertiser',
+        id: authUser.id || '',
+        name: authUser.name || 'Advertiser',
         email: authUser.email || '',
-        profilePicture: authUser.profilePicture || authUser.photoURL || undefined,
+        profilePicture: authUser.profilePicture || undefined,
         isOnline: true
       });
     }

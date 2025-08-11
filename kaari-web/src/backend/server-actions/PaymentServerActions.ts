@@ -163,9 +163,7 @@ export async function processPayment(reservationId: string): Promise<{
       updatedAt: new Date()
     });
     
-    // Note: We do NOT update advertiser's payment records here
-    // The payment will be released to the advertiser 24 hours after move-in
-    // This is handled by the handleMoveIn function and a scheduled job
+    // Note: Advertiser settlement is scheduled at move-in in handleMoveIn via SettlementService
     
     // Send notifications
     try {
@@ -292,7 +290,24 @@ export async function handleMoveIn(reservationId: string): Promise<{
       movedInAt: new Date(),
       updatedAt: new Date()
     });
+
+    // Schedule a review prompt for the user after move-in to keep parity with ClientServerActions
+    try {
+      const { scheduleReviewPromptAfterMoveIn } = await import('./ReviewManagementActions');
+      await scheduleReviewPromptAfterMoveIn(reservationId);
+    } catch (e) {
+      // Non-critical
+      console.warn('Failed to schedule review prompt after move-in:', e);
+    }
     
+    // Schedule settlement consistently (pending payout + advertiser payment status)
+    try {
+      const { schedulePendingPayout } = await import('../settlements/SettlementService');
+      await schedulePendingPayout(reservationId, scheduledReleaseDate);
+    } catch (e) {
+      console.warn('Failed to schedule pending payout:', e);
+    }
+
     // Send notifications
     try {
       // Import NotificationService dynamically to avoid circular dependencies
@@ -370,45 +385,48 @@ export async function processPendingPayouts(): Promise<{
       const payoutId = docSnapshot.id;
       
       try {
-        // Update advertiser's payment records - increment total collected amount
+        // Use unified settlement completion helper
+        const { completePayoutForReservation } = await import('../settlements/SettlementService');
+        const ok = await completePayoutForReservation(payoutData.reservationId);
+        if (!ok) throw new Error('Failed to finalize payout');
+
+        // Update advertiser aggregates
         const advertiserRef = doc(db, USERS_COLLECTION, payoutData.advertiserId);
         const advertiserDoc = await getDoc(advertiserRef);
-        
         if (advertiserDoc.exists()) {
           const advertiserData = advertiserDoc.data();
           const currentTotal = advertiserData.totalCollected || 0;
           const paymentCount = advertiserData.paymentCount || 0;
-          
           await updateDoc(advertiserRef, {
             totalCollected: currentTotal + (payoutData.amount || 0),
             paymentCount: paymentCount + 1,
             updatedAt: Timestamp.now()
           });
-          
-          // Update the payout status to completed
-          await updateDoc(doc(db, PENDING_PAYOUTS_COLLECTION, payoutId), {
-            status: 'completed',
-            updatedAt: Timestamp.now()
-          });
-          
-          // Send notification to advertiser
-          const NotificationService = (await import('../../services/NotificationService')).default;
-          await NotificationService.createNotification(
-            payoutData.advertiserId,
-            'advertiser',
-            'payout_processed',
-            'Payout Completed',
-            `A payment of ${payoutData.amount} ${payoutData.currency} has been released to your account.`,
-            `/dashboard/advertiser/payments`,
-            {
-              payoutId,
-              amount: payoutData.amount,
-              currency: payoutData.currency
-            }
-          );
-          
-          processedCount++;
         }
+
+        // Mark pending payout completed
+        await updateDoc(doc(db, PENDING_PAYOUTS_COLLECTION, payoutId), {
+          status: 'completed',
+          updatedAt: Timestamp.now()
+        });
+
+        // Notify advertiser
+        const NotificationService = (await import('../../services/NotificationService')).default;
+        await NotificationService.createNotification(
+          payoutData.advertiserId,
+          'advertiser',
+          'payout_processed',
+          'Payout Completed',
+          `A payment of ${payoutData.amount} ${payoutData.currency} has been released to your account.`,
+          `/dashboard/advertiser/payments`,
+          {
+            payoutId,
+            amount: payoutData.amount,
+            currency: payoutData.currency
+          }
+        );
+
+        processedCount++;
       } catch (err) {
         console.error(`Error processing payout ${payoutId}:`, err);
         // Continue with other payouts even if one fails
@@ -834,6 +852,26 @@ export async function getAdvertiserPaymentStats(): Promise<{
       pendingAmount: 0
     };
   }
+}
+
+/**
+ * Get pending payouts for current advertiser with scheduled release dates
+ */
+export async function getAdvertiserPendingPayouts(): Promise<Array<{ reservationId: string; scheduledReleaseDate: Date }>> {
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) throw new Error('User not authenticated');
+
+  const pendingRef = collection(db, PENDING_PAYOUTS_COLLECTION);
+  const q = query(pendingRef, where('advertiserId', '==', user.uid), where('status', '==', 'pending'));
+  const snapshot = await getDocs(q);
+  const results: Array<{ reservationId: string; scheduledReleaseDate: Date }> = [];
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    const sched = data.scheduledReleaseDate instanceof Timestamp ? data.scheduledReleaseDate.toDate() : new Date(data.scheduledReleaseDate);
+    results.push({ reservationId: data.reservationId, scheduledReleaseDate: sched });
+  });
+  return results;
 }
 
 export default {

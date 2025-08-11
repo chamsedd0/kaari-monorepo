@@ -3,13 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { FaArrowLeft, FaClock, FaUser, FaBuilding, FaCreditCard, FaClipboard, FaCopy } from 'react-icons/fa';
 import { Theme } from '../../../../theme/theme';
-import {
-  DashboardCard,
-  CardTitle,
-  CardContent,
-  Button,
-  FormGroup,
-} from '../styles';
+import { Button } from '../styles';
+import { Button as AdminUIButton } from '../../../../components/admin/AdminUI';
+import { PageContainer, PageHeader, GlassCard, StatusBadge as GlassStatusBadge } from '../../../../components/admin/AdminUI';
 import {
   DetailPanel,
   DetailGrid,
@@ -34,7 +30,7 @@ import {
 import { getBookingById, getBookingEvents, addBookingNote, BookingEvent, AdminBooking } from '../../../../backend/server-actions/BookingServerActions';
 
 // Styled components
-const BackButton = styled(Button)`
+const BackButton = styled(AdminUIButton)`
   background-color: transparent;
   color: ${Theme.colors.secondary};
   padding: 8px 0;
@@ -216,16 +212,11 @@ const SuccessMessage = styled.div`
   margin-bottom: 15px;
 `;
 
-const DetailContainer = styled.div`
-  padding: 20px;
+const DetailContainer = styled(PageContainer)`
   max-width: 1200px;
-  margin: 0 auto;
 `;
 
-const DetailSection = styled.div`
-  background-color: white;
-  border-radius: 8px;
-  border: 1px solid ${Theme.colors.gray};
+const DetailSection = styled(GlassCard)`
   padding: 20px;
   margin-bottom: 20px;
 `;
@@ -499,14 +490,18 @@ const BookingDetail: React.FC = () => {
           <FaArrowLeft /> Back to Bookings
         </BackButton>
         
-        <DetailHeader>
-          <BookingId>{booking.bookingId}</BookingId>
-          <StatusBadge $status={booking.status}>{booking.status}</StatusBadge>
-        <PaymentStateBadge $state={booking.paymentState}>{booking.paymentState}</PaymentStateBadge>
-        {booking.status === 'Await-Advertiser' && (
-            <CountdownTimer updatedAt={booking.updatedAt} />
-          )}
-        </DetailHeader>
+        <PageHeader
+          title={`Booking ${booking.bookingId}`}
+          right={
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <GlassStatusBadge status={booking.status}>{booking.status}</GlassStatusBadge>
+              <GlassStatusBadge status={booking.paymentState}>{booking.paymentState}</GlassStatusBadge>
+              {booking.status === 'Await-Advertiser' && (
+                <CountdownTimer updatedAt={booking.updatedAt} />
+              )}
+            </div>
+          }
+        />
         
       <DetailGrid>
         {/* Property Section */}

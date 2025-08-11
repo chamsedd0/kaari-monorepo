@@ -221,6 +221,71 @@ class ExpirationService {
       };
     }
   }
+
+  /**
+   * Anti-fraud safeguard: downgrade broker/agency to landlord if they had < 3 active listings in any rolling 60-day period.
+   * This should be scheduled daily.
+   */
+  async enforceAdvertiserDowngrade(): Promise<{ processed: number; downgraded: number; errors: number; }> {
+    let processed = 0;
+    let downgraded = 0;
+    let errors = 0;
+    try {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('role', '==', 'advertiser'));
+      const snapshot = await getDocs(q);
+      const now = new Date();
+      const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+      
+      for (const docSnap of snapshot.docs) {
+        processed++;
+        const userData: any = docSnap.data();
+        const advertiserType = userData.advertiserType as ('broker' | 'agency' | 'landlord' | undefined);
+        if (advertiserType !== 'broker' && advertiserType !== 'agency') continue;
+        const advertiserId = docSnap.id;
+        
+        try {
+          // Count active listings in last 60 days
+          const propertiesRef = collection(db, 'properties');
+          const propsQ = query(
+            propertiesRef,
+            where('ownerId', '==', advertiserId),
+            where('status', '==', 'available')
+          );
+          const propsSnap = await getDocs(propsQ);
+          const activeCount = propsSnap.docs
+            .map(d => d.data() as any)
+            .filter(p => {
+              const updatedAt = p.updatedAt?.toDate ? p.updatedAt.toDate() : (p.updatedAt ? new Date(p.updatedAt) : null);
+              return !updatedAt || updatedAt >= sixtyDaysAgo;
+            }).length;
+
+          if (activeCount < 3) {
+            await updateDoc(doc(db, 'users', advertiserId), {
+              advertiserType: 'landlord'
+            });
+            downgraded++;
+            // Optional: could trigger banner via a flag on user (read by dashboard)
+            try {
+              await updateDoc(doc(db, 'users', advertiserId), {
+                downgradeBanner: {
+                  type: 'broker_to_landlord',
+                  at: serverTimestamp()
+                }
+              });
+            } catch {}
+          }
+        } catch (e) {
+          console.error('Error processing advertiser downgrade', advertiserId, e);
+          errors++;
+        }
+      }
+    } catch (e) {
+      console.error('Error enforcing advertiser downgrade', e);
+      errors++;
+    }
+    return { processed, downgraded, errors };
+  }
 }
 
 export default new ExpirationService(); 

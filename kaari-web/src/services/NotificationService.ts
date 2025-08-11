@@ -9,9 +9,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
-  getDoc,
   onSnapshot,
-  serverTimestamp,
   Timestamp,
   writeBatch
 } from 'firebase/firestore';

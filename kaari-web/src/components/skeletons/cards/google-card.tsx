@@ -3,7 +3,7 @@ import { GoogleButtonSM32 } from "../buttons/google_SM32";
 import googleIcon from "../icons/google-icon.svg";
 
 
-export const GoogleCard = ({title, description}: {title: string, description: string}) => {
+export const GoogleCard = ({title, description, onConnect, isConnected}: {title: string, description: string, onConnect?: () => void, isConnected?: boolean}) => {
   return (
     <CardBaseModelStyleGoogle>
         <div className="title">
@@ -13,7 +13,7 @@ export const GoogleCard = ({title, description}: {title: string, description: st
             {description}
         </div>
         <div className="button">
-            <GoogleButtonSM32 text="Connect to Google" icon={<img src={googleIcon} alt="Google" />} />
+            <GoogleButtonSM32 text={isConnected ? "Connected" : "Connect to Google"} icon={<img src={googleIcon} alt="Google" />} onClick={onConnect} />
         </div>
     </CardBaseModelStyleGoogle>
   );

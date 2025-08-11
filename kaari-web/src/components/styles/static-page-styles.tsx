@@ -148,7 +148,7 @@ export const StaticPageWrapper = styled.div`
       }
       
       .subtitle {
-        font: ${Theme.typography.fonts.h5};
+      font: ${Theme.typography.fonts.h4};
       }
     }
     

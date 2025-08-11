@@ -416,7 +416,7 @@ const Input = styled.input<{ hasError?: boolean }>`
   }
   
   &::placeholder {
-    color: ${Theme.colors.gray1};
+    color: ${Theme.colors.gray};
   }
 `;
 

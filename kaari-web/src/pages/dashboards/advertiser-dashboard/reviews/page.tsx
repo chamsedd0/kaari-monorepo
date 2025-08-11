@@ -75,8 +75,30 @@ const ReviewsPage: React.FC = () => {
     
     // Handle filter change
     const handleFilterChange = (value: string) => {
-        setFilterStatus(value);
+        if (!value) return setFilterStatus('all');
+        const v = value.toLowerCase();
+        if (v.includes('pending')) return setFilterStatus('pending');
+        if (v.includes('approved')) return setFilterStatus('approved');
+        if (v.includes('rejected')) return setFilterStatus('rejected');
+        return setFilterStatus('all');
     };
+
+    // Derive review status from data with safe fallbacks
+    const getReviewStatus = (r: ReviewData): 'pending' | 'approved' | 'rejected' | 'unknown' => {
+        const raw = (r.review as any).status || (r.review as any).reviewStatus || (r.review as any).approvalStatus;
+        if (typeof raw === 'string') {
+            const s = raw.toLowerCase();
+            if (s.includes('pending')) return 'pending';
+            if (s.includes('approved') || s.includes('public')) return 'approved';
+            if (s.includes('rejected') || s.includes('hidden')) return 'rejected';
+        }
+        return 'unknown';
+    };
+
+    const filtered = reviews.filter(r => {
+        if (filterStatus === 'all') return true;
+        return getReviewStatus(r) === (filterStatus as any);
+    });
     
     return (
         <ReviewsPageStyle>
@@ -108,7 +130,7 @@ const ReviewsPage: React.FC = () => {
                 </div>
             ) : (
                 <div className="reviews-container">
-                    {reviews.map((reviewData) => (
+                    {filtered.map((reviewData) => (
                         <ReviewCard 
                             key={reviewData.review.id}
                             propertyImage={reviewData.property.images?.[0]}

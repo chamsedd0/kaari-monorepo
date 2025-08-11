@@ -14,7 +14,9 @@ export const SelectHeader1 = styled(SelectHeader)`
 
 `;
 
-export const SelectDropdown1 = styled(SelectDropdown)<{ $isOpen: boolean }>`
+export const SelectDropdown1 = styled(SelectDropdown).attrs<{ $isOpen: boolean }>(props => ({
+  isOpen: props.$isOpen
+}))<{$isOpen: boolean}>`
   display: ${props => props.$isOpen ? 'block' : 'none'};
 `;
 
@@ -26,7 +28,9 @@ export const Label1 = styled(Label)`
   font: ${Theme.typography.fonts.mediumB};
 `;
 
-export const ChevronIcon1 = styled(ChevronIcon)<{ $isOpen: boolean }>`
+export const ChevronIcon1 = styled(ChevronIcon).attrs<{ $isOpen: boolean }>(props => ({
+  isOpen: props.$isOpen
+}))<{$isOpen: boolean}>`
   img {
     width: 10px;
     height: 10px;

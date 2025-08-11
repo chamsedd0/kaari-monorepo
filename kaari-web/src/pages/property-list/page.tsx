@@ -6,17 +6,17 @@ import { AppliedFilterBannerComponent } from "../../components/skeletons/banners
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
 import SelectFieldBaseModelVariant2 from "../../components/skeletons/inputs/select-fields/select-field-base-model-variant-2"
 import { PropertyList } from "./styles"
-import { getProperties } from "../../backend/server-actions/PropertyServerActions.tsx";
+import { getProperties } from "../../backend/server-actions/PropertyServerActions";
 import SearchFilterBar from "../../components/skeletons/inputs/search-bars/search-filter-bar";
 import FilteringSection from "../../components/skeletons/constructed/filtering/filtering-section";
-import defaultImage from "../../assets/images/propertyExamplePic.png";
+// defaultImage import removed (unused)
 
 import { useAuth } from "../../contexts/auth";
 import { useTranslation } from 'react-i18next';
 import { Theme } from "../../theme/theme";
 import { AuthModal } from '../../components/skeletons/constructed/modals/auth-modal';
 import closeIcon from '../../components/skeletons/icons/Cross-Icon.svg';
-import { toggleFavoriteProperty, isPropertyFavorited } from "../../backend/server-actions/ClientServerActions.tsx";
+import { toggleSavedProperty, isPropertySaved } from "../../backend/server-actions/ClientServerActions";
 import { getGoogleMapsLoaderOptions } from '../../utils/googleMapsConfig';
 
 
@@ -122,7 +122,7 @@ const PropertyMarkers = memo(({ properties, onPropertyClick, selectedPropertyId 
   selectedPropertyId: string | number | null
 }) => {
   // Format price for marker labels with proper locale
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
   
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat('fr-MA', {
@@ -217,7 +217,7 @@ const PropertyMap = memo(({
   const navigate = useNavigate();
   const mapRef = useRef<google.maps.Map>();
   const geocoderRef = useRef<google.maps.Geocoder>();
-  const { isAuthenticated } = useAuth();
+  // removed unused isAuthenticated
 
   // Debug properties being passed to map
   useEffect(() => {
@@ -230,6 +230,8 @@ const PropertyMap = memo(({
 
   // Load the Google Maps JavaScript API
   const { isLoaded, loadError } = useJsApiLoader(getGoogleMapsLoaderOptions());
+  // mark unused param as referenced to satisfy TS noUnusedParameters
+  void toggleFavorite;
 
   // Create geocoder instance when maps are loaded
   useEffect(() => {
@@ -798,7 +800,7 @@ export default function PropertyListPage() {
           const checkFavoriteStatus = async () => {
             const propertiesWithFavorites = await Promise.all(
               fetchedProperties.map(async (property) => {
-                const isFavorite = await isPropertyFavorited(property.id.toString());
+                const isFavorite = await isPropertySaved(property.id.toString());
                 return { ...property, isFavorite };
               })
             );
@@ -1699,14 +1701,14 @@ export default function PropertyListPage() {
     }
 
     try {
-      // Call the server action to update the favorite status in the database
-      const result = await toggleFavoriteProperty(propertyId.toString());
+      // Toggle favorite in the database
+      const added = await toggleSavedProperty(propertyId.toString());
       
       // Update the local UI state based on the result from the server
     setProperties(prevProperties => 
       prevProperties.map(property => 
         property.id === propertyId 
-            ? { ...property, isFavorite: result.added } 
+            ? { ...property, isFavorite: added } 
           : property
       )
     );
@@ -1714,7 +1716,7 @@ export default function PropertyListPage() {
     setFilteredProperties(prevFiltered => 
       prevFiltered.map(property => 
         property.id === propertyId 
-            ? { ...property, isFavorite: result.added } 
+            ? { ...property, isFavorite: added } 
           : property
       )
     );

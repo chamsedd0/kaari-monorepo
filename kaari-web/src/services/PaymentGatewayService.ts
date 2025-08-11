@@ -3,10 +3,13 @@
  * This service handles communication with our Express payment gateway server
  */
 
-// Configuration
-const PAYMENT_API_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://kaari-monorepo-1ou9.vercel.app/api/payments'  // Updated Vercel deployment URL
-  : 'http://localhost:3001/api/payments';  // Local development API URL
+// Configuration: prefer Vite env, fallback to sensible defaults
+const BASE_URL = (import.meta as any).env?.VITE_PAYMENT_GATEWAY_BASE_URL as string | undefined;
+const PAYMENT_API_URL = BASE_URL && BASE_URL.trim().length > 0
+  ? BASE_URL.replace(/\/$/, '') // strip trailing slash
+  : (process.env.NODE_ENV === 'production'
+      ? 'https://kaari-monorepo-1ou9.vercel.app/api/payments'
+      : 'http://localhost:3001/api/payments');
 
 /**
  * Initiates a payment and returns an HTML form to redirect to Payzone's payment page
@@ -22,12 +25,18 @@ export async function initiatePayment(paymentData: {
   customData?: Record<string, any>;
 }): Promise<{ success: boolean; htmlForm?: string; error?: string }> {
   try {
+    // Ensure callback URL always points to the gateway's callback endpoint
+    const body = {
+      ...paymentData,
+      callbackURL: `${PAYMENT_API_URL}/callback`,
+    };
+
     const response = await fetch(`${PAYMENT_API_URL}/initiate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(paymentData),
+      body: JSON.stringify(body),
     });
 
     // Check if response is HTML (the form)

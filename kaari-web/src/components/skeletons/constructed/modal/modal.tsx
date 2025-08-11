@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ModalContainer, ModalOverlay, ModalContent, ModalHeader, ModalBody, CloseButton } from '../../../styles/constructed/modal/modal-style';
+import { ModalContainer, ModalOverlay, ModalHeader, ModalBody, CloseButton } from '../../../styles/constructed/modal/modal-style';
 import { FaTimes } from 'react-icons/fa';
 
 interface ModalProps {

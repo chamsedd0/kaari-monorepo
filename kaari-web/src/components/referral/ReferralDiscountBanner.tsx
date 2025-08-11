@@ -66,7 +66,7 @@ const ReferralDiscountBanner: React.FC<ReferralDiscountBannerProps> = ({ classNa
 // Styled components
 const BannerContainer = styled.div`
   background: linear-gradient(90deg, ${Theme.colors.primary} 0%, ${Theme.colors.secondary} 100%);
-  border-radius: ${Theme.borders.radius.large};
+  border-radius: ${Theme.borders.radius.lg};
   padding: 24px;
   color: white;
   display: flex;
@@ -99,13 +99,13 @@ const DiscountText = styled.div`
 `;
 
 const DiscountHeading = styled.h1`
-  font: ${Theme.typography.fonts.boldXL};
+  font: ${Theme.typography.fonts.largeB};
   margin: 0;
   font-size: 32px;
 `;
 
 const DiscountSubheading = styled.h2`
-  font: ${Theme.typography.fonts.regularL};
+  font: ${Theme.typography.fonts.largeM};
   margin: 0;
   font-size: 24px;
 `;
@@ -117,12 +117,12 @@ const ImportantInfo = styled.div`
 `;
 
 const ImportantHeading = styled.h3`
-  font: ${Theme.typography.fonts.boldM};
+  font: ${Theme.typography.fonts.mediumB};
   margin: 0;
 `;
 
 const ImportantText = styled.p`
-  font: ${Theme.typography.fonts.regularM};
+  font: ${Theme.typography.fonts.mediumM};
   margin: 0;
   line-height: 1.5;
 `;
@@ -131,9 +131,9 @@ const ClaimButton = styled.button`
   background-color: white;
   color: ${Theme.colors.secondary};
   border: none;
-  border-radius: ${Theme.borders.radius.medium};
+  border-radius: ${Theme.borders.radius.md};
   padding: 12px 24px;
-  font: ${Theme.typography.fonts.boldM};
+  font: ${Theme.typography.fonts.mediumB};
   cursor: pointer;
   transition: all 0.2s ease;
   align-self: flex-start;

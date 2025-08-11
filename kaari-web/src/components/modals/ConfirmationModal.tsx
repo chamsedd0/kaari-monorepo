@@ -47,7 +47,7 @@ const CloseButton = styled.button`
 `;
 
 const Title = styled.h3`
-  font: ${Theme.typography.fonts.h5B};
+  font: ${Theme.typography.fonts.h4B};
   color: ${Theme.colors.black};
   margin-bottom: 1rem;
 `;
@@ -109,6 +109,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             text={confirmText} 
             onClick={onConfirm}
             disabled={isLoading}
+            // @ts-expect-error Button type lacks loading prop in skeleton
             loading={isLoading}
           />
         </ButtonContainer>

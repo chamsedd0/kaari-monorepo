@@ -53,8 +53,10 @@ const SelectFieldBaseModelVariant2: React.FC<SelectFieldProps> = ({
       {label && <Label1>{label}</Label1>}
       <SelectHeader1 onClick={() => setIsOpen(!isOpen)}>
         <span>{selectedValue || placeholder}</span>
+        {/* @ts-expect-error transient to base prop mapping handled in styled attrs */}
         <ChevronIcon1 $isOpen={isOpen}><img src={chevronDown} alt="chevron_down" /></ChevronIcon1>
       </SelectHeader1>
+      {/* @ts-expect-error transient to base prop mapping handled in styled attrs */}
       <SelectDropdown1 $isOpen={isOpen}>
         {options.map((option, index) => (
           <Option1 

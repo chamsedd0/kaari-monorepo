@@ -11,22 +11,9 @@ import {
   FaMoneyBillWave,
   FaHome
 } from 'react-icons/fa';
-import {
-  DashboardCard,
-  CardTitle,
-  CardContent,
-  StatsGrid,
-  StatCard,
-  StatValue,
-  StatLabel,
-  Table,
-  TableHead,
-  TableRow,
-  TableHeader,
-  TableCell,
-  Button,
-  StatusBadge,
-} from './styles';
+import { Button } from './styles';
+import { PageContainer, PageHeader, GlassCard, StatusBadge as GlassStatusBadge } from '../../../components/admin/AdminUI';
+import { StatsGrid, StatCard, StatValue, StatLabel } from './styles';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -50,7 +37,7 @@ const ActivityGrid = styled.div`
   }
 `;
 
-const ActivityCard = styled(DashboardCard)`
+const ActivityCard = styled(GlassCard)`
   margin-bottom: 0;
 `;
 
@@ -260,7 +247,8 @@ const OverviewPage: React.FC = () => {
   };
   
   return (
-    <div>
+    <PageContainer>
+      <PageHeader title="Overview" subtitle="Quick snapshot of platform activity" />
       <StatsGrid>
         <StatCard>
           <StatValue>{stats.pendingBookings}</StatValue>
@@ -313,8 +301,8 @@ const OverviewPage: React.FC = () => {
       
       <ActivityGrid>
         <ActivityCard>
-          <CardTitle>Recent Bookings</CardTitle>
-          <CardContent>
+          <h3>Recent Bookings</h3>
+          <div>
             {loading ? (
               <p>Loading data...</p>
             ) : recentBookings.length > 0 ? (
@@ -329,7 +317,7 @@ const OverviewPage: React.FC = () => {
                         {booking.property?.title || 'Property Booking'} - {booking.client?.name || 'Unknown Client'}
                       </ActivityTitle>
                       <ActivityMeta>
-                        {formatDate(booking.createdAt)} - Status: <StatusBadge status={booking.status}>{booking.status}</StatusBadge>
+                        {formatDate(booking.createdAt)} - Status: <GlassStatusBadge status={booking.status}>{booking.status}</GlassStatusBadge>
                       </ActivityMeta>
                     </ActivityContent>
                     <ActivityAmount>
@@ -346,12 +334,12 @@ const OverviewPage: React.FC = () => {
             ) : (
               <EmptyState>No recent bookings found.</EmptyState>
             )}
-          </CardContent>
+          </div>
         </ActivityCard>
         
         <ActivityCard>
-          <CardTitle>Pending Payouts</CardTitle>
-          <CardContent>
+          <h3>Pending Payouts</h3>
+          <div>
             {loading ? (
               <p>Loading data...</p>
             ) : recentPayouts.length > 0 ? (
@@ -383,12 +371,12 @@ const OverviewPage: React.FC = () => {
             ) : (
               <EmptyState>No pending payouts found.</EmptyState>
             )}
-          </CardContent>
+          </div>
         </ActivityCard>
         
         <ActivityCard>
-          <CardTitle>Recent Photoshoot Bookings</CardTitle>
-          <CardContent>
+          <h3>Recent Photoshoot Bookings</h3>
+          <div>
             {loading ? (
               <p>Loading data...</p>
             ) : recentPhotoshoots.length > 0 ? (
@@ -403,9 +391,9 @@ const OverviewPage: React.FC = () => {
                         {booking.propertyType || 'Property'} - {booking.name || 'Unknown User'}
                       </ActivityTitle>
                       <ActivityMeta>
-                        {formatDate(booking.date)} - <StatusBadge status={booking.status || 'pending'}>
+                        {formatDate(booking.date)} - <GlassStatusBadge status={booking.status || 'pending'}>
                           {booking.status ? booking.status.charAt(0).toUpperCase() + booking.status.slice(1) : 'Pending'}
-                        </StatusBadge>
+                        </GlassStatusBadge>
                       </ActivityMeta>
                     </ActivityContent>
                     <Button 
@@ -428,12 +416,12 @@ const OverviewPage: React.FC = () => {
             ) : (
               <EmptyState>No recent photoshoot bookings found.</EmptyState>
             )}
-          </CardContent>
+          </div>
         </ActivityCard>
         
         <ActivityCard>
-          <CardTitle>Recent Users</CardTitle>
-          <CardContent>
+          <h3>Recent Users</h3>
+          <div>
             {loading ? (
               <p>Loading data...</p>
             ) : recentUsers.length > 0 ? (
@@ -471,12 +459,12 @@ const OverviewPage: React.FC = () => {
             ) : (
               <EmptyState>No recent users found.</EmptyState>
             )}
-          </CardContent>
+          </div>
         </ActivityCard>
         
         <ActivityCard>
-          <CardTitle>Recent Referrals</CardTitle>
-          <CardContent>
+          <h3>Recent Referrals</h3>
+          <div>
             {loading ? (
               <p>Loading data...</p>
             ) : recentReferrals.length > 0 ? (
@@ -508,10 +496,10 @@ const OverviewPage: React.FC = () => {
             ) : (
               <EmptyState>No recent referrals found.</EmptyState>
             )}
-          </CardContent>
+          </div>
         </ActivityCard>
       </ActivityGrid>
-    </div>
+    </PageContainer>
   );
 };
 

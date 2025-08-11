@@ -18,7 +18,7 @@ import RejectedCard from '../../cards/rejected-card';
 import PaymentFailedCard from '../../cards/payment-failed-card';
 import Mastercard from '../../cards/mastercard';
 import { PurpleButtonLB60 } from '../../buttons/purple_LB60';
-import RefundCard from '../../cards/refund-card';
+import { RefundCard } from '../../cards/refund-card';
 interface SuccessProps {
   onDone: () => void;
   status: 'success' | 'pending' | 'rejected' | 'payment_failed' | 'refund_processing';
@@ -288,7 +288,19 @@ const Success: React.FC<SuccessProps> = ({ onDone, status = 'success' }) => {
       case 'refund_processing':
         return (
           <>
-            <RefundCard />
+            <RefundCard 
+              title="Example Property"
+              image=""
+              moveInDate="2025-01-01"
+              lengthOfStay="12 months"
+              profileImage=""
+              profileName="Advertiser"
+              originalAmount="10000 MAD"
+              serviceFee="500 MAD"
+              cancellationFee="300 MAD"
+              refundTotal="9200 MAD"
+              daysToMoveIn={10}
+            />
             <ExtraLargeText>
            Some other Suggestions for you:  
            </ExtraLargeText>

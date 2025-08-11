@@ -135,10 +135,10 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   const [emailSent, setEmailSent] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { sendPasswordResetEmail, error, loading: authLoading, clearError } = useAuth();
+  const { sendPasswordResetEmail, error, clearError } = useAuth();
 
   // Combined loading state from both sources
-  const isLoading = isSubmitting || authLoading || externalLoading;
+  const isLoading = isSubmitting || externalLoading;
 
   useEffect(() => {
     // Prevent submitting if already loading from external source
@@ -167,7 +167,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
   // Update local error state when auth context error changes
   useEffect(() => {
     if (error) {
-      setErrorMessage(formatErrorMessage(error));
+      setErrorMessage(formatErrorMessage(String(error)));
       setIsSubmitting(false);
     }
   }, [error]);
@@ -308,7 +308,7 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
                       <span>Sending...</span>
                     </div>
                   ) : "Send Reset Link"} 
-                  onClick={handleSubmit}
+                  onClick={(e) => handleSubmit(e as any)}
                   disabled={!email.trim() || isLoading}
                   aria-busy={isLoading ? 'true' : 'false'}
                 />

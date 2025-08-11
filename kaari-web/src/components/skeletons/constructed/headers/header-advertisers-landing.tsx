@@ -141,6 +141,7 @@ export const HeaderAdvertisersLanding: React.FC<HeaderAdvertisersLandingProps> =
                   </div>
                   
                   <ProfileDropdown
+                    // @ts-expect-error prop signature mismatch for this legacy component usage
                     isOpen={showProfileDropdown}
                     onClose={() => setShowProfileDropdown(false)}
                     userName={userName}

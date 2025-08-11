@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
+import { PageContainer, PageHeader as AdminPageHeader, GlassCard, GlassTable, StatusBadge } from '../../../components/admin/AdminUI';
 import { getAdminLogs, getPropertyRefreshLogs } from '../../../backend/server-actions/AdminLogServerActions';
 import { AdminLog } from '../../../backend/entities';
-import { formatTimeAgo } from '../../../utils/property-refresh-utils';
+import { formatDateSafe } from '../../../utils/dates';
+import AdminTableScaffold from '../../../components/admin/AdminTableScaffold';
 import { IoRefreshOutline, IoPersonOutline, IoHomeOutline, IoShieldCheckmarkOutline, IoCloseCircleOutline, IoCheckmarkCircleOutline } from 'react-icons/io5';
 
 const LogsPageContainer = styled.div`
@@ -12,7 +14,7 @@ const LogsPageContainer = styled.div`
   margin: 0 auto;
 `;
 
-const PageHeader = styled.div`
+const PageHeaderLocal = styled.div`
   margin-bottom: 32px;
   
   h1 {
@@ -37,7 +39,7 @@ const FilterSection = styled.div`
     padding: 8px 12px;
     border: 1px solid ${Theme.colors.gray}40;
     border-radius: 8px;
-    font: ${Theme.typography.fonts.mediumS};
+    font: ${Theme.typography.fonts.mediumM};
     background: white;
     min-width: 150px;
     
@@ -126,7 +128,7 @@ const LogContent = styled.div`
   }
   
   .metadata {
-    font: ${Theme.typography.fonts.smallS};
+    font: ${Theme.typography.fonts.smallM};
     color: ${Theme.colors.gray2};
     display: flex;
     gap: 16px;
@@ -135,7 +137,7 @@ const LogContent = styled.div`
 `;
 
 const LogTime = styled.div`
-  font: ${Theme.typography.fonts.smallS};
+  font: ${Theme.typography.fonts.smallM};
   color: ${Theme.colors.gray2};
   text-align: right;
   min-width: 100px;
@@ -156,52 +158,34 @@ const EmptyState = styled.div`
   }
 `;
 
-const LoadingSpinner = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  
-  &:before {
-    content: '';
-    width: 32px;
-    height: 32px;
-    border: 3px solid ${Theme.colors.gray}30;
-    border-top-color: ${Theme.colors.secondary};
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-`;
+// Loading handled by AdminTableScaffold
 
 const AdminLogsPage: React.FC = () => {
   const [logs, setLogs] = useState<AdminLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [limit] = useState<number>(50);
   const [filter, setFilter] = useState<AdminLog['action'] | 'all'>('all');
   const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState<boolean>(false);
 
   useEffect(() => {
-    loadLogs();
+    loadLogs(true);
   }, [filter]);
 
-  const loadLogs = async () => {
+  const loadLogs = async (reset: boolean = false) => {
     try {
       setLoading(true);
       setError(null);
       
       let logsData: AdminLog[];
       if (filter === 'all') {
-        logsData = await getAdminLogs({ limit: 100 });
+        logsData = await getAdminLogs({ limit });
       } else {
-        logsData = await getAdminLogs({ action: filter, limit: 100 });
+        logsData = await getAdminLogs({ action: filter, limit });
       }
       
-      setLogs(logsData);
+      setLogs(reset ? logsData : [...logs, ...logsData]);
+      setHasMore(logsData.length === limit);
     } catch (err) {
       console.error('Error loading admin logs:', err);
       setError('Failed to load admin logs');
@@ -250,61 +234,64 @@ const AdminLogsPage: React.FC = () => {
   };
 
   return (
-    <LogsPageContainer>
-      <PageHeader>
-        <h1>Admin Logs</h1>
-        <p>View all administrator activity and system events</p>
-      </PageHeader>
-      
-      <FilterSection>
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as AdminLog['action'] | 'all')}
-        >
-          <option value="all">All Actions</option>
-          <option value="property_refresh">Property Refresh</option>
-          <option value="user_blocked">User Blocked</option>
-          <option value="user_unblocked">User Unblocked</option>
-          <option value="property_approved">Property Approved</option>
-          <option value="property_rejected">Property Rejected</option>
-          <option value="team_assigned">Team Assigned</option>
-          <option value="photoshoot_completed">Photoshoot Completed</option>
-        </select>
-      </FilterSection>
-      
-      <LogsContainer>
-        {loading ? (
-          <LoadingSpinner />
-        ) : error ? (
-          <EmptyState>
-            <h3>Error Loading Logs</h3>
-            <p>{error}</p>
-          </EmptyState>
-        ) : logs.length === 0 ? (
-          <EmptyState>
-            <h3>No Logs Found</h3>
-            <p>There are no activity logs matching your filter criteria</p>
-          </EmptyState>
-        ) : (
-          logs.map((log) => (
-            <LogItem key={log.id}>
-              <LogIcon action={log.action}>
-                {getActionIcon(log.action)}
-              </LogIcon>
-              <LogContent>
-                <div className="description">{log.description}</div>
-                <div className="metadata">
-                  <span>Action: {getActionLabel(log.action)}</span>
-                  <span>Admin: {log.adminName || 'System'}</span>
-                  {log.targetId && <span>Target ID: {log.targetId}</span>}
-                </div>
-              </LogContent>
-              <LogTime>{formatTimeAgo(log.timestamp)}</LogTime>
-            </LogItem>
-          ))
-        )}
-      </LogsContainer>
-    </LogsPageContainer>
+    <PageContainer>
+      <AdminPageHeader title="Admin Logs" subtitle="View all administrator activity and system events" />
+
+      <AdminTableScaffold
+        loading={loading}
+        error={error}
+        isEmpty={!loading && !error && logs.length === 0}
+        onRetry={() => loadLogs(true)}
+        hasMore={hasMore}
+        onLoadMore={() => loadLogs(false)}
+        header={
+          <FilterSection>
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value as AdminLog['action'] | 'all')}
+            >
+              <option value="all">All Actions</option>
+              <option value="property_refresh">Property Refresh</option>
+              <option value="user_blocked">User Blocked</option>
+              <option value="user_unblocked">User Unblocked</option>
+              <option value="property_approved">Property Approved</option>
+              <option value="property_rejected">Property Rejected</option>
+              <option value="team_assigned">Team Assigned</option>
+              <option value="photoshoot_completed">Photoshoot Completed</option>
+            </select>
+          </FilterSection>
+        }
+      >
+        <GlassCard>
+          <GlassTable>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Description</th>
+                <th>Performed By</th>
+                <th>Target</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log) => (
+                <tr key={log.id}>
+                  <td>
+                    <StatusBadge status={getActionLabel(log.action)}>
+                      {getActionIcon(log.action)} {getActionLabel(log.action)}
+                    </StatusBadge>
+                  </td>
+                  <td>{log.description}</td>
+                  <td>{log.performedBy || 'System'}</td>
+                  <td>{log.targetUserId || log.targetPropertyId || '-'}</td>
+                  <td>{formatDateSafe(log.createdAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </GlassTable>
+        </GlassCard>
+      </AdminTableScaffold>
+    </PageContainer>
   );
 };
 

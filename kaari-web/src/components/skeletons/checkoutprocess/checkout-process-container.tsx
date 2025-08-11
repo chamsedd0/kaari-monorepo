@@ -61,9 +61,9 @@ const CheckoutProcessContainer: React.FC<CheckoutProcessContainerProps> = ({
   const property = propertyData || defaultPropertyData;
   
   // Get the display image from either the first image in the images array, the image property, or the default
-  const displayImage = property.images && property.images.length > 0 
-    ? property.images[0] 
-    : (property.image || PropertyImage);
+  const displayImage = (property as any).images && (property as any).images.length > 0 
+    ? (property as any).images[0] 
+    : ((property as any).image || PropertyImage);
   
   const handleNext = () => {
     setCurrentStep(prev => Math.min(prev + 1, 4));

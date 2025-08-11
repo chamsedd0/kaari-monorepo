@@ -36,7 +36,6 @@ export type PayoutSourceType = 'rent' | 'referral' | 'refund' | 'cancellation';
 export type PayoutReason = 
   'Rent – Move-in' | 
   'Cushion – Pre-move Cancel' | 
-  'Cushion – Haani Max Cancel' | 
   'Referral Commission' | 
   'Tenant Refund';
 
@@ -1053,20 +1052,18 @@ async getAllPayouts(limit2: number = 50, lastDocId?: string): Promise<{
       const advertiserName = advertiserData.displayName || advertiserData.name || 'Unknown Advertiser';
       const advertiserPhone = advertiserData.phoneNumber || 'No phone';
       
-      // Calculate amount (this would be the advertiser's share of the payment)
-      const amount = reservation.totalPrice || 0;
-      const platformFee = amount * 0.05; // 5% platform fee
-      
-      // Note: Haani Max fee does NOT go to the advertiser, it's for Kaari
-      let haaniMaxFee = 0;
-      let payoutAmount = amount - platformFee;
-      let notes = `Platform fee: ${platformFee.toFixed(2)} MAD`;
-      
-      if (reservation.haaniMaxSelected) {
-        haaniMaxFee = reservation.haaniMaxFee || (amount * 0.03); // Default to 3% if not specified
-        notes += `, Haani Max fee: ${haaniMaxFee.toFixed(2)} MAD (retained by Kaari)`;
-        console.log(`Reservation has Haani Max fee of ${haaniMaxFee} MAD (not added to advertiser payout)`);
-      }
+      // Determine advertiser type and compute payout excluding tenant commission
+      const advertiserType: 'broker' | 'landlord' | 'agency' = advertiserData.advertiserType || 'landlord';
+      const rentAmount: number = (typeof reservation.price === 'number' ? reservation.price : 0)
+        || (typeof reservation.totalPrice === 'number' && typeof reservation.serviceFee === 'number'
+              ? Math.max(0, reservation.totalPrice - reservation.serviceFee)
+              : 0);
+      const tenantCommission: number = typeof reservation.serviceFee === 'number' ? reservation.serviceFee : 0;
+      const advertiserKaariFee: number = (advertiserType === 'broker' || advertiserType === 'agency')
+        ? 0
+        : rentAmount * 0.5; // 50% of 1st month for landlords
+      const payoutAmount = Math.max(0, rentAmount - advertiserKaariFee);
+      const notes = `Advertiser type: ${advertiserType}. Advertiser fee: ${advertiserKaariFee.toFixed(2)} MAD. Tenant commission retained: ${tenantCommission.toFixed(2)} MAD. Rent: ${rentAmount.toFixed(2)} MAD.`;
       
       // Check if a payout already exists for this reservation
       const payoutsRef = collection(db, PAYOUTS_COLLECTION);
@@ -1107,8 +1104,7 @@ async getAllPayouts(limit2: number = 50, lastDocId?: string): Promise<{
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         createdBy: 'system',
-        notes: notes,
-        haaniMaxFee: haaniMaxFee > 0 ? haaniMaxFee : undefined
+        notes: notes
       });
       
       console.log(`Created payout ${newPayoutRef.id} for reservation ${reservationId} with amount ${payoutAmount}`);

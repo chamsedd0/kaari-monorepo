@@ -13,7 +13,7 @@ import { useActiveReferralDiscount } from "../../../hooks/useActiveReferralDisco
 import ReferralDiscountBanner from "../banners/status/referral-discount-banner";
 import ReferralDiscountErrorBanner from "../banners/status/referral-discount-error-banner";
 import ReferralDiscountExpiryWarning from "../banners/status/referral-discount-expiry-warning";
-import { useToast } from "../../../contexts/ToastContext";
+import { useToastService } from "../../../services/ToastService";
 
 // Date picker styles (from SearchFilterBar)
 const DatePickerDropdown = styled.div<{ isOpen: boolean }>`
@@ -151,7 +151,7 @@ const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const { activeDiscount, loading, error, refreshDiscount } = useActiveReferralDiscount();
-  const { showToast } = useToast();
+  const toast = useToastService();
 
   // Calculate price with discount applied
   const discountAmount = activeDiscount ? activeDiscount.amount : 0;
@@ -263,14 +263,15 @@ const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({
     if (activeDiscount && 
         activeDiscount.timeLeft.days === 0 && 
         activeDiscount.timeLeft.hours < 24) {
-      showToast({
-        type: 'warning',
-        title: 'Discount Expiring Soon',
-        message: `Your ${activeDiscount.amount} MAD discount will expire in ${activeDiscount.timeLeft.hours}h ${activeDiscount.timeLeft.minutes}m`,
-        duration: 10000
-      });
+      toast.showToast(
+        'warning',
+        'Discount Expiring Soon',
+        `Your ${activeDiscount.amount} MAD discount will expire in ${activeDiscount.timeLeft.hours}h ${activeDiscount.timeLeft.minutes}m`,
+        true,
+        10000
+      );
     }
-  }, [activeDiscount, showToast]);
+  }, [activeDiscount, toast]);
 
   const handleSendRequest = () => {
     if (!date) return;
@@ -280,6 +281,7 @@ const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({
       scheduledDate: date,
       visitDate: '',
       message: '',
+      intendedLengthOfStayMonths: 0,
       // Add discount information if available
       discount: activeDiscount ? {
         amount: activeDiscount.amount,
@@ -344,11 +346,10 @@ const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({
       )}
       
       <div className="advertiser-information">
-        <div className="info-title">The advertiser</div>
+        <div className="info-title">Advertiser</div>
         <div className="profile-info">
           <div className="profile">
-            <img src={advertiserImage} alt="Profile" />
-            <div className="name">{advertiserName}</div>
+            <div className="badge">Landlord / Broker / Agency</div>
           </div>
           <div className="view-profile" onClick={() => navigate(`/advertiser-profile/${ownerId}`)}>View Profile</div>
         </div>
@@ -406,13 +407,13 @@ const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({
       </div>
       
       <div className="price-breakdown">
-        <div className="row first">Price <img src={InfoIcon} alt="info" /></div>
+          <div className="row first">Price breakdown <img src={InfoIcon} alt="info" /></div>
         <div className="row">
           <span>Price for 30 days</span>
           <span>{priceFor30Days} MAD</span>
         </div>
         <div className="row">
-          <span>Service fee</span>
+          <span>Tenant commission</span>
           <span>{serviceFee} MAD</span>
         </div>
         {activeDiscount && (

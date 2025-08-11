@@ -98,7 +98,7 @@ const PaymentsPage: React.FC = () => {
                                         cardNumber={paymentItem.payment.transactionId?.slice(-4) || '****'}
                                         propertyLocation={paymentItem.property?.location?.city || 'Unknown Location'}
                                         moveInDate={paymentItem.payment.createdAt ? formatDate(paymentItem.payment.createdAt) : 'Unknown Date'}
-                                        amount={`${paymentItem.payment.amount} ${paymentItem.payment.currency || 'MAD'}`}
+                                        
                                     />
                                 ))
                             )}

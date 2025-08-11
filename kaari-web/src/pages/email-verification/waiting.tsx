@@ -6,7 +6,7 @@ import { Theme } from '../../theme/theme';
 import Logo from '../../assets/images/purpleLogo.svg';
 import { FaEnvelope, FaSpinner } from 'react-icons/fa';
 import LanguageSwitcher from '../../components/skeletons/language-switcher/language-switcher';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, sendEmailVerification } from 'firebase/auth';
 import { useToastService } from '../../services/ToastService';
 import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../backend/firebase/config';
@@ -133,7 +133,7 @@ const EmailVerificationWaitingPage: React.FC = () => {
     const auth = getAuth();
     if (auth.currentUser) {
       try {
-        await auth.currentUser.sendEmailVerification({
+        await sendEmailVerification(auth.currentUser, {
           url: window.location.origin + '/email-verification/success',
           handleCodeInApp: true
         });

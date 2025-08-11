@@ -1,6 +1,18 @@
 'use server';
 
-import { Listing } from '../entities';
+// Minimal Listing interface to avoid dependency on removed type
+interface Listing {
+  id: string;
+  agentId: string;
+  listingType: 'rent' | 'sale';
+  status: 'draft' | 'published' | 'archived';
+  title: string;
+  price: number;
+  createdAt: Date;
+  updatedAt: Date;
+  viewCount: number;
+  contactCount: number;
+}
 import { 
   getDocumentById, 
   createDocument, 

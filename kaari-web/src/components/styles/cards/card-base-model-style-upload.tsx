@@ -34,7 +34,7 @@ export const UploadCardStyled = styled.div`
             gap: 8px;
             margin-top: 8px;
             padding: 8px 12px;
-            background-color: ${Theme.colors.lightPurple};
+            background-color: ${Theme.colors.quaternary};
             border-radius: ${Theme.borders.radius.sm};
             max-width: fit-content;
 

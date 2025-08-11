@@ -101,7 +101,7 @@ export const MessagingModal: React.FC<MessagingModalProps> = ({
             <div className="button-container">
               <PurpleButtonLB60 
                 text={t('messages.send_message')}
-                onClick={handleSubmit}
+                onClick={(e) => handleSubmit(e as any)}
                 icon={<FaPaperPlane />}
                 disabled={!message.trim()}
               />

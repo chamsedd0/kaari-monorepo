@@ -207,7 +207,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
       
       // Add the cost of any add-ons to the final payment amount
       if (rentalData.addOns && Array.isArray(rentalData.addOns)) {
-        const addOnsTotal = rentalData.addOns.reduce((sum, addon) => {
+        const addOnsTotal = rentalData.addOns.reduce((sum: number, addon: any) => {
           return sum + (addon.price || 0);
         }, 0);
         
@@ -279,7 +279,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
     navigateToPaymentMethod();
     // Emit event for scroll to top component
     import('../../utils/event-bus').then(({ default: eventBus, EventType }) => {
-      eventBus.emit(EventType.CHECKOUT_STEP_CHANGED);
+      eventBus.emit(EventType.CHECKOUT_STEP_CHANGED, {} as any);
     });
   };
   
@@ -289,20 +289,26 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
   
   // Calculate fees
   const pricePerMonth = propertyData.price;
-  const serviceFee = Math.round(pricePerMonth * 0.2);
+  // Kaari tenant commission: 25% of 1st month rent
+  const serviceFee = Math.round(pricePerMonth * 0.25);
+  // Broker/Agency extra fee (0–75%) from advertiser profile if applicable
+  const brokerExtraPercent = (reservation?.advertiser as any)?.brokerExtraFeePercent;
+  const brokerExtraFee = (reservation && (reservation as any).advertiser && typeof brokerExtraPercent === 'number')
+    ? Math.round(Math.max(0, Math.min(75, brokerExtraPercent)) / 100 * pricePerMonth)
+    : 0;
 
   // Apply discount if available
   const discount = rentalData.discount ? {
     amount: rentalData.discount.amount,
     code: rentalData.discount.code
-  } : null;
+  } : undefined;
   const discountAmount = discount ? discount.amount : 0;
 
-  // Add Haani Max fee if selected
-  const haaniMaxFee = selectedPaymentMethod?.protectionOption === 'haaniMax' ? 250 : 0;
+  // HAANI Max retired; single HAANI plan has no extra fee
+  const haaniMaxFee = 0;
 
-  // Calculate total price
-  const totalPrice = pricePerMonth + serviceFee - discountAmount + haaniMaxFee;
+  // Calculate total price including broker/agency extra fee
+  const totalPrice = pricePerMonth + serviceFee + brokerExtraFee - discountAmount + haaniMaxFee;
   
   return (
     <ConfirmationContainer>
@@ -418,6 +424,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
             moveInDate={rentalData.scheduledDate}
             price={pricePerMonth}
             serviceFee={serviceFee}
+            brokerExtraFee={brokerExtraFee}
             total={totalPrice}
             termsAgreed={termsAccepted}
             onTermsChange={handleTermsChange}

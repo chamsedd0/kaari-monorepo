@@ -1,6 +1,7 @@
 'use server';
 
 import { Review, Property, Request } from '../entities';
+import { getDocumentById, updateDocument, getDocuments, createDocument } from '../firebase/firestore';
 import { 
   collection, 
   getDocs, 
@@ -135,7 +136,7 @@ export async function checkUserShouldSeeReviewPrompt(): Promise<{
         { field: 'completed', operator: '==', value: false },
         { field: 'dismissed', operator: '==', value: false }
       ]
-    });
+    }) as ReviewPrompt[];
     
     // If no prompts, return false
     if (prompts.length === 0) {
@@ -160,7 +161,7 @@ export async function checkUserShouldSeeReviewPrompt(): Promise<{
     const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, prompt.propertyId);
     if (!property) {
       // If property doesn't exist anymore, mark the prompt as dismissed
-      await updateDocument(REVIEW_PROMPTS_COLLECTION, prompt.id, {
+      await updateDocument<ReviewPrompt>(REVIEW_PROMPTS_COLLECTION, prompt.id, {
         dismissed: true,
         updatedAt: new Date()
       });
@@ -168,7 +169,7 @@ export async function checkUserShouldSeeReviewPrompt(): Promise<{
     }
     
     // Mark the prompt as having been shown to the user
-    await updateDocument(REVIEW_PROMPTS_COLLECTION, prompt.id, {
+    await updateDocument<ReviewPrompt>(REVIEW_PROMPTS_COLLECTION, prompt.id, {
       promptedAt: new Date(),
       updatedAt: new Date()
     });
@@ -194,7 +195,7 @@ export async function markReviewPromptCompleted(
   reviewId: string
 ): Promise<void> {
   try {
-    await updateDocument(REVIEW_PROMPTS_COLLECTION, promptId, {
+    await updateDocument<ReviewPrompt>(REVIEW_PROMPTS_COLLECTION, promptId, {
       completed: true,
       reviewId,
       updatedAt: new Date()
@@ -217,7 +218,7 @@ export async function dismissReviewPrompt(promptId: string): Promise<void> {
       return;
     }
     
-    await updateDocument(REVIEW_PROMPTS_COLLECTION, promptId, {
+    await updateDocument<ReviewPrompt>(REVIEW_PROMPTS_COLLECTION, promptId, {
       dismissed: true,
       updatedAt: new Date()
     });
@@ -271,10 +272,10 @@ export async function getActiveReviewPrompts(): Promise<{
         { field: 'completed', operator: '==', value: false },
         { field: 'dismissed', operator: '==', value: false }
       ]
-    });
+    }) as ReviewPrompt[];
     
     // Map prompts to the format needed for the UI
-    return prompts.map(prompt => ({
+    return prompts.map((prompt: ReviewPrompt) => ({
       id: prompt.id,
       propertyId: prompt.propertyId
     }));

@@ -217,13 +217,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         {headerConfig.showMinimalHeader ? null : (
           <UnifiedHeader
             variant={headerConfig.variant}
-            userType={headerConfig.userType}
+            userType={(headerConfig.userType as 'user' | 'advertiser' | 'admin' | 'none')}
             isAuthenticated={headerConfig.isAuthenticated}
             showSearchBar={headerConfig.showSearchBar}
           />
         )}
         <MainContent id="main-content" className={contentLoaded ? 'loaded' : ''}>
-          {isPageLoading ? <LoadingScreen /> : children}
+          {isPageLoading ? <LoadingScreen isLoading={true} /> : children}
         </MainContent>
         {shouldShowFooter() && contentLoaded && !isPageLoading && <Footer />}
         

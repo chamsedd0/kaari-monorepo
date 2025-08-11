@@ -180,29 +180,35 @@ export async function markPayoutAsPaid(payoutId: string): Promise<boolean> {
         
         // Send notification to the payee
         try {
-          if (payoutData.reason === 'Tenant Refund') {
-            // For refunds, use the refund notification
-            let propertyName = 'your booking';
-            
-            // Try to get property name if propertyId is available
-            if (payoutData.sourceId) {
-              try {
-                const propertyRef = doc(db, PROPERTIES_COLLECTION, payoutData.sourceId);
+      if (payoutData.reason === 'Tenant Refund') {
+        // For refunds, resolve property via refund request context
+        let propertyName = 'your booking';
+        try {
+          if (payoutData.sourceId) {
+            const refundReqRef = doc(db, REFUND_REQUESTS_COLLECTION, payoutData.sourceId);
+            const refundReqDoc = await getDoc(refundReqRef);
+            if (refundReqDoc.exists()) {
+              const refundReq = refundReqDoc.data();
+              const propId = refundReq.propertyId;
+              if (propId) {
+                const propertyRef = doc(db, PROPERTIES_COLLECTION, propId);
                 const propertyDoc = await getDoc(propertyRef);
                 if (propertyDoc.exists()) {
                   propertyName = propertyDoc.data().title || 'your booking';
                 }
-              } catch (err) {
-                console.error('Error getting property name for refund notification:', err);
               }
             }
-            
-            await payoutNotifications.refundProcessed(
-              payoutData.payeeId,
-              payoutData.amount,
-              payoutData.currency || 'MAD',
-              propertyName
-            );
+          }
+        } catch (err) {
+          console.error('Error resolving refund property name:', err);
+        }
+
+        await payoutNotifications.refundProcessed(
+          payoutData.payeeId,
+          payoutData.amount,
+          payoutData.currency || 'MAD',
+          propertyName
+        );
           } else {
             // For other payouts, use the standard payout notification
             await payoutNotifications.payoutProcessed(
@@ -362,30 +368,48 @@ export async function createCancellationPayout(
   userId: string,
   refundAmount: number,
   cancellationRequestId: string,
-  reason: 'Cushion – Pre-move Cancel' | 'Cushion – Haani Max Cancel'
+  reason: 'Cushion – Pre-move Cancel'
 ): Promise<boolean> {
   try {
-    // Get user details
-    const userRef = doc(db, USERS_COLLECTION, userId);
-    const userDoc = await getDoc(userRef);
+    // Treat userId as advertiserId for cushion payouts
+    const advertiserRef = doc(db, USERS_COLLECTION, userId);
+    const advertiserDoc = await getDoc(advertiserRef);
     
-    if (!userDoc.exists()) {
+    if (!advertiserDoc.exists()) {
       throw new Error('User not found');
     }
     
-    const userData = userDoc.data();
+    const advertiserData = advertiserDoc.data();
     
-    // Check if user has payment method
-    if (!userData.paymentMethod) {
+    // Check if advertiser has payment method
+    if (!advertiserData.paymentMethod) {
       throw new Error('User has no payment method');
     }
     
+    // Try to fetch cancellation request to include property context in notifications
+    let propertyTitle: string | undefined;
+    try {
+      const cancellationRef = doc(db, 'cancellationRequests', cancellationRequestId);
+      const cancellationDoc = await getDoc(cancellationRef);
+      const cancellationData = cancellationDoc.exists() ? cancellationDoc.data() : null;
+      const propertyId = cancellationData?.propertyId;
+      if (propertyId) {
+        const propertyRef = doc(db, PROPERTIES_COLLECTION, propertyId);
+        const propertyDoc = await getDoc(propertyRef);
+        if (propertyDoc.exists()) {
+          propertyTitle = propertyDoc.data().title;
+        }
+      }
+    } catch (ctxErr) {
+      console.warn('createCancellationPayout: unable to enrich with property context', ctxErr);
+    }
+
     // Create a new payout request document
     const payoutRequestsRef = collection(db, PAYOUT_REQUESTS_COLLECTION);
     
     await addDoc(payoutRequestsRef, {
       userId: userId,
-      userType: 'client', // Cancellations are always to clients
+      userType: 'advertiser',
       amount: refundAmount,
       currency: 'MAD',
       sourceType: 'cancellation',
@@ -393,26 +417,28 @@ export async function createCancellationPayout(
       status: 'pending',
       reason,
       paymentMethod: {
-        type: userData.paymentMethod.type || 'IBAN',
-        bankName: userData.paymentMethod.bankName || '',
-        accountNumber: userData.paymentMethod.accountNumber || '',
-        accountLast4: userData.paymentMethod.accountNumber ? 
-          userData.paymentMethod.accountNumber.slice(-4) : '****'
+        type: advertiserData.paymentMethod.type || 'IBAN',
+        bankName: advertiserData.paymentMethod.bankName || '',
+        accountNumber: advertiserData.paymentMethod.accountNumber || '',
+        accountLast4: advertiserData.paymentMethod.accountNumber ? 
+          advertiserData.paymentMethod.accountNumber.slice(-4) : '****'
       },
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       // Add additional info for admin reference
-      clientName: userData.name + (userData.surname ? ` ${userData.surname}` : ''),
+      clientName: undefined,
       adminCreated: true
     });
     
     // Send notification to client
     try {
-      await payoutNotifications.cancellationRequestCreated(
+      await payoutNotifications.payoutRequestCreated(
         userId,
+        'advertiser',
         refundAmount,
         'MAD',
-        reason
+        reason,
+        propertyTitle || 'your property'
       );
     } catch (notifError) {
       console.error('Error sending cancellation request created notification:', notifError);
@@ -525,16 +551,11 @@ export async function getAllPayouts(limit: number = 50, lastDocId?: string): Pro
       throw new Error('Admin not authenticated');
     }
     
-    let startAfterDoc: QueryDocumentSnapshot<DocumentData> | undefined = undefined;
+    let startAfterDoc: string | undefined = undefined;
     
     // If lastDocId is provided, get the document to start after
     if (lastDocId) {
-      const docRef = doc(db, PAYOUTS_COLLECTION, lastDocId);
-      const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-        startAfterDoc = docSnap as QueryDocumentSnapshot<DocumentData>;
-      }
+      startAfterDoc = lastDocId;
     }
     
     const result = await PayoutsService.getAllPayouts(limit, startAfterDoc);

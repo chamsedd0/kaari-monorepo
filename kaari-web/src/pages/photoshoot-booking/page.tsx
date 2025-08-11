@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PhotoshootBookingPageStyle } from './styles';
-import UnifiedHeader from '../../components/skeletons/constructed/headers/unified-header';
 import CalendarComponent from '../../components/skeletons/constructed/calendar/calendar';
 import InputBaseModel from '../../components/skeletons/inputs/input-fields/input-variant';
 import TextAreaBaseModel from '../../components/skeletons/inputs/input-fields/textarea-variant';
@@ -761,7 +760,6 @@ const PhotoshootBookingPage: React.FC = () => {
   
   return (
     <>
-      <UnifiedHeader />
       
       <PhotoshootBookingPageStyle>
         <div className="back-button-container">

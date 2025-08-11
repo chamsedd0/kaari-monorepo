@@ -1,10 +1,8 @@
-import { WhiteHeaderUsers } from "../../components/skeletons/constructed/headers/header-users-white";
 import { ProfileShowcaseStyle } from "./styles";
 import ProfilePic from "../../assets/images/advertiser.png";
 import propertyExamplePic from "../../assets/images/propertyExamplePic.png";
 import { CertificationBanner } from "../../components/skeletons/banners/static/certification-banner";
 import { useState, useEffect } from "react";
-import UnifiedHeader from "../../components/skeletons/constructed/headers/unified-header";
 import { useParams, useNavigate } from "react-router-dom";
 import { getUserById } from "../../backend/server-actions/UserServerActions";
 import { getPropertiesByOwner } from "../../backend/server-actions/PropertyServerActions";
@@ -211,7 +209,7 @@ export default function ProfileShowcasePage() {
 
     return(
         <ProfileShowcaseStyle>
-            <UnifiedHeader variant="white" userType="user" />
+            
             <div className="info-section">
                 <img className="image" src={advertiser.profilePicture || ProfilePic} alt="Profile" />
                 

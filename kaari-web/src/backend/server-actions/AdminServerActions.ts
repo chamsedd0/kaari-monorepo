@@ -724,7 +724,7 @@ export const approveCancellationRequest = async (cancellationRequestId: string):
             
             // Determine the type of cancellation based on days to move-in
             const daysToMoveIn = typeof cancellationData.daysToMoveIn === 'number' ? cancellationData.daysToMoveIn : 0;
-            const payoutReason = daysToMoveIn <= 3 ? 'Cushion – Pre-move Cancel' : 'Cushion – Haani Max Cancel';
+            const payoutReason = 'Cushion – Pre-move Cancel';
             
             // Get property details to find advertiser ID
             const propertyRef = doc(db, 'properties', cancellationData.propertyId);
@@ -733,7 +733,7 @@ export const approveCancellationRequest = async (cancellationRequestId: string):
             
             // Create the payout - need to pass userId and refundAmount
             const advertiserId = propertyData?.ownerId || '';
-            const cushionAmount = daysToMoveIn <= 3 ? 500 : 250; // Example amounts
+            const cushionAmount = 500; // Single plan; keep pre-move cushion only
             
             await createCancellationPayout(
               advertiserId,
@@ -804,7 +804,7 @@ export const approveCancellationRequest = async (cancellationRequestId: string):
           
           // Determine the type of cancellation based on days to move-in
           const daysToMoveIn = typeof cancellationData.daysToMoveIn === 'number' ? cancellationData.daysToMoveIn : 0;
-          const payoutReason = daysToMoveIn <= 3 ? 'Cushion – Pre-move Cancel' : 'Cushion – Haani Max Cancel';
+          const payoutReason = 'Cushion – Pre-move Cancel';
           
           // Get property details to find advertiser ID
           const propertyRef = doc(db, 'properties', cancellationData.propertyId);
@@ -813,7 +813,7 @@ export const approveCancellationRequest = async (cancellationRequestId: string):
           
           // Create the payout - need to pass userId and refundAmount
           const advertiserId = propertyData?.ownerId || '';
-          const cushionAmount = daysToMoveIn <= 3 ? 500 : 250; // Example amounts
+          const cushionAmount = 500; // Single plan; keep pre-move cushion only
           
           await createCancellationPayout(
             advertiserId,

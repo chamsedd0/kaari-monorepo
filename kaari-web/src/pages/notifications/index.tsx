@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import { useNotifications } from '../../contexts/notifications/NotificationContext';
 import NotificationItem from '../../components/skeletons/notifications/NotificationItem';
 import { Theme } from '../../theme/theme';
-import UnifiedHeader from '../../components/skeletons/constructed/headers/unified-header';
 import { useAuth } from '../../contexts/auth/AuthContext';
 
 const PageContainer = styled.div`
@@ -174,11 +173,6 @@ const NotificationsPage: React.FC = () => {
   
   return (
     <PageContainer>
-      <UnifiedHeader 
-        variant="white" 
-        userType={user?.userType || "user"}
-        isAuthenticated={!!user}
-      />
       
       <ContentContainer>
         <HeaderContainer>

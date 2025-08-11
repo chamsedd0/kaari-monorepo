@@ -37,10 +37,10 @@ export interface Conversation {
   id?: string;
   participants: string[];
   lastMessage?: string;
-  lastMessageTime?: Timestamp;
+  lastMessageTimestamp?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
-  unreadCount?: Record<string, number>;
+  unreadCounts?: Record<string, number>;
   metadata?: {
     propertyId?: string;
     reservationId?: string;
@@ -84,7 +84,7 @@ class MessageService {
         participants: participantIds,
         createdAt: now,
         updatedAt: now,
-        unreadCount: participantIds.reduce((acc, id) => ({ ...acc, [id]: 0 }), {}),
+        unreadCounts: participantIds.reduce((acc, id) => ({ ...acc, [id]: 0 }), {}),
         metadata
       };
 
@@ -171,14 +171,14 @@ class MessageService {
       const batch = writeBatch(db);
       
       // Increment unread count for recipient
-      const unreadCount = conversation.unreadCount || {};
-      unreadCount[recipientId] = (unreadCount[recipientId] || 0) + 1;
+      const unreadCounts = conversation.unreadCounts || {};
+      unreadCounts[recipientId] = (unreadCounts[recipientId] || 0) + 1;
       
       batch.update(conversationRef, {
         lastMessage: text,
-        lastMessageTime: newMessage.timestamp,
+        lastMessageTimestamp: newMessage.timestamp,
         updatedAt: newMessage.timestamp,
-        unreadCount
+        unreadCounts
       });
       
       await batch.commit();
@@ -205,12 +205,12 @@ class MessageService {
       }
       
       const conversation = conversationDoc.data() as Conversation;
-      const unreadCount = conversation.unreadCount || {};
+      const unreadCounts = conversation.unreadCounts || {};
       
       // Reset unread count for this user
-      unreadCount[userId] = 0;
+      unreadCounts[userId] = 0;
       
-      await updateDoc(conversationRef, { unreadCount });
+      await updateDoc(conversationRef, { unreadCounts });
       
       // Get unread messages for this user
       const q = query(
@@ -264,7 +264,7 @@ class MessageService {
       const q = query(
         collection(db, this.conversationsCollection),
         where('participants', 'array-contains', userId),
-        orderBy('updatedAt', 'desc')
+         orderBy('lastMessageTimestamp', 'desc')
       );
       
       const querySnapshot = await getDocs(q);
@@ -283,8 +283,8 @@ class MessageService {
     try {
       const conversations = await this.getUserConversations(userId);
       return conversations.reduce((total, conversation) => {
-        const unreadCount = conversation.unreadCount || {};
-        return total + (unreadCount[userId] || 0);
+        const unreadCounts = conversation.unreadCounts || {};
+        return total + (unreadCounts[userId] || 0);
       }, 0);
     } catch (error) {
       console.error('Error getting total unread count:', error);
@@ -323,7 +323,7 @@ class MessageService {
     const q = query(
       collection(db, this.conversationsCollection),
       where('participants', 'array-contains', userId),
-      orderBy('updatedAt', 'desc')
+       orderBy('lastMessageTimestamp', 'desc')
     );
     
     return onSnapshot(q, (querySnapshot) => {

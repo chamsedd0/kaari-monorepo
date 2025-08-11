@@ -33,6 +33,7 @@ export interface RentalApplicationFormData {
   studyField: string;
   funding: string;
   aboutMe: string;
+  languages?: string[];
   receivePromotions: boolean;
 }
 
@@ -99,6 +100,16 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ onContinue }) => 
       return;
     }
     
+    try {
+      // Heads-up: If other pending/accepted requests exist for this property, inform the tenant.
+      const pendingKey = 'kaari_checkout_heads_up_shown';
+      if (!localStorage.getItem(pendingKey)) {
+        // Non-blocking notice; we allow concurrency
+        alert('Heads-up: another booking request may already be in progress for this property. Your request will still be sent.');
+        localStorage.setItem(pendingKey, 'true');
+      }
+    } catch {}
+
     // Call parent component's onContinue with the complete form data
     onContinue(formData);
     scrollToTop();
@@ -112,36 +123,36 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ onContinue }) => 
     handleInputChange('idDocument', { files, type });
   };
 
-  const handleDateChange = (date: Date | null) => {
-    handleInputChange('dateOfBirth', date);
+  const handleDateChange = (date: { day: string; month: string; year: string }) => {
+    const parsed = date && date.year && date.month && date.day 
+      ? new Date(parseInt(date.year, 10), parseInt(date.month, 10) - 1, parseInt(date.day, 10))
+      : null;
+    handleInputChange('dateOfBirth', parsed);
   };
 
   const renderFirstStep = () => (
     <FormContainer className="form-container">
       <div className="form-group">
-        <InputBaseModel    
+         <InputBaseModel    
           title="First Name" 
           placeholder="Enter your first name"
           value={formData.firstName}
           onChange={(e) => handleInputChange('firstName', e.target.value)}
-          required
         />
-        <InputBaseModel 
+         <InputBaseModel 
           title="Email" 
           placeholder="Enter your email"
           value={formData.email}
           onChange={(e) => handleInputChange('email', e.target.value)}
-          required
         />
       </div>
       
       <div className="form-group">
-        <InputBaseModel 
+         <InputBaseModel 
           title="Last Name" 
           placeholder="Enter your last name"
           value={formData.lastName}
           onChange={(e) => handleInputChange('lastName', e.target.value)}
-          required
         />
         <InputBaseModel 
           title="Phone Number" 
@@ -161,7 +172,6 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ onContinue }) => 
       <div className="date-of-birth-container">
         <SelectFieldDatePicker 
           label="Date of Birth"
-          value={formData.dateOfBirth}
           onChange={handleDateChange}
         />
       </div>
@@ -262,6 +272,12 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ onContinue }) => 
           placeholder="Tell us more about yourself"
           value={formData.aboutMe}
           onChange={(e) => handleInputChange('aboutMe', e.target.value)}
+        />
+        <SelectFieldBaseModelVariant1
+          label="What languages do you speak?"
+          options={["Arabic", "French", "English", "Spanish", "Other"]}
+          value={(formData.languages && formData.languages[0]) || ''}
+          onChange={(value) => handleInputChange('languages', [value])}
         />
         <div className="checkbox-container">
           <input 

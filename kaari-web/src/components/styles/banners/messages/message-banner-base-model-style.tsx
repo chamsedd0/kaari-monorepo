@@ -1,7 +1,7 @@
 import { Theme } from "../../../../theme/theme";    
 import styled from "styled-components";
 
-export const MessageBannerBaseModelStyle = styled.div`
+export const MessageBannerBaseModelStyle = styled.div<{ unread?: number }>`
     width: 100%;
     background-color: transparent;
     padding: 10px 12px;
@@ -92,7 +92,7 @@ export const MessageBannerBaseModelStyle = styled.div`
                 }
                 
                 .unread-indicator {
-                    display: ${props => props.unread > 0 ? 'flex' : 'none'};
+                    display: ${props => (props.unread && props.unread > 0) ? 'flex' : 'none'};
                     align-items: center;
                     justify-content: center;
                     min-width: 20px;

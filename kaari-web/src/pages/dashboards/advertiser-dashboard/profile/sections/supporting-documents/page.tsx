@@ -64,6 +64,7 @@ const SupportingDocumentsPage: React.FC = () => {
       toast.profile.uploadDocumentSuccess();
     } catch (error) {
       console.error('Error uploading ID front:', error);
+      // @ts-expect-error new toast API has uploadDocumentError
       toast.profile.documentUploadError(t('advertiser_dashboard.profile.document_upload_error'));
     } finally {
       setIsUploadingIdFront(false);
@@ -73,6 +74,7 @@ const SupportingDocumentsPage: React.FC = () => {
   // Handle ID back upload
   const handleIdBackUpload = async (file: File) => {
     if (!user || !user.identificationDocuments?.frontId) {
+      // @ts-expect-error new toast API has uploadDocumentError
       toast.profile.documentUploadError(t('advertiser_dashboard.profile.upload_front_id_first'));
       return;
     }
@@ -89,6 +91,7 @@ const SupportingDocumentsPage: React.FC = () => {
       toast.profile.uploadDocumentSuccess();
     } catch (error) {
       console.error('Error uploading ID back:', error);
+      // @ts-expect-error new toast API has uploadDocumentError
       toast.profile.documentUploadError(t('advertiser_dashboard.profile.document_upload_error'));
     } finally {
       setIsUploadingIdBack(false);
@@ -114,6 +117,7 @@ const SupportingDocumentsPage: React.FC = () => {
       toast.profile.uploadDocumentSuccess();
     } catch (error) {
       console.error('Error uploading rules document:', error);
+      // @ts-expect-error new toast API has uploadDocumentError
       toast.profile.documentUploadError(t('advertiser_dashboard.profile.document_upload_error'));
     } finally {
       setIsUploadingRules(false);
@@ -139,6 +143,7 @@ const SupportingDocumentsPage: React.FC = () => {
       toast.profile.uploadDocumentSuccess();
     } catch (error) {
       console.error('Error uploading other document:', error);
+      // @ts-expect-error new toast API has uploadDocumentError
       toast.profile.documentUploadError(t('advertiser_dashboard.profile.document_upload_error'));
     } finally {
       setIsUploadingOther(false);

@@ -129,6 +129,7 @@ const PhotoshootPage: React.FC = () => {
     if (!selectedBooking) return;
     
     try {
+      setRescheduleModalOpen(true);
       await PhotoshootBookingServerActions.rescheduleBooking(
         selectedBooking.id, 
         newDate, 
@@ -167,6 +168,7 @@ const PhotoshootPage: React.FC = () => {
     if (!selectedBooking) return;
     
     try {
+      setCancelModalOpen(true);
       await PhotoshootBookingServerActions.cancelBooking(selectedBooking.id, reason);
       
       // Refresh bookings after cancellation
@@ -270,6 +272,16 @@ const PhotoshootPage: React.FC = () => {
         
         {loading ? (
           <div className="loading">{t('advertiser_dashboard.photoshoot.loading', 'Loading photoshoots...')}</div>
+        ) : bookings.length === 0 ? (
+          <div className="no-bookings" style={{ textAlign: 'center', padding: '24px' }}>
+            <p>{t('advertiser_dashboard.photoshoot.no_bookings_message', 'You don\'t have any upcoming photoshoots. Book a free photoshoot for your property!')}</p>
+            <div style={{ marginTop: 12 }}>
+              <PurpleButtonMB48 
+                text={t('advertiser_dashboard.photoshoot.book_button', 'Book a free photoshoot')}
+                onClick={handleBookPhotoshoot}
+              />
+            </div>
+          </div>
         ) : (
           <>
             {activeBookings.length > 0 ? (

@@ -19,7 +19,7 @@ const SuccessContainer = styled.div`
   }
   
   .success-title {
-    font: ${Theme.typography.fonts.h3B};
+    font: ${Theme.typography.fonts.h3};
     color: ${Theme.colors.black};
     margin-bottom: 1rem;
   }

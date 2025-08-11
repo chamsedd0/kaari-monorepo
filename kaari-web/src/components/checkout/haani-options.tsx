@@ -4,8 +4,8 @@ import { Theme } from '../../theme/theme';
 import { FaStar, FaCheck } from 'react-icons/fa';
 
 interface HaaniOptionsProps {
-  selectedOption: 'haani' | 'haaniMax';
-  onSelectOption: (option: 'haani' | 'haaniMax') => void;
+  selectedOption: 'haani';
+  onSelectOption: (option: 'haani') => void;
 }
 
 const HaaniOptionsContainer = styled.div`
@@ -141,16 +141,11 @@ const OptionCard = styled.div<{ selected: boolean; isPremium?: boolean }>`
 const HaaniOptions: React.FC<HaaniOptionsProps> = ({ selectedOption, onSelectOption }) => {
   return (
     <HaaniOptionsContainer>
-      <h2 className="options-title">Protection Options</h2>
-      <p className="options-description">
-        Choose a protection plan for your booking. Haani Max offers enhanced protection with a full refund option.
-      </p>
+      <h2 className="options-title">Protection Plan</h2>
+      <p className="options-description">HAANI protection (48-hour mismatch guarantee) is included.</p>
       
       <div className="options-container">
-        <OptionCard 
-          selected={selectedOption === 'haani'} 
-          onClick={() => onSelectOption('haani')}
-        >
+        <OptionCard selected={true}>
           <div className="option-header">
             <div className="option-title">
               <h3>Haani</h3>
@@ -163,45 +158,9 @@ const HaaniOptions: React.FC<HaaniOptionsProps> = ({ selectedOption, onSelectOpt
             <li>Cancel within 24h if listing doesn't match</li>
           </ul>
           
-          <button className="select-button">
-            {selectedOption === 'haani' && (
-              <>
-                <FaCheck className="check-icon" /> Selected
-              </>
-            )}
-            {selectedOption !== 'haani' && 'Select'}
-          </button>
+          <button className="select-button"><FaCheck className="check-icon" /> Selected</button>
         </OptionCard>
         
-        <OptionCard 
-          selected={selectedOption === 'haaniMax'} 
-          isPremium
-          onClick={() => onSelectOption('haaniMax')}
-        >
-          <div className="option-header">
-            <div className="option-title">
-              <h3>Haani <span className="max-label">Max</span></h3>
-              <FaStar className="star-icon" />
-            </div>
-            <span className="price-tag">250 MAD</span>
-          </div>
-          
-          <ul className="option-features">
-            <li>Included with every booking</li>
-            <li>Cancel within 24h if listing doesn't match</li>
-            <li>Full refund if requested (no questions asked)</li>
-            <li>Priority customer support</li>
-          </ul>
-          
-          <button className="select-button">
-            {selectedOption === 'haaniMax' && (
-              <>
-                <FaCheck className="check-icon" /> Selected
-              </>
-            )}
-            {selectedOption !== 'haaniMax' && 'Select'}
-          </button>
-        </OptionCard>
       </div>
     </HaaniOptionsContainer>
   );

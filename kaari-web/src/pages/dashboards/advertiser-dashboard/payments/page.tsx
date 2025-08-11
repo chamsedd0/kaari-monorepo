@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { PaymentsPageStyle } from "./styles";
-import SelectFieldBaseModelVariant1 from '../../../../components/skeletons/inputs/select-fields/select-field-base-model-variant-2';
+import SelectFieldBaseModelVariant2 from '../../../../components/skeletons/inputs/select-fields/select-field-base-model-variant-2';
 import { useTranslation } from 'react-i18next';
-import { getAdvertiserPayments, getAdvertiserPaymentStats } from '../../../../backend/server-actions/PaymentServerActions';
+import { getAdvertiserPayments, getAdvertiserPaymentStats, getAdvertiserPendingPayouts } from '../../../../backend/server-actions/PaymentServerActions';
 import { getCurrentUserPayoutRequests, requestRentPayout, getCurrentUserPayoutHistory, requestReferralPayout } from '../../../../backend/server-actions/PayoutsServerActions';
-import { formatDate } from '../../../../utils/date-utils';
+import { formatDateSafe } from '../../../../utils/dates';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import { BorderPurpleLB40 } from '../../../../components/skeletons/buttons/border_purple_LB40';
 import { PayoutRequest, Payout } from '../../../../services/PayoutsService';
@@ -31,10 +31,38 @@ const PaymentsPage = () => {
   const [sortBy, setSortBy] = useState<string>('date');
   const [activeTab, setActiveTab] = useState<'payments' | 'payouts' | 'history'>('payments');
   const { isModalOpen, openModal, closeModal, hasPaymentMethod, checkPaymentMethod, ensurePaymentMethod } = usePaymentMethod();
+  const [pendingPayoutSchedule, setPendingPayoutSchedule] = useState<Record<string, Date>>({});
+  const [nowTick, setNowTick] = useState<number>(Date.now());
+
+  // Helper to fetch pending schedules with a simple retry
+  const fetchPendingSchedules = async () => {
+    try {
+      const pending = await getAdvertiserPendingPayouts();
+      const map: Record<string, Date> = {};
+      pending.forEach(p => { map[p.reservationId] = p.scheduledReleaseDate; });
+      setPendingPayoutSchedule(map);
+    } catch (e1) {
+      // Retry once
+      try {
+        const pending2 = await getAdvertiserPendingPayouts();
+        const map2: Record<string, Date> = {};
+        pending2.forEach(p => { map2[p.reservationId] = p.scheduledReleaseDate; });
+        setPendingPayoutSchedule(map2);
+      } catch {
+        // Graceful fallback: keep existing map; UI already falls back to generic label
+      }
+    }
+  };
 
   // Load advertiser payments and stats
   useEffect(() => {
     loadPayments();
+  }, []);
+
+  // Refresh countdowns every minute
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 60000);
+    return () => clearInterval(id);
   }, []);
   
   // Function to load payments data
@@ -52,6 +80,8 @@ const PaymentsPage = () => {
       // Fetch payout requests
       const requests = await getCurrentUserPayoutRequests();
       setPayoutRequests(requests);
+      // Fetch pending payout schedules with retry
+      await fetchPendingSchedules();
       
       setError(null);
     } catch (err: any) {
@@ -100,10 +130,14 @@ const PaymentsPage = () => {
 
   // Handle sort change
   const handleSortChange = (value: string) => {
-    setSortBy(value.toLowerCase().split(' ')[1]);
+    if (!value) return;
+    const lc = value.toLowerCase();
+    if (lc.includes('tenant')) setSortBy('tenant');
+    else if (lc.includes('property')) setSortBy('property');
+    else setSortBy('date');
   };
   
-  // Handle request payout
+  // Handle request payout (kept for referrals; rent is auto-scheduled by system)
   const handleRequestPayout = async (type: string, id: string) => {
     // First check if the user has a payment method
     ensurePaymentMethod(async () => {
@@ -113,15 +147,7 @@ const PaymentsPage = () => {
         setPayoutError(null);
         setPayoutSuccess(null);
         
-        if (type === 'rent') {
-          const success = await requestRentPayout(id);
-          if (success) {
-            setPayoutSuccess('Rent payout requested successfully');
-            toast.success('Rent payout requested successfully');
-          } else {
-            throw new Error('Failed to request rent payout');
-          }
-        } else if (type === 'referral') {
+        if (type === 'referral') {
           const success = await requestReferralPayout(id);
           if (success) {
             setPayoutSuccess('Referral payout requested successfully');
@@ -143,25 +169,7 @@ const PaymentsPage = () => {
     });
   };
   
-  // Check if a payout request exists for a reservation
-  const hasPayoutRequest = (reservationId: string): boolean => {
-    return payoutRequests.some(request => 
-      request.sourceType === 'rent' && 
-      request.sourceId === reservationId
-    );
-  };
-  
-  // Get payout request status for a reservation
-  const getPayoutRequestStatus = (reservationId: string): string => {
-    const request = payoutRequests.find(req => 
-      req.sourceType === 'rent' && 
-      req.sourceId === reservationId
-    );
-    
-    if (!request) return 'none';
-    
-    return request.status;
-  };
+  // Payout requests are not used for rent (auto-scheduled). Still used for referrals in the Payouts tab.
   
   // Format payout status for display
   const formatPayoutStatus = (status: string): string => {
@@ -249,16 +257,26 @@ const PaymentsPage = () => {
         {activeTab === 'payments' && (
           <>
             <div className="slider-container">
-              <SelectFieldBaseModelVariant1
+              <SelectFieldBaseModelVariant2
                 options={[
-                  t('advertiser_dashboard.payments.sort_by_date', 'By date'), 
-                  t('advertiser_dashboard.payments.sort_by_tenant', 'By tenant'), 
+                  t('advertiser_dashboard.payments.sort_by_date', 'By date'),
+                  t('advertiser_dashboard.payments.sort_by_tenant', 'By tenant'),
                   t('advertiser_dashboard.payments.sort_by_property', 'By property')
                 ]}
-                placeholder={t('advertiser_dashboard.payments.select_status', 'Select Status')}
-                value={t('advertiser_dashboard.payments.all', 'All')}
+                placeholder={t('advertiser_dashboard.payments.sort_placeholder', 'Sort by...')}
+                value={t(
+                  sortBy === 'tenant' ? 'advertiser_dashboard.payments.sort_by_tenant' :
+                  sortBy === 'property' ? 'advertiser_dashboard.payments.sort_by_property' :
+                  'advertiser_dashboard.payments.sort_by_date',
+                  sortBy === 'tenant' ? 'By tenant' : sortBy === 'property' ? 'By property' : 'By date'
+                )}
                 onChange={handleSortChange}
               />
+            </div>
+            <div className="border-container" style={{ marginTop: 12, padding: '10px 12px', background: '#F9FAFB', borderRadius: 8 }}>
+              <div style={{ fontSize: 13, color: '#6B7280' }}>
+                {t('advertiser_dashboard.payments.info_auto_payouts', 'Note: Rent payouts are created automatically 24h after tenant move-in (safety window). Referral payouts can be requested below.')}
+              </div>
             </div>
             <div className="border-container">
               {loading ? (
@@ -292,12 +310,24 @@ const PaymentsPage = () => {
                             </span>
                           </div>
                         </td>
-                        <td>
-                          {paymentItem.payment.status === 'completed' 
-                            ? t('advertiser_dashboard.payments.status_completed', 'Completed')
-                            : paymentItem.payment.status === 'pending'
-                              ? t('advertiser_dashboard.payments.status_pending', 'Pending (24h after move-in)')
-                              : paymentItem.payment.status}
+                        <td title={(() => {
+                              if (paymentItem.payment.status !== 'pending') return undefined as unknown as string;
+                              const releaseAt = pendingPayoutSchedule[paymentItem.payment.reservationId];
+                              return releaseAt ? `Releases at ${releaseAt.toLocaleString()}` : undefined as unknown as string;
+                            })()}>
+                          {paymentItem.payment.status === 'completed' ? (
+                            t('advertiser_dashboard.payments.status_completed', 'Completed')
+                          ) : paymentItem.payment.status === 'pending' ? (
+                            (() => {
+                              const releaseAt = pendingPayoutSchedule[paymentItem.payment.reservationId];
+                              if (!releaseAt) return t('advertiser_dashboard.payments.status_pending', 'Pending (24h after move-in)');
+                              const ms = Math.max(0, releaseAt.getTime() - nowTick);
+                              const hours = Math.ceil(ms / (60*60*1000));
+                              return `${t('advertiser_dashboard.payments.status_pending', 'Pending')} · ${hours}h`;
+                            })()
+                          ) : (
+                            paymentItem.payment.status
+                          )}
                         </td>
                         <td>
                           <div className="property-info">
@@ -311,27 +341,19 @@ const PaymentsPage = () => {
                           {`${paymentItem.payment.amount} ${paymentItem.payment.currency || 'MAD'}`}
                         </td>
                         <td className="move-in-date">
-                          {formatDate(paymentItem.payment.paymentDate)}
+                          {formatDateSafe(paymentItem.payment.paymentDate)}
                         </td>
                         <td>
                           {paymentItem.payment.transactionId || paymentItem.payment.id.substring(0, 7)}
                         </td>
                         <td>
-                          {paymentItem.payment.status === 'completed' && paymentItem.reservation?.status === 'movedIn' && !hasPayoutRequest(paymentItem.reservation.id) ? (
-                            <button 
-                              className="request-payout-button"
-                              onClick={() => handleRequestPayout('rent', paymentItem.reservation.id)}
-                              disabled={payoutLoading}
-                            >
-                              {payoutLoading ? 'Processing...' : 'Request Payout'}
-                            </button>
-                          ) : paymentItem.payment.status === 'pending' ? (
+                          {paymentItem.payment.status === 'pending' ? (
                             <span className="payout-status pending">
                               {t('advertiser_dashboard.payments.not_available_yet', 'Not available yet')}
                             </span>
                           ) : (
-                            <span className={`payout-status ${getPayoutRequestStatus(paymentItem.reservation?.id || '')}`}>
-                              {formatPayoutStatus(getPayoutRequestStatus(paymentItem.reservation?.id || ''))}
+                            <span className="payout-status approved">
+                              {t('advertiser_dashboard.payments.status_completed', 'Completed')}
                             </span>
                           )}
                         </td>
@@ -386,7 +408,7 @@ const PaymentsPage = () => {
                           {formatPayoutStatus(request.status)}
                         </td>
                         <td>
-                          {formatDate(request.createdAt)}
+                          {formatDateSafe(request.createdAt)}
                         </td>
                         <td>
                           {request.paymentMethod ? 
@@ -446,7 +468,7 @@ const PaymentsPage = () => {
                           {formatDate(payout.createdAt)}
                         </td>
                         <td>
-                          {payout.paidAt ? formatDate(payout.paidAt) : '-'}
+                          {payout.paidAt ? formatDateSafe(payout.paidAt) : '-'}
                         </td>
                         <td>
                           {payout.paymentMethod ? 

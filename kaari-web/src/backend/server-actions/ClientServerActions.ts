@@ -128,8 +128,7 @@ export async function cancelReservation(reservationId: string): Promise<void> {
         await createRefundPayout(
           currentUser.id,
           refundAmount,
-          refundRequestRef.id,
-          reservation.propertyId
+          refundRequestRef.id
         );
         
         console.log(`Automatic refund payout created for reservation ${reservationId} with amount ${refundAmount}`);
@@ -595,6 +594,53 @@ export async function processStandardCancellation(data: {
     return;
   } catch (error) {
     console.error('Error processing standard cancellation:', error);
+    throw error;
+  }
+}
+// Tenant responds to advertiser counter-offer
+export async function respondToCounterOffer(
+  reservationId: string,
+  accept: boolean
+): Promise<void> {
+  try {
+    const reservation = await getDocumentById<Request>(REQUESTS_COLLECTION, reservationId);
+    if (!reservation) throw new Error('Reservation not found');
+    const newStatus = accept ? 'accepted_counter_offer' : 'rejected_counter_offer';
+    await updateDocument<Request>(REQUESTS_COLLECTION, reservationId, {
+      status: newStatus,
+      updatedAt: new Date()
+    });
+
+    // Notify advertiser about tenant decision
+    try {
+      if (reservation.propertyId) {
+        const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
+        if (property) {
+          const currentUser = await getCurrentUserProfile();
+          const clientName = currentUser?.name && currentUser?.surname
+            ? `${currentUser.name} ${currentUser.surname}`
+            : currentUser?.email || 'Client';
+          const notifReservation = {
+            id: reservationId,
+            propertyId: reservation.propertyId,
+            propertyTitle: property.title || 'Property',
+            clientId: reservation.userId,
+            clientName,
+            advertiserId: property.ownerId,
+            status: newStatus
+          } as any;
+          if (accept) {
+            await advertiserNotifications.counterOfferAccepted(property.ownerId, notifReservation);
+          } else {
+            await advertiserNotifications.counterOfferRejected(property.ownerId, notifReservation);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Counter-offer notify error:', e);
+    }
+  } catch (error) {
+    console.error('Error responding to counter offer:', error);
     throw error;
   }
 }

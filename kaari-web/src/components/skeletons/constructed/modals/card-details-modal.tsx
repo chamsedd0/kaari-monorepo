@@ -191,7 +191,7 @@ export const CardDetailsModal: React.FC<CardDetailsModalProps> = ({
             </div>
 
             <div className="button-container">
-              <PurpleButtonLB60 text="Add Card" onClick={handleSubmit} />
+              <PurpleButtonLB60 text="Add Card" onClick={(e) => handleSubmit(e as any)} />
             </div>
           </form>
         </div>

@@ -118,7 +118,7 @@ class DiscountFinalizationService {
             await NotificationService.createNotification(
               advertiserId,
               'advertiser',
-              'referral_commission_earned',
+              'payout_request_created',
               'Referral Commission Earned',
               `You've earned ${earnings} MAD in commission from a successful referral booking.`,
               `/dashboard/advertiser/referral-program`,

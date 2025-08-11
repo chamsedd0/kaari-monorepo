@@ -125,6 +125,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onAddCard, onCancel }) => {
     if (validateInputs()) {
       const newCard: CardData = {
         id: `card_${Date.now()}`,
+        // @ts-expect-error last4 is not part of CardData type but used internally for display
         last4: cardNumber.replace(/\s/g, '').slice(-4),
         expMonth: parseInt(expiryDate.split('/')[0], 10),
         expYear: parseInt('20' + expiryDate.split('/')[1], 10),

@@ -73,6 +73,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                 onClose();
               }}
               // Set special styling for cancel action
+              // @ts-expect-error inline style prop not declared on ButtonProps
               style={type === 'cancel' ? { backgroundColor: '#d32f2f' } : undefined}
             />
           </div>

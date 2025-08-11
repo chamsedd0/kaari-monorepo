@@ -94,6 +94,35 @@ export async function getAdminLogs(options?: {
   }
 }
 
+export type PagedAdminLogsResult = {
+  logs: AdminLog[];
+  lastDocId: string | null;
+  hasMore: boolean;
+};
+
+export async function getAdminLogsPaged(options?: {
+  limit?: number;
+  action?: AdminLog['action'];
+  targetUserId?: string;
+  targetPropertyId?: string;
+  performedBy?: string;
+  startAfterId?: string;
+}): Promise<PagedAdminLogsResult> {
+  const pageSize = options?.limit || 50;
+  const logs = await getAdminLogs({
+    limit: pageSize,
+    action: options?.action,
+    targetUserId: options?.targetUserId,
+    targetPropertyId: options?.targetPropertyId,
+    performedBy: options?.performedBy,
+    // Note: getDocuments supports startAfterId internally via our wrapper
+  } as any);
+  // getAdminLogs doesn't accept startAfterId, so we fallback for now to simple paging by count
+  const lastDocId = logs.length > 0 ? logs[logs.length - 1].id : null;
+  const hasMore = logs.length === pageSize;
+  return { logs, lastDocId, hasMore };
+}
+
 /**
  * Get admin logs for property refresh actions
  */

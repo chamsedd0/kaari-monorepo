@@ -88,10 +88,7 @@ function App() {
   const user = useStore(state => state.user);
   const initAuth = useStore(state => state.initAuth);
   
-  // Initialize auth on mount
-  useEffect(() => {
-    initAuth();
-  }, [initAuth]);
+  // Auth is initialized once in main.tsx via AppWithAuth
   
   // Register signup listener
   useEffect(() => {

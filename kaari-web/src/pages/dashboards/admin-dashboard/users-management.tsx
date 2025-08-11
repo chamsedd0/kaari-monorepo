@@ -20,6 +20,9 @@ import {
 } from './styles';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
+import AdminTableScaffold from '../../../components/admin/AdminTableScaffold';
+import { formatDateSafe } from '../../../utils/dates';
+import { PageContainer, PageHeader, FilterBar, SearchBox, GlassCard, GlassTable, Pill, IconButton } from '../../../components/admin/AdminUI';
 
 // Mock data for testing
 const mockUsers = [
@@ -171,25 +174,6 @@ const Table = styled.table`
 const ActionsContainer = styled.div`
   display: flex;
   gap: 0.5rem;
-  
-  button {
-    padding: 0.35rem;
-    border: none;
-    border-radius: 4px;
-    background: transparent;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    
-    &.view {
-      color: ${Theme.colors.primary};
-    }
-    
-    &:hover {
-      background-color: ${Theme.colors.gray}20;
-    }
-  }
 `;
 
 const FilterContainer = styled.div`
@@ -198,31 +182,6 @@ const FilterContainer = styled.div`
   gap: 1rem;
   margin-bottom: 1.5rem;
   align-items: center;
-  
-  button {
-    padding: 0.5rem 1rem;
-    border: 1px solid ${Theme.colors.gray}30;
-    border-radius: 4px;
-    background-color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    
-    &.active {
-      background-color: ${Theme.colors.primary};
-      color: white;
-      border-color: ${Theme.colors.primary};
-    }
-    
-    &:hover {
-      background-color: ${Theme.colors.gray}10;
-      
-      &.active {
-        background-color: ${Theme.colors.primary}dd;
-      }
-    }
-  }
 `;
 
 const SearchContainer = styled.div`
@@ -417,6 +376,9 @@ const FilterDropdown = styled.select`
 const UsersManagementPage: React.FC = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState<boolean>(false);
+  const [limit, setLimit] = useState<number>(50);
+  const [error, setError] = useState<string | null>(null);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [userTypeFilter, setUserTypeFilter] = useState<'all' | 'client' | 'advertiser'>('all');
@@ -429,13 +391,22 @@ const UsersManagementPage: React.FC = () => {
 
   // Load users on component mount
   useEffect(() => {
-    // Simulate loading delay
+    // Simulated initial load; replace with server-action when available
+    setLoading(true);
+    setError(null);
     setTimeout(() => {
-      setUsers(mockUsers);
-      setFilteredUsers(mockUsers);
-      setLoading(false);
-    }, 500);
-  }, []);
+      try {
+        const initial = mockUsers.slice(0, limit);
+        setUsers(initial);
+        setFilteredUsers(initial);
+        setHasMore(mockUsers.length > initial.length);
+      } catch (e: any) {
+        setError('Failed to load users');
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+  }, [limit]);
 
   // Apply filters whenever filter state changes
   useEffect(() => {
@@ -522,9 +493,12 @@ const UsersManagementPage: React.FC = () => {
   // Handle refresh button click
   const handleRefresh = () => {
     setLoading(true);
+    setError(null);
     setTimeout(() => {
-      setUsers(mockUsers);
-      setFilteredUsers(mockUsers);
+      const initial = mockUsers.slice(0, limit);
+      setUsers(initial);
+      setFilteredUsers(initial);
+      setHasMore(mockUsers.length > initial.length);
       setUserTypeFilter('all');
       setAdvertiserTypeFilter('all');
       setSearchTerm('');
@@ -537,28 +511,11 @@ const UsersManagementPage: React.FC = () => {
 
   // Handle view user details
   const handleViewUser = (userId: string) => {
-    navigate(`/dashboard/admin/user-management-detail/${userId}`);
+    navigate(`/dashboard/admin/user-management/${userId}`);
   };
 
   // Format date for display
-  const formatDate = (dateString: string | Date): string => {
-    if (!dateString) return 'N/A';
-    
-    try {
-      const date = new Date(dateString);
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        return 'N/A';
-      }
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short', 
-        day: 'numeric'
-      });
-    } catch (error) {
-      return 'N/A';
-    }
-  };
+  const formatDate = (dateLike: any): string => formatDateSafe(dateLike);
 
   // Get user icon based on role
   const getUserIcon = (user: any) => {
@@ -613,218 +570,176 @@ const UsersManagementPage: React.FC = () => {
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
-    <DashboardCard>
-      <CardTitle>
-        <div className="title-text">
-          <h2>Users Management</h2>
-          <p>View and manage all users in the system</p>
-        </div>
-        <Button onClick={handleRefresh}>
-          <FaRedo />
-          Refresh
-        </Button>
-      </CardTitle>
-      
-      <CardContent>
-        {/* Filters */}
-        <FilterContainer>
-          {/* User Type Filter */}
-          <button 
-            className={userTypeFilter === 'all' ? 'active' : ''}
-            onClick={() => handleUserTypeFilter('all')}
-          >
-            <FaUser /> All Users
-          </button>
-          <button 
-            className={userTypeFilter === 'client' ? 'active' : ''}
-            onClick={() => handleUserTypeFilter('client')}
-          >
-            <FaUser /> Clients
-          </button>
-          <button 
-            className={userTypeFilter === 'advertiser' ? 'active' : ''}
-            onClick={() => handleUserTypeFilter('advertiser')}
-          >
-            <FaUserTie /> Advertisers
-          </button>
-          
-          {/* Advertiser Type Filter (only visible when advertiser filter is active) */}
-          {userTypeFilter === 'advertiser' && (
-            <FilterDropdown value={advertiserTypeFilter} onChange={handleAdvertiserTypeFilter}>
-              <option value="all">All Types</option>
-              <option value="broker">Broker</option>
-              <option value="landlord">Landlord</option>
-              <option value="agency">Agency</option>
-            </FilterDropdown>
-          )}
-          
-          {/* Search */}
-          <SearchContainer>
-            <FaSearch />
-            <input 
-              type="text" 
-              placeholder="Search by name or email..." 
-              value={searchTerm}
-              onChange={handleSearchChange}
-            />
-          </SearchContainer>
-          
-          {/* Date Range Filter */}
-          <DateRangeFilter>
-            <label>From:</label>
-            <input 
-              type="date" 
-              value={startDate}
-              onChange={handleStartDateChange}
-            />
-            <label>To:</label>
-            <input 
-              type="date" 
-              value={endDate}
-              onChange={handleEndDateChange}
-            />
-          </DateRangeFilter>
-        </FilterContainer>
-        
-        {/* Users Table */}
-        {loading ? (
-          <LoadingState>Loading users...</LoadingState>
-        ) : filteredUsers.length === 0 ? (
-          <EmptyState>
-            <FaUser />
-            <p>No users found matching your filters</p>
-            <Button onClick={() => {
-              setUserTypeFilter('all');
-              setAdvertiserTypeFilter('all');
-              setSearchTerm('');
-              setStartDate('');
-              setEndDate('');
+    <PageContainer>
+      <PageHeader title="Users Management" subtitle="View and manage all users in the system" right={<Button onClick={handleRefresh}><FaRedo /> Refresh</Button>} />
+      <FilterBar>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {([
+            { key: 'all', label: 'All Users', icon: <FaUser /> },
+            { key: 'client', label: 'Clients', icon: <FaUser /> },
+            { key: 'advertiser', label: 'Advertisers', icon: <FaUserTie /> },
+          ] as const).map(item => (
+            <Pill key={item.key as string} onClick={() => handleUserTypeFilter(item.key as any)} style={{
+              cursor: 'pointer',
+              background: userTypeFilter === (item.key as any) ? `${Theme.colors.tertiary}30` : '#fff',
+              borderColor: userTypeFilter === (item.key as any) ? Theme.colors.tertiary : `${Theme.colors.tertiary}80`
             }}>
-              Clear Filters
-            </Button>
-          </EmptyState>
-        ) : (
-          <>
-            <TableContainer>
-              <Table>
-                <thead>
-                  <tr>
-                    <th>User</th>
-                    <th>Type</th>
-                    <th>Advertiser Type</th>
-                    <th>Date Joined</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentUsers.map((user) => (
-                    <tr key={user.id} onClick={() => handleViewUser(user.id)}>
-                      <td>
-                        <UserProfile>
-                          <div className="avatar">
-                            {user.profilePicture ? (
-                              <img src={user.profilePicture} alt={user.name} />
-                            ) : (
-                              user.name?.charAt(0) || user.email.charAt(0).toUpperCase()
-                            )}
-                          </div>
-                          <div className="user-info">
-                            <div className="name">{user.name} {user.surname}</div>
-                            <div className="email">{user.email}</div>
-                          </div>
-                        </UserProfile>
-                      </td>
-                      <td>
-                        <UserType role={user.role}>
-                          {getUserIcon(user)}
-                          {user.role === 'admin' ? 'Admin' : user.role === 'advertiser' ? 'Advertiser' : 'Client'}
-                        </UserType>
-                      </td>
-                      <td>
-                        {user.role === 'advertiser' ? (
-                          <AdvertiserType>
-                            {getAdvertiserTypeIcon(user)}
-                            {getAdvertiserTypeText(user)}
-                          </AdvertiserType>
-                        ) : (
-                          'N/A'
-                        )}
-                      </td>
-                      <td>{formatDate(user.createdAt)}</td>
-                      <td>
-                        <ActionsContainer>
-                          <button className="view" onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewUser(user.id);
-                          }}>
-                            <FaEye />
-                          </button>
-                        </ActionsContainer>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </TableContainer>
-            
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <Pagination>
-                <button 
-                  onClick={() => paginate(1)} 
-                  disabled={currentPage === 1}
-                >
-                  First
-                </button>
-                <button 
-                  onClick={() => paginate(currentPage - 1)} 
-                  disabled={currentPage === 1}
-                >
-                  Prev
-                </button>
-                
-                {/* Page numbers */}
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => paginate(pageNum)}
-                      className={currentPage === pageNum ? 'active' : ''}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-                
-                <button 
-                  onClick={() => paginate(currentPage + 1)} 
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </button>
-                <button 
-                  onClick={() => paginate(totalPages)} 
-                  disabled={currentPage === totalPages}
-                >
-                  Last
-                </button>
-              </Pagination>
-            )}
-          </>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                {item.icon} {item.label}
+              </span>
+            </Pill>
+          ))}
+        </div>
+        {userTypeFilter === 'advertiser' && (
+          <FilterDropdown value={advertiserTypeFilter} onChange={handleAdvertiserTypeFilter}>
+            <option value="all">All Types</option>
+            <option value="broker">Broker</option>
+            <option value="landlord">Landlord</option>
+            <option value="agency">Agency</option>
+          </FilterDropdown>
         )}
-      </CardContent>
-    </DashboardCard>
+        <SearchBox>
+          <FaSearch />
+          <input type="text" placeholder="Search by name or email..." value={searchTerm} onChange={handleSearchChange} />
+        </SearchBox>
+        <DateRangeFilter>
+          <label>From:</label>
+          <input type="date" value={startDate} onChange={handleStartDateChange} />
+          <label>To:</label>
+          <input type="date" value={endDate} onChange={handleEndDateChange} />
+        </DateRangeFilter>
+      </FilterBar>
+        
+        <AdminTableScaffold
+          loading={loading}
+          error={error}
+          isEmpty={!loading && !error && filteredUsers.length === 0}
+          onRetry={handleRefresh}
+          hasMore={hasMore}
+          onLoadMore={() => {
+            const next = mockUsers.slice(users.length, users.length + limit);
+            const updated = [...users, ...next];
+            setUsers(updated);
+            setHasMore(updated.length < mockUsers.length);
+          }}
+        >
+          {filteredUsers.length > 0 && (
+            <>
+              <GlassCard>
+                <GlassTable>
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Type</th>
+                      <th>Advertiser Type</th>
+                      <th>Date Joined</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentUsers.map((user) => (
+                      <tr key={user.id} onClick={() => handleViewUser(user.id)}>
+                        <td>
+                          <UserProfile>
+                            <div className="avatar">
+                              {user.profilePicture ? (
+                                <img src={user.profilePicture} alt={user.name} />
+                              ) : (
+                                user.name?.charAt(0) || user.email.charAt(0).toUpperCase()
+                              )}
+                            </div>
+                            <div className="user-info">
+                              <div className="name">{user.name} {user.surname}</div>
+                              <div className="email">{user.email}</div>
+                            </div>
+                          </UserProfile>
+                        </td>
+                        <td>
+                          <UserType role={user.role}>
+                            {getUserIcon(user)}
+                            {user.role === 'admin' ? 'Admin' : user.role === 'advertiser' ? 'Advertiser' : 'Client'}
+                          </UserType>
+                        </td>
+                        <td>
+                          {user.role === 'advertiser' ? (
+                            <AdvertiserType>
+                              {getAdvertiserTypeIcon(user)}
+                              {getAdvertiserTypeText(user)}
+                            </AdvertiserType>
+                          ) : (
+                            'N/A'
+                          )}
+                        </td>
+                        <td>{formatDate(user.createdAt)}</td>
+                        <td>
+                          <ActionsContainer>
+                            <IconButton title="View" onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewUser(user.id);
+                            }}>
+                              <FaEye style={{ color: Theme.colors.primary }} />
+                            </IconButton>
+                          </ActionsContainer>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </GlassTable>
+              </GlassCard>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <Pagination>
+                  <button 
+                    onClick={() => paginate(1)} 
+                    disabled={currentPage === 1}
+                  >
+                    First
+                  </button>
+                  <button 
+                    onClick={() => paginate(currentPage - 1)} 
+                    disabled={currentPage === 1}
+                  >
+                    Prev
+                  </button>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => paginate(pageNum)}
+                        className={currentPage === pageNum ? 'active' : ''}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  <button 
+                    onClick={() => paginate(currentPage + 1)} 
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                  <button 
+                    onClick={() => paginate(totalPages)} 
+                    disabled={currentPage === totalPages}
+                  >
+                    Last
+                  </button>
+                </Pagination>
+              )}
+            </>
+          )}
+        </AdminTableScaffold>
+    </PageContainer>
   );
 };
 

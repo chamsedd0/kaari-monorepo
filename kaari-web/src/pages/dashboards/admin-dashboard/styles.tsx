@@ -1,5 +1,15 @@
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
+import {
+  Button as AdminUIButton,
+  PrimaryButton,
+  SecondaryButton,
+  DangerButton,
+  GlassInput,
+  GlassSelect,
+  GlassTextArea,
+  StatusBadge as GlassStatusBadge,
+} from '../../../components/admin/AdminUI';
 
 export const AdminDashboardContainer = styled.div`
   display: flex;
@@ -207,69 +217,11 @@ export const TableCell = styled.td`
   padding: 12px 15px;
 `;
 
-export const Button = styled.button`
-  background-color: ${Theme.colors.secondary};
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-weight: 500;
-  
-  &:hover {
-    background-color: ${Theme.colors.secondary};
-  }
-`;
+// Unify buttons with AdminUI shadcn-like system
+export const Button = AdminUIButton;
+export { PrimaryButton, DangerButton };
 
-export const StatusBadge = styled.span<{ status: string }>`
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  
-  background-color: ${props => {
-    switch (props.status.toLowerCase()) {
-      case 'pending':
-        return '#ffeeba';
-      case 'assigned':
-        return '#d1ecf1';
-      case 'completed':
-        return '#d4edda';
-      case 'cancelled':
-        return '#f8d7da';
-      case 'active':
-        return '#d4edda';
-      case 'blocked':
-        return '#f8d7da';
-      case 'admin':
-        return '#cce5ff';
-      default:
-        return '#e2e3e5';
-    }
-  }};
-  
-  color: ${props => {
-    switch (props.status.toLowerCase()) {
-      case 'pending':
-        return '#856404';
-      case 'assigned':
-        return '#0c5460';
-      case 'completed':
-        return '#155724';
-      case 'cancelled':
-        return '#721c24';
-      case 'active':
-        return '#155724';
-      case 'blocked':
-        return '#721c24';
-      case 'admin':
-        return '#004085';
-      default:
-        return '#383d41';
-    }
-  }};
-`;
+export const StatusBadge = GlassStatusBadge as unknown as typeof GlassStatusBadge;
 
 export const FormGroup = styled.div`
   margin-bottom: 20px;
@@ -281,28 +233,11 @@ export const Label = styled.label`
   font-weight: 500;
 `;
 
-export const Input = styled.input`
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-`;
+export const Input = GlassInput;
 
-export const Select = styled.select`
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-`;
+export const Select = GlassSelect;
 
-export const TextArea = styled.textarea`
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  min-height: 100px;
-  resize: vertical;
-`;
+export const TextArea = GlassTextArea;
 
 export const Modal = styled.div`
   position: fixed;
@@ -342,10 +277,12 @@ export const ModalTitle = styled.h2`
 `;
 
 export const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid ${Theme.colors.tertiary}60;
+  border-radius: 12px;
+  font-size: 1rem;
   cursor: pointer;
+  padding: 6px 10px;
 `;
 
 export const ModalFooter = styled.div`
@@ -357,31 +294,9 @@ export const ModalFooter = styled.div`
   border-top: 1px solid #eee;
 `;
 
-export const CancelButton = styled.button`
-  background-color: #f1f1f1;
-  color: #333;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  
-  &:hover {
-    background-color: #e1e1e1;
-  }
-`;
+export const CancelButton = SecondaryButton;
 
-export const ActionButton = styled.button`
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  
-  &:hover {
-    background-color: #3a80d2;
-  }
-`;
+export const ActionButton = PrimaryButton;
 
 export const TabsContainer = styled.div`
   margin-bottom: 20px;

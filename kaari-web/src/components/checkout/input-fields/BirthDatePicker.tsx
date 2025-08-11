@@ -606,13 +606,13 @@ const BirthDatePicker: React.FC<BirthDatePickerProps> = ({
         <CalendarHeader>
           <div className="mode-selector">
             <button 
-              className={viewMode === 'years' ? 'active' : ''}
+              className={viewMode === ('years' as any) ? 'active' : ''}
               onClick={() => setViewMode('years')}
             >
               Year
             </button>
             <button 
-              className={viewMode === 'months' ? 'active' : ''}
+              className={viewMode === ('months' as any) ? 'active' : ''}
               onClick={() => setViewMode('months')}
             >
               Month

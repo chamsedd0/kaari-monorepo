@@ -5,7 +5,7 @@ import LoadingScreen from '../../../components/loading/LoadingScreen';
 import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import DashboardFooter from '../../../components/skeletons/constructed/footer/dashboard-footer';
-import PhotoshootBanner from '../../../components/skeletons/banners/photoshoot-banner';
+// import PhotoshootBanner from '../../../components/skeletons/banners/photoshoot-banner';
 
 // Import all section pages
 import DashboardPage from './dashboard/page';

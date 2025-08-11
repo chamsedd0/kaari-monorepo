@@ -78,9 +78,7 @@ export const generateTestNotifications = async (
 
       await advertiserNotifications.paymentConfirmed(
         userId,
-        data.payment,
-        data.property,
-        data.user
+        data.reservation as any
       );
 
       await advertiserNotifications.clientMovedIn(
@@ -171,9 +169,7 @@ export const generateSingleNotification = async (
         case 'payment':
           await advertiserNotifications.paymentConfirmed(
             userId,
-            data.payment,
-            data.property,
-            data.user
+            data.reservation as any
           );
           break;
         case 'move_in':

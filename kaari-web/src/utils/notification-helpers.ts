@@ -4,7 +4,7 @@ import {
   NotificationType
 } from '../types/Notification';
 import NotificationService from '../services/NotificationService';
-import { User } from 'firebase/auth';
+// removed unused Firebase Auth User to avoid name conflict
 import { Timestamp } from 'firebase/firestore';
 
 /**
@@ -379,6 +379,8 @@ interface Reservation {
   clientName: string;
   advertiserId: string;
   status: string;
+  totalPrice?: number;
+  currency?: string;
 }
 
 interface Payment {
@@ -412,6 +414,43 @@ const ensureTimestamp = (date: Date | any): Timestamp => {
  * Notification helpers for advertisers
  */
 export const advertiserNotifications = {
+  // Notify advertiser that tenant accepted counter-offer
+  counterOfferAccepted: async (
+    advertiserId: string,
+    reservation: Reservation
+  ): Promise<string> => {
+    const title = 'Counter-Offer Accepted';
+    const message = `${reservation.clientName} accepted your proposed move-in date for ${reservation.propertyTitle}.`;
+    const link = `/dashboard/advertiser/reservations`;
+    return NotificationService.createNotification(
+      advertiserId,
+      'advertiser',
+      'counter_offer_accepted',
+      title,
+      message,
+      link,
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
+    );
+  },
+
+  // Notify advertiser that tenant rejected counter-offer
+  counterOfferRejected: async (
+    advertiserId: string,
+    reservation: Reservation
+  ): Promise<string> => {
+    const title = 'Counter-Offer Declined';
+    const message = `${reservation.clientName} declined your proposed move-in date for ${reservation.propertyTitle}.`;
+    const link = `/dashboard/advertiser/reservations`;
+    return NotificationService.createNotification(
+      advertiserId,
+      'advertiser',
+      'counter_offer_rejected',
+      title,
+      message,
+      link,
+      { reservationId: reservation.id, propertyId: reservation.propertyId }
+    );
+  },
   // Notify advertiser about new photoshoot booking
   photoshootBooked: async (
     advertiserId: string, 

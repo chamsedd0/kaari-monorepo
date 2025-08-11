@@ -1,17 +1,16 @@
 import { FavouritesStyle } from "./styles";
 import React, { useEffect, useState, useRef } from "react";
-import UnifiedHeader from "../../components/skeletons/constructed/headers/unified-header";
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
 import PropertyPic from "../../assets/images/propertyExamplePic.png";
 import LeftArrow from "../../components/skeletons/icons/Icon_Arrow_Left.svg";
 import RightArrow from "../../components/skeletons/icons/Icon_Arrow_Right.svg";
 import emptyBoxSvg from "../../assets/images/emptybox.svg";
-import { getFavoriteProperties, toggleFavoriteProperty } from "../../backend/server-actions/ClientServerActions.tsx";
-import { getProperties } from "../../backend/server-actions/PropertyServerActions.tsx";
+import { getSavedProperties as getFavoriteProperties, toggleSavedProperty as toggleFavoriteProperty } from "../../backend/server-actions/ClientServerActions";
+import { getProperties } from "../../backend/server-actions/PropertyServerActions";
 import { useAuth } from "../../contexts/auth";
 import { AuthModal } from "../../components/skeletons/constructed/modals/auth-modal";
 import { useNavigate } from "react-router-dom";
-import { IoBagOutline } from "react-icons/io5";
+// Removed unused IoBagOutline import
 import { Property } from "../../backend/entities";
 // Import default property images
 import livingRoomImage from "../../assets/images/livingRoomExample.png";
@@ -103,33 +102,37 @@ export const FavouritesPage = () => {
                 
                 setLoading(true);
                 
-                // Fetch favorite properties
-                const favorites = await getFavoriteProperties() as Property[];
-                
-                // Map to PropertyType format
+                // Fetch saved property IDs
+                const saved = await getFavoriteProperties(); // returns { propertyId: string }[]
+                const favIds = Array.isArray(saved) ? saved.map(s => s.propertyId) : [];
+
+                // Fetch property docs and map
+                const allProps = await getProperties({ limit: 50 }) as Property[];
+                const favorites = allProps.filter(p => favIds.includes(p.id));
+
                 const formattedFavorites = favorites.map(property => ({
-                    id: property.id,
-                    title: property.title,
-                    description: property.description,
-                    subtitle: property.address.city,
-                    propertyType: property.propertyType,
-                    price: property.price,
-                    priceType: '/month',
-                    minstay: property.minstay ? `${property.minstay}` : undefined,
-                    image: getDefaultPropertyImage(property.id),
-                    images: property.images,
-                    isFavorite: true
+                  id: property.id,
+                  title: property.title,
+                  description: property.description,
+                  subtitle: property.address.city,
+                  propertyType: property.propertyType,
+                  price: property.price,
+                  priceType: '/month',
+                  minstay: property.minstay ? `${property.minstay}` : undefined,
+                  image: getDefaultPropertyImage(property.id),
+                  images: property.images,
+                  isFavorite: true
                 }));
-                
+
                 setFavoriteProperties(formattedFavorites);
                 
                 // Fetch some suggested properties (not in favorites)
                 const allProperties = await getProperties({ limit: 10 }) as Property[];
                 
                 // Filter out properties that are already in favorites
-                const favoriteIds = favorites.map(p => p.id);
+                const favoriteIdsSet = new Set(favIds);
                 const suggested = allProperties
-                    .filter(p => !favoriteIds.includes(p.id))
+                    .filter(p => !favoriteIdsSet.has(p.id))
                     .slice(0, 7)
                     .map(property => ({
                         id: property.id,
@@ -168,9 +171,9 @@ export const FavouritesPage = () => {
             const id = propertyId.toString();
             
             // Toggle in the database
-            const result = await toggleFavoriteProperty(id);
+            const added = await toggleFavoriteProperty(id);
             
-            if (result.added) {
+            if (added) {
                 // If added to favorites, find the property in suggested and move to favorites
                 const property = suggestedProperties.find(p => p.id === propertyId);
                 if (property) {
@@ -202,7 +205,6 @@ export const FavouritesPage = () => {
 
     return (
         <FavouritesStyle>
-            <UnifiedHeader variant="white" userType="user" />
 
             <div className="favourites-container">
                 <div className="section-header">

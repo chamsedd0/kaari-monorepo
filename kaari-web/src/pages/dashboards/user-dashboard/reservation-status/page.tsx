@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { ReservationStatusContainer } from './styles';
 import { Theme } from '../../../../theme/theme';
-import { FaArrowLeft, FaInfoCircle, FaComments, FaClock, FaReceipt } from 'react-icons/fa';
+import { FaArrowLeft, FaInfoCircle, FaClock, FaReceipt } from 'react-icons/fa';
 import { MdBed, MdKitchen, MdChair, MdBathtub } from 'react-icons/md';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import { BpurpleButtonMB48 } from '../../../../components/skeletons/buttons/border_purple_MB48';
 import { CheckoutCard } from '../../../../components/skeletons/cards/checkout-card';
-import { getClientReservations, cancelReservation } from '../../../../backend/server-actions/ClientServerActions';
-import { processPayment, handleMoveIn } from '../../../../backend/server-actions/PaymentServerActions';
+import { getClientReservations, cancelReservation, respondToCounterOffer } from '../../../../backend/server-actions/ClientServerActions';
+import { handleMoveIn } from '../../../../backend/server-actions/PaymentServerActions';
+import { processPayment as initiateCheckoutPayment } from '../../../../backend/server-actions/CheckoutServerActions';
 import { useToastService } from '../../../../services/ToastService';
 import BookingDetailsComponent from '../../../../components/reservations/BookingDetails';
 import TimerComponent from '../../../../components/skeletons/constructed/status-cards/TimerComponent';
@@ -231,12 +232,9 @@ const ReservationStatusPage: React.FC = () => {
     try {
       setProcessing(true);
       setModalOpen(false);
-      const result = await processPayment(reservation.reservation.id);
-      
-      if (result.success) {
-        toast.showToast('success', 'Payment Processed', 'Your payment has been successfully processed');
-      } else {
-        toast.showToast('error', 'Payment Failed', result.error || 'Failed to process payment');
+      const ok = await initiateCheckoutPayment(reservation.reservation.id);
+      if (!ok) {
+        toast.showToast('error', 'Payment Failed', 'Failed to initiate payment');
       }
       
       // Reload data
@@ -500,6 +498,55 @@ const ReservationStatusPage: React.FC = () => {
           
           {status === 'rejected' && (
             <ConfirmationRequestRejected />
+          )}
+
+          {/* Counter-offer pending: offer Accept / Decline */}
+          {status === 'counter_offer_pending_tenant' && (
+            <div style={{ marginTop: '1rem' }}>
+              <div className="section">
+                <div className="info-card">
+                  <div className="card-header">
+                    <FaInfoCircle />
+                    <h3>Advertiser proposed a new move-in date</h3>
+                  </div>
+                  <p>Please review the suggested date and choose to accept or decline.</p>
+                  <div className="card-actions" style={{ display: 'flex', gap: '12px' }}>
+                    <PurpleButtonMB48 
+                      text="Accept Counter-Offer"
+                      onClick={async () => {
+                        if (!reservation) return;
+                        try {
+                          setProcessing(true);
+                          await respondToCounterOffer(reservation.reservation.id, true);
+                          toast.showToast('success', 'Counter-Offer Accepted', 'The advertiser will be notified.');
+                          await loadReservationDetails();
+                        } catch (e: any) {
+                          toast.showToast('error', 'Failed', e.message || 'Could not accept counter-offer');
+                        } finally {
+                          setProcessing(false);
+                        }
+                      }}
+                    />
+                    <BpurpleButtonMB48 
+                      text="Decline"
+                      onClick={async () => {
+                        if (!reservation) return;
+                        try {
+                          setProcessing(true);
+                          await respondToCounterOffer(reservation.reservation.id, false);
+                          toast.showToast('info', 'Counter-Offer Declined', 'We informed the advertiser.');
+                          await loadReservationDetails();
+                        } catch (e: any) {
+                          toast.showToast('error', 'Failed', e.message || 'Could not decline counter-offer');
+                        } finally {
+                          setProcessing(false);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
           
           {status === 'paid' && (

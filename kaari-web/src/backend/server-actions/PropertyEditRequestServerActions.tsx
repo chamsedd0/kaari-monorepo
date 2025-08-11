@@ -15,7 +15,8 @@ import { db } from '../firebase/config';
 import { getCurrentUserProfile } from '../firebase/auth';
 import { User } from '../entities';
 import { EditRequestFormData } from '../../components/skeletons/constructed/modals/property-edit-request-modal';
-import { updateProperty } from './PropertyServerActions'; // Import the updateProperty function
+import { updateProperty } from './PropertyServerActions';
+import { createDocument, getDocumentsByField, getDocumentById, updateDocument } from '../firebase/firestore';
 
 // Define edit request interface
 export interface PropertyEditRequest {

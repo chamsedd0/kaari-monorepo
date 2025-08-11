@@ -11,7 +11,7 @@ import {
   secureUploadFile, 
   getUserProfileImagePath
 } from '../firebase/storage';
-import { User as FirebaseUser, updateProfile } from 'firebase/auth';
+import { User as FirebaseUser, updateProfile, reauthenticateWithCredential, EmailAuthProvider, updatePassword as fbUpdatePassword } from 'firebase/auth';
 import { auth, db } from '../firebase/config';
 import { 
   doc, 
@@ -96,11 +96,14 @@ export async function updateUserProfile(
     name?: string;
     surname?: string;
     phoneNumber?: string;
+    email?: string;
     dateOfBirth?: string;
     gender?: string;
     nationality?: string;
     languages?: string[];
     aboutMe?: string;
+    brokerExtraFeePercent?: number;
+    contactAdditionalInfo?: string;
     profilePicture?: File | null;
   }
 ): Promise<User> {
@@ -130,15 +133,23 @@ export async function updateUserProfile(
     }
 
     // Create updated user data
-    const updatedUserData: Partial<User> = {
+    // Clamp broker fee if provided
+    const safeBrokerFee = typeof profileData.brokerExtraFeePercent === 'number'
+      ? Math.max(0, Math.min(75, profileData.brokerExtraFeePercent))
+      : undefined;
+
+    const updatedUserData: Partial<User> & { contactAdditionalInfo?: string; brokerExtraFeePercent?: number } = {
       ...(profileData.name && { name: profileData.name }),
       ...(profileData.surname && { surname: profileData.surname }),
       ...(profileData.phoneNumber && { phoneNumber: profileData.phoneNumber }),
+      ...(profileData.email && { email: profileData.email }),
       ...(profileData.dateOfBirth && { dateOfBirth: profileData.dateOfBirth }),
       ...(profileData.gender && { gender: profileData.gender }),
       ...(profileData.nationality && { nationality: profileData.nationality }),
       ...(profileData.languages && { languages: profileData.languages }),
       ...(profileData.aboutMe && { aboutMe: profileData.aboutMe }),
+      ...(typeof safeBrokerFee === 'number' && { brokerExtraFeePercent: safeBrokerFee }),
+      ...(profileData.contactAdditionalInfo && { contactAdditionalInfo: profileData.contactAdditionalInfo }),
       ...(profilePictureUrl && { profilePicture: profilePictureUrl }),
       // Always update the 'updatedAt' field
       updatedAt: new Date()
@@ -408,3 +419,46 @@ export async function getUserPaymentMethod(): Promise<{
     return null;
   }
 } 
+
+/**
+ * Securely update the current user's password
+ */
+export async function updatePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  try {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+
+    // Ensure the caller matches the authenticated user
+    if (currentUser.uid !== userId) {
+      throw new Error('Unauthorized password update');
+    }
+
+    // Reauthenticate using email/password credentials
+    if (!currentUser.email) {
+      throw new Error('User email not available for reauthentication');
+    }
+    const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+    await reauthenticateWithCredential(currentUser, credential);
+
+    // Update password
+    await fbUpdatePassword(currentUser, newPassword);
+
+    // Touch user doc updatedAt (best-effort)
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, { updatedAt: serverTimestamp() });
+    } catch (e) {
+      // non-critical
+      console.warn('Failed to update user updatedAt after password change:', e);
+    }
+  } catch (error) {
+    console.error('Error updating password:', error);
+    throw error instanceof Error ? error : new Error('Failed to update password');
+  }
+}

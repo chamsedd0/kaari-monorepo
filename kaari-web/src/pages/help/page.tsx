@@ -1,6 +1,5 @@
 import React, { useState, ChangeEvent } from 'react';
 import { HelpStyle } from './styles';
-import UnifiedHeader from '../../components/skeletons/constructed/headers/unified-header';
 import InputBaseModel from '../../components/skeletons/inputs/input-fields/input-variant';
 import TextAreaBaseModel from '../../components/skeletons/inputs/input-fields/textarea-variant';
 import SelectFieldBaseModelVariant1 from '../../components/skeletons/inputs/select-fields/select-field-base-model-variant-1';
@@ -66,7 +65,6 @@ const HelpPage: React.FC = () => {
 
   return (
     <>
-      <UnifiedHeader />
       <HelpStyle>
         <div className="left-container">
             <img src={supportImage} alt="Customer support representative" />

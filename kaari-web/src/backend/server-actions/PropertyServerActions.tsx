@@ -88,6 +88,54 @@ export async function deleteProperty(propertyId: string): Promise<boolean> {
 }
 
 /**
+ * Relist a property with 30-day freshness gate
+ * - If lastPhotoshootAt or firstPublishedAt is within 30 days: set status 'available' and listingStatus 'active'
+ * - Else: set listingStatus 'pending_verification' and keep status as is (usually 'occupied')
+ * Returns the updated statuses for UI feedback
+ */
+export async function relistProperty(propertyId: string): Promise<{
+  status: Property['status'];
+  listingStatus: Property['listingStatus'];
+}> {
+  try {
+    const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, propertyId);
+    if (!property) {
+      throw new Error('Property not found');
+    }
+
+    const now = new Date();
+    const referenceDate = property.lastPhotoshootAt || property.firstPublishedAt;
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const withinThirtyDays = referenceDate
+      ? (now.getTime() - new Date(referenceDate).getTime()) <= THIRTY_DAYS_MS
+      : true; // If no reference date, allow immediate relist and set firstPublishedAt
+
+    if (withinThirtyDays) {
+      const updates: Partial<Property> = {
+        status: 'available',
+        listingStatus: 'active',
+        updatedAt: now
+      };
+      if (!property.firstPublishedAt) {
+        updates.firstPublishedAt = now;
+      }
+      await updateDocument<Property>(PROPERTIES_COLLECTION, propertyId, updates);
+      return { status: 'available', listingStatus: 'active' };
+    }
+
+    // Older than 30 days → pending verification
+    await updateDocument<Property>(PROPERTIES_COLLECTION, propertyId, {
+      listingStatus: 'pending_verification',
+      updatedAt: now
+    });
+    return { status: property.status, listingStatus: 'pending_verification' };
+  } catch (error) {
+    console.error('Error relisting property:', error);
+    throw new Error('Failed to relist property');
+  }
+}
+
+/**
  * Get all properties (with optional pagination and filtering)
  */
 export async function getProperties(options?: { 
@@ -99,6 +147,8 @@ export async function getProperties(options?: {
   minPrice?: number;
   maxPrice?: number;
   showAllStatuses?: boolean; // New option to override default filtering
+  requireActiveListing?: boolean; // New option to require active listing status
+  startAfterId?: string; // Cursor id for pagination
 }): Promise<Property[]> {
   try {
     const filters: Array<{
@@ -131,13 +181,22 @@ export async function getProperties(options?: {
         operator: '==',
         value: options.status
       });
-    } 
+    }
     // Otherwise, by default only show available properties unless showAllStatuses is true
     else if (!options?.showAllStatuses) {
       filters.push({
         field: 'status',
         operator: '==',
         value: 'available'
+      });
+    }
+
+    // Optionally require active listing status
+    if (options?.requireActiveListing === true) {
+      filters.push({
+        field: 'listingStatus',
+        operator: '==',
+        value: 'active'
       });
     }
     
@@ -158,7 +217,7 @@ export async function getProperties(options?: {
     }
     
     // Calculate startAfterId based on pagination
-    let startAfterId;
+    let startAfterId = options?.startAfterId;
     if (options?.page && options.page > 1 && options.limit) {
       const skipCount = (options.page - 1) * options.limit;
       const allProperties = await getDocuments<Property>(PROPERTIES_COLLECTION, {
@@ -465,12 +524,25 @@ export async function checkAndSendPropertyRefreshNotifications(): Promise<void> 
       for (const property of advertiserProperties) {
         const daysSinceRefresh = getDaysSinceLastRefresh(property);
         
-        // Check if property needs warning (14+ days)
+        // Check if property needs warning (14+ days) → auto-unlist stale
         if (daysSinceRefresh >= 14) {
+          try {
+            // Auto-unlist stale listing and set listingStatus
+            await updateDocument<Property>(PROPERTIES_COLLECTION, property.id, {
+              status: 'occupied',
+              listingStatus: 'auto_unlisted_stale',
+              updatedAt: new Date()
+            });
+          } catch (e) {
+            console.error('Failed to auto-unlist stale property', property.id, e);
+          }
           propertiesNeedingWarning.push(property);
         }
-        // Check if property needs reminder (7+ days but less than 14)
-        else if (daysSinceRefresh >= 7) {
+        // Check if property needs reminder (7+ days) and 10-day warning
+        else if (daysSinceRefresh >= 10) {
+          // 10-day warning
+          propertiesNeedingWarning.push(property);
+        } else if (daysSinceRefresh >= 7) {
           propertiesNeedingReminder.push(property);
         }
       }

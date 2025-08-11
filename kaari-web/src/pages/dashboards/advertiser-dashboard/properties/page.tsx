@@ -1,4 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
+import styled from 'styled-components';
+import { Theme } from '../../../../theme/theme';
 import { PropertiesPageStyle } from './styles';
 import PropertyCardAdvertiserSide from '../../../../components/skeletons/cards/property-card-advertiser-side';
 import picture from '../../../../assets/images/propertyExamplePic.png';
@@ -6,7 +8,7 @@ import PropertyExamplePic from '../../../../assets/images/propertyExamplePic.png
 import LeftArrow from '../../../../components/skeletons/icons/Icon_Arrow_Left.svg';
 import RightArrow from '../../../../components/skeletons/icons/Icon_Arrow_Right.svg';
 import { getAdvertiserProperties, checkPropertyHasActiveReservations } from '../../../../backend/server-actions/AdvertiserServerActions';
-import { updateProperty, refreshPropertyAvailability } from '../../../../backend/server-actions/PropertyServerActions';
+import { updateProperty, refreshPropertyAvailability, relistProperty } from '../../../../backend/server-actions/PropertyServerActions';
 import { logPropertyRefresh } from '../../../../backend/server-actions/AdminLogServerActions';
 import { Property } from '../../../../backend/entities';
 import { useAuth } from '../../../../contexts/auth';
@@ -17,7 +19,90 @@ import { PurpleButtonLB40 } from '../../../../components/skeletons/buttons/purpl
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useToast } from '../../../../contexts/ToastContext';
-import { countPropertiesNeedingRefresh } from '../../../../utils/property-refresh-utils';
+import { countPropertiesNeedingRefresh, getRefreshStatus, getDaysSinceLastRefresh, needsAvailabilityRefresh } from '../../../../utils/property-refresh-utils';
+
+// Local UI helpers for clearer freshness & listing status
+const MetaRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+`;
+
+const Pill = styled.span<{ $tone?: 'info' | 'warning' | 'danger' | 'success' }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: ${({ $tone }) =>
+    $tone === 'danger' ? '#FEF2F2' :
+    $tone === 'warning' ? '#FFFBEB' :
+    $tone === 'success' ? '#ECFDF5' : '#EEF2FF'};
+  color: ${({ $tone }) =>
+    $tone === 'danger' ? '#B91C1C' :
+    $tone === 'warning' ? '#92400E' :
+    $tone === 'success' ? '#065F46' : '#3730A3'};
+`;
+
+const TextButton = styled.button`
+  border: none;
+  background: transparent;
+  color: ${Theme.colors.secondary};
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  &:hover { background: ${Theme.colors.tertiary}33; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+`;
+
+const RefreshBanner = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid ${Theme.colors.tertiary}80;
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.75));
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  margin: 12px 0 16px;
+`;
+
+// Mini progress ring (0-14 days)
+const RingWrapper = styled.div`
+  width: 20px; height: 20px; position: relative; display: inline-flex; align-items: center; justify-content: center;
+`;
+
+const ringColorFor = (days: number) => {
+  if (days >= 14) return '#B91C1C'; // red
+  if (days >= 7) return '#92400E'; // amber
+  return '#065F46'; // green
+};
+
+const ProgressRing: React.FC<{ days: number }> = ({ days }) => {
+  const radius = 9;
+  const circumference = 2 * Math.PI * radius;
+  const maxDays = 14;
+  const clamped = Math.max(0, Math.min(maxDays, days));
+  const percent = clamped / maxDays;
+  const strokeDashoffset = circumference * (1 - percent);
+  const color = ringColorFor(days);
+  return (
+    <RingWrapper title={`${clamped}/14 days since refresh`}>
+      <svg width={20} height={20}>
+        <circle cx={10} cy={10} r={radius} stroke="#E5E7EB" strokeWidth={2} fill="none" />
+        <circle cx={10} cy={10} r={radius} stroke={color} strokeWidth={2} fill="none"
+          strokeDasharray={`${circumference} ${circumference}`} strokeDashoffset={strokeDashoffset}
+          transform="rotate(-90 10 10)" />
+      </svg>
+    </RingWrapper>
+  );
+};
 import { useChecklist } from '../../../../contexts/checklist/ChecklistContext';
 
 const PropertiesPage: React.FC = () => {
@@ -41,6 +126,7 @@ const PropertiesPage: React.FC = () => {
     
     // Refresh states
     const [refreshingProperties, setRefreshingProperties] = useState<Set<string>>(new Set());
+  const [refreshingAll, setRefreshingAll] = useState<boolean>(false);
     
     // Add navigate
     const navigate = useNavigate();
@@ -174,6 +260,47 @@ const PropertiesPage: React.FC = () => {
             });
         }
     };
+
+    // Refresh all properties that need availability confirmation
+    const handleRefreshAllDue = async () => {
+        try {
+            const due = properties.filter(p => needsAvailabilityRefresh(p));
+            if (due.length === 0) return;
+            setRefreshingAll(true);
+
+            for (const prop of due) {
+                // mark per-card refreshing
+                setRefreshingProperties(prev => new Set(prev).add(prop.id));
+                try {
+                    await refreshPropertyAvailability(prop.id);
+                    if (user) {
+                        await logPropertyRefresh(
+                          prop.id,
+                          prop.title,
+                          user.id,
+                          `${user.name} ${user.surname || ''}`.trim()
+                        );
+                    }
+                    // update local state
+                    setProperties(prev => prev.map(p => p.id === prop.id ? {
+                        ...p,
+                        lastAvailabilityRefresh: new Date(),
+                        updatedAt: new Date()
+                    } : p));
+                } catch (e) {
+                    console.error('Batch refresh failed for', prop.id, e);
+                } finally {
+                    setRefreshingProperties(prev => {
+                        const next = new Set(prev);
+                        next.delete(prop.id);
+                        return next;
+                    });
+                }
+            }
+        } finally {
+            setRefreshingAll(false);
+        }
+    };
     
     const handleListProperty = async (property: Property) => {
         try {
@@ -213,15 +340,26 @@ const PropertiesPage: React.FC = () => {
                     errorMessage
                 );
             } else {
-                // No reservations, update status to available
-                await handleChangePropertyStatus(property.id, 'available');
+                // No reservations, apply relist gate (30-day rule)
+                const result = await relistProperty(property.id);
                 
-                // Show success toast
-                addToast(
-                    'success',
-                    t('advertiser_dashboard.properties.success.property_listed'),
-                    t('advertiser_dashboard.properties.success.property_listed_message')
-                );
+                // Update local property to reflect new status/listingStatus
+                setProperties(prev => prev.map(p => p.id === property.id ? { ...p, status: result.status, listingStatus: result.listingStatus } : p));
+                
+                // Show feedback depending on result
+                if (result.listingStatus === 'active') {
+                    addToast(
+                        'success',
+                        t('advertiser_dashboard.properties.success.property_listed'),
+                        t('advertiser_dashboard.properties.success.property_listed_message')
+                    );
+                } else if (result.listingStatus === 'pending_verification') {
+                    addToast(
+                        'info',
+                        t('advertiser_dashboard.properties.success.property_pending_verification', 'Pending Verification'),
+                        t('advertiser_dashboard.properties.success.property_pending_verification_message', 'Our team will verify your listing freshness before relisting.')
+                    );
+                }
             }
         } catch (err) {
             console.error('Error checking reservations:', err);
@@ -280,7 +418,7 @@ const PropertiesPage: React.FC = () => {
                     <div className="loading-spinner">{t('advertiser_dashboard.properties.loading')}</div>
                 ) : (
                     <>
-                <div className="my-properties">
+                 <div className="my-properties">
                     <div className="section-header">
                                 <h3 className="title">{t('advertiser_dashboard.properties.listed_properties', { count: listedProperties.length })}</h3>
                                 {listedProperties.length > 0 && (
@@ -294,6 +432,22 @@ const PropertiesPage: React.FC = () => {
                         </div>
                                 )}
                             </div>
+                            {/* Global freshness banner for listed properties needing refresh */}
+                            {listedProperties.length > 0 && propertiesNeedingRefresh > 0 && (
+                              <RefreshBanner>
+                                <div style={{ fontSize: 13, color: '#6B7280' }}>
+                                  {t('advertiser_dashboard.properties.refresh_banner', `${propertiesNeedingRefresh} properties need availability refresh to stay live. Auto-unlisting will occur after 14 days.`)}
+                                </div>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                  <TextButton onClick={handleRefreshAllDue} disabled={refreshingAll}>
+                                    {refreshingAll ? t('common.refreshing', 'Refreshing...') : t('advertiser_dashboard.properties.refresh_all_due', 'Refresh all due')}
+                                  </TextButton>
+                                  <TextButton onClick={() => window.scrollTo({ top: 99999, behavior: 'smooth' })}>
+                                    {t('advertiser_dashboard.properties.view_all_refresh', 'View')}
+                                  </TextButton>
+                                </div>
+                              </RefreshBanner>
+                            )}
                             
                             {listedProperties.length === 0 ? (
                                 <div className="no-properties-message">
@@ -304,7 +458,11 @@ const PropertiesPage: React.FC = () => {
                     </div>
                             ) : (
                     <div className="properties-group" ref={listedPropertiesRef}>
-                                    {listedProperties.map(property => (
+                                    {listedProperties.map(property => {
+                                      const freshness = getRefreshStatus(property);
+                                      const days = Number.isFinite(getDaysSinceLastRefresh(property)) ? getDaysSinceLastRefresh(property) : 0;
+                                      const tone = freshness.status === 'needs_refresh' ? (freshness.detailedMessage.includes('overdue') ? 'danger' : 'warning') : 'success';
+                                      return (
                         <PropertyCardAdvertiserSide 
                                             key={property.id}
                                             title={property.title}
@@ -319,8 +477,24 @@ const PropertiesPage: React.FC = () => {
                                             onRefreshAvailability={() => handleRefreshAvailability(property.id)}
                                             isSubmitting={isSubmitting}
                                             isRefreshing={refreshingProperties.has(property.id)}
-                                        />
-                                    ))}
+                                        >
+                                          <MetaRow>
+                                            <Pill $tone={tone as any} title={freshness.detailedMessage}>
+                                              <ProgressRing days={days} />
+                                              {freshness.message}
+                                            </Pill>
+                                            {property.listingStatus && (
+                                              <Pill $tone={property.listingStatus === 'active' ? 'success' : property.listingStatus === 'pending_verification' ? 'warning' : 'danger'}>
+                                                {property.listingStatus === 'active' ? t('common.active', 'Active') : property.listingStatus === 'pending_verification' ? t('common.pending_verification', 'Pending verification') : t('common.auto_unlisted', 'Auto-unlisted')}
+                                              </Pill>
+                                            )}
+                                            <TextButton onClick={() => handleRefreshAvailability(property.id)} disabled={refreshingProperties.has(property.id)}>
+                                              {refreshingProperties.has(property.id) ? t('common.refreshing', 'Refreshing...') : t('common.refresh_now', 'Refresh now')}
+                                            </TextButton>
+                                          </MetaRow>
+                                        </PropertyCardAdvertiserSide>
+                                      );
+                                    })}
                     </div>
                             )}
                 </div>
@@ -347,7 +521,10 @@ const PropertiesPage: React.FC = () => {
                     </div>
                             ) : (
                     <div className="properties-group" ref={unlistedPropertiesRef}>
-                                    {unlistedProperties.map(property => (
+                                    {unlistedProperties.map(property => {
+                                      const freshness = getRefreshStatus(property);
+                                      const tone = freshness.status === 'needs_refresh' ? (freshness.detailedMessage.includes('overdue') ? 'danger' : 'warning') : 'success';
+                                      return (
                         <PropertyCardAdvertiserSide 
                                             key={property.id}
                                             title={property.title}
@@ -362,8 +539,24 @@ const PropertiesPage: React.FC = () => {
                                             onRefreshAvailability={() => handleRefreshAvailability(property.id)}
                                             isSubmitting={isSubmitting}
                                             isRefreshing={refreshingProperties.has(property.id)}
-                                        />
-                                    ))}
+                                        >
+                                          <MetaRow>
+                                            <Pill $tone={tone as any} title={freshness.detailedMessage}>
+                                              <ProgressRing days={Number.isFinite(getDaysSinceLastRefresh(property)) ? getDaysSinceLastRefresh(property) : 0} />
+                                              {freshness.message}
+                                            </Pill>
+                                            {property.listingStatus && (
+                                              <Pill $tone={property.listingStatus === 'active' ? 'success' : property.listingStatus === 'pending_verification' ? 'warning' : 'danger'}>
+                                                {property.listingStatus === 'active' ? t('common.active', 'Active') : property.listingStatus === 'pending_verification' ? t('common.pending_verification', 'Pending verification') : t('common.auto_unlisted', 'Auto-unlisted')}
+                                              </Pill>
+                                            )}
+                                            <TextButton onClick={() => handleRefreshAvailability(property.id)} disabled={refreshingProperties.has(property.id)}>
+                                              {refreshingProperties.has(property.id) ? t('common.refreshing', 'Refreshing...') : t('common.refresh_now', 'Refresh now')}
+                                            </TextButton>
+                                          </MetaRow>
+                                        </PropertyCardAdvertiserSide>
+                                      );
+                                    })}
                     </div>
                             )}
                 </div>

@@ -16,6 +16,7 @@ export interface Notification {
 // Notification types for advertisers
 export type AdvertiserNotificationType = 
   | 'team_assigned_photoshoot'
+  | 'photoshoot_booked'
   | 'photoshoot_reminder'
   | 'property_created'
   | 'reservation_request'
@@ -28,9 +29,13 @@ export type AdvertiserNotificationType =
   | 'new_message'
   | 'property_refresh_reminder'
   | 'property_refresh_warning'
+  | 'payout_request_created'
+  | 'payout_created'
   | 'payout_request_approved'
   | 'payout_request_rejected'
-  | 'payout_processed';
+  | 'payout_processed'
+  | 'counter_offer_accepted'
+  | 'counter_offer_rejected';
 
 // Notification types for clients/users
 export type ClientNotificationType = 
@@ -38,6 +43,7 @@ export type ClientNotificationType =
   | 'reservation_rejected'
   | 'reservation_cancelled_by_advertiser'
   | 'payment_reminder'
+  | 'payment_expired'
   | 'payment_confirmation'
   | 'reservation_expired'
   | 'move_in_reminder'
@@ -47,9 +53,13 @@ export type ClientNotificationType =
   | 'inquiry_response'
   | 'property_availability'
   | 'new_message'
+  | 'payout_request_created'
+  | 'payout_created'
   | 'payout_request_approved'
   | 'payout_request_rejected'
   | 'payout_processed'
+  | 'refund_request_created'
+  | 'cancellation_request_created'
   | 'refund_processed';
 
 // Add a new type for admin notifications

@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FaSearch, FaFilter, FaSync, FaDownload, FaSpinner, FaInbox } from 'react-icons/fa';
 import { Theme } from '../../../../theme/theme';
-import {
-  DashboardCard,
-  CardTitle,
-  CardContent,
-} from '../styles';
+import { PageContainer, PageHeader, FilterBar, SearchBox as GlassSearchBox, GlassCard, GlassTable, StatusBadge as GlassStatusBadge, Button as AdminUIButton, Pill } from '../../../../components/admin/AdminUI';
+import { formatDateSafe } from '../../../../utils/dates';
 import { getAllPayouts } from '../../../../backend/server-actions/PayoutsServerActions';
 import { Payout } from '../../../../services/PayoutsService';
 import { formatDate } from '../../../../utils/date-utils';
@@ -107,11 +104,7 @@ const ReasonBadge = styled.span<{ $type: string }>`
           background-color: #fff8e1;
           color: #ff8f00;
         `;
-      case 'Cushion – Haani Max Cancel':
-        return `
-          background-color: #fce4ec;
-          color: #c2185b;
-        `;
+      // Haani Max retired
       case 'Referral Commission':
         return `
           background-color: #e8f5e9;
@@ -329,7 +322,7 @@ const PayoutsHistoryPage: React.FC = () => {
       
       try {
         // Get payouts with pagination
-        const result = await getAllPayouts(pageSize, reset ? undefined : lastDocId);
+        const result = await getAllPayouts(pageSize, reset ? undefined : (lastDocId || undefined));
         
         if (reset) {
           setPayouts(result.payouts);
@@ -456,45 +449,26 @@ const PayoutsHistoryPage: React.FC = () => {
   const totalAmount = filteredPayouts.reduce((sum, payout) => sum + payout.amount, 0);
   
   return (
-    <DashboardCard>
-      <CardTitle>Payouts History</CardTitle>
-      <CardContent>
-        <FilterContainer>
+    <PageContainer>
+      <PageHeader title="Payouts History" />
+        <FilterBar>
           <FilterGroup>
-            <FilterButton 
-              $active={filter === 'all'} 
-              onClick={() => setFilter('all')}
-            >
-              All
-            </FilterButton>
-            <FilterButton 
-              $active={filter === 'advertiser'} 
-              onClick={() => setFilter('advertiser')}
-            >
-              Advertisers
-            </FilterButton>
-            <FilterButton 
-              $active={filter === 'tenant'} 
-              onClick={() => setFilter('tenant')}
-            >
-              Tenants
-            </FilterButton>
-            <FilterButton 
-              $active={filter === 'pending'} 
-              onClick={() => setFilter('pending')}
-            >
-              Pending
-            </FilterButton>
-            <FilterButton 
-              $active={filter === 'paid'} 
-              onClick={() => setFilter('paid')}
-            >
-              Paid
-            </FilterButton>
+            {(['all','advertiser','tenant','pending','paid'] as const).map(k => (
+              <Pill key={k}
+                onClick={() => setFilter(k)}
+                style={{
+                  cursor: 'pointer',
+                  background: filter === k ? `${Theme.colors.tertiary}30` : Theme.colors.white,
+                  borderColor: filter === k ? Theme.colors.tertiary : `${Theme.colors.tertiary}80`
+                }}
+              >
+                {k === 'all' ? 'All' : k.charAt(0).toUpperCase() + k.slice(1)}
+              </Pill>
+            ))}
           </FilterGroup>
           
           <FilterGroup>
-            <SearchBox>
+            <GlassSearchBox>
               <FaSearch />
               <input 
                 type="text" 
@@ -502,7 +476,7 @@ const PayoutsHistoryPage: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-            </SearchBox>
+            </GlassSearchBox>
             <ActionButton onClick={() => loadPayouts(true)}>
               <FaSync /> Refresh
             </ActionButton>
@@ -510,7 +484,7 @@ const PayoutsHistoryPage: React.FC = () => {
               <FaDownload /> Export
             </ActionButton>
           </FilterGroup>
-        </FilterContainer>
+        </FilterBar>
         
         {loading && payouts.length === 0 ? (
           <LoadingState>
@@ -528,19 +502,20 @@ const PayoutsHistoryPage: React.FC = () => {
           </EmptyState>
         ) : (
           <>
-            <Table>
-              <TableHead>
-                <tr>
-                  <TableHeader>Payee</TableHeader>
-                  <TableHeader>Pay-out Method</TableHeader>
-                  <TableHeader>Reason</TableHeader>
-                  <TableHeader>Amount</TableHeader>
-                  <TableHeader>Status</TableHeader>
-                  <TableHeader>Created Date</TableHeader>
-                  <TableHeader>Paid Date</TableHeader>
-                </tr>
-              </TableHead>
-              <tbody>
+            <GlassCard>
+              <GlassTable>
+                <thead>
+                  <tr>
+                    <th>Payee</th>
+                    <th>Pay-out Method</th>
+                    <th>Reason</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Created Date</th>
+                    <th>Paid Date</th>
+                  </tr>
+                </thead>
+                <tbody>
                 {filteredPayouts.map(payout => (
                   <TableRow key={payout.id} $status={payout.status}>
                     <TableCell>
@@ -566,20 +541,21 @@ const PayoutsHistoryPage: React.FC = () => {
                       <Amount>{formatCurrency(payout.amount, payout.currency)}</Amount>
                     </TableCell>
                     <TableCell>
-                      <StatusBadge $status={payout.status}>
+                      <GlassStatusBadge status={payout.status}>
                         {payout.status.charAt(0).toUpperCase() + payout.status.slice(1)}
-                      </StatusBadge>
+                      </GlassStatusBadge>
                     </TableCell>
                     <TableCell>
-                      {formatDate(payout.createdAt)}
+                      {formatDateSafe(payout.createdAt)}
                     </TableCell>
                     <TableCell>
-                      {payout.paidAt ? formatDate(payout.paidAt) : '-'}
+                      {payout.paidAt ? formatDateSafe(payout.paidAt) : '-'}
                     </TableCell>
                   </TableRow>
                 ))}
-              </tbody>
-            </Table>
+                </tbody>
+              </GlassTable>
+            </GlassCard>
             
             <TotalAmount>
               Total: {formatCurrency(totalAmount)}
@@ -594,8 +570,7 @@ const PayoutsHistoryPage: React.FC = () => {
             )}
           </>
         )}
-      </CardContent>
-    </DashboardCard>
+    </PageContainer>
   );
 };
 

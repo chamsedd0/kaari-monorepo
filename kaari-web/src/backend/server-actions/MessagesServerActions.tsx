@@ -13,7 +13,8 @@ import {
   QueryDocumentSnapshot,
   limit,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  updateDoc
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -100,7 +101,7 @@ async function processConversationDoc(docSnapshot: QueryDocumentSnapshot<Documen
     }
     
     // Get last message
-    let lastMessage = null;
+  let lastMessage: Conversation['lastMessage'] | undefined = undefined;
     if (data.lastMessage) {
       lastMessage = {
         content: data.lastMessage || '',
@@ -332,7 +333,7 @@ export async function sendAdminMessage(conversationId: string, content: string):
     });
     
     // Update the conversation with the last message
-    await conversationRef.update({
+    await updateDoc(conversationRef, {
       lastMessage: content,
       lastMessageTimestamp: now,
       updatedAt: now

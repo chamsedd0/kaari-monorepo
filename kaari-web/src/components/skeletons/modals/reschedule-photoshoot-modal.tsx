@@ -175,7 +175,7 @@ const ModalHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid ${Theme.colors.lightGray};
+  border-bottom: 1px solid ${Theme.colors.gray3};
   
   h3 {
     font: ${Theme.typography.fonts.largeB};
@@ -236,12 +236,12 @@ const ModalContent = styled.div`
     
     input, select {
       padding: 12px;
-      border: 1px solid ${Theme.colors.lightGray};
+      border: 1px solid ${Theme.colors.gray3};
       border-radius: 8px;
       font: ${Theme.typography.fonts.mediumM};
       
       &.error {
-        border-color: ${Theme.colors.danger};
+        border-color: ${Theme.colors.error};
       }
       
       &:focus {
@@ -252,7 +252,7 @@ const ModalContent = styled.div`
   }
   
   .error-message {
-    color: ${Theme.colors.danger};
+    color: ${Theme.colors.error};
     font: ${Theme.typography.fonts.smallM};
     margin: 5px 0 0;
   }
@@ -260,7 +260,7 @@ const ModalContent = styled.div`
 
 const ModalFooter = styled.div`
   padding: 20px;
-  border-top: 1px solid ${Theme.colors.lightGray};
+  border-top: 1px solid ${Theme.colors.gray3};
   
   .button-container {
     display: flex;

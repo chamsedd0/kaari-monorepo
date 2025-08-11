@@ -2,11 +2,17 @@ const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
 
-// Payzone credentials from environment variables
-const MERCHANT_ACCOUNT = process.env.PAYZONE_MERCHANT_ACCOUNT || 'kaari_monorepo_vercel_Test';
-const PAYWALL_SECRET_KEY = process.env.PAYZONE_PAYWALL_SECRET_KEY || '5Wkxa8VkO6LzREMk';
+// Payzone credentials from environment variables (fail fast if missing)
+const MERCHANT_ACCOUNT = process.env.PAYZONE_MERCHANT_ACCOUNT;
+const PAYWALL_SECRET_KEY = process.env.PAYZONE_PAYWALL_SECRET_KEY;
 const PAYWALL_URL = process.env.PAYZONE_PAYWALL_URL || 'https://payment-sandbox.payzone.ma/pwthree/launch';
-const NOTIFICATION_KEY = process.env.PAYZONE_NOTIFICATION_KEY || 'yw06hJBzkheD3ARA';
+const NOTIFICATION_KEY = process.env.PAYZONE_NOTIFICATION_KEY;
+
+if (!MERCHANT_ACCOUNT || !PAYWALL_SECRET_KEY || !NOTIFICATION_KEY) {
+  // eslint-disable-next-line no-console
+  console.error('Missing required Payzone environment variables. Please set PAYZONE_MERCHANT_ACCOUNT, PAYZONE_PAYWALL_SECRET_KEY, PAYZONE_NOTIFICATION_KEY');
+  throw new Error('Payment gateway misconfigured: missing Payzone environment variables');
+}
 
 /**
  * Initiate a payment and return HTML form for redirect
@@ -111,8 +117,8 @@ router.post('/initiate', async (req, res) => {
  */
 router.post('/callback', (req, res) => {
   try {
-    // Get the raw request body
-    const input = JSON.stringify(req.body);
+    // Get the raw request body captured by body-parser verify hook
+    const input = req.rawBody || JSON.stringify(req.body);
     
     // Calculate signature using HMAC-SHA256
     const signature = crypto

@@ -5,7 +5,7 @@ import { Theme } from '../../theme/theme';
 import { createCheckoutReservation } from '../../backend/server-actions/CheckoutServerActions';
 import referralService from '../../services/ReferralService';
 import { FaSpinner, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
-import LoadingScreen from '../../components/loading/LoadingScreen';
+// Removed unused LoadingScreen import
 
 const PaymentCallbackContainer = styled.div`
   display: flex;
@@ -42,7 +42,7 @@ const PaymentCallbackContainer = styled.div`
   }
   
   .status-title {
-    font: ${Theme.typography.fonts.h3B};
+    font: ${Theme.typography.fonts.h3};
     color: ${Theme.colors.black};
     margin-bottom: 1rem;
   }
@@ -270,7 +270,7 @@ const PaymentCallback: React.FC = () => {
       {status === 'loading' && (
         <div className="card">
           <FaSpinner className="status-icon loading" />
-          <h1 className="status-title">Processing Payment</h1>
+            <h1 className="status-title">Processing Payment</h1>
           <p className="status-message">{message}</p>
           <div className="progress-bar">
             <div className="progress" style={{ width: `${progress}%` }}></div>

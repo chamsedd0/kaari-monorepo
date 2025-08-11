@@ -3,11 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaUser, FaPhone, FaEnvelope, FaCopy, FaToggleOn, FaToggleOff, FaCalendarAlt, FaExclamationTriangle } from 'react-icons/fa';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-import {
-  DashboardCard,
-  CardTitle,
-  CardContent,
-} from '../styles';
+import { PageContainer, PageHeader, GlassCard } from '../../../../components/admin/AdminUI';
 import { 
   getReferralAdvertiserById, 
   getReferralBookingsByAdvertiserId,
@@ -517,245 +513,260 @@ const ReferralDetailPage: React.FC = () => {
   
   if (loading) {
     return (
-      <DetailContainer>
-        <BackButton onClick={() => navigate('/dashboard/admin/referrals')}>
-          <FaArrowLeft /> Back to Referrals
-        </BackButton>
-        <LoadingMessage>Loading advertiser details...</LoadingMessage>
-      </DetailContainer>
+      <PageContainer>
+        <PageHeader title="Referral Advertiser" />
+        <GlassCard>
+          <DetailContainer>
+            <BackButton onClick={() => navigate('/dashboard/admin/referrals')}>
+              <FaArrowLeft /> Back to Referrals
+            </BackButton>
+            <LoadingMessage>Loading advertiser details...</LoadingMessage>
+          </DetailContainer>
+        </GlassCard>
+      </PageContainer>
     );
   }
   
   if (error || !advertiser) {
     return (
-      <DetailContainer>
-        <BackButton onClick={() => navigate('/dashboard/admin/referrals')}>
-          <FaArrowLeft /> Back to Referrals
-        </BackButton>
-        <ErrorMessage>{error || 'Advertiser not found'}</ErrorMessage>
-      </DetailContainer>
+      <PageContainer>
+        <PageHeader title="Referral Advertiser" />
+        <GlassCard>
+          <DetailContainer>
+            <BackButton onClick={() => navigate('/dashboard/admin/referrals')}>
+              <FaArrowLeft /> Back to Referrals
+            </BackButton>
+            <ErrorMessage>{error || 'Advertiser not found'}</ErrorMessage>
+          </DetailContainer>
+        </GlassCard>
+      </PageContainer>
     );
   }
   
   return (
-    <DetailContainer>
-      <BackButton onClick={() => navigate('/dashboard/admin/referrals')}>
-        <FaArrowLeft /> Back to Referrals
-      </BackButton>
-      
-      {success && <SuccessMessage>{success}</SuccessMessage>}
-      
-      <DetailHeader>
-        <HeaderLeft>
-          <AdvertiserName>{advertiser.name}</AdvertiserName>
-          <div>Referral Code: <strong>{advertiser.referralCode}</strong></div>
-        </HeaderLeft>
-        
-        <HeaderRight>
-          <PassStatusToggle onClick={handleTogglePassStatus} title="Click to toggle pass status">
-            {advertiser.passStatus === 'active' ? (
-              <>
-                <FaToggleOn size={24} color={Theme.colors.secondary} />
-                <span>Pass Active</span>
-              </>
-            ) : (
-              <>
-                <FaToggleOff size={24} color={Theme.colors.gray2} />
-                <span>Pass Locked</span>
-              </>
-            )}
-          </PassStatusToggle>
-        </HeaderRight>
-      </DetailHeader>
-      
-      <DetailGrid>
-        {/* Contact Information */}
-        <DetailSection>
-          <SectionTitle><FaUser /> Contact Information</SectionTitle>
+    <PageContainer>
+      <PageHeader title="Referral Advertiser" />
+      <GlassCard>
+        <DetailContainer>
+          <BackButton onClick={() => navigate('/dashboard/admin/referrals')}>
+            <FaArrowLeft /> Back to Referrals
+          </BackButton>
           
-          <ContactItem>
-            <ContactLabel>Name</ContactLabel>
-            <ContactValue>{advertiser.name}</ContactValue>
-          </ContactItem>
+          {success && <SuccessMessage>{success}</SuccessMessage>}
           
-          <ContactItem>
-            <ContactLabel>Phone Number</ContactLabel>
-            <ContactValue>
-              {advertiser.phoneNumber}
-              <CopyButton onClick={() => copyToClipboard(advertiser.phoneNumber)}>
-                <FaCopy size={14} />
-              </CopyButton>
-            </ContactValue>
-          </ContactItem>
+          <DetailHeader>
+            <HeaderLeft>
+              <AdvertiserName>{advertiser.name}</AdvertiserName>
+              <div>Referral Code: <strong>{advertiser.referralCode}</strong></div>
+            </HeaderLeft>
+            
+            <HeaderRight>
+              <PassStatusToggle onClick={handleTogglePassStatus} title="Click to toggle pass status">
+                {advertiser.passStatus === 'active' ? (
+                  <>
+                    <FaToggleOn size={24} color={Theme.colors.secondary} />
+                    <span>Pass Active</span>
+                  </>
+                ) : (
+                  <>
+                    <FaToggleOff size={24} color={Theme.colors.gray2} />
+                    <span>Pass Locked</span>
+                  </>
+                )}
+              </PassStatusToggle>
+            </HeaderRight>
+          </DetailHeader>
           
-          {advertiser.email && (
-            <ContactItem>
-              <ContactLabel>Email</ContactLabel>
-              <ContactValue>
-                {advertiser.email}
-                <CopyButton onClick={() => copyToClipboard(advertiser.email)}>
-                  <FaCopy size={14} />
-                </CopyButton>
-              </ContactValue>
-            </ContactItem>
-          )}
-          
-          <ContactItem>
-            <ContactLabel>Referral Code</ContactLabel>
-            <ReferralCodeDisplay>
-              {advertiser.referralCode}
-              <CopyButton onClick={() => copyToClipboard(advertiser.referralCode)}>
-                <FaCopy size={16} />
-              </CopyButton>
-            </ReferralCodeDisplay>
-          </ContactItem>
-        </DetailSection>
-        
-        {/* Referral Pass */}
-        <DetailSection>
-          <SectionTitle><FaCalendarAlt /> Referral Pass Status</SectionTitle>
-          
-          {advertiser.referralPass ? (
-            <>
+          <DetailGrid>
+            {/* Contact Information */}
+            <DetailSection>
+              <SectionTitle><FaUser /> Contact Information</SectionTitle>
+              
               <ContactItem>
-                <ContactLabel>Status</ContactLabel>
+                <ContactLabel>Name</ContactLabel>
+                <ContactValue>{advertiser.name}</ContactValue>
+              </ContactItem>
+              
+              <ContactItem>
+                <ContactLabel>Phone Number</ContactLabel>
                 <ContactValue>
-                  {advertiser.passStatus === 'active' ? (
-                    <span style={{ color: '#137333', fontWeight: 'bold' }}>Active</span>
-                  ) : (
-                    <span style={{ color: '#5f6368' }}>Locked</span>
-                  )}
+                  {advertiser.phoneNumber}
+                  <CopyButton onClick={() => copyToClipboard(advertiser.phoneNumber)}>
+                    <FaCopy size={14} />
+                  </CopyButton>
                 </ContactValue>
               </ContactItem>
               
-              {advertiser.referralPass.expiryDate && !isNaN(advertiser.referralPass.expiryDate.getTime()) && (
+              {advertiser.email && (
                 <ContactItem>
-                  <ContactLabel>Expiry Date</ContactLabel>
-                  <ContactValue>{formatDate(advertiser.referralPass.expiryDate)}</ContactValue>
+                  <ContactLabel>Email</ContactLabel>
+                  <ContactValue>
+                    {advertiser.email}
+                  <CopyButton onClick={() => advertiser.email && copyToClipboard(advertiser.email)}>
+                      <FaCopy size={14} />
+                    </CopyButton>
+                  </ContactValue>
                 </ContactItem>
               )}
               
-            <ContactItem>
-                <ContactLabel>Requirements</ContactLabel>
-                <PassRequirementsList>
-                  <PassRequirementItem 
-                    $isMet={isPassRequirementMet(
-                      advertiser.referralPass.bookingsSincePass, 
-                      advertiser.referralPass.bookingRequirement
-                    )}
-                  >
-                    Bookings: {advertiser.referralPass.bookingsSincePass} / {advertiser.referralPass.bookingRequirement}
-                  </PassRequirementItem>
-                  <PassRequirementItem 
-                    $isMet={isPassRequirementMet(
-                      advertiser.referralPass.listingsSincePass, 
-                      advertiser.referralPass.listingRequirement
-                    )}
-                  >
-                    Listings: {advertiser.referralPass.listingsSincePass} / {advertiser.referralPass.listingRequirement}
-                  </PassRequirementItem>
-                </PassRequirementsList>
-            </ContactItem>
-            </>
-          ) : (
-            <WarningMessage>
-              <FaExclamationTriangle />
-              No referral pass information available
-            </WarningMessage>
-          )}
-        </DetailSection>
-        
-        {/* Earnings Summary */}
-        <DetailSection>
-          <SectionTitle>Earnings Summary</SectionTitle>
-          
-          <EarningsSummary>
-            <EarningsRow>
-              <EarningsLabel>Total Referrals</EarningsLabel>
-              <EarningsValue>{getTotalReferrals()}</EarningsValue>
-            </EarningsRow>
-            <EarningsRow>
-              <EarningsLabel>Pending Earnings</EarningsLabel>
-              <EarningsValue>{formatCurrency(advertiser.earningsPending)}</EarningsValue>
-            </EarningsRow>
-            <EarningsRow>
-              <EarningsLabel>Paid Earnings</EarningsLabel>
-              <EarningsValue>{formatCurrency(advertiser.earningsPaid)}</EarningsValue>
-            </EarningsRow>
-            <EarningsRow>
-              <EarningsLabel>Total Earnings</EarningsLabel>
-              <EarningsValue>{formatCurrency(getTotalEarnings())}</EarningsValue>
-            </EarningsRow>
-          </EarningsSummary>
-        </DetailSection>
-        
-        {/* Admin Notes */}
-        <DetailSection>
-          <SectionTitle>Admin Notes</SectionTitle>
-          
-          <NoteTextArea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Add internal notes about this advertiser..."
-          />
-          
-          <SaveButton 
-            onClick={handleSaveNote} 
-            disabled={savingNote}
-          >
-            {savingNote ? 'Saving...' : 'Save Note'}
-          </SaveButton>
-        </DetailSection>
-        
-        {/* Referral Bookings */}
-        <DetailSection style={{ gridColumn: '1 / -1' }}>
-          <SectionTitle>Referral Bookings</SectionTitle>
-          
-          {bookings.length === 0 ? (
-            <NoDataMessage>No referral bookings found for this advertiser.</NoDataMessage>
-          ) : (
-              <BookingsTable>
-                <BookingsTableHead>
-                <tr>
-                    <BookingsTableHeader>Property</BookingsTableHeader>
-                    <BookingsTableHeader>Tenant</BookingsTableHeader>
-                    <BookingsTableHeader>Date</BookingsTableHeader>
-                  <BookingsTableHeader>Amount</BookingsTableHeader>
-                    <BookingsTableHeader>Status</BookingsTableHeader>
-                </tr>
-                </BookingsTableHead>
-                <tbody>
-                {bookings.map((booking, index) => (
-                  <BookingsTableRow key={index}>
-                      <BookingsTableCell>
-                        <PropertyInfo>
-                          <PropertyThumbnail 
-                            src={booking.propertyThumbnail || getPlaceholderImage(booking.propertyTitle)} 
-                            alt={booking.propertyTitle} 
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = getPlaceholderImage(booking.propertyTitle);
-                            }}
-                          />
-                          <PropertyTitle>{booking.propertyTitle}</PropertyTitle>
-                        </PropertyInfo>
-                      </BookingsTableCell>
-                      <BookingsTableCell>{booking.tenantName}</BookingsTableCell>
-                      <BookingsTableCell>{formatDate(booking.date)}</BookingsTableCell>
-                    <BookingsTableCell>{formatCurrency(booking.amount)}</BookingsTableCell>
-                      <BookingsTableCell>
-                      <StatusBadge $status={booking.status}>
-                        {booking.status === 'pending' ? 'Pending' : 
-                         booking.status === 'paid' ? 'Paid' : 'Completed'}
-                      </StatusBadge>
-                      </BookingsTableCell>
-                    </BookingsTableRow>
-                  ))}
-                </tbody>
-              </BookingsTable>
-          )}
-        </DetailSection>
-      </DetailGrid>
-    </DetailContainer>
+              <ContactItem>
+                <ContactLabel>Referral Code</ContactLabel>
+                <ReferralCodeDisplay>
+                  {advertiser.referralCode}
+                  <CopyButton onClick={() => copyToClipboard(advertiser.referralCode)}>
+                    <FaCopy size={16} />
+                  </CopyButton>
+                </ReferralCodeDisplay>
+              </ContactItem>
+            </DetailSection>
+            
+            {/* Referral Pass */}
+            <DetailSection>
+              <SectionTitle><FaCalendarAlt /> Referral Pass Status</SectionTitle>
+              
+              {advertiser.referralPass ? (
+                <>
+                  <ContactItem>
+                    <ContactLabel>Status</ContactLabel>
+                    <ContactValue>
+                      {advertiser.passStatus === 'active' ? (
+                        <span style={{ color: '#137333', fontWeight: 'bold' }}>Active</span>
+                      ) : (
+                        <span style={{ color: '#5f6368' }}>Locked</span>
+                      )}
+                    </ContactValue>
+                  </ContactItem>
+                  
+                  {advertiser.referralPass.expiryDate && !isNaN(advertiser.referralPass.expiryDate.getTime()) && (
+                    <ContactItem>
+                      <ContactLabel>Expiry Date</ContactLabel>
+                      <ContactValue>{formatDate(advertiser.referralPass.expiryDate)}</ContactValue>
+                    </ContactItem>
+                  )}
+                  
+                <ContactItem>
+                    <ContactLabel>Requirements</ContactLabel>
+                    <PassRequirementsList>
+                      <PassRequirementItem 
+                        $isMet={isPassRequirementMet(
+                          advertiser.referralPass.bookingsSincePass, 
+                          advertiser.referralPass.bookingRequirement
+                        )}
+                      >
+                        Bookings: {advertiser.referralPass.bookingsSincePass} / {advertiser.referralPass.bookingRequirement}
+                      </PassRequirementItem>
+                      <PassRequirementItem 
+                        $isMet={isPassRequirementMet(
+                          advertiser.referralPass.listingsSincePass, 
+                          advertiser.referralPass.listingRequirement
+                        )}
+                      >
+                        Listings: {advertiser.referralPass.listingsSincePass} / {advertiser.referralPass.listingRequirement}
+                      </PassRequirementItem>
+                    </PassRequirementsList>
+                </ContactItem>
+                </>
+              ) : (
+                <WarningMessage>
+                  <FaExclamationTriangle />
+                  No referral pass information available
+                </WarningMessage>
+              )}
+            </DetailSection>
+            
+            {/* Earnings Summary */}
+            <DetailSection>
+              <SectionTitle>Earnings Summary</SectionTitle>
+              
+              <EarningsSummary>
+                <EarningsRow>
+                  <EarningsLabel>Total Referrals</EarningsLabel>
+                  <EarningsValue>{getTotalReferrals()}</EarningsValue>
+                </EarningsRow>
+                <EarningsRow>
+                  <EarningsLabel>Pending Earnings</EarningsLabel>
+                  <EarningsValue>{formatCurrency(advertiser.earningsPending)}</EarningsValue>
+                </EarningsRow>
+                <EarningsRow>
+                  <EarningsLabel>Paid Earnings</EarningsLabel>
+                  <EarningsValue>{formatCurrency(advertiser.earningsPaid)}</EarningsValue>
+                </EarningsRow>
+                <EarningsRow>
+                  <EarningsLabel>Total Earnings</EarningsLabel>
+                  <EarningsValue>{formatCurrency(getTotalEarnings())}</EarningsValue>
+                </EarningsRow>
+              </EarningsSummary>
+            </DetailSection>
+            
+            {/* Admin Notes */}
+            <DetailSection>
+              <SectionTitle>Admin Notes</SectionTitle>
+              
+              <NoteTextArea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Add internal notes about this advertiser..."
+              />
+              
+              <SaveButton 
+                onClick={handleSaveNote} 
+                disabled={savingNote}
+              >
+                {savingNote ? 'Saving...' : 'Save Note'}
+              </SaveButton>
+            </DetailSection>
+            
+            {/* Referral Bookings */}
+            <DetailSection style={{ gridColumn: '1 / -1' }}>
+              <SectionTitle>Referral Bookings</SectionTitle>
+              
+              {bookings.length === 0 ? (
+                <NoDataMessage>No referral bookings found for this advertiser.</NoDataMessage>
+              ) : (
+                  <BookingsTable>
+                    <BookingsTableHead>
+                    <tr>
+                        <BookingsTableHeader>Property</BookingsTableHeader>
+                        <BookingsTableHeader>Tenant</BookingsTableHeader>
+                        <BookingsTableHeader>Date</BookingsTableHeader>
+                      <BookingsTableHeader>Amount</BookingsTableHeader>
+                        <BookingsTableHeader>Status</BookingsTableHeader>
+                    </tr>
+                    </BookingsTableHead>
+                    <tbody>
+                    {bookings.map((booking, index) => (
+                      <BookingsTableRow key={index}>
+                          <BookingsTableCell>
+                            <PropertyInfo>
+                              <PropertyThumbnail 
+                                src={booking.propertyThumbnail || getPlaceholderImage(booking.propertyTitle)} 
+                                alt={booking.propertyTitle} 
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = getPlaceholderImage(booking.propertyTitle);
+                                }}
+                              />
+                              <PropertyTitle>{booking.propertyTitle}</PropertyTitle>
+                            </PropertyInfo>
+                          </BookingsTableCell>
+                          <BookingsTableCell>{booking.tenantName}</BookingsTableCell>
+                          <BookingsTableCell>{formatDate(booking.date)}</BookingsTableCell>
+                        <BookingsTableCell>{formatCurrency(booking.amount)}</BookingsTableCell>
+                          <BookingsTableCell>
+                          <StatusBadge $status={booking.status}>
+                            {booking.status === 'pending' ? 'Pending' : 
+                             booking.status === 'paid' ? 'Paid' : 'Completed'}
+                          </StatusBadge>
+                          </BookingsTableCell>
+                        </BookingsTableRow>
+                      ))}
+                    </tbody>
+                  </BookingsTable>
+              )}
+            </DetailSection>
+          </DetailGrid>
+        </DetailContainer>
+      </GlassCard>
+    </PageContainer>
   );
 };
 

@@ -9,6 +9,7 @@ interface BookingSummaryProps {
   lengthOfStay?: string;
   price: number;
   serviceFee: number;
+  brokerExtraFee?: number;
   total: number;
   termsAgreed: boolean;
   onTermsChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -29,6 +30,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   lengthOfStay,
   price,
   serviceFee,
+  brokerExtraFee,
   total,
   termsAgreed,
   onTermsChange,
@@ -94,16 +96,17 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
         </div>
 
         <div className="info-row">
-          <span className="label">Service fee</span>
+          <span className="label">Tenant commission</span>
           <span className="value">{formatCurrency(serviceFee)}</span>
         </div>
-
-        {haaniMaxFee > 0 && (
+        {brokerExtraFee && brokerExtraFee > 0 && (
           <div className="info-row">
-            <span className="label">Haani Max Protection</span>
-            <span className="value">{formatCurrency(haaniMaxFee)}</span>
+            <span className="label">Broker/Agency fee</span>
+            <span className="value">{formatCurrency(brokerExtraFee)}</span>
           </div>
         )}
+
+        {/* HAANI Max retired; no extra line item */}
 
         {discount && discount.amount > 0 && (
           <div className="info-row discount">
@@ -118,7 +121,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
             {discount && discount.amount > 0 ? (
               <>
                 <span style={{ textDecoration: 'line-through', fontSize: '0.8em', marginRight: '8px', color: Theme.colors.gray2 }}>
-                  {formatCurrency(price + serviceFee + haaniMaxFee)}
+                  {formatCurrency(price + serviceFee + (brokerExtraFee || 0) + haaniMaxFee)}
                 </span>
                 {formatCurrency(total)}
               </>

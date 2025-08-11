@@ -33,7 +33,7 @@ const ReservationsTableStyle = styled.div`
         color: ${Theme.colors.black};
         padding: 24px 32px;
         margin: 0;
-        border-bottom: 1px solid ${Theme.colors.gray5};
+        border-bottom: 1px solid ${Theme.colors.gray3};
     }
 
     table {
@@ -50,12 +50,12 @@ const ReservationsTableStyle = styled.div`
         padding: 16px 24px;
         font: ${Theme.typography.fonts.smallB};
         color: ${Theme.colors.gray2};
-        border-bottom: 1px solid ${Theme.colors.gray5};
+        border-bottom: 1px solid ${Theme.colors.gray3};
     }
 
     td {
         padding: 16px 24px;
-        border-bottom: 1px solid ${Theme.colors.gray5};
+        border-bottom: 1px solid ${Theme.colors.gray3};
         font: ${Theme.typography.fonts.smallM};
         color: ${Theme.colors.black};
         vertical-align: middle;
@@ -248,8 +248,8 @@ export const ReservationsTable: React.FC<ReservationsTableProps> = ({
                 dateObj = date;
             }
             // Check if it's a Firestore timestamp (has seconds and nanoseconds)
-            else if (typeof date === 'object' && 'seconds' in date && 'nanoseconds' in date) {
-                dateObj = new Date(date.seconds * 1000);
+            else if (typeof (date as any)?.seconds === 'number') {
+                dateObj = new Date((date as any).seconds * 1000);
             }
             // Handle string or any other format
             else {
@@ -284,8 +284,8 @@ export const ReservationsTable: React.FC<ReservationsTableProps> = ({
                 updated = updatedAt;
             }
             // Check if it's a Firestore timestamp (has seconds and nanoseconds)
-            else if (typeof updatedAt === 'object' && 'seconds' in updatedAt && 'nanoseconds' in updatedAt) {
-                updated = new Date(updatedAt.seconds * 1000);
+            else if (typeof (updatedAt as any)?.seconds === 'number') {
+                updated = new Date((updatedAt as any).seconds * 1000);
             }
             // Handle string or any other format
             else {
@@ -386,14 +386,14 @@ export const ReservationsTable: React.FC<ReservationsTableProps> = ({
                                     )}
                                     <span>
                                         {res.client?.name || 'Unknown'}
-                                        <span className="age">{res.client?.age ? `, ${res.client.age}` : ''}</span>
+                                     <span className="age">{(res.client as any)?.age ? `, ${(res.client as any).age}` : ''}</span>
                                     </span>
                                 </div>
                             </td>
                             <td>{res.property?.title || 'Apartment - flat in Agadir'}</td>
                             <td>{formatDate(res.reservation.createdAt)}</td>
-                            <td>{res.property?.occupants || res.reservation.numPeople || 2}</td>
-                            <td>{formatDate(res.reservation.scheduledDate || res.reservation.movingDate || res.reservation.createdAt)}</td>
+                            <td>{(res.property as any)?.occupants || (res.reservation as any).numPeople || 2}</td>
+                            <td>{formatDate((res.reservation as any).scheduledDate || (res.reservation as any).movingDate || res.reservation.createdAt)}</td>
                             <td>
                                 {res.reservation.status === 'accepted' ? 
                                     (() => {

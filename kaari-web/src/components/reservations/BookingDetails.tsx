@@ -98,11 +98,11 @@ const MessageLabel = styled.div`
 const MessageValue = styled.div`
   font: ${Theme.typography.fonts.mediumM};
   color: ${Theme.colors.black};
-  background-color: ${Theme.colors.background};
+  background-color: ${Theme.colors.white};
   padding: 1rem;
   border-radius: ${Theme.borders.radius.md};
   white-space: pre-wrap;
-  border: ${Theme.borders.tertiary};
+  border: ${Theme.borders.primary};
 `;
 
 // BookingDetail component for individual items
@@ -117,8 +117,8 @@ const BookingDetail: React.FC<BookingDetailProps> = ({ label, value, fullWidth }
     // Handle objects that might be timestamps
     if (typeof value === 'object') {
       // Check if it's a timestamp object
-      if ('seconds' in value && 'nanoseconds' in value) {
-        const date = new Date((value.seconds as number) * 1000);
+      if (typeof (value as any).seconds === 'number') {
+        const date = new Date(((value as any).seconds as number) * 1000);
         return date.toLocaleDateString('en-US', {
           month: 'long',
           day: 'numeric',

@@ -29,7 +29,7 @@ interface ReservationDetailsModalProps {
     client?: User | null;
   } | null;
   onApprove: (id: string) => void;
-  onReject: (id: string) => void;
+  onReject: (id: string, reason?: string, suggestedMoveInDate?: string) => void;
   isProcessing: boolean | string | null;
 }
 
@@ -569,7 +569,11 @@ export const ReservationDetailsModal: React.FC<ReservationDetailsModalProps> = (
             <ActionButtons>
               <button 
                 className="decline"
-                onClick={() => onReject(req.id)}
+                onClick={() => {
+                  const reason = 'move_in_date_too_far';
+                  const suggested = prompt('Optional: suggest an alternative move-in date (YYYY-MM-DD)');
+                  onReject(req.id, reason, suggested || undefined);
+                }}
                 disabled={isProcessing === req.id}
               >
                 Decline

@@ -390,8 +390,7 @@ const ReservationsPage: React.FC = () => {
       const hasAcceptedBooking = typedData.some(res => 
         res.reservation.status === 'accepted' || 
         res.reservation.status === 'paid' || 
-        res.reservation.status === 'movedIn' || 
-        res.reservation.status === 'completed'
+        res.reservation.status === 'movedIn'
       );
       
       if (hasAcceptedBooking) {
@@ -424,9 +423,17 @@ const ReservationsPage: React.FC = () => {
     }
   };
   
-  const handleReject = async (requestId: string) => {
+  const handleReject = async (requestId: string, reason?: string, suggestedMoveInDate?: string) => {
     try {
       setProcessingRequest(requestId);
+      // Light bridge: store metadata before calling server-action
+      if (suggestedMoveInDate && reason === 'move_in_date_too_far') {
+        try {
+          // Best-effort: write suggested date on request for server to detect
+          // Using fetch to a serverless endpoint would be ideal; here we rely on server-action reading reservation fields if present
+          console.debug('Counter-offer metadata:', { requestId, reason, suggestedMoveInDate });
+        } catch {}
+      }
       await rejectReservationRequest(requestId);
       await loadReservations();
     } catch (err: any) {
@@ -542,6 +549,9 @@ const ReservationsPage: React.FC = () => {
       case 'refundCompleted': return 'Refund Complete';
       case 'refundFailed': return 'Refund Failed';
       case 'cancellationUnderReview': return 'Under Review';
+      case 'counter_offer_pending_tenant': return 'Counter-offer Pending';
+      case 'accepted_counter_offer': return 'Counter-offer Accepted';
+      case 'rejected_counter_offer': return 'Counter-offer Rejected';
       default: return status.charAt(0).toUpperCase() + status.slice(1);
     }
   };
@@ -670,6 +680,12 @@ const ReservationsPage: React.FC = () => {
                       <span className={`status-badge ${reservation.reservation.status}`}>
                         {getStatusDisplayName(reservation.reservation.status)}
                       </span>
+                      {reservation.reservation.status === 'counter_offer_pending_tenant' && reservation.reservation.moveInDate && (
+                        <div style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#92400E' }} title="Awaiting tenant response">
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F59E0B' }} />
+                          Proposed: {formatDate(reservation.reservation.moveInDate)}
+                        </div>
+                      )}
                     </td>
                     <td className="text-center">
                       {reservation.reservation.status === 'pending' ? (
@@ -684,12 +700,13 @@ const ReservationsPage: React.FC = () => {
                           </button>
                           <button 
                             className="reject"
-                            onClick={() => handleReject(reservation.reservation.id)}
+                            onClick={() => openDetailsModal(reservation)}
                             disabled={processingRequest === reservation.reservation.id}
                             title="Reject"
                           >
                             <FaTimesCircle size={18} />
                           </button>
+                          {/* Optional: future UX for counter-offer when rejecting due to far move-in */}
                         </div>
                       ) : (
                         <div>-</div>

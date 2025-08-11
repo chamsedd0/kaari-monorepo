@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getAuth, applyActionCode, signInWithEmailLink } from 'firebase/auth';
+import { getAuth, applyActionCode } from 'firebase/auth';
 import styled from 'styled-components';
 import { Theme } from '../../theme/theme';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +14,7 @@ const EmailVerificationHandler: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const [isProcessing, setIsProcessing] = useState(true);
+  const [isProcessing] = useState(true);
   
   useEffect(() => {
     const processVerification = async () => {
@@ -40,7 +40,7 @@ const EmailVerificationHandler: React.FC = () => {
         // If verification fails, redirect to error page
         navigate('/email-verification/error');
       } finally {
-        setIsProcessing(false);
+        // processing complete
       }
     };
     

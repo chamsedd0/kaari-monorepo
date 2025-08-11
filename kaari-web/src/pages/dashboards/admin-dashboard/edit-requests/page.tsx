@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { PageContainer, PageHeader, GlassCard, Pill, IconButton, Button as AdminUIButton } from '../../../../components/admin/AdminUI';
 import { Theme } from '../../../../theme/theme';
 import { FaSearch, FaFilter, FaCheck, FaTimes, FaSpinner, FaPaw, FaSmoking } from 'react-icons/fa';
 import { ImWoman } from 'react-icons/im';
@@ -179,8 +180,10 @@ const EditRequestsPage: React.FC = () => {
   };
 
   return (
+    <PageContainer>
+      <PageHeader title="Property Edit Requests" />
+      <GlassCard>
     <EditRequestsPageContainer>
-      <h1>Property Edit Requests</h1>
       
       <div className="filter-bar">
         <div className="search-box">
@@ -193,54 +196,19 @@ const EditRequestsPage: React.FC = () => {
           />
         </div>
         
-        <div className="filters">
-          <div className="filter-dropdown">
-            <div className="filter-button" onClick={() => setShowStatusFilter(!showStatusFilter)}>
-              <FaFilter />
-              <span>Status: {filterStatus === 'all' ? 'All' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}</span>
-            </div>
-            
-            {showStatusFilter && (
-              <div className="dropdown-content">
-                <div 
-                  className={`dropdown-item ${filterStatus === 'all' ? 'active' : ''}`}
-                  onClick={() => {
-                    setFilterStatus('all');
-                    setShowStatusFilter(false);
-                  }}
-                >
-                  All
-                </div>
-                <div 
-                  className={`dropdown-item ${filterStatus === 'pending' ? 'active' : ''}`}
-                  onClick={() => {
-                    setFilterStatus('pending');
-                    setShowStatusFilter(false);
-                  }}
-                >
-                  Pending
-                </div>
-                <div 
-                  className={`dropdown-item ${filterStatus === 'approved' ? 'active' : ''}`}
-                  onClick={() => {
-                    setFilterStatus('approved');
-                    setShowStatusFilter(false);
-                  }}
-                >
-                  Approved
-                </div>
-                <div 
-                  className={`dropdown-item ${filterStatus === 'rejected' ? 'active' : ''}`}
-                  onClick={() => {
-                    setFilterStatus('rejected');
-                    setShowStatusFilter(false);
-                  }}
-                >
-                  Rejected
-                </div>
-              </div>
-            )}
-          </div>
+        <div className="filters" style={{ display: 'flex', gap: 8 }}>
+          {(['all','pending','approved','rejected'] as const).map(k => (
+            <Pill key={k}
+              onClick={() => setFilterStatus(k)}
+              style={{
+                cursor: 'pointer',
+                background: filterStatus === k ? `${Theme.colors.tertiary}30` : Theme.colors.white,
+                borderColor: filterStatus === k ? Theme.colors.tertiary : `${Theme.colors.tertiary}80`
+              }}
+            >
+              {k === 'all' ? 'All' : k.charAt(0).toUpperCase() + k.slice(1)}
+            </Pill>
+          ))}
         </div>
       </div>
 
@@ -301,27 +269,21 @@ const EditRequestsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="request-actions">
-                <button 
-                  className="approve-button"
-                  onClick={() => handleApproveRequest(request.id)}
-                  title="Approve Request"
-                >
+              <div className="request-actions" style={{ display: 'flex', gap: 8 }}>
+                <AdminUIButton $variant="default" onClick={() => handleApproveRequest(request.id)} title="Approve Request">
                   <FaCheck /> Approve
-                </button>
-                <button 
-                  className="reject-button"
-                  onClick={() => handleRejectRequest(request.id)}
-                  title="Reject Request"
-                >
+                </AdminUIButton>
+                <AdminUIButton $variant="destructive" onClick={() => handleRejectRequest(request.id)} title="Reject Request">
                   <FaTimes /> Reject
-                </button>
+                </AdminUIButton>
               </div>
             </div>
           ))}
         </div>
       )}
     </EditRequestsPageContainer>
+      </GlassCard>
+    </PageContainer>
   );
 };
 

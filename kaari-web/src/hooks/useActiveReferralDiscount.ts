@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useStore } from '../backend/store';
 import referralService from '../services/ReferralService';
-import { useToast } from '../contexts/ToastContext';
+import { useToastService } from '../services/ToastService';
 import { useTranslation } from 'react-i18next';
 
 export interface ActiveDiscount {
@@ -22,7 +22,7 @@ export const useActiveReferralDiscount = () => {
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState<number>(0);
   const currentUser = useStore(state => state.user);
-  const { showToast } = useToast();
+  const toast = useToastService();
   const { t } = useTranslation();
   
   // Ref to track if this is the first load
@@ -58,12 +58,7 @@ export const useActiveReferralDiscount = () => {
         
         // If discount has expired, return null and show toast
         if (timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0) {
-          showToast({
-            type: 'error',
-            title: t('referral.discount.expired'),
-            message: t('referral.discount.expired'),
-            duration: 5000
-          });
+          toast.showToast('error', t('referral.discount.expired'), t('referral.discount.expired'), true, 5000);
           return null;
         }
         
@@ -75,7 +70,7 @@ export const useActiveReferralDiscount = () => {
     }, 60000); // Update every minute
     
     return () => clearInterval(timer);
-  }, [activeDiscount, showToast, t]);
+  }, [activeDiscount, t]);
 
   // Retry mechanism for fetching discount
   const fetchDiscount = async () => {
@@ -114,15 +109,7 @@ export const useActiveReferralDiscount = () => {
         
         // Show toast when discount is applied (but not on first load)
         if (!isFirstLoad.current && !prevDiscountRef.current) {
-          showToast({
-            type: 'success',
-            title: t('referral.discount.applied'),
-            message: t('referral.discount.banner', { 
-              code: newDiscount.code, 
-              amount: newDiscount.amount 
-            }),
-            duration: 5000
-          });
+            toast.showToast('success', t('referral.discount.applied'), t('referral.discount.banner', { code: newDiscount.code, amount: newDiscount.amount }), true, 5000);
         }
         
         // Update the previous discount ref
@@ -133,27 +120,15 @@ export const useActiveReferralDiscount = () => {
         setError(null);
         
         // Only show toast if we previously had a discount
-        if (prevDiscountRef.current) {
-          showToast({
-            type: 'info',
-            title: t('referral.discount.inUse'),
-            message: t('referral.discount.inUseMessage', { 
-              amount: prevDiscountRef.current.amount 
-            }),
-            duration: 5000
-          });
+          if (prevDiscountRef.current) {
+          toast.showToast('info', t('referral.discount.inUse'), t('referral.discount.inUseMessage', { amount: prevDiscountRef.current.amount }), true, 5000);
         }
         
         prevDiscountRef.current = null;
       } else {
         // If we had a discount before but not now, it might have expired
         if (prevDiscountRef.current) {
-          showToast({
-            type: 'error',
-            title: t('referral.discount.expired'),
-            message: t('referral.discount.expired'),
-            duration: 5000
-          });
+          toast.showToast('error', t('referral.discount.expired'), t('referral.discount.expired'), true, 5000);
         }
         
         setActiveDiscount(null);

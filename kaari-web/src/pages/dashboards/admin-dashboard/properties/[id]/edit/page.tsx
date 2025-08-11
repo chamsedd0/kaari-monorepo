@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
+import { PageContainer, PageHeader, GlassCard } from '../../../../../../components/admin/AdminUI';
 import { Theme } from '../../../../../../theme/theme';
 import { FaArrowLeft, FaSave, FaTrash, FaPlus, FaUpload, FaMapMarkerAlt } from 'react-icons/fa';
 import { getPropertyById, updateProperty } from '../../../../../../backend/server-actions/PropertyServerActions';
@@ -400,18 +401,12 @@ const PropertyEditPage: React.FC = () => {
   }
 
   return (
-    <PropertyEditPageContainer>
+    <PageContainer>
+      <PageHeader title="Edit Property" right={<button className="save-button" onClick={handleSave} disabled={saving}><FaSave /> {saving ? 'Saving...' : 'Save Changes'}</button>} />
+      <GlassCard>
       <div className="header">
         <button className="back-button" onClick={handleBack}>
           <FaArrowLeft /> Back
-        </button>
-        <h1>Edit Property</h1>
-        <button 
-          className="save-button" 
-          onClick={handleSave}
-          disabled={saving}
-        >
-          <FaSave /> {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
 
@@ -1027,7 +1022,8 @@ const PropertyEditPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </PropertyEditPageContainer>
+      </GlassCard>
+    </PageContainer>
   );
 };
 

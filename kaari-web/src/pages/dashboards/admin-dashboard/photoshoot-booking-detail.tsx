@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaCalendarAlt, FaUsers, FaUpload, FaCheck, FaPlus, FaTimes, FaTrash, FaBan, FaExclamationCircle, FaSync, FaExclamationTriangle } from 'react-icons/fa';
+import { PageContainer, PageHeader, GlassCard, GlassInput, GlassSelect, GlassTextArea, PrimaryButton, SecondaryButton, DangerButton, ButtonGroup } from '../../../components/admin/AdminUI';
 import {
   DashboardCard,
   CardTitle,
@@ -226,18 +227,8 @@ const StyledFormGroup = styled(FormGroup)`
   }
 
   input, select, textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid ${Theme.colors.gray}40;
-    border-radius: ${Theme.borders.radius.sm};
-    font: ${Theme.typography.fonts.mediumM};
-    transition: all 0.2s ease;
-
-    &:focus {
-      outline: none;
-      border-color: ${Theme.colors.secondary};
-      box-shadow: 0 0 0 2px ${Theme.colors.secondary}20;
-    }
+    ${'' /* Use glass inputs globally inside this form */}
+    border-radius: 14px;
   }
 
   textarea {
@@ -287,16 +278,12 @@ const ListContainer = styled.div`
       background: transparent;
       border: none;
       cursor: pointer;
-      border-radius: ${Theme.borders.radius.sm};
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.2s ease;
-      
-      &:hover {
-        color: ${Theme.colors.error}dd;
-        background: ${Theme.colors.error}10;
-      }
+      &:hover { color: ${Theme.colors.error}dd; background: ${Theme.colors.error}10; }
     }
   }
   
@@ -1063,7 +1050,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         minstay: '',
         availableFrom: new Date().toISOString().split('T')[0],
         images: bookingData.images || [],
-        videos: bookingData.videos || [],
+        videos: (bookingData as any).videos || [],
         amenities: [],
         features: [], // Start with empty features array instead of COMMON_FEATURES
         status: 'available',
@@ -1408,7 +1395,7 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
         });
       };
       
-      addValidVideos(booking.videos);
+      addValidVideos((booking as any).videos);
       addValidVideos(propertyData.videos);
       
       // Convert Set back to array
@@ -2774,13 +2761,12 @@ const PhotoshootBookingDetail: React.FC<PhotoshootBookingDetailProps> = ({ onUpd
                 
                 {/* Submit Button */}
                 <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button 
+                  <PrimaryButton 
                     onClick={handleCompleteBooking}
                     disabled={!propertyData.title || !propertyData.description || !propertyData.address.street}
-                    style={{ backgroundColor: Theme.colors.primary }}
                   >
                     <FaCheck /> Complete Booking & Create Property
-                  </Button>
+                  </PrimaryButton>
                 </div>
               </PropertyFormContainer>
             </div>

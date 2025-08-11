@@ -74,13 +74,13 @@ export async function getReviewsToWrite(): Promise<{
     console.log(`Total requests found: ${allRequests.length}`);
     
     // Get properties and check if already reviewed
-    const reviewsToWritePromises = allRequests.map(async (request) => {
+    const reviewsToWritePromises = allRequests.map(async (request: any) => {
       // Get property ID either directly from request or via listing
       let propertyId = request.propertyId;
       if (!propertyId && request.listingId) {
-        const listing = await getDocumentById('listings', request.listingId);
+        const listing = await getDocumentById<{ propertyId: string }>('listings', request.listingId);
         if (listing) {
-          propertyId = listing.propertyId;
+          propertyId = (listing as any).propertyId;
         }
       }
       
@@ -124,7 +124,7 @@ export async function getReviewsToWrite(): Promise<{
     });
     
     // Wait for all promises to resolve and filter out nulls
-    const reviewsToWrite = (await Promise.all(reviewsToWritePromises)).filter(Boolean);
+    const reviewsToWrite = (await Promise.all(reviewsToWritePromises)).filter(Boolean) as { property: Property; advertiser: User; moveInDate: Date; }[];
     
     console.log(`Found ${reviewsToWrite.length} reviews that need to be written`);
     
@@ -167,7 +167,7 @@ export async function getUserReviews(): Promise<{
     }));
     
     // Filter out reviews with missing properties
-    return reviewsWithDetails.filter(item => item.property !== null);
+    return reviewsWithDetails.filter((item): item is { review: Review; property: Property } => item.property !== null);
   } catch (error) {
     console.error('Error getting user reviews:', error);
     throw new Error('Failed to get user reviews');

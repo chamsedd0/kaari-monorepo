@@ -208,8 +208,8 @@ export const signInWithEmail = async (email: string, password: string): Promise<
       }
       
       return {
-        id: firebaseUser.uid, 
-        ...userData
+        ...userData,
+        id: firebaseUser.uid
       } as User;
     } else {
       throw new Error('User document not found in Firestore');
@@ -269,8 +269,8 @@ export const signInWithGoogle = async (
       }
       
       return {
-        id: firebaseUser.uid, 
-        ...userData
+        ...userData,
+        id: firebaseUser.uid
       } as User;
     } else {
       // Create new user document

@@ -2,8 +2,6 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Theme } from '../../theme/theme';
-import UnifiedHeader from '../../components/skeletons/constructed/headers/unified-header';
-import Footer from '../../components/skeletons/constructed/footer/footer';
 import { PurpleButtonLB60 } from '../../components/skeletons/buttons/purple_LB60';
 import { BpurpleButtonLB60 } from '../../components/skeletons/buttons/border_purple_LB60';
 import GenerativeObjectSvg from '../../components/skeletons/icons/Generative-Object.svg';
@@ -32,7 +30,6 @@ const ThankYouPage: React.FC = () => {
   
   return (
     <>
-      <UnifiedHeader variant="white" userType="advertiser" showSearchBar={true} />
       <ThankYouPageStyle>
         <div className="celebration-confetti left">
           <img src={LeftCelebrationSvg} alt="Left celebration" />

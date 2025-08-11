@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaSearch, FaEye, FaCopy } from 'react-icons/fa';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-import {
-  DashboardCard,
-  CardTitle,
-  CardContent,
-} from '../styles';
+import { PageContainer, PageHeader, FilterBar, SearchBox as GlassSearchBox, GlassCard, GlassTable, StatusBadge as GlassStatusBadge } from '../../../../components/admin/AdminUI';
 import { useNavigate } from 'react-router-dom';
 import { 
   getAllReferralAdvertisers,
@@ -330,10 +326,9 @@ const ReferralsPage: React.FC = () => {
   };
   
   return (
-    <DashboardCard>
-      <CardTitle>Referral Program Management</CardTitle>
-      <CardContent>
-        <FilterContainer>
+    <PageContainer>
+      <PageHeader title="Referral Program Management" />
+      <FilterBar>
           <FilterSelect
             value={passStatusFilter}
             onChange={handlePassStatusFilterChange}
@@ -343,16 +338,11 @@ const ReferralsPage: React.FC = () => {
             <option value="locked">Locked Pass</option>
           </FilterSelect>
           
-          <SearchContainer>
+          <GlassSearchBox>
             <FaSearch />
-            <SearchInput
-              type="text"
-              placeholder="Search by name, phone, or code"
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-          </SearchContainer>
-        </FilterContainer>
+            <input type="text" placeholder="Search by name, phone, or code" value={searchQuery} onChange={handleSearchChange} />
+          </GlassSearchBox>
+        </FilterBar>
         
         <TableContainer>
           {loading ? (
@@ -362,19 +352,20 @@ const ReferralsPage: React.FC = () => {
           ) : filteredAdvertisers.length === 0 ? (
             <NoDataMessage>No referral advertisers found matching your criteria.</NoDataMessage>
           ) : (
-            <ReferralTable>
-              <ReferralTableHead>
-                <tr>
-                  <ReferralTableHeader style={{ width: '20%' }}>Advertiser</ReferralTableHeader>
-                  <ReferralTableHeader style={{ width: '15%' }}>Referral Code</ReferralTableHeader>
-                  <ReferralTableHeader style={{ width: '10%' }}>Total Referrals</ReferralTableHeader>
-                  <ReferralTableHeader style={{ width: '15%' }}>Earnings (Pending)</ReferralTableHeader>
-                  <ReferralTableHeader style={{ width: '15%' }}>Earnings (Paid)</ReferralTableHeader>
-                  <ReferralTableHeader style={{ width: '15%' }}>Total Earnings</ReferralTableHeader>
-                  <ReferralTableHeader style={{ width: '10%' }}>Pass Status</ReferralTableHeader>
-                </tr>
-              </ReferralTableHead>
-              <tbody>
+            <GlassCard>
+              <GlassTable>
+                <thead>
+                  <tr>
+                    <th style={{ width: '20%' }}>Advertiser</th>
+                    <th style={{ width: '15%' }}>Referral Code</th>
+                    <th style={{ width: '10%' }}>Total Referrals</th>
+                    <th style={{ width: '15%' }}>Earnings (Pending)</th>
+                    <th style={{ width: '15%' }}>Earnings (Paid)</th>
+                    <th style={{ width: '15%' }}>Total Earnings</th>
+                    <th style={{ width: '10%' }}>Pass Status</th>
+                  </tr>
+                </thead>
+                <tbody>
                 {filteredAdvertisers.map(advertiser => (
                   <ReferralRow key={advertiser.id} onClick={() => openAdvertiserDetail(advertiser)}>
                     <ReferralCell>
@@ -405,18 +396,18 @@ const ReferralsPage: React.FC = () => {
                       <EarningsAmount>{formatCurrency(getTotalEarnings(advertiser))}</EarningsAmount>
                     </ReferralCell>
                     <ReferralCell>
-                      <PassStatusBadge $status={advertiser.passStatus}>
+                      <GlassStatusBadge status={advertiser.passStatus}>
                         {advertiser.passStatus === 'active' ? 'Active' : 'Locked'}
-                      </PassStatusBadge>
+                      </GlassStatusBadge>
                     </ReferralCell>
                   </ReferralRow>
                 ))}
-              </tbody>
-            </ReferralTable>
+                </tbody>
+              </GlassTable>
+            </GlassCard>
           )}
         </TableContainer>
-      </CardContent>
-    </DashboardCard>
+    </PageContainer>
   );
 };
 

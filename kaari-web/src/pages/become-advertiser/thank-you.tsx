@@ -235,7 +235,7 @@ const LaunchInfo = styled.div`
 `;
 
 const LaunchTitle = styled.h2`
-  font: ${Theme.typography.fonts.h5};
+  font: ${Theme.typography.fonts.h4B};
   color: white;
   margin-bottom: 10px;
   

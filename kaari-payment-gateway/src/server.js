@@ -8,7 +8,15 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+// capture raw body for HMAC verification on callback
+app.use(bodyParser.json({
+  verify: (req, res, buf) => {
+    try {
+      // @ts-ignore attach raw body for signature verification
+      req.rawBody = buf.toString('utf8');
+    } catch (_) {}
+  }
+}));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Root endpoint for testing

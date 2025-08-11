@@ -77,20 +77,20 @@ const AdvertiserOnboardingPage = () => {
                   (i18n.language && i18n.language.startsWith('fr') ? 'fr' : 'en');
       
       // Try to get from fallback translations
-      let fallback = fallbackTranslations[lang as 'fr' | 'en'];
+      let fallback: any = fallbackTranslations[lang as 'fr' | 'en'] as Record<string, any>;
       
       // Navigate through the nested properties
       for (const part of keyParts) {
-        if (fallback && typeof fallback === 'object' && part in fallback) {
-          fallback = fallback[part] as any;
+        if (fallback && typeof fallback === 'object' && (fallback as Record<string, any>)[part] !== undefined) {
+          fallback = (fallback as Record<string, any>)[part];
         } else {
           // If property doesn't exist, try the other language
           const otherLang = lang === 'fr' ? 'en' : 'fr';
-          fallback = fallbackTranslations[otherLang];
+          fallback = fallbackTranslations[otherLang] as Record<string, any>;
           
           for (const p of keyParts) {
-            if (fallback && typeof fallback === 'object' && p in fallback) {
-              fallback = fallback[p] as any;
+            if (fallback && typeof fallback === 'object' && (fallback as Record<string, any>)[p] !== undefined) {
+              fallback = (fallback as Record<string, any>)[p];
             } else {
               return key; // Return the key if all else fails
             }

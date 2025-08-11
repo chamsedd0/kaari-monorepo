@@ -37,7 +37,7 @@ export const isProfileComplete = (user: User | null): boolean => {
     }
   }
   
-  return missingFields.length === 0 && hasIdentificationDocuments;
+  return missingFields.length === 0 && !!hasIdentificationDocuments;
 };
 
 /**

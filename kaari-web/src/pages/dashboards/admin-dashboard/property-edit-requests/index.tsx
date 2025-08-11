@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { PageContainer, PageHeader, GlassCard, GlassTable, Button as AdminUIButton } from '../../../../components/admin/AdminUI';
 import { FaCheck, FaTimes, FaEye, FaPaw, FaSmoking } from 'react-icons/fa';
 import { ImWoman } from 'react-icons/im';
 import { Theme } from '../../../../theme/theme';
@@ -175,8 +176,9 @@ const PropertyEditRequestsPage: React.FC = () => {
   };
 
   return (
-    <Container>
-      <h1>Property Edit Requests</h1>
+    <PageContainer>
+      <PageHeader title="Property Edit Requests" />
+      <GlassCard>
       
       {error && <ErrorMessage>{error}</ErrorMessage>}
       
@@ -204,12 +206,12 @@ const PropertyEditRequestsPage: React.FC = () => {
                     day: 'numeric'
                   })}
                 </RequestDate>
-                <ViewPropertyButton onClick={(e) => {
+                <AdminUIButton $variant="outline" onClick={(e) => {
                   e.stopPropagation();
                   viewProperty(request.propertyId);
                 }}>
                   <FaEye /> View Property
-                </ViewPropertyButton>
+                </AdminUIButton>
               </RequestCard>
             ))}
           </RequestsList>
@@ -266,19 +268,20 @@ const PropertyEditRequestsPage: React.FC = () => {
                 />
                 
                 <ActionButtons>
-                  <ApproveButton onClick={() => handleApprove(selectedRequest.id)}>
+                  <AdminUIButton $variant="default" onClick={() => handleApprove(selectedRequest.id)}>
                     <FaCheck /> Approve Request
-                  </ApproveButton>
-                  <RejectButton onClick={() => handleReject(selectedRequest.id)}>
+                  </AdminUIButton>
+                  <AdminUIButton $variant="destructive" onClick={() => handleReject(selectedRequest.id)}>
                     <FaTimes /> Reject Request
-                  </RejectButton>
+                  </AdminUIButton>
                 </ActionButtons>
               </AdminResponseSection>
             </RequestDetails>
           )}
         </Content>
       )}
-    </Container>
+      </GlassCard>
+    </PageContainer>
   );
 };
 

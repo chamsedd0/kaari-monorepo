@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
+import { PageContainer, PageHeader, FilterBar, SearchBox, Pill, Button as AdminUIButton, GlassCard, StatusBadge as GlassStatusBadge } from '../../../../components/admin/AdminUI';
 import { FaSearch, FaEdit, FaTrash, FaSync, FaFilter, FaExclamationTriangle } from 'react-icons/fa';
 import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +9,7 @@ import { Property } from '../../../../backend/models/entities';
 import { getProperties, deleteProperty, refreshPropertyAvailability } from '../../../../backend/server-actions/PropertyServerActions';
 import { useToastService } from '../../../../services/ToastService';
 import { getRefreshStatus, formatTimeAgo, getDaysSinceLastRefresh } from '../../../../utils/property-refresh-utils';
+import AdminTableScaffold from '../../../../components/admin/AdminTableScaffold';
 
 const ConfirmationModal = ({ 
   isOpen, 
@@ -57,8 +59,8 @@ const PropertyCard = ({
   const hasMultipleImages = property.images && property.images.length > 1;
   
   // Get refresh status
-  const refreshStatus = getRefreshStatus(property);
-  const daysSinceRefresh = getDaysSinceLastRefresh(property);
+  const refreshStatus = getRefreshStatus(property as any);
+  const daysSinceRefresh = getDaysSinceLastRefresh(property as any);
 
   const nextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -91,7 +93,7 @@ const PropertyCard = ({
     } else if (daysSinceRefresh >= 7) {
       return `${daysSinceRefresh} days ago`;
     } else {
-      return formatTimeAgo(property.lastAvailabilityRefresh);
+      return formatTimeAgo((property as any).lastAvailabilityRefresh);
     }
   };
 
@@ -134,24 +136,18 @@ const PropertyCard = ({
       </div>
       <div className="property-info">
         <h3>{property.title}</h3>
-        <p className="property-type">{property.propertyType}</p>
+         <p className="property-type">{String(property.propertyType)}</p>
         <p className="property-price">${property.price}/month</p>
         <p className="property-location">
           {property.address.city}, {property.address.country}
         </p>
         <div className="action-buttons">
-          <button
-            className="edit-button"
-            onClick={() => onEdit(property.id)}
-          >
-            <FaEdit /> Edit
-          </button>
-          <button
-            className="delete-button"
-            onClick={() => onDelete(property)}
-          >
-            <FaTrash /> Delete
-          </button>
+            <AdminUIButton $variant="secondary" onClick={() => onEdit(property.id)}>
+              <FaEdit /> Edit
+            </AdminUIButton>
+            <AdminUIButton $variant="destructive" onClick={() => onDelete(property)}>
+              <FaTrash /> Delete
+            </AdminUIButton>
         </div>
       </div>
     </div>
@@ -163,6 +159,8 @@ const PropertyPage: React.FC = () => {
   const toast = useToastService();
   
   const [properties, setProperties] = useState<Property[]>([]);
+  const [pageCursor, setPageCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -172,15 +170,20 @@ const PropertyPage: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    loadProperties();
+    loadProperties(true);
   }, []);
 
-  const loadProperties = async () => {
+  const loadProperties = async (reset: boolean = false) => {
     try {
       setLoading(true);
       setError(null);
-      const propertiesData = await getProperties({ showAllStatuses: true });
-      setProperties(propertiesData as Property[]);
+      const limit = 50;
+      const data = await getProperties({ showAllStatuses: true, limit, page: reset ? 1 : undefined });
+      // Fallback: if service supports startAfterId/lastDoc, wire here; using page for now
+      setProperties(data as Property[]);
+      // Simplified hasMore heuristic until cursor is exposed
+      setHasMore((data as Property[]).length === limit);
+      setPageCursor(null);
     } catch (err) {
       console.error('Error loading properties:', err);
       setError('Failed to load properties');
@@ -228,8 +231,8 @@ const PropertyPage: React.FC = () => {
     // Status filter
     if (filterStatus === 'all') return true;
     
-    const refreshStatus = getRefreshStatus(property);
-    const daysSinceRefresh = getDaysSinceLastRefresh(property);
+    const refreshStatus = getRefreshStatus(property as any);
+    const daysSinceRefresh = getDaysSinceLastRefresh(property as any);
     
     switch (filterStatus) {
       case 'overdue':
@@ -245,12 +248,12 @@ const PropertyPage: React.FC = () => {
   
   // Get counts for filter badges
   const getFilterCounts = () => {
-    const overdue = properties.filter(p => getDaysSinceLastRefresh(p) >= 14).length;
+    const overdue = properties.filter(p => getDaysSinceLastRefresh(p as any) >= 14).length;
     const needsRefresh = properties.filter(p => {
-      const days = getDaysSinceLastRefresh(p);
+      const days = getDaysSinceLastRefresh(p as any);
       return days >= 7 && days < 14;
     }).length;
-    const recent = properties.filter(p => getDaysSinceLastRefresh(p) < 7).length;
+    const recent = properties.filter(p => getDaysSinceLastRefresh(p as any) < 7).length;
     
     return { overdue, needsRefresh, recent };
   };
@@ -258,10 +261,9 @@ const PropertyPage: React.FC = () => {
   const filterCounts = getFilterCounts();
 
   return (
-    <PropertyPageContainer>
-      <div className="header">
-        <h1>Properties</h1>
-        <div className="header-stats">
+    <PageContainer>
+      <PageHeader title="Properties" />
+      <div className="header-stats">
           <div className="stat-item">
             <span className="stat-number">{properties.length}</span>
             <span className="stat-label">Total Properties</span>
@@ -275,68 +277,79 @@ const PropertyPage: React.FC = () => {
             <span className="stat-label">Need Refresh</span>
           </div>
         </div>
-      </div>
-
-      <div className="filters-row">
-        <div className="search-box">
+      <FilterBar>
+        <SearchBox>
           <FaSearch />
-          <input
-            type="text"
-            placeholder="Search by title, type, or ID"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        
+          <input type="text" placeholder="Search by title, type, or ID" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        </SearchBox>
         <div className="filter-buttons">
-          <button 
-            className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('all')}
-          >
-            <FaFilter /> All ({properties.length})
-          </button>
-          <button 
-            className={`filter-btn urgent ${filterStatus === 'overdue' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('overdue')}
-          >
-            <FaExclamationTriangle /> Overdue ({filterCounts.overdue})
-          </button>
-          <button 
-            className={`filter-btn warning ${filterStatus === 'needs_refresh' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('needs_refresh')}
-          >
-            <FaSync /> Needs Refresh ({filterCounts.needsRefresh})
-          </button>
-          <button 
-            className={`filter-btn success ${filterStatus === 'recent' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('recent')}
-          >
-            Recent ({filterCounts.recent})
-          </button>
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="loading-state">Loading properties...</div>
-      ) : error ? (
-        <div className="error-state">
-          <p>{error}</p>
-          <button onClick={loadProperties}>Retry</button>
-        </div>
-      ) : filteredProperties.length === 0 ? (
-        <div className="empty-state">No properties found matching your criteria.</div>
-      ) : (
-        <div className="properties-grid">
-          {filteredProperties.map(property => (
-            <PropertyCard 
-              key={property.id} 
-              property={property} 
-              onEdit={handleEditProperty} 
-              onDelete={confirmDelete}
-            />
+          {([
+            { key: 'all', label: `All (${properties.length})`, icon: <FaFilter /> },
+            { key: 'overdue', label: `Overdue (${filterCounts.overdue})`, icon: <FaExclamationTriangle /> },
+            { key: 'needs_refresh', label: `Needs Refresh (${filterCounts.needsRefresh})`, icon: <FaSync /> },
+            { key: 'recent', label: `Recent (${filterCounts.recent})` },
+          ] as const).map(item => (
+            <Pill key={item.key as string}
+              onClick={() => setFilterStatus(item.key as any)}
+              style={{
+                cursor: 'pointer',
+                background: filterStatus === (item.key as any) ? `${Theme.colors.tertiary}30` : Theme.colors.white,
+                borderColor: filterStatus === (item.key as any) ? Theme.colors.tertiary : `${Theme.colors.tertiary}80`
+              }}
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                {item.icon} {item.label}
+              </span>
+            </Pill>
           ))}
         </div>
-      )}
+      </FilterBar>
+
+      <AdminTableScaffold
+        loading={loading}
+        error={error}
+        isEmpty={!loading && !error && filteredProperties.length === 0}
+        onRetry={() => loadProperties(true)}
+        hasMore={hasMore}
+        onLoadMore={() => loadProperties(false)}
+      >
+        {filteredProperties.length > 0 && (
+          <CardsGrid>
+            {filteredProperties.map(property => {
+              const priceLabel = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(property.price || 0);
+              const refreshedAgo = formatTimeAgo((property as any).lastAvailabilityRefresh);
+              const imageSrc = (property.images && property.images[0]) || '';
+              return (
+                <CardBox key={property.id}>
+                  <div className="thumb">
+                    {imageSrc ? <img src={imageSrc} alt={property.title} /> : <div className="placeholder" />}
+                    <div className="overlay" />
+                    <div className="chip price">{priceLabel}/month</div>
+                  </div>
+                  <div className="body">
+                    <div className="title-row">
+                      <h3>{property.title}</h3>
+                      <GlassStatusBadge status={String(property.propertyType)}>{String(property.propertyType)}</GlassStatusBadge>
+                    </div>
+                    <div className="meta">
+                      <span>{property.address.city}, {property.address.country}</span>
+                      <span className="muted">{refreshedAgo}</span>
+                    </div>
+                    <div className="actions">
+                      <AdminUIButton $variant="outline" $size="sm" onClick={() => handleEditProperty(property.id)}>
+                        <FaEdit /> Edit
+                      </AdminUIButton>
+                      <AdminUIButton $variant="destructive" $size="sm" onClick={() => confirmDelete(property)}>
+                        <FaTrash /> Delete
+                      </AdminUIButton>
+                    </div>
+                  </div>
+                </CardBox>
+              );
+            })}
+          </CardsGrid>
+        )}
+      </AdminTableScaffold>
       
       <ConfirmationModal
         isOpen={!!propertyToDelete}
@@ -345,7 +358,7 @@ const PropertyPage: React.FC = () => {
         title="Delete Property"
         message={`Are you sure you want to delete the property "${propertyToDelete?.title}"? This action cannot be undone.`}
       />
-    </PropertyPageContainer>
+    </PageContainer>
   );
 };
 
@@ -798,33 +811,29 @@ const ModalFooter = styled.div`
   border-top: 1px solid ${Theme.colors.gray}20;
 `;
 
-const CancelButton = styled.button`
-  padding: 0.75rem 1.5rem;
-  background-color: white;
-  color: ${Theme.colors.gray2};
-  border: 1px solid ${Theme.colors.gray}30;
-  border-radius: ${Theme.borders.radius.sm};
-  font: ${Theme.typography.fonts.smallB};
-  cursor: pointer;
-  
-  &:hover {
-    background-color: ${Theme.colors.gray}10;
-  }
-`;
+const CancelButton = styled(AdminUIButton).attrs({ $variant: 'secondary' as const })``;
 
-const DeleteButton = styled.button`
-  padding: 0.75rem 1.5rem;
-  background-color: ${Theme.colors.error};
-  color: white;
-  border: none;
-  border-radius: ${Theme.borders.radius.sm};
-  font: ${Theme.typography.fonts.smallB};
-  cursor: pointer;
-  
-  &:hover {
-    background-color: ${Theme.colors.error};
-    opacity: 0.9;
-  }
-`;
+const DeleteButton = styled(AdminUIButton).attrs({ $variant: 'destructive' as const })``;
 
 export default PropertyPage; 
+
+const CardsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+`;
+
+const CardBox = styled(GlassCard)`
+  padding: 0;
+  overflow: hidden;
+  .thumb { position: relative; aspect-ratio: 16 / 9; background: #f2f2f2; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.25) 100%); }
+  .thumb .chip { position: absolute; bottom: 8px; left: 8px; padding: 6px 10px; border-radius: 999px; background: rgba(255,255,255,0.9); font: ${Theme.typography.fonts.smallB}; }
+  .body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .title-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  h3 { margin: 0; font: ${Theme.typography.fonts.mediumB}; }
+  .meta { display: flex; justify-content: space-between; color: ${Theme.colors.gray2}; font: ${Theme.typography.fonts.smallM}; }
+  .meta .muted { color: ${Theme.colors.gray}; }
+  .actions { display: flex; gap: 8px; margin-top: 6px; }
+`;

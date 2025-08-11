@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaSearch, FaEye, FaCopy, FaClock } from 'react-icons/fa';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-import {
-  DashboardCard,
-  CardTitle,
-  CardContent,
-} from '../styles';
+import { PageContainer, PageHeader, FilterBar, SearchBox as GlassSearchBox, GlassCard, GlassTable, StatusBadge as GlassStatusBadge } from '../../../../components/admin/AdminUI';
 import { useNavigate } from 'react-router-dom';
 import { 
   getAllMoveInBookings, 
@@ -497,10 +493,9 @@ const MoveInPage: React.FC = () => {
   };
   
   return (
-    <DashboardCard>
-      <CardTitle>Move-In Management</CardTitle>
-      <CardContent>
-        <FilterContainer>
+    <PageContainer>
+      <PageHeader title="Move-In Management" />
+      <FilterBar>
           <FilterSelect 
             value={statusFilter}
             onChange={handleStatusFilterChange}
@@ -513,16 +508,11 @@ const MoveInPage: React.FC = () => {
             <option value="Cancelled – Advertiser">Cancelled – Advertiser ({countByStatus('Cancelled – Advertiser')})</option>
           </FilterSelect>
           
-          <SearchContainer>
+          <GlassSearchBox>
             <FaSearch />
-            <SearchInput 
-              type="text" 
-              placeholder="Search by name, property, or phone"
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-          </SearchContainer>
-        </FilterContainer>
+            <input type="text" placeholder="Search by name, property, or phone" value={searchQuery} onChange={handleSearchChange} />
+          </GlassSearchBox>
+        </FilterBar>
         
         <TableContainer>
           {loading ? (
@@ -532,19 +522,20 @@ const MoveInPage: React.FC = () => {
           ) : filteredBookings.length === 0 ? (
             <NoDataMessage>No move-in bookings found matching your criteria.</NoDataMessage>
           ) : (
-            <MoveInTable>
-              <MoveInTableHead>
-                <tr>
-                  <MoveInTableHeader style={{ width: '25%' }}>Property</MoveInTableHeader>
-                  <MoveInTableHeader style={{ width: '15%' }}>Tenant</MoveInTableHeader>
-                  <MoveInTableHeader style={{ width: '15%' }}>Advertiser</MoveInTableHeader>
-                  <MoveInTableHeader style={{ width: '15%' }}>Move-In Date</MoveInTableHeader>
-                  <MoveInTableHeader style={{ width: '10%' }}>Amount</MoveInTableHeader>
-                  <MoveInTableHeader style={{ width: '10%' }}>Status</MoveInTableHeader>
-                  <MoveInTableHeader style={{ width: '10%' }}>Safety Window</MoveInTableHeader>
-                </tr>
-              </MoveInTableHead>
-              <tbody>
+            <GlassCard>
+              <GlassTable>
+                <thead>
+                  <tr>
+                    <th style={{ width: '25%' }}>Property</th>
+                    <th style={{ width: '15%' }}>Tenant</th>
+                    <th style={{ width: '15%' }}>Advertiser</th>
+                    <th style={{ width: '15%' }}>Move-In Date</th>
+                    <th style={{ width: '10%' }}>Amount</th>
+                    <th style={{ width: '10%' }}>Status</th>
+                    <th style={{ width: '10%' }}>Safety Window</th>
+                  </tr>
+                </thead>
+                <tbody>
                 {filteredBookings.map(booking => (
                   <MoveInRow key={booking.id} onClick={() => openBookingDetail(booking)}>
                     <PropertyCell>
@@ -585,9 +576,9 @@ const MoveInPage: React.FC = () => {
                       {formatAmount(booking.amount)}
                     </MoveInCell>
                     <MoveInCell>
-                      <StatusBadge $status={booking.status}>
+                      <GlassStatusBadge status={booking.status}>
                         {booking.status}
-                      </StatusBadge>
+                      </GlassStatusBadge>
                       {booking.reason !== 'None' && (
                         <div style={{ marginTop: '5px' }}>
                           <ReasonBadge $reason={booking.reason}>
@@ -604,12 +595,12 @@ const MoveInPage: React.FC = () => {
                     </MoveInCell>
                   </MoveInRow>
                 ))}
-              </tbody>
-            </MoveInTable>
+                </tbody>
+              </GlassTable>
+            </GlassCard>
           )}
         </TableContainer>
-      </CardContent>
-    </DashboardCard>
+    </PageContainer>
   );
 };
 

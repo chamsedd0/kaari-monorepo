@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { PropertyPage, spin } from "./styles";
-import UnifiedHeader from "../../components/skeletons/constructed/headers/unified-header";
+import { useParams } from "react-router-dom";
+import { PropertyPage } from "./styles";
 import PhotoSlider from "../../components/skeletons/constructed/slider/photo-slider";
 import pictures from '../../assets/images/propertyExamplePic.png'
 import PropertyRequestCard from "../../components/skeletons/cards/send-request-card";
@@ -63,7 +62,7 @@ interface Property {
   address: Address;
   bedrooms?: number;
   bathrooms?: number;
-  propertyType: 'apartment' | 'house' | 'condo' | 'land' | 'commercial';
+  propertyType: 'apartment' | 'house' | 'studio' | 'room' | 'villa' | 'penthouse' | 'townhouse' | 'condo' | 'land' | 'commercial';
   rooms?: Room[];
   amenities: string[];
   features: string[];
@@ -116,7 +115,7 @@ declare global {
 
 const PropertyPageComponent = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  // removed unused navigate
   const [property, setProperty] = useState<Property | null>(null);
   const [advertiser, setAdvertiser] = useState<User | null>(null);
   const [recommendations, setRecommendations] = useState<Property[]>([]);
@@ -315,7 +314,6 @@ const PropertyPageComponent = () => {
       isStopped={isBoxStopped} 
       stopPosition={boxTopPosition}
     >
-      <UnifiedHeader variant="white" userType="user" />
       <div className="main-content">
         <div className="photo-slider">
           {property.images.length > 0 || (property.videos && property.videos.length > 0) ? (
@@ -576,18 +574,15 @@ const PropertyPageComponent = () => {
             </div>
           </div>
           <div className="about-advertiser">
-            <h2>About the advertiser</h2>
+            <h2>Advertiser</h2>
             <div className="advertiser-info">
-              <img src={advertiser?.profilePicture || ProfilePic} alt={advertiser?.name || "Advertiser"} className="advertiser-image" />
               <div className="advertiser-details">
-                <h3>{advertiser?.name || "Advertiser"}</h3>
-                <p>On Kaari since {advertiser?.createdAt ? new Date(advertiser.createdAt).toLocaleDateString() : "2024"}</p>
                 <div className="certification-banner">
                   <CertificationBanner text={"Verified"} purple></CertificationBanner>
                 </div>
+                <div className="advertiser-type-badge">Landlord / Broker / Agency</div>
               </div>
             </div>
-            <p className="advertiser-description">{advertiser?.aboutMe || "No description."}</p>
           </div>
           <div className="location">
             <h2>Where you will live</h2>
@@ -714,8 +709,8 @@ const PropertyPageComponent = () => {
             advertiserImage={advertiser?.profilePicture || ProfilePic}
             moveInDate={availableFrom}
             priceFor30Days={property.price || 0}
-            serviceFee={property.serviceFee || 0}
-            totalPrice={(property.price || 0) + (property.serviceFee || 0)}
+            serviceFee={Math.round((property.price || 0) * 0.25)}
+            totalPrice={Math.round((property.price || 0) + ((property.price || 0) * 0.25))}
             propertyId={property.id}
             ownerId={advertiser?.id || ''}
           />

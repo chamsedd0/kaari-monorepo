@@ -605,6 +605,20 @@ const DashboardPage: React.FC = () => {
                 {/* Referral Banner - Always visible */}
                 <ReferralBanner />
                 
+                {/* Downgrade banner if flagged by system */}
+                {(user as any)?.downgradeBanner?.type === 'broker_to_landlord' && (
+                    <div style={{
+                        background: '#FFF3CD',
+                        color: '#856404',
+                        padding: '12px 16px',
+                        borderRadius: '8px',
+                        marginBottom: '16px',
+                        border: '1px solid #FFEEBA'
+                    }}>
+                        Your account was downgraded to Landlord due to low activity (&lt; 3 active listings in 60 days). If this is a mistake, contact support.
+                    </div>
+                )}
+
                 {/* Free Photoshoot Banner - Only visible if no photoshoots */}
                 {showFreePhotoshootBanner && (
                     <FreePhotoshootBanner />

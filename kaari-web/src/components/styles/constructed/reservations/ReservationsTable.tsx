@@ -1,11 +1,11 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
-import { Request, Listing, Property, User } from '../../../../backend/entities';
+import { Request, Property, User } from '../../../../backend/entities';
 
 interface ReservationWithDetails {
   reservation: Request;
-  listing?: Listing | null;
+  listing?: any | null;
   property?: Property | null;
   advertiser?: User | null;
 }
@@ -32,7 +32,7 @@ export const ReservationsTableStyle = styled.div`
         display: grid;
         grid-template-columns: 2fr 1.5fr 1fr 1fr 0.5fr 0.5fr;
         padding: 12px 16px;
-        border-bottom: 1px solid ${Theme.colors.gray5};
+        border-bottom: 1px solid ${Theme.colors.gray3};
 
         span {
             font: ${Theme.typography.fonts.text14};
@@ -45,7 +45,7 @@ export const ReservationsTableStyle = styled.div`
         grid-template-columns: 2fr 1.5fr 1fr 1fr 0.5fr 0.5fr;
         padding: 16px;
         align-items: center;
-        border-bottom: 1px solid ${Theme.colors.gray5};
+        border-bottom: 1px solid ${Theme.colors.gray3};
 
         .property-name {
             font: ${Theme.typography.fonts.text16};
@@ -82,7 +82,7 @@ export const ReservationsTableStyle = styled.div`
             width: fit-content;
 
             &.pending {
-                background: ${Theme.colors.info};
+                background: ${Theme.colors.blue};
                 color: ${Theme.colors.white};
             }
 
@@ -104,7 +104,7 @@ export const ReservationsTableStyle = styled.div`
 
         .details-button {
             padding: 6px 12px;
-            border: 1px solid ${Theme.colors.gray5};
+            border: 1px solid ${Theme.colors.gray3};
             border-radius: ${Theme.borders.radius.md};
             background: transparent;
             font: ${Theme.typography.fonts.text14};
@@ -113,7 +113,7 @@ export const ReservationsTableStyle = styled.div`
             transition: all 0.2s ease;
 
             &:hover {
-                background: ${Theme.colors.gray6};
+                background: ${Theme.colors.gray3};
             }
         }
     }

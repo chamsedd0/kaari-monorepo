@@ -85,7 +85,7 @@ const ProfilePage: React.FC = () => {
                     toast.profile.uploadDocumentSuccess();
                 } catch (idError) {
                     console.error('Error uploading government ID:', idError);
-                    toast.profile.documentUploadError('Failed to upload identification documents.');
+                    toast.profile.uploadDocumentError('Failed to upload identification documents.');
                     // Continue with the profile update even if ID upload fails
                 }
             }

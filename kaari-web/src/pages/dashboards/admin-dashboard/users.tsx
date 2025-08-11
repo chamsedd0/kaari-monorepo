@@ -12,13 +12,8 @@ import {
   FaFilter, 
   FaRedo
 } from 'react-icons/fa';
-import { 
-  DashboardCard, 
-  CardTitle, 
-  CardContent, 
-  Button, 
-  StatusBadge 
-} from './styles';
+import { PageContainer, PageHeader, GlassCard, FilterBar, SearchBox, Pill, IconButton } from '../../../components/admin/AdminUI';
+import { Button, StatusBadge } from './styles';
 import { getAllUsers, blockUser, unblockUser } from '../../../backend/server-actions/UserServerActions';
 import { deleteDocument } from '../../../backend/firebase/firestore';
 import { User } from '../../../backend/entities';
@@ -89,66 +84,9 @@ const ActionsContainer = styled.div`
   }
 `;
 
-const FilterContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  align-items: center;
-  
-  button {
-    padding: 0.5rem 1rem;
-    border: 1px solid ${Theme.colors.gray}30;
-    border-radius: 4px;
-    background-color: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    
-    &.active {
-      background-color: ${Theme.colors.primary};
-      color: white;
-      border-color: ${Theme.colors.primary};
-    }
-    
-    &:hover {
-      background-color: ${Theme.colors.gray}10;
-      
-      &.active {
-        background-color: ${Theme.colors.primary}dd;
-      }
-    }
-  }
-`;
+// Legacy FilterContainer removed; using shared FilterBar and Pill
 
-const SearchContainer = styled.div`
-  position: relative;
-  flex: 1;
-  max-width: 300px;
-  
-  input {
-    width: 100%;
-    padding: 0.5rem 1rem;
-    padding-left: 2.5rem;
-    border: 1px solid ${Theme.colors.gray}30;
-    border-radius: 4px;
-    font-size: 1rem;
-    
-    &:focus {
-      outline: none;
-      border-color: ${Theme.colors.primary};
-    }
-  }
-  
-  svg {
-    position: absolute;
-    left: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: ${Theme.colors.gray};
-  }
-`;
+// Legacy SearchContainer removed; using shared SearchBox
 
 const UserProfile = styled.div`
   display: flex;
@@ -451,15 +389,9 @@ const UsersPage = () => {
   };
 
   return (
-    <DashboardCard>
-      <CardTitle>
-        <h2>User Management</h2>
-        <Button onClick={handleRefresh} className="secondary">
-          <FaRedo /> Refresh
-        </Button>
-      </CardTitle>
-      
-      <CardContent>
+    <PageContainer>
+      <PageHeader title="User Management" right={<Button onClick={handleRefresh} className="secondary"><FaRedo /> Refresh</Button>} />
+      <GlassCard>
         {/* Stats cards */}
         <Stats>
           <div className="stat-card">
@@ -481,42 +413,30 @@ const UsersPage = () => {
         </Stats>
         
         {/* Filters and search */}
-        <FilterContainer>
-          <button 
-            className={activeFilter === 'all' ? 'active' : ''} 
-            onClick={() => handleFilterClick('all')}
-          >
-            <FaFilter /> All Users
-          </button>
-          <button 
-            className={activeFilter === 'client' ? 'active' : ''} 
-            onClick={() => handleFilterClick('client')}
-          >
-            <FaUser /> Clients
-          </button>
-          <button 
-            className={activeFilter === 'advertiser' ? 'active' : ''} 
-            onClick={() => handleFilterClick('advertiser')}
-          >
-            <FaUserTie /> Advertisers
-          </button>
-          <button 
-            className={activeFilter === 'admin' ? 'active' : ''} 
-            onClick={() => handleFilterClick('admin')}
-          >
-            <FaUserCog /> Admins
-          </button>
-          
-          <SearchContainer>
+        <FilterBar>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {([
+              { key: 'all', label: 'All Users', icon: <FaFilter /> },
+              { key: 'client', label: 'Clients', icon: <FaUser /> },
+              { key: 'advertiser', label: 'Advertisers', icon: <FaUserTie /> },
+              { key: 'admin', label: 'Admins', icon: <FaUserCog /> },
+            ] as const).map(item => (
+              <Pill key={item.key as string} onClick={() => handleFilterClick(item.key as any)} style={{
+                cursor: 'pointer',
+                background: activeFilter === (item.key as any) ? `${Theme.colors.tertiary}30` : Theme.colors.white,
+                borderColor: activeFilter === (item.key as any) ? Theme.colors.tertiary : `${Theme.colors.tertiary}80`
+              }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  {item.icon} {item.label}
+                </span>
+              </Pill>
+            ))}
+          </div>
+          <SearchBox>
             <FaSearch />
-            <input 
-              type="text" 
-              placeholder="Search users..." 
-              value={searchQuery} 
-              onChange={handleSearchChange}
-            />
-          </SearchContainer>
-        </FilterContainer>
+            <input type="text" placeholder="Search users..." value={searchQuery} onChange={handleSearchChange} />
+          </SearchBox>
+        </FilterBar>
 
         {/* User list */}
         {loading ? (
@@ -586,27 +506,22 @@ const UsersPage = () => {
                       <ActionsContainer>
                         {user.role !== 'admin' && (
                           <>
-                            <button 
-                              className="view" 
-                              title="View Details"
-                              onClick={() => handleViewUser(user.id)}
-                            >
-                              <FaEye />
-                            </button>
-                            <button 
-                              className={user.isBlocked ? "unblock" : "block"} 
-                              title={user.isBlocked ? "Unblock User" : "Block User"}
+                            <IconButton title="View Details" onClick={() => handleViewUser(user.id)}>
+                              <FaEye style={{ color: Theme.colors.primary }} />
+                            </IconButton>
+                            <IconButton
+                              title={user.isBlocked ? 'Unblock User' : 'Block User'}
                               onClick={() => handleBlockUser(user.id, user.isBlocked || false)}
                             >
-                              {user.isBlocked ? <FaUnlock /> : <FaBan />}
-                            </button>
-                            <button 
-                              className="delete" 
-                              title="Delete User"
-                              onClick={() => handleDeleteUser(user.id, user.name)}
-                            >
-                              <FaTrash />
-                            </button>
+                              {user.isBlocked ? (
+                                <FaUnlock style={{ color: Theme.colors.success }} />
+                              ) : (
+                                <FaBan style={{ color: Theme.colors.error }} />
+                              )}
+                            </IconButton>
+                            <IconButton title="Delete User" onClick={() => handleDeleteUser(user.id, user.name)}>
+                              <FaTrash style={{ color: Theme.colors.error }} />
+                            </IconButton>
                           </>
                         )}
                         {user.role === 'admin' && (
@@ -653,8 +568,8 @@ const UsersPage = () => {
             )}
           </TableContainer>
         )}
-      </CardContent>
-    </DashboardCard>
+      </GlassCard>
+    </PageContainer>
   );
 };
 

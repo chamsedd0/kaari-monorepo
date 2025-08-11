@@ -51,6 +51,7 @@ export interface User {
   
   // Advertiser specific fields
   advertiserType?: 'broker' | 'landlord' | 'agency'; // Type of advertiser
+  brokerExtraFeePercent?: number; // 0-75, tenant-side extra fee for brokers/agencies
   isBusiness?: boolean; // Whether the advertiser is a business/agency (legacy field)
   businessName?: string; // Name of the agency if isBusiness is true
   businessSize?: string; // Size of the agency if isBusiness is true
@@ -87,6 +88,10 @@ export interface Property {
   amenities: string[];
   features: string[];
   status: 'available' | 'occupied';
+  // Listing lifecycle and freshness
+  listingStatus?: 'active' | 'pending_verification' | 'auto_unlisted_stale';
+  firstPublishedAt?: Date; // First time the listing went live
+  lastPhotoshootAt?: Date; // Latest photoshoot timestamp
   createdAt: Date;
   updatedAt: Date;
   
@@ -141,7 +146,7 @@ export interface Request {
   propertyId?: string; // Reference to the Property ID if related to a specific property
   requestType: 'rent' | 'information' | 'offer' | 'general';
   message: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'paid' | 'movedIn' | 'cancelled' | 'refundProcessing' | 'refundCompleted' | 'refundFailed' | 'cancellationUnderReview';
+  status: 'pending' | 'accepted' | 'rejected' | 'paid' | 'movedIn' | 'cancelled' | 'refundProcessing' | 'refundCompleted' | 'refundFailed' | 'cancellationUnderReview' | 'cancellationRejected' | 'counter_offer_pending_tenant' | 'accepted_counter_offer' | 'rejected_counter_offer';
   offerAmount?: number; // In case this is an offer
   createdAt: Date;
   updatedAt: Date;
