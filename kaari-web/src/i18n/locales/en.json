@@ -957,6 +957,11 @@
       "learn_more": "Learn More"
     }
   },
+  "user_dashboard": {
+    "payment_method_required": "Payment method required",
+    "payment_method_description": "To receive refunds, add a payout method to your account.",
+    "add_payment_method": "Add Payment Method"
+  },
   "footer": {
     "for_advertisers": "For Advertisers",
     "manage_properties": "Manage Properties",

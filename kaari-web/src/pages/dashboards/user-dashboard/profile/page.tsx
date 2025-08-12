@@ -60,7 +60,6 @@ const ProfilePage: React.FC = () => {
         setSuccess(false);
         
         try {
-            // Update profile data
             const updatedUser = await updateUserProfile(user.id, {
                 name,
                 surname,
@@ -72,85 +71,59 @@ const ProfilePage: React.FC = () => {
                 profilePicture
             });
             
-            // Upload ID documents if provided
             if (idFront) {
                 try {
-                    // Only pass idBack if it exists
                     if (idBack) {
                         await uploadGovernmentID(user.id, idFront, idBack);
                     } else {
                         await uploadGovernmentID(user.id, idFront);
                     }
-                    // Show document upload success toast
                     toast.profile.uploadDocumentSuccess();
                 } catch (idError) {
                     console.error('Error uploading government ID:', idError);
                     toast.profile.uploadDocumentError('Failed to upload identification documents.');
-                    // Continue with the profile update even if ID upload fails
                 }
             }
             
-            // Update user in global store
             setUser(updatedUser);
             setSuccess(true);
-            
-            // Show profile update success toast
             toast.profile.updateSuccess();
-            
-            // Reset file inputs after successful upload
             setProfilePicture(null);
             setIdFront(null);
             setIdBack(null);
-            
         } catch (err) {
             console.error('Error updating profile:', err);
             setError('Failed to update profile. Please try again.');
-            
-            // Show error toast
             toast.profile.updateError('Failed to update profile. Please try again.');
         } finally {
             setLoading(false);
         }
     };
     
-    // Handle connecting with Google
     const handleConnectGoogle = async () => {
         if (!user) return;
-        
-        // This would typically trigger a Google OAuth flow
-        // For now, we just simulate it
         try {
             const googleData = {
                 googleId: 'google-id-placeholder',
-                googleEmail: `${user.email.split('@')[0]}@gmail.com` // Simulated Google email
+                googleEmail: `${user.email.split('@')[0]}@gmail.com`
             };
-            
             const updatedUser = await connectWithGoogle(user.id, googleData);
             setUser(updatedUser);
-            
-            // Show success toast
             toast.app.actionSuccess('Google account connection');
         } catch (err) {
             console.error('Error connecting with Google:', err);
             setError('Failed to connect with Google. Please try again.');
-            
-            // Show error toast
             toast.app.actionError('Google account connection', 'Failed to connect with Google. Please try again.');
         }
     };
     
-    // Handle profile picture change
     const handleProfilePictureChange = (file: File) => {
         setProfilePicture(file);
-        
-        // Create a preview of the uploaded image
         const reader = new FileReader();
         reader.onloadend = () => {
             setProfilePicturePreview(reader.result as string);
         };
         reader.readAsDataURL(file);
-        
-        // Show success toast
         toast.profile.uploadPhotoSuccess();
     };
     
@@ -165,6 +138,9 @@ const ProfilePage: React.FC = () => {
                             profileImage={profilePicturePreview || user?.profilePicture}
                             size={120}
                         />
+                        <button className="edit-button" title="Change photo" onClick={() => {}}>
+                            ✎
+                        </button>
                     </div>
                     <UploadFieldModel 
                         isProfilePicture={true}
@@ -173,17 +149,20 @@ const ProfilePage: React.FC = () => {
                 </div>
                 <div className="profile-grid">
                     <InputBaseModel 
-                        title="Full Name" 
+                        title="Full Name"
+                        placeholder="Enter your full name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                     />
                     <InputBaseModel 
-                        title="Your Surname" 
+                        title="Your Surname"
+                        placeholder="Enter your surname"
                         value={surname}
                         onChange={(e) => setSurname(e.target.value)}
                     />
                     <InputBaseModel 
-                        title="Phone Number" 
+                        title="Phone Number"
+                        placeholder="06 XX XX XX XX"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
                     />
@@ -200,7 +179,6 @@ const ProfilePage: React.FC = () => {
                         label="Back of ID" 
                         onFileSelect={(file) => setIdBack(file)}
                     />
-               
                     <div className="profile-inbut-label">Gender</div>
                     <div className="profile-inbut-label">Languages</div>
                     <GenderCheckBox 
@@ -210,7 +188,6 @@ const ProfilePage: React.FC = () => {
                     <div className="text-button">Add A Language+</div>
                 </div>
                 
-                
                 <SelectFieldBaseModel 
                     label="Nationality"
                     options={['English', 'French', 'Spanish', 'German', 'Italian', 'Portuguese', 'Russian', 'Arabic', 'Chinese', 'Japanese', 'Korean', 'Vietnamese', 'Other']} 
@@ -219,7 +196,8 @@ const ProfilePage: React.FC = () => {
                 />
                 
                 <TextAreaBaseModel 
-                    title="About Me" 
+                    title="About Me"
+                    placeholder="Tell us a bit about yourself (studies, work, hobbies...)"
                     value={aboutMe}
                     onChange={(e) => setAboutMe(e.target.value)}
                 />
@@ -241,6 +219,7 @@ const ProfilePage: React.FC = () => {
                         text={loading ? "Saving..." : "Save Data"} 
                         onClick={handleSaveProfile}
                         disabled={loading}
+                        style={{ borderRadius: 100 }}
                     />
                 </div>
             </div>

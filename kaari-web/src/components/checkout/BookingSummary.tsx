@@ -99,7 +99,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
           <span className="label">Tenant commission</span>
           <span className="value">{formatCurrency(serviceFee)}</span>
         </div>
-        {brokerExtraFee && brokerExtraFee > 0 && (
+        {typeof brokerExtraFee === 'number' && brokerExtraFee > 0 && (
           <div className="info-row">
             <span className="label">Broker/Agency fee</span>
             <span className="value">{formatCurrency(brokerExtraFee)}</span>

@@ -181,6 +181,7 @@ export const PaymentsPageStyle = styled.div`
                
                button {
                 max-width: 200px;
+                border-radius: 100px;
                }
             }
         }

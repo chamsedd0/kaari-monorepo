@@ -1,24 +1,33 @@
 import styled from 'styled-components';
+import { Theme } from '../../../theme/theme';
 
 export const UserDashboardStyle = styled.div`
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  background-color: ${Theme.colors.white};
   
   .dashboard-container {
     display: flex;
+    gap: 24px;
     min-height: calc(100vh - 80px);
+    padding: 24px;
   }
   
   .sidebar {
-    width: 250px;
-    background-color: #f5f5f5;
+    width: 280px;
+    background: rgba(81, 27, 114, 0.04);
+    border: ${Theme.borders.primary};
+    border-radius: ${Theme.borders.radius.lg};
     padding: 20px;
-    
+    height: fit-content;
+    position: sticky;
+    top: 96px;
+
     .sidebar-title {
-      font-size: 24px;
-      margin-bottom: 20px;
-      font-weight: 600;
+      font: ${Theme.typography.fonts.h5B};
+      color: ${Theme.colors.black};
+      margin: 0 0 16px 0;
     }
     
     .sidebar-nav {
@@ -26,24 +35,30 @@ export const UserDashboardStyle = styled.div`
         list-style: none;
         padding: 0;
         margin: 0;
+        display: grid;
+        gap: 8px;
         
         li {
-          margin-bottom: 10px;
+          margin: 0;
           
           button {
             width: 100%;
             text-align: left;
-            padding: 10px;
+            padding: 12px 14px;
             border: none;
-            background: none;
-            border-radius: 4px;
-            font-size: 16px;
+            background: ${Theme.colors.white};
+            border-radius: ${Theme.borders.radius.md};
+            font: ${Theme.typography.fonts.largeB};
+            color: ${Theme.colors.black};
             cursor: pointer;
-            transition: background-color 0.2s;
+            border: ${Theme.borders.primary};
+            transition: background-color 0.2s, box-shadow 0.2s, transform 0.02s;
             
             &:hover {
-              background-color: #e0e0e0;
+              background-color: ${Theme.colors.tertiary};
             }
+            
+            &:active { transform: scale(0.998); }
           }
         }
       }
@@ -51,13 +66,13 @@ export const UserDashboardStyle = styled.div`
   }
   
   .content {
-    flex-grow: 1;
-    padding: 20px;
+    flex: 1;
+    padding: 0;
     
     .payment-method-alert {
-      background-color: #fff3cd;
-      border: 1px solid #ffeeba;
-      border-radius: 8px;
+      background: #fff8eb;
+      border: 1px solid #ffe0a6;
+      border-radius: ${Theme.borders.radius.md};
       padding: 16px;
       margin-bottom: 20px;
       display: flex;
@@ -66,42 +81,41 @@ export const UserDashboardStyle = styled.div`
       
       .alert-content {
         h3 {
-          font-size: 18px;
-          font-weight: 600;
-          margin: 0 0 8px 0;
-          color: #856404;
+          font: ${Theme.typography.fonts.largeB};
+          margin: 0 0 6px 0;
+          color: #8a5800;
         }
         
-        p {
-          margin: 0;
-          color: #856404;
-        }
+        p { margin: 0; color: #8a5800; font: ${Theme.typography.fonts.mediumM}; }
       }
       
       .add-payment-method-btn {
-        background-color: #856404;
+        background-color: ${Theme.colors.secondary};
         color: white;
         border: none;
-        border-radius: 4px;
+        border-radius: ${Theme.borders.radius.sm};
         padding: 10px 16px;
         cursor: pointer;
-        font-weight: 600;
+        font: ${Theme.typography.fonts.mediumB};
         transition: background-color 0.2s;
         
-        &:hover {
-          background-color: #6d5204;
-        }
+        &:hover { background-color: ${Theme.colors.primary}; }
       }
     }
   }
   
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     .dashboard-container {
       flex-direction: column;
+      padding: 16px;
+      gap: 16px;
+      min-height: calc(100vh - 64px);
     }
     
     .sidebar {
       width: 100%;
+      position: static;
+      top: auto;
     }
   }
 `;

@@ -292,10 +292,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
   // Kaari tenant commission: 25% of 1st month rent
   const serviceFee = Math.round(pricePerMonth * 0.25);
   // Broker/Agency extra fee (0–75%) from advertiser profile if applicable
-  const brokerExtraPercent = (reservation?.advertiser as any)?.brokerExtraFeePercent;
-  const brokerExtraFee = (reservation && (reservation as any).advertiser && typeof brokerExtraPercent === 'number')
-    ? Math.round(Math.max(0, Math.min(75, brokerExtraPercent)) / 100 * pricePerMonth)
-    : 0;
+  const brokerExtraFee = 0; // Will be computed from advertiser profile if available
 
   // Apply discount if available
   const discount = rentalData.discount ? {

@@ -31,12 +31,13 @@ const VerifyEmailCardComponent: React.FC<VerifyEmailCardProps> = ({
             <span className="verify-email-text">{verifyEmailText}</span>
           </>
         ) : (
-          <div className="verify-action">
+          <div className="verify-action" style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
             <p className="unverified-text">Your email is not verified</p>
             <PurpleButtonMB48 
               text={isLoading ? "Sending..." : "Send Verification Email"} 
               onClick={onSendVerification}
               disabled={isLoading}
+              style={{ borderRadius: 100 }}
             />
           </div>
         )}

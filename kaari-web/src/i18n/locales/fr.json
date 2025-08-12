@@ -916,6 +916,11 @@
       "learn_more": "En savoir plus"
     }
   },
+  "user_dashboard": {
+    "payment_method_required": "Méthode de paiement requise",
+    "payment_method_description": "Pour recevoir des remboursements, ajoutez une méthode de paiement à votre compte.",
+    "add_payment_method": "Ajouter une méthode de paiement"
+  },
   "footer": {
     "for_advertisers": "Pour les Annonceurs",
     "manage_properties": "Gérer les Propriétés",
