@@ -1,5 +1,5 @@
 import { ScrollView, View, Text } from 'react-native';
-import { TextWithBg, Timer, Timeslot, Switch, ProgressBar, SegmentedProgress, Stars, MessageBubbles, PrimaryButton, SecondaryButton, TextButton, IconButton, LikeButton, DualActionButtons, SectionBadge, TopPickBadge, SimpleChip, Tag, StatusTag, VerifiedTag, PeopleCountTag, FilterTag, CountTag, GirlsOnlyTag, WeekdayChatTag, TextField, SearchBar, PasswordField, SendMessageField, UploadField, RadioGroup, TextArea, AlertBanner, PropertyCardTenant, GenericHeader, Tabs, BottomNavBar, TenantNavBar, AdvertiserNavBar, LinkNavBar } from '~/components';
+import { TextWithBg, Timer, TimerDisplay, Timeslot, Switch, ProgressBar, SegmentedProgress, Stars, MessageBubbles, PrimaryButton, SecondaryButton, TextButton, IconButton, LikeButton, DualActionButtons, SectionBadge, TopPickBadge, SimpleChip, Tag, StatusTag, VerifiedTag, PeopleCountTag, FilterTag, CountTag, GirlsOnlyTag, WeekdayChatTag, TextField, SearchBar, PasswordField, SendMessageField, UploadField, RadioGroup, TextArea, Slider, SelectorRadial, AlertBanner, ReservationRequestBanner, PaymentMethodBanner, PropertyCardTenant, LatestReviewCard, PaymentsSummaryCard, GenericHeader, Tabs, BottomNavBar, TenantNavBar, AdvertiserNavBar, LinkNavBar, DrawerStatusHeader } from '~/components';
 import React from 'react';
 
 export default function ComponentsGallery() {
@@ -14,10 +14,10 @@ export default function ComponentsGallery() {
         </View>
         <View className="gap-4">
           <Text className="text-lg font-semibold">Timer</Text>
-          <View className="flex-row gap-3">
-            <Timer size="small" colorScheme="purple" timeText="00:45" />
-            <Timer size="small" colorScheme="white" timeText="12:32" />
-            <Timer size="big" colorScheme="white" timeText="02:13:44" />
+          <View className="gap-4">
+            <TimerDisplay size="big" scheme="white" mode="countdown" initialSeconds={(1 * 24 + 23) * 3600 + 59 * 60 + 45} />
+            <TimerDisplay size="small" scheme="white" mode="countdown" initialSeconds={23 * 3600 + 59 * 60 + 45} />
+            <TimerDisplay size="small" scheme="purple" mode="countdown" initialSeconds={23 * 3600 + 59 * 60 + 45} />
           </View>
         </View>
         <View className="gap-4">
@@ -59,6 +59,7 @@ export default function ComponentsGallery() {
         <InputsDemo />
         <TagsDemo />
         <BannersCardsDemo />
+        <DrawerHeaderDemo />
         <HeadersNavDemo />
         <PngOverlayToggle />
       </View>
@@ -140,6 +141,7 @@ function InputsDemo() {
   const [pwd, setPwd] = React.useState('');
   const [msg, setMsg] = React.useState('');
   const [radio, setRadio] = React.useState('a');
+  const [slider, setSlider] = React.useState(0.3);
   return (
     <View className="gap-3">
       <Text className="text-lg font-semibold">Inputs</Text>
@@ -150,6 +152,8 @@ function InputsDemo() {
       <UploadField />
       <RadioGroup options={[{ label: 'Option A', value: 'a' }, { label: 'Option B', value: 'b' }]} value={radio} onChange={setRadio} />
       <TextArea label="About" placeholder="Write here..." />
+      <Slider value={slider} onChange={setSlider} />
+      <SelectorRadial label="Selector" selected={true} />
     </View>
   );
 }
@@ -174,6 +178,8 @@ function BannersCardsDemo() {
     <View className="gap-3">
       <Text className="text-lg font-semibold">Banner & Card</Text>
       <AlertBanner title="Payment failed" subtitle="Please update your payment method" tone="danger" actionLabel="Fix" />
+      <ReservationRequestBanner title="Reservation request sent" subtitle="Awaiting advertiser response" />
+      <PaymentMethodBanner title="Payment method" subtitle="Visa •••• 1234" />
       <PropertyCardTenant
         imageUri="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1600"
         title="Bright studio with balcony"
@@ -181,6 +187,25 @@ function BannersCardsDemo() {
         price="$1,200/mo"
         rating={4}
       />
+      <LatestReviewCard
+        avatarUri="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800"
+        name="Sarah"
+        timeAgo="2d ago"
+        rating={5}
+        comment="Great location and cozy space!"
+      />
+      <PaymentsSummaryCard total="$2,340" nextPayout="Aug 20" pending="$120" />
+    </View>
+  );
+}
+
+function DrawerHeaderDemo() {
+  return (
+    <View className="gap-3">
+      <Text className="text-lg font-semibold">Drawer Status Header</Text>
+      <DrawerStatusHeader status="approved" title="Request approved" subtitle="You can proceed" />
+      <DrawerStatusHeader status="payment-failed" title="Payment failed" subtitle="Update your card" />
+      <DrawerStatusHeader status="cancellation-under-review" title="Under review" />
     </View>
   );
 }

@@ -3,26 +3,37 @@ import { View, Text } from 'react-native';
 import { colors } from '~/theme/colors';
 
 export type StatusTone = 'success' | 'danger' | 'warning' | 'info' | 'neutral';
+export type StatusName = 'pending' | 'approved' | 'success' | 'rejected' | 'error' | 'await';
 
 export type StatusTagProps = {
   label: string;
-  tone?: StatusTone;
+  tone?: StatusTone; // legacy
+  status?: StatusName; // preferred
 };
 
-const toneToColors: Record<StatusTone, { bg: keyof typeof colors; fg: keyof typeof colors }> = {
-  success: { bg: 'primaryTint2', fg: 'success' },
-  danger: { bg: 'primaryTint2', fg: 'danger' },
-  warning: { bg: 'primaryTint2', fg: 'warning' },
-  info: { bg: 'primaryTint2', fg: 'info' },
-  neutral: { bg: 'gray100', fg: 'gray700' },
+const statusToBg: Record<StatusName, keyof typeof colors> = {
+  pending: 'info', // blue
+  approved: 'success', // green
+  success: 'success', // green
+  rejected: 'danger', // red
+  error: 'danger', // red
+  await: 'primary', // purple
 };
 
-export default function StatusTag({ label, tone = 'neutral' }: StatusTagProps) {
-  const { bg, fg } = toneToColors[tone];
+const toneToBg: Record<StatusTone, keyof typeof colors> = {
+  success: 'success',
+  danger: 'danger',
+  warning: 'warning',
+  info: 'info',
+  neutral: 'gray300',
+};
+
+export default function StatusTag({ label, tone, status }: StatusTagProps) {
+  const bgColorKey = status ? statusToBg[status] : toneToBg[tone ?? 'neutral'];
+  const bgColor = colors[bgColorKey];
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 6, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: colors[bg], borderRadius: 100 }}>
-      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors[fg] }} />
-      <Text style={{ color: colors[fg], fontWeight: '700' }}>{label}</Text>
+    <View style={{ alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100, backgroundColor: bgColor }}>
+      <Text style={{ color: colors.white, fontWeight: '700' }}>{label}</Text>
     </View>
   );
 }
