@@ -34,15 +34,27 @@ class ExpirationService {
       try {
         await this.processSafetyWindowClosures();
         console.log('Processed safety window closures');
+        const { processed, downgraded } = await this.enforceAdvertiserDowngrade();
+        if (processed > 0) {
+          console.log(`Downgrade check done. Processed: ${processed}, downgraded: ${downgraded}`);
+        }
       } catch (error) {
         console.error('Error in expiration check:', error);
       }
     }, this.CHECK_INTERVAL_MS);
 
     // Run initial check
-    this.processSafetyWindowClosures().catch(error => {
-      console.error('Error in initial expiration check:', error);
-    });
+    (async () => {
+      try {
+        await this.processSafetyWindowClosures();
+        const { processed, downgraded } = await this.enforceAdvertiserDowngrade();
+        if (processed > 0) {
+          console.log(`Initial downgrade check. Processed: ${processed}, downgraded: ${downgraded}`);
+        }
+      } catch (error) {
+        console.error('Error in initial expiration/downgrade check:', error);
+      }
+    })();
     
     return () => {
       if (this.checkInterval) {
