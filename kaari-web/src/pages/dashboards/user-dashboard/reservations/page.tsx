@@ -1022,14 +1022,21 @@ const ReservationsPage: React.FC = () => {
         
   const handleConfirmPayment = async () => {
     if (!selectedReservation) return;
-    
+ 
     try {
+      // Do not re-initiate payment for already paid/moved-in
+      const current = reservations.find(r => r.reservation.id === selectedReservation)?.reservation;
+      if (current && (current.status === 'paid' || current.status === 'movedIn')) {
+        toast.showToast('success', 'Already Paid', 'Your reservation payment is already completed.');
+        setShowPaymentModal(false);
+        return;
+      }
       setProcessingPayment(selectedReservation);
       const ok = await initiateCheckoutPayment(selectedReservation);
       if (!ok) {
         toast.showToast('error', 'Payment Failed', 'Failed to initiate payment');
       }
-      
+ 
       await loadReservations();
       setShowPaymentModal(false);
     } catch (err: any) {

@@ -7,6 +7,7 @@ import { createCheckoutReservation } from '../../backend/server-actions/Checkout
 import BookingSummary from './BookingSummary';
 import referralService from '../../services/ReferralService';
 import PaymentGatewayService from '../../services/PaymentGatewayService';
+import { getDocumentById } from '../../backend/firebase/firestore';
 
 const ConfirmationContainer = styled.div`
   display: flex;
@@ -107,7 +108,8 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [brokerExtraFee, setBrokerExtraFee] = useState<number>(0);
+
   useEffect(() => {
     // Retrieve rental application data from localStorage
     const savedData = localStorage.getItem('rentalApplicationData');
@@ -125,6 +127,26 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
       console.warn('No rental application data found in localStorage');
     }
   }, []);
+
+  useEffect(() => {
+    const fetchBrokerFee = async () => {
+      try {
+        const ownerId = propertyData.ownerId;
+        if (!ownerId) return setBrokerExtraFee(0);
+        const user = await getDocumentById<User>('users', ownerId);
+        const percent = (user && typeof user.brokerExtraFeePercent === 'number') ? user.brokerExtraFeePercent : 0;
+        if (percent > 0) {
+          const clamped = Math.max(0, Math.min(75, percent));
+          setBrokerExtraFee(Math.round((clamped / 100) * pricePerMonth));
+        } else {
+          setBrokerExtraFee(0);
+        }
+      } catch {
+        setBrokerExtraFee(0);
+      }
+    };
+    fetchBrokerFee();
+  }, [propertyData.ownerId, pricePerMonth]);
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -291,8 +313,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
   const pricePerMonth = propertyData.price;
   // Kaari tenant commission: 25% of 1st month rent
   const serviceFee = Math.round(pricePerMonth * 0.25);
-  // Broker/Agency extra fee (0–75%) from advertiser profile if applicable
-  const brokerExtraFee = 0; // Will be computed from advertiser profile if available
+  // brokerExtraFee computed via effect
 
   // Apply discount if available
   const discount = rentalData.discount ? {

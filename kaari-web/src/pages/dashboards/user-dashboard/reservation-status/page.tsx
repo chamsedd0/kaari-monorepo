@@ -232,6 +232,11 @@ const ReservationStatusPage: React.FC = () => {
     try {
       setProcessing(true);
       setModalOpen(false);
+      if (reservation.reservation.status === 'paid' || reservation.reservation.status === 'movedIn') {
+        toast.showToast('success', 'Already Paid', 'Payment is already completed for this reservation.');
+        await loadReservationDetails();
+        return;
+      }
       const ok = await initiateCheckoutPayment(reservation.reservation.id);
       if (!ok) {
         toast.showToast('error', 'Payment Failed', 'Failed to initiate payment');

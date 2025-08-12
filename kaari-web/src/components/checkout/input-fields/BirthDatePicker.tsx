@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
 import { FiCalendar, FiChevronDown, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
@@ -311,8 +311,8 @@ const BirthDatePicker: React.FC<BirthDatePickerProps> = ({
   const today = new Date();
   const currentYear = today.getFullYear();
   
-  // Parse the selected date or use today's date
-  let selectedDate = value ? new Date(value) : null;
+  // Parse the selected date or use today's date (memoized to avoid changing reference every render)
+  const selectedDate = useMemo(() => (value ? new Date(value) : null), [value]);
   
   // For year view, we show a range of 16 years
   const [yearRangeStart, setYearRangeStart] = useState(Math.max(currentYear - 100, 1900));
@@ -323,7 +323,7 @@ const BirthDatePicker: React.FC<BirthDatePickerProps> = ({
     year: selectedDate ? selectedDate.getFullYear() : currentYear - 30, // Default to 30 years ago for birth dates
   });
   
-  // Update view date when selected date changes
+  // Update view date when the value prop changes
   useEffect(() => {
     if (selectedDate) {
       setViewDate({
@@ -331,7 +331,7 @@ const BirthDatePicker: React.FC<BirthDatePickerProps> = ({
         year: selectedDate.getFullYear()
       });
     }
-  }, [selectedDate]);
+  }, [value]);
   
   const handlePrevYearRange = () => {
     setYearRangeStart(prev => Math.max(prev - 16, 1900));

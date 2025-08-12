@@ -228,16 +228,18 @@ export async function createCheckoutReservation(data: {
       discount = null
     } = data.rentalData;
     
-    // Create the request data
+    // Create the request data (payment already completed before creation)
     const requestData = {
       userId: currentUser.id,
       propertyId: data.propertyId,
       requestType: 'rent' as const,
-      status: 'pending' as const,
+      status: 'paid' as const,
       scheduledDate, // This is the move-in date
       paymentMethodId: data.paymentMethodId,
       createdAt: new Date(),
       updatedAt: new Date(),
+      paymentStatus: 'paid',
+      paidAt: new Date(),
       
       // Personal information
       fullName,
@@ -273,8 +275,8 @@ export async function createCheckoutReservation(data: {
       } : null
     };
     
-    // Concurrency heads-up: this allows multiple pending requests to coexist; UI shows notice at step 1
-    const request = await createDocument<Request>(REQUESTS_COLLECTION, requestData as Omit<Request, 'id'>);
+    // Reservation is created as 'paid' since gateway confirmed success before this call
+    const request = await createDocument<Request>(REQUESTS_COLLECTION, requestData as unknown as Omit<Request, 'id'>);
     
     // Get property details to include in notifications
     const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, data.propertyId);
