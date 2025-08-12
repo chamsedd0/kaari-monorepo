@@ -332,7 +332,7 @@ export const CheckoutButton = styled.button`
   font: ${Theme.typography.fonts.mediumB};
   cursor: pointer;
   transition: all 0.3s ease;
-  width: 100%;
+  width: auto;
   
   &:hover {
     background-color: ${Theme.colors.primary};

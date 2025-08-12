@@ -729,7 +729,7 @@ const RentalApplication: React.FC<RentalApplicationProps> = ({ userData, propert
           </div>
           
           <div className="button-container">
-            <CheckoutButton type="submit">
+            <CheckoutButton type="submit" style={{ width: 'auto', maxWidth: 220 }}>
               Next Step
             </CheckoutButton>
           </div>

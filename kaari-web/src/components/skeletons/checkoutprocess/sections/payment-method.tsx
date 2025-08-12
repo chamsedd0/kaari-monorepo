@@ -3,6 +3,7 @@ import { useCheckoutContext } from '../../../../contexts/checkout-process';
 import { PaymentMethodContainer } from '../../../styles/checkoutprocess/checkout-process-sections-style';
 import { FaArrowLeft } from 'react-icons/fa';
 import { Theme } from '../../../../theme/theme';
+import HaaniOptions from '../../../checkout/haani-options';
 // Retired Haani Max: single HAANI plan only
 
 const ProtectionOptions: React.FC = () => {
@@ -58,7 +59,9 @@ const ProtectionOptions: React.FC = () => {
         </div>
       )}
       
-      <div className="payment-section" style={{padding: '12px 0'}}>HAANI protection (48-hour mismatch guarantee) is included. No upgrades available.</div>
+      <div className="payment-section">
+        <HaaniOptions selectedOption={protectionOption} onSelectOption={() => { /* single option */ }} />
+      </div>
       
       <div className="actions-container">
         <button className="back-button" onClick={navigateToRentalApplication}>
