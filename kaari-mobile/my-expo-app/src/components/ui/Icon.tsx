@@ -25,6 +25,9 @@ import IconMessages from '../../../assets/Icon_Messages.svg';
 import IconShow from '../../../assets/Icon_Show.svg';
 import IconHide from '../../../assets/Icon_Hide.svg';
 import IconArrowRight from '../../../assets/Icon_Arrow_Right.svg';
+import IconSend from '../../../assets/Icon_Send.svg';
+import IconAttach from '../../../assets/Icon_Attach.svg';
+import IconAdd from '../../../assets/Icon_Add.svg';
 
 const map = {
   search: IconSearch,
@@ -51,6 +54,9 @@ const map = {
   show: IconShow,
   hide: IconHide,
   arrowRight: IconArrowRight,
+  send: IconSend,
+  attach: IconAttach,
+  add: IconAdd,
 } as const;
 
 export type IconName = keyof typeof map;
