@@ -9,6 +9,7 @@ export type PressableSurfaceProps = PropsWithChildren<{
   style?: ViewStyle | ViewStyle[];
   className?: string;
   pressedBackground?: string; // must be a color from theme; caller responsibility
+  pressedOverlayOpacity?: number; // default 0.08
   scaleFrom?: number;
   scaleTo?: number;
   accessibilityLabel?: string;
@@ -22,6 +23,7 @@ export default function PressableSurface({
   style,
   className,
   pressedBackground,
+  pressedOverlayOpacity = 0.08,
   scaleFrom = 1,
   scaleTo = 0.98,
   accessibilityLabel,
@@ -34,7 +36,7 @@ export default function PressableSurface({
   }));
 
   const underlayStyle = useAnimatedStyle(() => ({
-    opacity: withTiming(pressedBackground ? (pressed.value ? 0.08 : 0) : 0, { duration: 120 }),
+    opacity: withTiming(pressedBackground ? (pressed.value ? pressedOverlayOpacity : 0) : 0, { duration: 120 }),
   }));
 
   const containerStyle = useMemo(() => [{ borderRadius } as ViewStyle, style], [style, borderRadius]);

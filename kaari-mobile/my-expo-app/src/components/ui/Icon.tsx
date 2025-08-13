@@ -14,9 +14,9 @@ export type IconProps = {
 export function Icon({ name, width = 20, height = 20, fill }: IconProps) {
   switch (name) {
     case 'dashboard':
-      return <DashboardIcon width={width} height={height} color={fill} />;
+      return <DashboardIcon width={width} height={height} />;
     case 'property':
-      return <PropertyIcon width={width} height={height} color={fill} />;
+      return <PropertyIcon width={width} height={height} />;
     default:
       return null;
   }

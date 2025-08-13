@@ -1,5 +1,5 @@
 import { ScrollView, View, Text } from 'react-native';
-import { TextWithBg, Timer, TimerDisplay, Timeslot, Switch, ProgressBar, SegmentedProgress, Stars, MessageBubbles, PrimaryButton, SecondaryButton, TextButton, IconButton, LikeButton, DualActionButtons, BookPhotoshootButton, CloseButton, ShareButton, CircularIconButton, SectionBadge, TopPickBadge, SimpleChip, Tag, StatusTag, VerifiedTag, PeopleCountTag, FilterTag, CountTag, GirlsOnlyTag, WeekdayChatTag, TextField, SearchBar, PasswordField, SendMessageField, UploadField, RadioGroup, TextArea, Slider, SelectorRadial, ReferFriendInput, ArrowIconInput, PasswordCreateInput, SendRequestInput, AlertBanner, ReservationRequestBanner, ReservationRequestBannerAlt, PaymentMethodBanner, PropertyBanner, PropertyTileBanner, ChangePasswordBanner, MessageBanner, PaymentItemBanner, PhotoshootHistoryItemBanner, UsageMessagesDefaultBanner, PaymentBanner, ProfileTile, PropertyCardTenant, PropertyCard, PropertyCardTenantView, LatestReviewCard, PaymentsSummaryCard, ListingPerformanceChart, UploadDocumentCard, PhotoshootRequestCard, WriteReviewCard, LatestReservationRequestCard, LatestReservationRequestCardVariant2, ProtectionInfoCard, RecommendUsCard, PropertyReviewCard, EmptyStateCard, GenericHeader, ConversationHeader, DashboardHeaderAdvertiser, SearchbarHeader, ApplicationHeader, ApplicationHeaderAlt, ProfileHeader, PropertyScreenHeader, MessageScreenHeader, AdvertiserHeader3, HeaderVariant9, PropertyHeaderWithBg, Tabs, BottomNavBar, TenantNavBar, AdvertiserNavBar, LinkNavBar, AndroidNavBar, DrawerStatusHeader, DrawerFooterOneButton, DrawerFooterTwoButtons, CancelConfirmPopup, AddPaymentMethodDrawer, LoginDrawer, LogoutDrawer, CommissionRateDrawer, AskForEditPropertyDrawer, UnlistPropertyDrawer, PaymentDetailsDrawer, ReservationRequestDrawer, AlertInformationPopup } from '~/components';
+import { TextWithBg, Timer, TimerDisplay, Timeslot, Switch, ProgressBar, SegmentedProgress, Stars, MessageBubbles, PrimaryButton, SecondaryButton, TextButton, IconButton, LikeButton, DualActionButtons, BookPhotoshootButton, CloseButton, ShareButton, CircularIconButton, SectionBadge, TopPickBadge, SimpleChip, Tag, StatusTag, VerifiedTag, PeopleCountTag, FilterTag, CountTag, GirlsOnlyTag, WeekdayChatTag, TextField, SearchBar, PasswordField, SendMessageField, UploadField, RadioGroup, TextArea, Slider, SelectorRadial, ReferFriendInput, ArrowIconInput, PasswordCreateInput, SendRequestInput, AlertBanner, ReservationRequestBanner, ReservationRequestBannerAlt, PaymentMethodBanner, PropertyBanner, PropertyTileBanner, ChangePasswordBanner, MessageBanner, PaymentItemBanner, PhotoshootHistoryItemBanner, UsageMessagesDefaultBanner, PaymentBanner, ProfileTile, PropertyCardTenant, PropertyCard, PropertyCardTenantView, LatestReviewCard, PaymentsSummaryCard, ListingPerformanceChart, UploadDocumentCard, PhotoshootRequestCard, PhotoshootScheduleCard, BookPhotoshootPromoCard, WriteReviewCard, LatestReservationRequestCard, LatestReservationRequestCardVariant2, ProtectionInfoCard, RecommendUsCard, PropertyReviewCard, NationalIDUploadCard, EmptyStateCard, GenericHeader, ConversationHeader, DashboardHeaderAdvertiser, SearchbarHeader, ApplicationHeader, ApplicationHeaderAlt, ProfileHeader, PropertyScreenHeader, MessageScreenHeader, AdvertiserHeader3, HeaderVariant9, PropertyHeaderWithBg, Tabs, BottomNavBar, TenantNavBar, AdvertiserNavBar, LinkNavBar, AndroidNavBar, DrawerStatusHeader, DrawerFooterOneButton, DrawerFooterTwoButtons, CancelConfirmPopup, AddPaymentMethodDrawer, LoginDrawer, LogoutDrawer, CommissionRateDrawer, AskForEditPropertyDrawer, UnlistPropertyDrawer, PaymentDetailsDrawer, ReservationRequestDrawer, AlertInformationPopup } from '~/components';
 import React from 'react';
 
 export default function ComponentsGallery() {
@@ -210,7 +210,15 @@ function BannersCardsDemo() {
       />
       <PaymentsSummaryCard total="$2,340" nextPayout="Aug 20" pending="$120" />
       <ListingPerformanceChart />
+      <PhotoshootScheduleCard
+        date="20.09.2024 6:00 PM"
+        remainingSeconds={(1 * 24 + 23) * 3600 + 59 * 60 + 45}
+        agentName="Derek Xavier"
+        agentSubtitle="Kaari Photography Agent"
+      />
+      <BookPhotoshootPromoCard />
       <UploadDocumentCard />
+      <NationalIDUploadCard />
       <MessageBanner title="Inbox" subtitle="You have 3 new messages" />
       <PaymentItemBanner title="Rent" amount="$1,200" date="Due Sep 1" />
       <PaymentBanner title="Upcoming charge" subtitle="Electricity bill" />
