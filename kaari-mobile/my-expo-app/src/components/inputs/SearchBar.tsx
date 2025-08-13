@@ -12,10 +12,10 @@ export type SearchBarProps = {
 
 export default function SearchBar({ value, onChangeText, placeholder = 'Search', left, right }: SearchBarProps) {
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', borderRadius: 100, paddingHorizontal: 16, backgroundColor: colors.gray100 }}>
-      {!!left && <View style={{ marginRight: 8 }}>{left}</View>}
+    <View className="flex-row items-center rounded-[100px] px-4" style={{ backgroundColor: colors.gray100 }}>
+      {!!left && <View className="mr-2">{left}</View>}
       <TextInput value={value} onChangeText={onChangeText} placeholder={placeholder} placeholderTextColor={colors.gray300} style={{ flex: 1, paddingVertical: 10, color: colors.gray700 }} />
-      {!!right && <View style={{ marginLeft: 8 }}>{right}</View>}
+      {!!right && <View className="ml-2">{right}</View>}
     </View>
   );
 }

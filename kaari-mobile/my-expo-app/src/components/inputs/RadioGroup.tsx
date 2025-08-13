@@ -12,25 +12,23 @@ export type RadioGroupProps = {
 
 export default function RadioGroup({ options, value, onChange }: RadioGroupProps) {
   return (
-    <View style={{ gap: 10 }}>
+    <View className="gap-2.5">
       {options.map((opt) => {
         const selected = value === opt.value;
         return (
-          <View key={opt.value} style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View key={opt.value} className="flex-row items-center">
             <View
               onTouchEnd={() => onChange(opt.value)}
+              className="items-center justify-center mr-2.5"
               style={{
                 width: 22,
                 height: 22,
                 borderRadius: 100,
                 borderWidth: 2,
                 borderColor: selected ? colors.primary : colors.gray300,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 10,
               }}
             >
-              {selected && <View style={{ width: 10, height: 10, borderRadius: 100, backgroundColor: colors.primary }} />}
+              {selected && <View className="" style={{ width: 10, height: 10, borderRadius: 100, backgroundColor: colors.primary }} />}
             </View>
             <Text style={{ color: colors.gray700 }}>{opt.label}</Text>
           </View>

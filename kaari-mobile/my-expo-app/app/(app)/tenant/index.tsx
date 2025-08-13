@@ -1,5 +1,5 @@
 import { ScrollView, View, Text } from 'react-native';
-import { PropertyCard } from '../../../src/components/cards/PropertyCard';
+import PropertyCard from '~/components/cards/PropertyCard';
 
 export default function TenantHome() {
   return (

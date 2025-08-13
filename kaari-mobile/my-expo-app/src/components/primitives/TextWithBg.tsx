@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, View, ViewStyle } from 'react-native';
 import { colors } from '~/theme/colors';
+import { bgColorClass, textColorClass } from '~/utils/nativewind';
 
 export type TextWithBgProps = {
   text: string;
@@ -25,20 +26,8 @@ export default function TextWithBg({
 }: TextWithBgProps) {
   const isWhite = variant === 'white' || background === 'white';
   return (
-    <View
-      style={[
-        {
-          backgroundColor: colors[background],
-          borderRadius: radius,
-          paddingHorizontal,
-          paddingVertical,
-          borderWidth: isWhite ? 1 : 0,
-          borderColor: isWhite ? colors.gray200 : 'transparent',
-        },
-        style,
-      ]}
-    >
-      <Text style={{ color: colors[color], fontWeight: '700' }}>{text}</Text>
+    <View className={`${bgColorClass(background)} rounded-[${radius}px] px-[${paddingHorizontal}px] py-[${paddingVertical}px] ${isWhite ? 'border' : ''}`} style={[isWhite ? { borderColor: colors.gray200 } : null, style]}>
+      <Text className={`font-bold ${textColorClass(color)}`}>{text}</Text>
     </View>
   );
 }

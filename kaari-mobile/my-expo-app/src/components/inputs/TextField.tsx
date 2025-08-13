@@ -11,16 +11,16 @@ export type TextFieldProps = TextInputProps & {
 
 export default function TextField({ label, error, left, right, style, ...rest }: TextFieldProps) {
   return (
-    <View style={{ gap: 6 }}>
+    <View className="gap-1.5">
       {!!label && <Text style={{ color: colors.gray700, fontWeight: '700' }}>{label}</Text>}
-      <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: error ? colors.danger : colors.gray200, borderRadius: 100, paddingHorizontal: 16, backgroundColor: colors.white }}>
-        {!!left && <View style={{ marginRight: 8 }}>{left}</View>}
+      <View className="flex-row items-center rounded-[100px] px-4" style={{ borderWidth: 1, borderColor: error ? colors.danger : colors.gray200, backgroundColor: colors.white }}>
+        {!!left && <View className="mr-2">{left}</View>}
         <TextInput
           placeholderTextColor={colors.gray300}
           style={[{ flex: 1, paddingVertical: 10, color: colors.gray700 }, style]}
           {...rest}
         />
-        {!!right && <View style={{ marginLeft: 8 }}>{right}</View>}
+        {!!right && <View className="ml-2">{right}</View>}
       </View>
       {!!error && <Text style={{ color: colors.danger, fontSize: 12 }}>{error}</Text>}
     </View>

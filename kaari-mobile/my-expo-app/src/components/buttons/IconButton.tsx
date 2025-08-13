@@ -13,7 +13,7 @@ export type IconButtonProps = {
 export default function IconButton({ onPress, icon, background = 'primaryTint1', size = 40 }: IconButtonProps) {
   return (
     <PressableSurface onPress={onPress} pressedBackground={colors.primary} borderRadius={100}>
-      <View style={{ width: size, height: size, borderRadius: 100, backgroundColor: colors[background], alignItems: 'center', justifyContent: 'center' }}>{icon}</View>
+      <View className="items-center justify-center" style={{ width: size, height: size, borderRadius: 100, backgroundColor: colors[background] }}>{icon}</View>
     </PressableSurface>
   );
 }

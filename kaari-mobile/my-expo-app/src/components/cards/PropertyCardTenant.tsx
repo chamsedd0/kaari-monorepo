@@ -22,17 +22,17 @@ export default function PropertyCardTenant({ imageUri, title, location, price, r
     onToggleLike?.(v);
   };
   return (
-    <View style={[{ borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: colors.gray100, backgroundColor: colors.white }, style]}>
+    <View className="rounded-2xl overflow-hidden" style={[{ borderWidth: 1, borderColor: colors.gray100, backgroundColor: colors.white }, style]}>
       <View style={{ height: 160, backgroundColor: colors.gray100 }}>
         <Image source={{ uri: imageUri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-        <View style={{ position: 'absolute', top: 8, right: 8 }}>
+        <View className="absolute top-2 right-2">
           <LikeButton liked={isLiked} onToggle={toggle} size={36} />
         </View>
       </View>
-      <View style={{ padding: 12, gap: 6 }}>
+      <View className="p-3 gap-1.5">
         <Text style={{ color: colors.gray700, fontWeight: '800' }}>{title}</Text>
         <Text style={{ color: colors.gray500 }}>{location}</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+        <View className="flex-row items-center justify-between mt-1">
           <Stars rating={rating} />
           <Text style={{ color: colors.primary, fontWeight: '800' }}>{price}</Text>
         </View>

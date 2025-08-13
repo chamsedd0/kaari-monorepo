@@ -13,9 +13,9 @@ export type PasswordFieldProps = {
 export default function PasswordField({ value, onChangeText, label, placeholder = 'Enter password', error }: PasswordFieldProps) {
   const [hidden, setHidden] = React.useState(true);
   return (
-    <View style={{ gap: 6 }}>
+    <View className="gap-1.5">
       {!!label && <Text style={{ color: colors.gray700, fontWeight: '700' }}>{label}</Text>}
-      <View style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: error ? colors.danger : colors.gray200, borderRadius: 100, paddingHorizontal: 16, backgroundColor: colors.white }}>
+      <View className="flex-row items-center rounded-[100px] px-4" style={{ borderWidth: 1, borderColor: error ? colors.danger : colors.gray200, backgroundColor: colors.white }}>
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -24,7 +24,7 @@ export default function PasswordField({ value, onChangeText, label, placeholder 
           style={{ flex: 1, paddingVertical: 10, color: colors.gray700 }}
           secureTextEntry={hidden}
         />
-        <Text onPress={() => setHidden((v) => !v)} style={{ color: colors.primary, fontWeight: '700', paddingVertical: 10 }}>
+        <Text onPress={() => setHidden((v) => !v)} className="py-2" style={{ color: colors.primary, fontWeight: '700' }}>
           {hidden ? 'Show' : 'Hide'}
         </Text>
       </View>

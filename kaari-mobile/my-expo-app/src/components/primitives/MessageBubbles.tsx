@@ -10,27 +10,15 @@ export type MessageBubblesProps = {
 
 export default function MessageBubbles({ messages }: MessageBubblesProps) {
   return (
-    <View style={{ gap: 12 }}>
+    <View className="gap-3">
       {messages.map((m) => {
         const mine = m.from === 'me';
         return (
-          <View key={m.id} style={{ alignItems: mine ? 'flex-end' : 'flex-start', paddingHorizontal: 6 }}>
-            <View
-              style={{
-                backgroundColor: mine ? colors.primary : colors.white,
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-                borderRadius: 14,
-                borderTopRightRadius: mine ? 4 : 14,
-                borderTopLeftRadius: mine ? 14 : 4,
-                maxWidth: '78%',
-                borderWidth: mine ? 0 : 1,
-                borderColor: colors.gray100,
-              }}
-            >
+          <View key={m.id} className={`${mine ? 'items-end' : 'items-start'} px-1.5`}>
+            <View className={`${mine ? '' : 'border'} px-3.5 py-2 rounded-[14px]`} style={{ backgroundColor: mine ? colors.primary : colors.white, maxWidth: '78%', borderColor: colors.gray100, borderTopRightRadius: mine ? 4 : 14, borderTopLeftRadius: mine ? 14 : 4 }}>
               <Text style={{ color: mine ? colors.white : colors.gray700 }}>{m.text}</Text>
               {!!m.time && (
-                <Text style={{ color: mine ? colors.primaryTint2 : colors.gray500, fontSize: 12, marginTop: 6 }}>{m.time}</Text>
+                <Text className="mt-1.5" style={{ color: mine ? colors.primaryTint2 : colors.gray500, fontSize: 12 }}>{m.time}</Text>
               )}
             </View>
           </View>

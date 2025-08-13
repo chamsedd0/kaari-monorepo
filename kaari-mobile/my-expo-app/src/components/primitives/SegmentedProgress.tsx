@@ -23,7 +23,7 @@ export default function SegmentedProgress({
   activeColor = 'white',
 }: SegmentedProgressProps) {
   return (
-    <View style={{ flexDirection: 'row', gap }}>
+    <View className="flex-row" style={{ columnGap: gap }}>
       {Array.from({ length: segments }).map((_, i) => (
         <Segment key={i} isActive={i === activeIndex} isPast={i < activeIndex} progress={i === activeIndex ? progressInActive : i < activeIndex ? 1 : 0} height={height} passiveColor={passiveColor} activeColor={activeColor} />
       ))}
@@ -34,7 +34,7 @@ export default function SegmentedProgress({
 function Segment({ isActive, isPast, progress, height, passiveColor, activeColor }: { isActive: boolean; isPast: boolean; progress: number; height: number; passiveColor: keyof typeof colors; activeColor: keyof typeof colors }) {
   const widthStyle = useAnimatedStyle(() => ({ width: withTiming(`${Math.max(0, Math.min(1, progress)) * 100}%`, { duration: isActive ? 160 : 0 }) }));
   return (
-    <View style={{ flex: 1, height, borderRadius: height / 2, backgroundColor: isPast ? colors[activeColor] : colors[passiveColor], overflow: 'hidden' }}>
+    <View className="overflow-hidden" style={{ flex: 1, height, borderRadius: height / 2, backgroundColor: isPast ? colors[activeColor] : colors[passiveColor] }}>
       <Animated.View style={[{ height: '100%', backgroundColor: colors[activeColor] }, widthStyle]} />
     </View>
   );

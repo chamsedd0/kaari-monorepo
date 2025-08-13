@@ -32,8 +32,8 @@ export default function StatusTag({ label, tone, status }: StatusTagProps) {
   const bgColorKey = status ? statusToBg[status] : toneToBg[tone ?? 'neutral'];
   const bgColor = colors[bgColorKey];
   return (
-    <View style={{ alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100, backgroundColor: bgColor }}>
-      <Text style={{ color: colors.white, fontWeight: '700' }}>{label}</Text>
+    <View className="self-start rounded-[100px] px-3 py-1.5" style={{ backgroundColor: bgColor }}>
+      <Text className="text-white font-bold">{label}</Text>
     </View>
   );
 }

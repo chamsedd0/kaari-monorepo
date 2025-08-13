@@ -21,26 +21,16 @@ export type AlertBannerProps = {
 };
 
 export default function AlertBanner({ title, subtitle, tone = 'info', actionLabel, onActionPress }: AlertBannerProps) {
-  const { bg, fg } = toneMap[tone];
+  const { bg } = toneMap[tone];
   const lightOnDark = tone !== 'info';
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        borderRadius: 14,
-        backgroundColor: colors[bg],
-      }}
-    >
-      <View style={{ width: 28, height: 28, borderRadius: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: lightOnDark ? 'rgba(255,255,255,0.2)' : colors.white }}>
+    <View className="flex-row items-center gap-3 px-3.5 py-3 rounded-[14px]" style={{ backgroundColor: colors[bg] }}>
+      <View className="items-center justify-center rounded-[8px]" style={{ width: 28, height: 28, backgroundColor: lightOnDark ? 'rgba(255,255,255,0.2)' : colors.white }}>
         <InfoIcon width={16} height={16} color={lightOnDark ? colors.white : colors.primary} />
       </View>
-      <View style={{ flex: 1 }}>
+      <View className="flex-1">
         <Text style={{ color: lightOnDark ? colors.white : colors.primary, fontWeight: '800' }}>{title}</Text>
-        {!!subtitle && <Text style={{ color: lightOnDark ? 'rgba(255,255,255,0.9)' : colors.gray700, marginTop: 2 }}>{subtitle}</Text>}
+        {!!subtitle && <Text className="mt-0.5" style={{ color: lightOnDark ? 'rgba(255,255,255,0.9)' : colors.gray700 }}>{subtitle}</Text>}
       </View>
       {!!actionLabel && (
         <Text onPress={onActionPress} style={{ color: lightOnDark ? colors.white : colors.primary, fontWeight: '800' }}>

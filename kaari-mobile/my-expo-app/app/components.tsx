@@ -1,5 +1,5 @@
 import { ScrollView, View, Text } from 'react-native';
-import { TextWithBg, Timer, TimerDisplay, Timeslot, Switch, ProgressBar, SegmentedProgress, Stars, MessageBubbles, PrimaryButton, SecondaryButton, TextButton, IconButton, LikeButton, DualActionButtons, SectionBadge, TopPickBadge, SimpleChip, Tag, StatusTag, VerifiedTag, PeopleCountTag, FilterTag, CountTag, GirlsOnlyTag, WeekdayChatTag, TextField, SearchBar, PasswordField, SendMessageField, UploadField, RadioGroup, TextArea, Slider, SelectorRadial, AlertBanner, ReservationRequestBanner, PaymentMethodBanner, PropertyCardTenant, LatestReviewCard, PaymentsSummaryCard, GenericHeader, Tabs, BottomNavBar, TenantNavBar, AdvertiserNavBar, LinkNavBar, DrawerStatusHeader } from '~/components';
+import { TextWithBg, Timer, TimerDisplay, Timeslot, Switch, ProgressBar, SegmentedProgress, Stars, MessageBubbles, PrimaryButton, SecondaryButton, TextButton, IconButton, LikeButton, DualActionButtons, BookPhotoshootButton, CloseButton, ShareButton, CircularIconButton, SectionBadge, TopPickBadge, SimpleChip, Tag, StatusTag, VerifiedTag, PeopleCountTag, FilterTag, CountTag, GirlsOnlyTag, WeekdayChatTag, TextField, SearchBar, PasswordField, SendMessageField, UploadField, RadioGroup, TextArea, Slider, SelectorRadial, ReferFriendInput, ArrowIconInput, PasswordCreateInput, SendRequestInput, AlertBanner, ReservationRequestBanner, ReservationRequestBannerAlt, PaymentMethodBanner, PropertyBanner, PropertyTileBanner, ChangePasswordBanner, MessageBanner, PaymentItemBanner, PhotoshootHistoryItemBanner, UsageMessagesDefaultBanner, PaymentBanner, ProfileTile, PropertyCardTenant, PropertyCard, PropertyCardTenantView, LatestReviewCard, PaymentsSummaryCard, ListingPerformanceChart, UploadDocumentCard, PhotoshootRequestCard, WriteReviewCard, LatestReservationRequestCard, LatestReservationRequestCardVariant2, ProtectionInfoCard, RecommendUsCard, PropertyReviewCard, EmptyStateCard, GenericHeader, ConversationHeader, DashboardHeaderAdvertiser, SearchbarHeader, ApplicationHeader, ApplicationHeaderAlt, ProfileHeader, PropertyScreenHeader, MessageScreenHeader, AdvertiserHeader3, HeaderVariant9, PropertyHeaderWithBg, Tabs, BottomNavBar, TenantNavBar, AdvertiserNavBar, LinkNavBar, AndroidNavBar, DrawerStatusHeader, DrawerFooterOneButton, DrawerFooterTwoButtons, CancelConfirmPopup, AddPaymentMethodDrawer, LoginDrawer, LogoutDrawer, CommissionRateDrawer, AskForEditPropertyDrawer, UnlistPropertyDrawer, PaymentDetailsDrawer, ReservationRequestDrawer, AlertInformationPopup } from '~/components';
 import React from 'react';
 
 export default function ComponentsGallery() {
@@ -61,6 +61,9 @@ export default function ComponentsGallery() {
         <BannersCardsDemo />
         <DrawerHeaderDemo />
         <HeadersNavDemo />
+        <HeadersDemo />
+        <MoreHeadersDemo />
+        <AllHeadersDemo />
         <PngOverlayToggle />
       </View>
     </ScrollView>
@@ -110,6 +113,9 @@ function ButtonsDemo() {
       <IconButton icon={<View className="w-4 h-4 bg-primary" />} onPress={() => {}} />
       <LikeButton liked={liked} onToggle={setLiked} />
       <DualActionButtons primaryLabel="Continue" secondaryLabel="Back" />
+      <BookPhotoshootButton />
+      <ShareButton />
+      <CloseButton />
     </View>
   );
 }
@@ -142,6 +148,7 @@ function InputsDemo() {
   const [msg, setMsg] = React.useState('');
   const [radio, setRadio] = React.useState('a');
   const [slider, setSlider] = React.useState(0.3);
+  const [refEmail, setRefEmail] = React.useState('');
   return (
     <View className="gap-3">
       <Text className="text-lg font-semibold">Inputs</Text>
@@ -154,6 +161,10 @@ function InputsDemo() {
       <TextArea label="About" placeholder="Write here..." />
       <Slider value={slider} onChange={setSlider} />
       <SelectorRadial label="Selector" selected={true} />
+      <ReferFriendInput value={refEmail} onChangeText={setRefEmail} />
+      <ArrowIconInput value={refEmail} onChangeText={setRefEmail} />
+      <PasswordCreateInput value={pwd} onChangeText={setPwd} />
+      <SendRequestInput value={msg} onChangeText={setMsg} />
     </View>
   );
 }
@@ -180,6 +191,8 @@ function BannersCardsDemo() {
       <AlertBanner title="Payment failed" subtitle="Please update your payment method" tone="danger" actionLabel="Fix" />
       <ReservationRequestBanner title="Reservation request sent" subtitle="Awaiting advertiser response" />
       <PaymentMethodBanner title="Payment method" subtitle="Visa •••• 1234" />
+      <ChangePasswordBanner />
+      <PropertyBanner imageUri="https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=1600" title="Modern loft" subtitle="2 beds • 1 bath • 72m²" badge="featured" />
       <PropertyCardTenant
         imageUri="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1600"
         title="Bright studio with balcony"
@@ -187,6 +200,7 @@ function BannersCardsDemo() {
         price="$1,200/mo"
         rating={4}
       />
+      <PropertyCard title="Minimalist studio" price="$980/mo" badge="broker" />
       <LatestReviewCard
         avatarUri="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800"
         name="Sarah"
@@ -195,6 +209,66 @@ function BannersCardsDemo() {
         comment="Great location and cozy space!"
       />
       <PaymentsSummaryCard total="$2,340" nextPayout="Aug 20" pending="$120" />
+      <ListingPerformanceChart />
+      <UploadDocumentCard />
+      <MessageBanner title="Inbox" subtitle="You have 3 new messages" />
+      <PaymentItemBanner title="Rent" amount="$1,200" date="Due Sep 1" />
+      <PaymentBanner title="Upcoming charge" subtitle="Electricity bill" />
+      <PhotoshootRequestCard />
+      <WriteReviewCard />
+      <LatestReservationRequestCard guestName="Jane Smith" date="Aug 18" status="pending" />
+      <ProtectionInfoCard />
+      <ProfileTile name="John Appleseed" subtitle="Member" avatarUri="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800" />
+      <ReservationRequestBannerAlt title="Reservation request" subtitle="Awaiting response" status="pending" />
+      <UsageMessagesDefaultBanner />
+      <RecommendUsCard />
+      <DrawerFooterOneButton label="Continue" />
+      <DrawerFooterTwoButtons primaryLabel="Confirm" secondaryLabel="Cancel" />
+      <AndroidNavBar title="Android Nav" />
+      <PhotoshootHistoryItemBanner title="Photoshoot" date="Aug 12, 2025" status="Done" />
+      <AdvertiserHeader3 />
+      <HeaderVariant9 title="Variant Header" subtitle="Subtext" />
+      <PropertyHeaderWithBg title="Property" subtitle="With background" backgroundUri="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1600" />
+      <CircularIconButton icon={<View className="w-4 h-4 bg-primary" />} />
+      <PropertyCardTenantView imageUri="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1600" title="Loft" location="Amsterdam" price="$1,500/mo" rating={5} details="2 beds • 1 bath • 80m²" />
+      <LatestReservationRequestCardVariant2 name="Alex" date="Aug 20" status="approved" />
+      {/* Popup and drawers demo (toggle when needed) */}
+      {/* <AlertInformationPopup visible title="Heads up" body="Info message" /> */}
+      {/* <CommissionRateDrawer visible initialRate={0.2} /> */}
+      {/* Drawers demo (static mount when toggled) */}
+      {/* <AddPaymentMethodDrawer visible={false} /> */}
+      {/* <LoginDrawer visible={false} /> */}
+      {/* <LogoutDrawer visible={false} /> */}
+    </View>
+  );
+}
+
+function HeadersDemo() {
+  return (
+    <View className="gap-3">
+      <Text className="text-lg font-semibold">Headers</Text>
+      <ConversationHeader title="Jane Doe" subtitle="Online" avatarUri="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800" />
+      <MessageScreenHeader title="Messages" subtitle="3 new" />
+    </View>
+  );
+}
+
+function MoreHeadersDemo() {
+  const [query, setQuery] = React.useState('');
+  return (
+    <View className="gap-3">
+      <DashboardHeaderAdvertiser />
+      <SearchbarHeader value={query} onChangeText={setQuery} />
+    </View>
+  );
+}
+
+function AllHeadersDemo() {
+  return (
+    <View className="gap-3">
+      <ApplicationHeader title="Application" subtitle="Fill your information" />
+      <ProfileHeader name="John Appleseed" subtitle="Member since 2022" avatarUri="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800" />
+      <PropertyScreenHeader title="Property" subtitle="Details and settings" />
     </View>
   );
 }

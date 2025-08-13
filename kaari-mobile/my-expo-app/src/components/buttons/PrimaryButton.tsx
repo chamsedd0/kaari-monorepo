@@ -15,21 +15,12 @@ export type PrimaryButtonProps = {
 
 export default function PrimaryButton({ label, onPress, disabled, loading, iconLeft, iconRight, fullWidth }: PrimaryButtonProps) {
   const content = (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        height: 48,
-        paddingHorizontal: 18,
-      }}
-    >
+    <View className="flex-row items-center justify-center gap-2 h-12 px-[18px]">
       {!!iconLeft && <View style={{ marginRight: 4 }}>{iconLeft}</View>}
       {loading ? (
         <ActivityIndicator color={colors.white} />
       ) : (
-        <Text style={{ color: colors.white, fontWeight: '800' }}>{label}</Text>
+        <Text className="text-white font-extrabold">{label}</Text>
       )}
       {!!iconRight && <View style={{ marginLeft: 4 }}>{iconRight}</View>}
     </View>
@@ -37,7 +28,7 @@ export default function PrimaryButton({ label, onPress, disabled, loading, iconL
 
   return (
     <PressableSurface onPress={onPress} disabled={disabled || loading} pressedBackground={colors.black} borderRadius={100}>
-      <View style={{ backgroundColor: disabled ? colors.gray300 : colors.primary, borderRadius: 100, overflow: 'hidden', width: fullWidth ? '100%' : undefined }}>{content}</View>
+      <View className={`${fullWidth ? 'w-full' : ''} rounded-[100px] overflow-hidden`} style={{ backgroundColor: disabled ? colors.gray300 : colors.primary }}>{content}</View>
     </PressableSurface>
   );
 }

@@ -13,16 +13,16 @@ export type LatestReviewCardProps = {
 
 export default function LatestReviewCard({ avatarUri, name, timeAgo, rating, comment }: LatestReviewCardProps) {
   return (
-    <View style={{ borderRadius: 16, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray100, padding: 14 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+    <View className="rounded-2xl p-3.5" style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray100 }}>
+      <View className="flex-row items-center gap-2.5">
         <Image source={{ uri: avatarUri }} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.gray100 }} />
-        <View style={{ flex: 1 }}>
+        <View className="flex-1">
           <Text style={{ color: colors.gray700, fontWeight: '800' }}>{name}</Text>
           <Text style={{ color: colors.gray500 }}>{timeAgo}</Text>
         </View>
         <Stars rating={rating} />
       </View>
-      <Text style={{ color: colors.gray700, marginTop: 8 }}>{comment}</Text>
+      <Text className="mt-2" style={{ color: colors.gray700 }}>{comment}</Text>
     </View>
   );
 }

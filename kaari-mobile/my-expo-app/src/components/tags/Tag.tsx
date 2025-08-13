@@ -10,7 +10,7 @@ export type TagProps = {
 
 export default function Tag({ text, color = 'primary', background = 'primaryTint2' }: TagProps) {
   return (
-    <View style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 100, backgroundColor: colors[background], alignSelf: 'flex-start' }}>
+    <View className="self-start rounded-[100px] px-2 py-1" style={{ backgroundColor: colors[background] }}>
       <Text style={{ color: colors[color], fontWeight: '600' }}>{text}</Text>
     </View>
   );

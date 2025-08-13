@@ -1,5 +1,5 @@
 import { ScrollView, View, Text } from 'react-native';
-import { RequestCard } from '../../../src/components/cards/RequestCard';
+import RequestCard from '~/components/cards/RequestCard';
 
 export default function AdvertiserHome() {
   return (

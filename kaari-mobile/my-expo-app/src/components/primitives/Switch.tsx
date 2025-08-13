@@ -22,18 +22,8 @@ export default function Switch({ label, value, onChange }: SwitchProps) {
 
   return (
     <PressableSurface onPress={() => onChange?.(!value)} pressedBackground={colors.primary}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, paddingHorizontal: 2 }}>
-        <View
-          style={{
-            width: 48,
-            height: 28,
-            borderRadius: 14,
-            backgroundColor: value ? colors.primary : colors.gray100,
-            padding: 4,
-            borderWidth: value ? 0 : 1,
-            borderColor: colors.gray200,
-          }}
-        >
+      <View className="flex-row items-center gap-2 py-1.5 px-0.5">
+        <View className="rounded-[14px] p-1" style={{ width: 48, height: 28, backgroundColor: value ? colors.primary : colors.gray100, borderWidth: value ? 0 : 1, borderColor: colors.gray200 }}>
           <Animated.View style={[{ width: 20, height: 20, borderRadius: 10, backgroundColor: colors.white }, knobStyle]} />
         </View>
         {!!label && <Text style={{ color: colors.gray700 }}>{label}</Text>}

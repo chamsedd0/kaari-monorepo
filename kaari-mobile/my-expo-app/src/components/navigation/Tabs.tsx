@@ -36,29 +36,20 @@ export default function Tabs({ items, activeKey, onTabPress }: TabsProps) {
   };
 
   return (
-    <View ref={containerRef} style={{ paddingHorizontal: 12 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+    <View ref={containerRef} className="px-3">
+      <View className="flex-row justify-around">
         {items.map((t) => (
-          <Pressable key={t.key} onPress={() => onTabPress(t.key)} style={{ paddingVertical: 12, alignItems: 'center' }}>
+          <Pressable key={t.key} onPress={() => onTabPress(t.key)} className="py-3 items-center">
             <View onLayout={onLabelLayout(t.key)}>
               <Text style={{ color: t.key === activeKey ? colors.gray700 : colors.gray500, fontWeight: t.key === activeKey ? '800' : '600' }}>{t.title}</Text>
             </View>
           </Pressable>
         ))}
       </View>
-      <View style={{ height: 8 }} />
-      <View style={{ height: 1, backgroundColor: colors.gray100 }} />
+      <View className="h-2" />
+      <View className="h-px" style={{ backgroundColor: colors.gray100 }} />
       <Animated.View
-        style={[
-          {
-            position: 'absolute',
-            bottom: 1,
-            height: 3,
-            backgroundColor: colors.primary,
-            borderRadius: 999,
-          },
-          indicatorStyle,
-        ]}
+        style={[{ position: 'absolute', bottom: 1, height: 3, backgroundColor: colors.primary, borderRadius: 999 }, indicatorStyle]}
       />
     </View>
   );

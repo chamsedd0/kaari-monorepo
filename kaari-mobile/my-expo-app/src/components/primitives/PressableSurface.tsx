@@ -7,6 +7,7 @@ export type PressableSurfaceProps = PropsWithChildren<{
   onPress?: () => void;
   disabled?: boolean;
   style?: ViewStyle | ViewStyle[];
+  className?: string;
   pressedBackground?: string; // must be a color from theme; caller responsibility
   scaleFrom?: number;
   scaleTo?: number;
@@ -19,6 +20,7 @@ export default function PressableSurface({
   onPress,
   disabled,
   style,
+  className,
   pressedBackground,
   scaleFrom = 1,
   scaleTo = 0.98,
@@ -50,8 +52,9 @@ export default function PressableSurface({
         pressed.value = 0;
       }}
       style={containerStyle}
+      className={className}
     >
-      <Animated.View style={[animatedStyle, { overflow: 'hidden', borderRadius }]}> {children} </Animated.View>
+      <Animated.View style={[animatedStyle, { overflow: 'hidden', borderRadius }]}>{children}</Animated.View>
       <Animated.View
         pointerEvents="none"
         style={[

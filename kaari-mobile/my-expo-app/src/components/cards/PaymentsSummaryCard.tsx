@@ -10,13 +10,13 @@ export type PaymentsSummaryCardProps = {
 
 export default function PaymentsSummaryCard({ total, nextPayout, pending }: PaymentsSummaryCardProps) {
   return (
-    <View style={{ borderRadius: 16, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray100, padding: 14 }}>
+    <View className="rounded-2xl p-3.5" style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.gray100 }}>
       <Text style={{ color: colors.gray700, fontWeight: '800' }}>Payments</Text>
-      <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 8 }}>
+      <View className="flex-row items-end justify-between mt-2">
         <Text style={{ color: colors.primary, fontSize: 22, fontWeight: '800' }}>{total}</Text>
         {!!nextPayout && <Text style={{ color: colors.gray500 }}>Next payout: {nextPayout}</Text>}
       </View>
-      {!!pending && <Text style={{ color: colors.gray500, marginTop: 4 }}>Pending: {pending}</Text>}
+      {!!pending && <Text className="mt-1" style={{ color: colors.gray500 }}>Pending: {pending}</Text>}
     </View>
   );
 }

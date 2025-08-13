@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Icon } from '../../src/components/ui/Icon';
+import Icon from '~/components/ui/Icon';
 
 export default function AppTabs() {
   return (

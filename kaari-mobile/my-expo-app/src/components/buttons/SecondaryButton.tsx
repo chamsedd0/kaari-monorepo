@@ -15,21 +15,7 @@ export type SecondaryButtonProps = {
 export default function SecondaryButton({ label, onPress, disabled, iconLeft, iconRight, fullWidth }: SecondaryButtonProps) {
   return (
     <PressableSurface onPress={onPress} disabled={disabled} pressedBackground={colors.primary} borderRadius={100}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          height: 48,
-          paddingHorizontal: 18,
-          backgroundColor: colors.white,
-          borderRadius: 100,
-          borderWidth: 1,
-          borderColor: colors.primary,
-          width: fullWidth ? '100%' : undefined,
-        }}
-      >
+      <View className={`flex-row items-center justify-center gap-2 h-12 px-[18px] rounded-[100px] border ${fullWidth ? 'w-full' : ''}`} style={{ backgroundColor: colors.white, borderColor: colors.primary }}>
         {!!iconLeft && <View style={{ marginRight: 4 }}>{iconLeft}</View>}
         <Text style={{ color: colors.primary, fontWeight: '800' }}>{label}</Text>
         {!!iconRight && <View style={{ marginLeft: 4 }}>{iconRight}</View>}

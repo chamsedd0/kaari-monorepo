@@ -41,28 +41,8 @@ export default function Timer({
   const timeText = formatTimer(value, isBig || showHours);
 
   return (
-    <View
-      style={{
-        backgroundColor: colors[bg],
-        paddingHorizontal: isBig ? 20 : 12,
-        paddingVertical: isBig ? 10 : 4,
-        borderRadius: rounded ? 100 : 6,
-        borderWidth: isPurple ? 0 : 1,
-        borderColor: isPurple ? 'transparent' : colors.primary,
-      }}
-    >
-      <Text
-        style={{
-          color: colors[fg],
-          fontSize: isBig ? 24 : 12,
-          fontWeight: '800',
-          letterSpacing: isBig ? 1 : 0.5,
-          // keeps digits aligned like in the PNG so it doesn't jump while ticking
-          fontVariant: ['tabular-nums'],
-        }}
-      >
-        {timeText}
-      </Text>
+    <View className={`${rounded ? 'rounded-[100px]' : 'rounded-[6px]'} ${isPurple ? '' : 'border'} px-[${isBig ? 20 : 12}px] py-[${isBig ? 10 : 4}px]`} style={{ backgroundColor: colors[bg], borderColor: isPurple ? 'transparent' : colors.primary }}>
+      <Text style={{ color: colors[fg], fontSize: isBig ? 24 : 12, fontWeight: '800', letterSpacing: isBig ? 1 : 0.5, fontVariant: ['tabular-nums'] }}>{timeText}</Text>
     </View>
   );
 }

@@ -10,7 +10,7 @@ export type TextAreaProps = TextInputProps & {
 
 export default function TextArea({ label, error, minRows = 4, style, ...rest }: TextAreaProps) {
   return (
-    <View style={{ gap: 6 }}>
+    <View className="gap-1.5">
       {!!label && <Text style={{ color: colors.gray700, fontWeight: '700' }}>{label}</Text>}
       <TextInput
         multiline

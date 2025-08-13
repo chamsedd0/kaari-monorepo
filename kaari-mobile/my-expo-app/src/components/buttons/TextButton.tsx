@@ -13,7 +13,7 @@ export type TextButtonProps = {
 export default function TextButton({ label, onPress, bold, color = 'primary' }: TextButtonProps) {
   return (
     <PressableSurface onPress={onPress} pressedBackground={colors[color]} borderRadius={100}>
-      <View style={{ paddingVertical: 8, paddingHorizontal: 10, borderRadius: 100 }}>
+      <View className="py-2 px-[10px] rounded-[100px]">
         <Text style={{ color: colors[color], fontWeight: bold ? '700' as const : '500' as const }}>{label}</Text>
       </View>
     </PressableSurface>

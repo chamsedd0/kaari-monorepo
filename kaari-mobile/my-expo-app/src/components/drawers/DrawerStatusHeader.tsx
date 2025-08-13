@@ -36,12 +36,12 @@ export type DrawerStatusHeaderProps = {
 export default function DrawerStatusHeader({ status, title, subtitle }: DrawerStatusHeaderProps) {
   const s = statusMap[status];
   return (
-    <View style={{ backgroundColor: colors[s.headerBg], borderBottomWidth: 1, borderColor: colors.gray100, paddingHorizontal: 16, paddingVertical: 12, borderTopLeftRadius: 20, borderTopRightRadius: 20 }}>
-      <View style={{ alignSelf: 'flex-start', backgroundColor: colors[s.chipBg], paddingHorizontal: 12, paddingVertical: 6, borderRadius: 100 }}>
+    <View className="border-b px-4 py-3 rounded-t-[20px]" style={{ backgroundColor: colors[s.headerBg], borderColor: colors.gray100 }}>
+      <View className="self-start rounded-[100px] px-3 py-1.5" style={{ backgroundColor: colors[s.chipBg] }}>
         <Text style={{ color: colors[s.chipFg], fontWeight: '800' }}>{s.label}</Text>
       </View>
-      <Text style={{ color: colors.gray700, fontSize: 18, fontWeight: '800', marginTop: 10 }}>{title}</Text>
-      {!!subtitle && <Text style={{ color: colors.gray500, marginTop: 4 }}>{subtitle}</Text>}
+      <Text className="mt-2" style={{ color: colors.gray700, fontSize: 18, fontWeight: '800' }}>{title}</Text>
+      {!!subtitle && <Text className="mt-1" style={{ color: colors.gray500 }}>{subtitle}</Text>}
     </View>
   );
 }
