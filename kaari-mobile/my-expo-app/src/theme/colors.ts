@@ -6,6 +6,11 @@ export const colors = {
   primaryLight: '#B885D8',
   primaryTint1: '#F1DBFF',
   primaryTint2: '#F7EBFF',
+  // States
+  primaryDisabled: '#CFAEE6',
+  secondaryDisabled: '#F2E6FB',
+  // Inputs
+  inputBorder: '#D1D1D1',
 
   // Neutrals
   white: '#FFFFFF',

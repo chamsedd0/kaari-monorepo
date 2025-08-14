@@ -748,58 +748,7 @@ const PropertyPageComponent = () => {
             </p>
           </div>
         )}
-        {/* Intended length of stay + Share CTA */}
-        {isClient && (
-          <div style={{ padding: '16px 24px' }}>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', font: Theme.typography.fonts.mediumB, color: Theme.colors.black, marginBottom: 6 }}>Intended length of stay</label>
-              <input
-                type="number"
-                min={1}
-                placeholder="Months"
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: 100,
-                  border: `1px solid ${Theme.colors.tertiary}`,
-                  font: Theme.typography.fonts.mediumM
-                }}
-                onChange={() => {}}
-              />
-              <div style={{ font: Theme.typography.fonts.text12, color: Theme.colors.gray2, marginTop: 6 }}>
-                For advertiser reference only; chosen length must respect the minimum stay.
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                const shareData = {
-                  title: property.title || 'Kaari Property',
-                  text: 'Intéressé·e mais besoin d’un·e coloc ? Partage ce lien !',
-                  url: window.location.href
-                } as any;
-                if (navigator.share) {
-                  navigator.share(shareData).catch(() => navigator.clipboard.writeText(window.location.href));
-                } else {
-                  navigator.clipboard.writeText(window.location.href);
-                  alert('Link copied');
-                }
-              }}
-              style={{
-                width: '100%',
-                marginTop: 12,
-                padding: '14px 20px',
-                borderRadius: 100,
-                border: 'none',
-                backgroundColor: Theme.colors.secondary,
-                color: 'white',
-                font: Theme.typography.fonts.mediumB,
-                cursor: 'pointer'
-              }}
-            >
-              Share to find a flatmate
-            </button>
-          </div>
-        )}
+        {/* Share moved into popup from send-request card */}
       </div>
     </PropertyPage>
   );

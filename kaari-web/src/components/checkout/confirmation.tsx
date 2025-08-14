@@ -110,6 +110,13 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
   const [error, setError] = useState<string | null>(null);
   const [brokerExtraFee, setBrokerExtraFee] = useState<number>(0);
 
+  // Calculate base fees early so they are available to hooks below
+  const pricePerMonth = propertyData.price;
+  // Kaari tenant commission: 25% of 1st month rent
+  const serviceFee = Math.round(pricePerMonth * 0.25);
+  // HAANI Max retired; single HAANI plan has no extra fee
+  const haaniMaxFee = 0;
+
   useEffect(() => {
     // Retrieve rental application data from localStorage
     const savedData = localStorage.getItem('rentalApplicationData');
@@ -309,21 +316,13 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
     return <div>Loading application data...</div>;
   }
   
-  // Calculate fees
-  const pricePerMonth = propertyData.price;
-  // Kaari tenant commission: 25% of 1st month rent
-  const serviceFee = Math.round(pricePerMonth * 0.25);
   // brokerExtraFee computed via effect
-
   // Apply discount if available
   const discount = rentalData.discount ? {
     amount: rentalData.discount.amount,
     code: rentalData.discount.code
   } : undefined;
   const discountAmount = discount ? discount.amount : 0;
-
-  // HAANI Max retired; single HAANI plan has no extra fee
-  const haaniMaxFee = 0;
 
   // Calculate total price including broker/agency extra fee
   const totalPrice = pricePerMonth + serviceFee + brokerExtraFee - discountAmount + haaniMaxFee;

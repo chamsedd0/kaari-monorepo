@@ -6,6 +6,7 @@ import { PurpleButtonLB60 } from "../buttons/purple_LB60";
 import InfoIcon from "../icons/detailsIcon.svg";
 import LikeBannerBaseModelLikeVariant1 from "../banners/status/banner-base-model-like-variant-1";
 import ShareButton from "../buttons/button-share";
+import ShareFlatmateModal from "../../modals/ShareFlatmateModal";
 import { IoCalendarOutline, IoChevronDown, IoClose } from 'react-icons/io5';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/theme';
@@ -176,6 +177,7 @@ const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(() => new Date(initialDate));
   const datePickerRef = useRef<HTMLDivElement>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Format date for display
   const formatDateForDisplay = (dateString: string): string => {
@@ -373,7 +375,7 @@ const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({
             )}
           </div>
           <div className="buttons">
-            <ShareButton />
+            <ShareButton onClick={() => setShareOpen(true)} />
             <LikeBannerBaseModelLikeVariant1 />
           </div>
         </div>
@@ -444,6 +446,11 @@ const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({
       <div className="disclaimer">
         You will not pay anything yet
       </div>
+      <ShareFlatmateModal 
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        propertyTitle={title}
+      />
     </PropertyRequestCardStyle>
   );
 };

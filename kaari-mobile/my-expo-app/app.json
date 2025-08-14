@@ -33,6 +33,19 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       }
+    },
+    "extra": {
+      "apiBaseUrl": "http://localhost:3000",
+      "environment": "development",
+      "firebase": {
+        "apiKey": "AIzaSyCsjdDeSqhx2qkskfyUqTgkqWRe4_knUU4",
+        "authDomain": "kaari-8df3c.firebaseapp.com",
+        "projectId": "kaari-8df3c",
+        "storageBucket": "kaari-8df3c.firebasestorage.app",
+        "messagingSenderId": "706294886686",
+        "appId": "1:706294886686:web:c2807384db594d3e44990f",
+        "measurementId": "G-Z320WYLSHL"
+      }
     }
   }
 }
