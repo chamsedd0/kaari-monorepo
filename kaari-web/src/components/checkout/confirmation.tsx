@@ -290,7 +290,7 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
       // The rest of the process will be handled by the payment callback page
     } catch (err) {
       console.error('Error initiating payment:', err);
-      setError('Failed to initiate payment. Please try again.');
+      setError('Failed to submit reservation. Please try again.');
       setIsSubmitting(false);
     }
   };

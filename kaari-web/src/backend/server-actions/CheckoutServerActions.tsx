@@ -181,8 +181,8 @@ export async function getUserPaymentMethods(userId?: string): Promise<PaymentMet
 
 /**
  * Create a new reservation request during checkout
- */
-export async function createCheckoutReservation(data: {
+  */
+ export async function createCheckoutReservation(data: {
   propertyId: string;
   userId: string;
   rentalData: any;
@@ -228,18 +228,17 @@ export async function createCheckoutReservation(data: {
       discount = null
     } = data.rentalData;
     
-    // Create the request data (payment already completed before creation)
+    // Create the request data (initially as a pending reservation request)
     const requestData = {
       userId: currentUser.id,
       propertyId: data.propertyId,
       requestType: 'rent' as const,
-      status: 'paid' as const,
+      status: 'pending' as const,
       scheduledDate, // This is the move-in date
       paymentMethodId: data.paymentMethodId,
       createdAt: new Date(),
       updatedAt: new Date(),
-      paymentStatus: 'paid',
-      paidAt: new Date(),
+      paymentStatus: 'pending',
       
       // Personal information
       fullName,
@@ -275,19 +274,13 @@ export async function createCheckoutReservation(data: {
       } : null
     };
     
-    // Reservation is created as 'paid' since gateway confirmed success before this call
+    // Reservation is created as 'pending' awaiting advertiser decision
     const request = await createDocument<Request>(REQUESTS_COLLECTION, requestData as unknown as Omit<Request, 'id'>);
     
     // Get property details to include in notifications
     const property = await getDocumentById<Property>(PROPERTIES_COLLECTION, data.propertyId);
     
     if (property) {
-      // Update the property status to 'occupied' since payment is already made
-      await updateDocument<Property>(PROPERTIES_COLLECTION, data.propertyId, {
-        status: 'occupied',
-        updatedAt: new Date()
-      });
-      
       try {
         // Send notification to the advertiser using the reservationRequest function
         await advertiserNotifications.reservationRequest(
