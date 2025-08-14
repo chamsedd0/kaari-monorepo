@@ -3,19 +3,19 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type AuthState = {
-  token?: string;
   userId?: string;
-  setSession: (s: { token: string; userId: string }) => void;
+  role?: 'advertiser' | 'client';
+  setUser: (s: { userId: string; role: 'advertiser' | 'client' }) => void;
   clearSession: () => void;
 };
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      token: undefined,
       userId: undefined,
-      setSession: ({ token, userId }) => set({ token, userId }),
-      clearSession: () => set({ token: undefined, userId: undefined }),
+      role: undefined,
+      setUser: ({ userId, role }) => set({ userId, role }),
+      clearSession: () => set({ userId: undefined, role: undefined }),
     }),
     {
       name: 'auth-store',

@@ -7,6 +7,8 @@ import Share from '~/../assets/Icon_Share.svg';
 import Photoshoot from '~/../assets/Icon_Photoshoot.svg';
 import Cross from '~/../assets/Icon_Cross.svg';
 import Favorites from '~/../assets/Icon_Favorites.svg';
+import ArrowRight from '~/../assets/Icon_Arrow_Right.svg';
+import ArrowLeft from '~/../assets/Icon_Arrow_Left.svg';
 
 export type IconName =
   | 'dashboard'
@@ -14,7 +16,9 @@ export type IconName =
   | 'share'
   | 'photoshoot'
   | 'cross'
-  | 'favorites';
+  | 'favorites'
+  | 'arrow-right'
+  | 'arrow-left';
 
 export type IconProps = SvgProps & {
   name: IconName;
@@ -30,6 +34,8 @@ const MAP: Record<IconName, React.ComponentType<SvgProps>> = {
   photoshoot: Photoshoot,
   cross: Cross,
   favorites: Favorites,
+  'arrow-right': ArrowRight,
+  'arrow-left': ArrowLeft,
 };
 
 export const Icon = memo(function Icon({ name, width = 20, height = 20, fill = 'currentColor', ...rest }: IconProps) {

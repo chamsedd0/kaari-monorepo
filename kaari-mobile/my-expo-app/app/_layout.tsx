@@ -1,15 +1,3 @@
-import React from 'react';
-import { Stack } from 'expo-router';
-import { ServerClientProvider } from '../src/server/hooks';
-
-export default function RootLayout() {
-  return (
-    <ServerClientProvider>
-      <Stack screenOptions={{ headerShown: false }} />
-    </ServerClientProvider>
-  );
-}
-
 import 'react-native-gesture-handler';
 import '../global.css';
 import { Stack } from 'expo-router';
@@ -80,8 +68,8 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <SafeAreaView style={{ flex: 1 }}>
           <StatusBar style="dark" />
-          <Stack screenOptions={{ headerTitleStyle: { fontFamily: 'VisbyCF' } }}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack screenOptions={{ headerShown: false, headerTitleStyle: { fontFamily: 'VisbyCF' } }}>
+            <Stack.Screen name="index" />
             <Stack.Screen name="components" options={{ title: 'Components' }} />
           </Stack>
         </SafeAreaView>

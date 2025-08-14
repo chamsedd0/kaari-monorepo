@@ -7,10 +7,14 @@
     "paths": {
       "~/*": [
         "src/*"
+      ],
+      "@backend/*": [
+        "src/backend/*"
       ]
     },
     "types": [
-      "nativewind/types"
+      "nativewind/types",
+      "jest"
     ]
   },
   "include": [

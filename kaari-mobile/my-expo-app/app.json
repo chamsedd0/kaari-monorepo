@@ -29,23 +29,28 @@
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
-    },
+  "package": "kaari.ma",
+  "adaptiveIcon": {
+    "foregroundImage": "./assets/adaptive-icon.png",
+    "backgroundColor": "#ffffff"
+  }
+},
     "extra": {
       "apiBaseUrl": "http://localhost:3000",
       "environment": "development",
       "firebase": {
         "apiKey": "AIzaSyCsjdDeSqhx2qkskfyUqTgkqWRe4_knUU4",
+        "androidApiKey": "AIzaSyDz_FDT-vp2WBPzKYti7JyjCA-w20tLB2Q",
         "authDomain": "kaari-8df3c.firebaseapp.com",
         "projectId": "kaari-8df3c",
-        "storageBucket": "kaari-8df3c.firebasestorage.app",
+        "storageBucket": "kaari-8df3c.appspot.com",
         "messagingSenderId": "706294886686",
         "appId": "1:706294886686:web:c2807384db594d3e44990f",
         "measurementId": "G-Z320WYLSHL"
-      }
+      },
+      "googleClientIdWeb": "706294886686-5ussm12nnmh4njg83gkluli00b0gud3a.apps.googleusercontent.com",
+      "googleClientIdAndroid": "706294886686-5ussm12nnmh4njg83gkluli00b0gud3a.apps.googleusercontent.com",
+      "googleClientIdIOS": "706294886686-5ussm12nnmh4njg83gkluli00b0gud3a.apps.googleusercontent.com"
     }
   }
 }

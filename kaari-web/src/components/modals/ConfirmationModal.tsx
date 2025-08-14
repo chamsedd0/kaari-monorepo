@@ -16,6 +16,13 @@ const ModalBackdrop = styled.div`
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: fadeIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: opacity;
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 `;
 
 const ModalContainer = styled.div`
@@ -26,6 +33,13 @@ const ModalContainer = styled.div`
   width: 90%;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   position: relative;
+  animation: slideIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform, opacity;
+
+  @keyframes slideIn {
+    from { transform: translateY(18px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
 `;
 
 const CloseButton = styled.button`

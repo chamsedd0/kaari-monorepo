@@ -17,13 +17,10 @@ const ModalOverlay = styled.div`
   justify-content: center;
   align-items: center;
   z-index: 1050;
-  animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
   padding: 20px;
 
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   
   @media (max-width: 480px) {
     padding: 10px;
@@ -37,13 +34,10 @@ const ModalContainer = styled.div`
   width: 100%;
   max-width: 480px;
   position: relative;
-  animation: slideIn 0.3s ease;
+  animation: slideIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
   overflow: hidden;
 
-  @keyframes slideIn {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
+  @keyframes slideIn { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   
   @media (max-width: 600px) {
     max-width: 100%;

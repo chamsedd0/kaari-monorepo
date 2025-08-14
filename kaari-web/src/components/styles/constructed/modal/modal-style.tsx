@@ -13,6 +13,13 @@ export const ModalOverlay = styled.div`
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  animation: overlay-fade-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: opacity;
+
+  @keyframes overlay-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 `;
 
 export const ModalContainer = styled.div`
@@ -25,17 +32,12 @@ export const ModalContainer = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: modal-appear 0.3s ease-out;
+  animation: modal-slide-fade-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform, opacity;
   
-  @keyframes modal-appear {
-    from {
-      opacity: 0;
-      transform: translateY(-50px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  @keyframes modal-slide-fade-in {
+    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
   
   @media (max-width: 600px) {
