@@ -1,3 +1,15 @@
+import React from 'react';
+import { Stack } from 'expo-router';
+import { ServerClientProvider } from '../src/server/hooks';
+
+export default function RootLayout() {
+  return (
+    <ServerClientProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </ServerClientProvider>
+  );
+}
+
 import 'react-native-gesture-handler';
 import '../global.css';
 import { Stack } from 'expo-router';

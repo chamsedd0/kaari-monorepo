@@ -1,18 +1,18 @@
 import React from 'react';
-import { View } from 'react-native';
-import PressableSurface from '../primitives/PressableSurface';
+import IconButton from './IconButton';
+import Cross from '~/../assets/Icon_Cross.svg';
 import { colors } from '~/theme/colors';
-import CrossIcon from '~/../assets/Icon_Cross.svg';
 
-export type CloseButtonProps = { onPress?: () => void; size?: number };
+export type CloseButtonProps = {
+  onPress?: () => void;
+  size?: number;
+};
 
-export default function CloseButton({ onPress, size = 36 }: CloseButtonProps) {
+export default function CloseButton({ onPress, size = 40 }: CloseButtonProps) {
   return (
-    <PressableSurface onPress={onPress} borderRadius={100} pressedBackground={colors.gray700}>
-      <View style={{ width: size, height: size, borderRadius: 100, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.gray200 }}>
-        <CrossIcon width={14} height={14} color={colors.gray700} />
-      </View>
-    </PressableSurface>
+    <IconButton size={size} background="white" onPress={onPress}>
+      <Cross width={18} height={18} fill={colors.gray700} />
+    </IconButton>
   );
 }
 

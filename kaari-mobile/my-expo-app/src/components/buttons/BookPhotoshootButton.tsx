@@ -1,29 +1,30 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { Text, View, ViewStyle } from 'react-native';
 import PressableSurface from '../primitives/PressableSurface';
 import { colors } from '~/theme/colors';
-import PhotoshootIcon from '~/../assets/Icon_Photoshoot.svg';
-import AddRoundIcon from '~/../assets/Icon_Add_round_light.svg';
+import Photoshoot from '~/../assets/Icon_Photoshoot.svg';
 
 export type BookPhotoshootButtonProps = {
+  title?: string;
   onPress?: () => void;
-  label?: string;
   disabled?: boolean;
-  fullWidth?: boolean;
+  style?: ViewStyle | ViewStyle[];
 };
 
-export default function BookPhotoshootButton({ onPress, label = 'Book a Photoshoot!', disabled, fullWidth = true }: BookPhotoshootButtonProps) {
+export default function BookPhotoshootButton({ title = 'Book a Photoshoot', onPress, disabled, style }: BookPhotoshootButtonProps) {
   return (
-    <PressableSurface onPress={onPress} pressedBackground={colors.black} borderRadius={16} disabled={disabled}>
-      <View className={`flex-row items-center justify-between gap-3 h-14 px-4 rounded-[16px] ${fullWidth ? 'w-full' : ''}`} style={{ backgroundColor: disabled ? colors.gray300 : colors.primary }}>
-        <View className="flex-row items-center gap-3">
-          <View className="items-center justify-center" style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.white }}>
-            <PhotoshootIcon width={18} height={18} color={colors.primary} />
-          </View>
-          <Text className="text-white font-extrabold" style={{ letterSpacing: 0.2 }}>{label}</Text>
-        </View>
-        <AddRoundIcon width={28} height={28} color={colors.white} />
+    <PressableSurface
+      onPress={onPress}
+      disabled={disabled}
+      className="rounded-2xl"
+      pressedClassName="opacity-90"
+      disabledClassName="opacity-50"
+      style={[{ backgroundColor: colors.gray700, height: 56, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center' }, style]}
+    >
+      <View style={{ width: 36, height: 36, borderRadius: 999, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+        <Photoshoot width={18} height={18} fill={colors.gray700} />
       </View>
+      <Text style={{ color: colors.white, fontWeight: '800' }}>{title}</Text>
     </PressableSurface>
   );
 }

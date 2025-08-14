@@ -1,7 +1,13 @@
 module.exports = {
-  // Preserve original SVG fills and strokes for illustration assets
-  // Do not coerce to currentColor
-  svgProps: {},
+  // Ensure imported SVGs don't hardcode colors; allow overriding via props
+  svgoConfig: {
+    plugins: [
+      { name: 'removeAttrs', params: { attrs: '(fill|stroke)' } },
+    ],
+  },
+  svgProps: {
+    fill: 'currentColor',
+  },
 };
 
 

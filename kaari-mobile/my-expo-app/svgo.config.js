@@ -1,7 +1,10 @@
 module.exports = {
   plugins: [
     { name: 'preset-default', params: { overrides: { removeViewBox: false } } },
-    // Keep original fills/strokes; do not strip colors
+    { name: 'convertStyleToAttrs' },
+    { name: 'inlineStyles', params: { onlyMatchedOnce: false } },
+    { name: 'removeStyleElement' },
+    { name: 'removeAttrs', params: { attrs: '(fill|stroke)' } },
   ],
 };
 
