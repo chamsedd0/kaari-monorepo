@@ -110,6 +110,9 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
   const [error, setError] = useState<string | null>(null);
   const [brokerExtraFee, setBrokerExtraFee] = useState<number>(0);
 
+  // Price per month is required by effects below; compute it before effects to avoid TDZ issues
+  const pricePerMonth = propertyData.price;
+
   useEffect(() => {
     // Retrieve rental application data from localStorage
     const savedData = localStorage.getItem('rentalApplicationData');
@@ -310,7 +313,6 @@ const Confirmation: React.FC<ConfirmationProps> = ({ userData, propertyData }) =
   }
   
   // Calculate fees
-  const pricePerMonth = propertyData.price;
   // Kaari tenant commission: 25% of 1st month rent
   const serviceFee = Math.round(pricePerMonth * 0.25);
   // brokerExtraFee computed via effect
