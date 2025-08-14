@@ -179,19 +179,18 @@ const PaymentCallback: React.FC = () => {
           isProcessing = true;
           
           try {
-            // Since we now create a pending reservation before payment, do not create again here.
-            // Optionally, we could locate the pending reservation by some orderID, but for now just cleanup and show success UI.
-            const existingReservationId = localStorage.getItem('lastReservationId');
-            if (existingReservationId) {
-              setReservationId(existingReservationId);
-            }
+            // Create the reservation as 'pending' after successful payment
+            const reservation = await createCheckoutReservation(pendingReservation);
             
-            // Apply discount to booking if available (handled post-approval/payment in future flow)
+            console.log('Reservation created:', reservation);
+            setReservationId(reservation.id);
+            
+            // Apply discount to booking if available
             if (pendingReservation.rentalData.discount) {
               try {
                 const discountApplied = await referralService.applyDiscountToBooking(
                   pendingReservation.userId,
-                  existingReservationId || 'pending',
+                  reservation.id,
                   pendingReservation.propertyId,
                   pendingReservation.propertyTitle || 'Property',
                   pendingReservation.rentalData.price
@@ -208,11 +207,11 @@ const PaymentCallback: React.FC = () => {
             localStorage.removeItem('pendingReservation');
             
             setStatus('success');
-            setMessage('Your payment was successful. Your reservation remains pending approval by the advertiser.');
+            setMessage('Your payment was successful. Your reservation request has been submitted and is pending advertiser approval.');
             
             // Redirect to success page after 3 seconds
             setTimeout(() => {
-              navigate('/payment-success' + (existingReservationId ? ('?reservationId=' + existingReservationId) : ''));
+              navigate('/payment-success?reservationId=' + reservation.id);
             }, 3000);
           } finally {
             // Reset the processing flag regardless of success or failure
