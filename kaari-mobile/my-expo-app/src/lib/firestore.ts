@@ -1,7 +1,7 @@
-import { firebaseFirestore } from './firebase';
+import { db } from '../backend/firebase/config';
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, addDoc, deleteDoc } from 'firebase/firestore';
 
-export const db = firebaseFirestore;
+export { db };
 
 export async function getDocument<T>(path: string) {
   const d = await getDoc(doc(db, path));

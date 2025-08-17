@@ -29,14 +29,14 @@
       "supportsTablet": true
     },
     "android": {
-  "package": "kaari.ma",
-  "adaptiveIcon": {
-    "foregroundImage": "./assets/adaptive-icon.png",
-    "backgroundColor": "#ffffff"
-  }
-},
+      "package": "kaari.ma",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
     "extra": {
-      "apiBaseUrl": "http://localhost:3000",
+      "apiBaseUrl": "https://localhost:3000",
       "environment": "development",
       "firebase": {
         "apiKey": "AIzaSyCsjdDeSqhx2qkskfyUqTgkqWRe4_knUU4",
@@ -48,9 +48,13 @@
         "appId": "1:706294886686:web:c2807384db594d3e44990f",
         "measurementId": "G-Z320WYLSHL"
       },
-      "googleClientIdWeb": "706294886686-5ussm12nnmh4njg83gkluli00b0gud3a.apps.googleusercontent.com",
-      "googleClientIdAndroid": "706294886686-5ussm12nnmh4njg83gkluli00b0gud3a.apps.googleusercontent.com",
-      "googleClientIdIOS": "706294886686-5ussm12nnmh4njg83gkluli00b0gud3a.apps.googleusercontent.com"
+      "googleClientIdWeb": "",
+      "googleClientIdAndroid": "706294886686-rlqu2oeel10gd25nnjjssqj69epvjfvd.apps.googleusercontent.com",
+      "googleClientIdIOS": "",
+      "router": {},
+      "eas": {
+        "projectId": "3179ae0a-879a-44f3-a582-357e1b6ffcf2"
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, Alert } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { colors } from '../../src/theme/colors';
 import { VText } from '../../src/components/typography';
@@ -7,7 +7,7 @@ import { Drawer } from '../../src/components/Drawer';
 import { SecondaryButton, PrimaryButton } from '../../src/components/Button';
 import { DefaultInput } from '../../src/components/Input';
 import { useRouter } from 'expo-router';
-import { startGoogleAuthSession, getCurrentUserProfile } from '../../src/backend/firebase/auth';
+import { startGoogleAuthSession } from '../../src/backend/firebase/auth';
 import { useAuthStore } from '../../src/store/auth';
 
 export default function LoginScreen() {
@@ -28,6 +28,26 @@ export default function LoginScreen() {
     transform: [{ translateY: -logoY.value * 80 }],
     opacity: withTiming(1),
   }));
+
+  // Google Sign-In handler
+  const handleGoogleSignIn = async () => {
+    if (loading) return;
+    try {
+      setLoading(true);
+      const profile = await startGoogleAuthSession();
+      if (!profile) {
+        Alert.alert('Sign-In Failed', 'Google sign-in was not completed.');
+        return;
+      }
+      setUser({ userId: profile.id, role: profile.role as 'advertiser' | 'client' });
+      router.replace(profile.role === 'advertiser' ? '/dashboards/advertiser' : '/dashboards/client');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'An error occurred during Google sign-in.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View className="flex-1 items-center justify-center" style={{ backgroundColor: colors.primary }}>
@@ -61,34 +81,21 @@ export default function LoginScreen() {
         }
       >
         <View className="gap-3 mt-2">
+          {/* Email login placeholder */}
           <DefaultInput value={''} onChangeText={() => {}} placeholder="Your e-mail" />
           <PrimaryButton label="Log In or Sign up" />
 
           <View className="items-center mt-1">
             <VText style={{ color: '#999' }}>Or</VText>
           </View>
+
+          {/* Google Sign-In */}
           <SecondaryButton
             label={loading ? 'Signing in…' : 'Google'}
-            onPress={async () => {
-              if (loading) return;
-              try {
-                setLoading(true);
-                const user = await startGoogleAuthSession();
-                if (!user) return;
-                const profile = await getCurrentUserProfile();
-                if (profile) {
-                  setUser({ userId: profile.id, role: (profile.role as any) || 'client' });
-                  router.replace(profile.role === 'advertiser' ? '/dashboards/advertiser' : '/dashboards/client');
-                }
-              } finally {
-                setLoading(false);
-              }
-            }}
+            onPress={handleGoogleSignIn}
           />
         </View>
       </Drawer>
     </View>
   );
 }
-
-

@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Theme } from '../../../../theme/theme';
 import { getClientReservations, cancelReservation, requestRefund } from '../../../../backend/server-actions/ClientServerActions';
 import { handleMoveIn as confirmMoveInAction } from '../../../../backend/server-actions/PaymentServerActions';
-import { processPayment as initiateCheckoutPayment } from '../../../../backend/server-actions/CheckoutServerActions';
+import { processPayment as confirmReservationPayment } from '../../../../backend/server-actions/ClientServerActions';
 import { PurpleButtonMB48 } from '../../../../components/skeletons/buttons/purple_MB48';
 import { BpurpleButtonMB48 } from '../../../../components/skeletons/buttons/border_purple_MB48';
 import { CardBaseModelStyleLatestRequest } from '../../../../components/styles/cards/card-base-model-style-latest-request';
@@ -1032,16 +1032,14 @@ const ReservationsPage: React.FC = () => {
         return;
       }
       setProcessingPayment(selectedReservation);
-      const ok = await initiateCheckoutPayment(selectedReservation);
-      if (!ok) {
-        toast.showToast('error', 'Payment Failed', 'Failed to initiate payment');
-      }
+      await confirmReservationPayment(selectedReservation);
+      toast.showToast('success', 'Payment Confirmed', 'Your reservation payment has been confirmed.');
  
       await loadReservations();
       setShowPaymentModal(false);
     } catch (err: any) {
-      console.error('Error processing payment:', err);
-      setError(err.message || 'Failed to process payment');
+      console.error('Error confirming payment:', err);
+      setError(err.message || 'Failed to confirm payment');
     } finally {
       setProcessingPayment(null);
       setSelectedReservation(null);
@@ -1450,8 +1448,8 @@ const ReservationsPage: React.FC = () => {
           onClose={closePaymentModal}
           onConfirm={handleConfirmPayment}
           title="Confirm Payment"
-          message="By confirming this payment, you agree to complete the reservation. Your payment method will be charged for the deposit and first month's rent."
-          confirmText={processingPayment ? 'Processing...' : 'Confirm Payment'}
+          message="Confirm your reservation payment? We will mark your payment as received."
+          confirmText={processingPayment ? 'Processing...' : 'Confirm'}
           cancelText="Cancel"
           isLoading={processingPayment !== null}
         />

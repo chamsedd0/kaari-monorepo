@@ -9,7 +9,7 @@ import { BpurpleButtonMB48 } from '../../../../components/skeletons/buttons/bord
 import { CheckoutCard } from '../../../../components/skeletons/cards/checkout-card';
 import { getClientReservations, cancelReservation, respondToCounterOffer } from '../../../../backend/server-actions/ClientServerActions';
 import { handleMoveIn } from '../../../../backend/server-actions/PaymentServerActions';
-import { processPayment as initiateCheckoutPayment } from '../../../../backend/server-actions/CheckoutServerActions';
+import { processPayment as confirmReservationPayment } from '../../../../backend/server-actions/ClientServerActions';
 import { useToastService } from '../../../../services/ToastService';
 import BookingDetailsComponent from '../../../../components/reservations/BookingDetails';
 import TimerComponent from '../../../../components/skeletons/constructed/status-cards/TimerComponent';
@@ -218,8 +218,8 @@ const ReservationStatusPage: React.FC = () => {
   const confirmPayment = () => {
     setModalConfig({
       title: 'Confirm Payment',
-      message: 'Are you sure you want to proceed with the payment? Your payment information will be processed.',
-      confirmText: 'Yes, Pay Now',
+      message: 'Confirm your reservation payment? We will mark your payment as received.',
+      confirmText: 'Confirm',
       cancelText: 'Not Now',
       onConfirm: performPayment
     });
@@ -237,16 +237,14 @@ const ReservationStatusPage: React.FC = () => {
         await loadReservationDetails();
         return;
       }
-      const ok = await initiateCheckoutPayment(reservation.reservation.id);
-      if (!ok) {
-        toast.showToast('error', 'Payment Failed', 'Failed to initiate payment');
-      }
+      await confirmReservationPayment(reservation.reservation.id);
+      toast.showToast('success', 'Payment Confirmed', 'Your reservation payment has been confirmed.');
       
       // Reload data
       await loadReservationDetails();
     } catch (error: any) {
-      console.error('Error processing payment:', error);
-      toast.showToast('error', 'Payment Failed', error.message || 'Failed to process payment');
+      console.error('Error confirming payment:', error);
+      toast.showToast('error', 'Confirmation Failed', error.message || 'Failed to confirm payment');
     } finally {
       setProcessing(false);
     }

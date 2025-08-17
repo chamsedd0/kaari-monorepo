@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "706294886686-rlqu2oeel10gd25nnjjssqj69epvjfvd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "kaari.ma",
+            "certificate_hash": "db3b79323ccc42c870a3fc5c28b600ff49d2b2bb"
+          }
+        },
+        {
           "client_id": "706294886686-5ussm12nnmh4njg83gkluli00b0gud3a.apps.googleusercontent.com",
           "client_type": 3
         }
