@@ -26,9 +26,10 @@ interface PropertyViewsTableProps {
 const TableContainer = styled.div`
   background: white;
   border-radius: ${Theme.borders.radius.lg};
-  padding: 24px;
+  padding: clamp(16px, 3vw, 24px);
   border: ${Theme.borders.primary};
   width: 100%;
+  min-width: 640px; /* allow horizontal scroll wrapper to work on small screens */
 `;
 
 const TableHeader = styled.div`
@@ -36,17 +37,19 @@ const TableHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
 `;
 
 const Title = styled.h2`
-  font-size: 20px;
+  font-size: clamp(16px, 4vw, 20px);
   font-weight: 700;
   color: ${Theme.colors.black};
   margin: 0;
 `;
 
 const ViewCount = styled.div`
-  font-size: 20px;
+  font-size: clamp(16px, 4vw, 20px);
   font-weight: 700;
   color: ${Theme.colors.secondary};
   margin: 0;
@@ -60,10 +63,11 @@ const TableContent = styled.div`
 
 const TableHeaderRow = styled.div`
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr repeat(6, minmax(100px, 1fr));
   padding: 12px 16px;
   border-bottom: ${Theme.borders.primary};
   background-color: #F9F9F9;
+  gap: 8px;
 `;
 
 const HeaderCell = styled.div`

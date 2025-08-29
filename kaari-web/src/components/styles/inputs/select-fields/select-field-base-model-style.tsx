@@ -16,7 +16,7 @@ export const SelectHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 23px 20px;
+  padding: clamp(12px, 3.4vw, 23px) clamp(14px, 3.6vw, 20px);
   background: ${Theme.colors.white};
   border: ${Theme.borders.primary};
   
@@ -47,7 +47,7 @@ export const SelectDropdown = styled.div<{ isOpen: boolean }>`
 `;
 
 export const Option = styled.div<{ selected?: boolean }>`
-  padding: 12px 16px;
+  padding: clamp(10px, 3vw, 12px) clamp(12px, 3.2vw, 16px);
   cursor: pointer;
   background: ${props => props.selected ? Theme.colors.quaternary : 'transparent'};
   
@@ -57,7 +57,7 @@ export const Option = styled.div<{ selected?: boolean }>`
 `;
 
 export const Label = styled.div`
-  margin-bottom: 30px;
+  margin-bottom: clamp(10px, 3vw, 20px);
   font: ${Theme.typography.fonts.largeB};
   color: ${Theme.colors.black};
 `;

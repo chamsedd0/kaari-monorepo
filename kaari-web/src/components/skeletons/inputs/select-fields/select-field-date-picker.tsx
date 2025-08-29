@@ -5,8 +5,14 @@ import { Label2 } from '../../../styles/inputs/select-fields/select-field-base-m
 import { useTranslation } from 'react-i18next';
 
 const DatePickerContainer = styled.div`
-  display: flex;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(8px, 3.2vw, 16px);
+
+  @media (max-width: 420px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
 `;
 
 interface DatePickerProps {

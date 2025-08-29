@@ -7,7 +7,7 @@ const NavigationCardStyle = styled.div`
     background-color: ${Theme.colors.white};
     border-radius: ${Theme.borders.radius.lg};
     border: ${Theme.borders.primary};
-    padding: 12px;
+    padding: clamp(8px, 2.2vw, 12px);
     display: flex;
     flex-direction: column;
 
@@ -15,7 +15,7 @@ const NavigationCardStyle = styled.div`
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 16px 24px;
+        padding: clamp(12px, 2.6vw, 16px) clamp(16px, 3.2vw, 24px);
         border-radius: ${Theme.borders.radius.md};
         cursor: pointer;
         transition: all 0.3s ease;
@@ -34,6 +34,48 @@ const NavigationCardStyle = styled.div`
         }
 
         
+    }
+
+    @media (max-width: 700px) {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        padding: 0;
+        border-radius: 12px;
+        overflow-x: auto;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        background: #fafafa;
+        border: ${Theme.borders.primary};
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+        &::-webkit-scrollbar { display: none; }
+
+        .nav-item {
+            padding: 14px 12px;
+            text-align: center;
+            border-radius: 0;
+            font: ${Theme.typography.fonts.mediumB};
+            color: ${Theme.colors.gray2};
+            background: transparent;
+            position: relative;
+        }
+        .nav-item.active { 
+            background: #fff; 
+            color: ${Theme.colors.secondary}; 
+        }
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            left: 20%;
+            right: 20%;
+            bottom: 0;
+            height: 3px;
+            border-radius: 3px 3px 0 0;
+            background: ${Theme.colors.secondary};
+        }
+        .nav-item:hover { background: transparent; color: ${Theme.colors.secondary}; }
     }
 `;
 

@@ -45,13 +45,13 @@ const TextContent = styled.div`
 `;
 
 const Title = styled.h3`
-  font-size: 20px;
+  font-size: clamp(16px, 3.2vw, 20px);
   font-weight: 700;
   margin: 0 0 8px 0;
 `;
 
 const Description = styled.p`
-  font-size: 12px;
+  font-size: clamp(11px, 2.6vw, 12px);
   font-weight: 500;
   margin: 0;
   opacity: 0.9;
@@ -63,8 +63,8 @@ const LearnMoreButton = styled.button`
   border: none;
   border-radius: 24px;
   padding: 10px 20px;
-  height: 48px;
-  min-width: 163px;
+  height: clamp(40px, 8vw, 48px);
+  min-width: 140px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;

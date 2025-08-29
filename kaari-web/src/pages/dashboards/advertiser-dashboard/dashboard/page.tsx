@@ -515,7 +515,8 @@ const DashboardPage: React.FC = () => {
                                     </div>
                                 )}
 
-                                <div style={{ marginTop: '24px' }}>
+                                <div className="section-spacer">
+                                    <div className="scroll-x">
                                 {hasProperties ? (
                                         <PropertyViewsTable 
                                             title={t('advertiser_dashboard.dashboard.views_of_properties', 'Views of Properties')}
@@ -551,6 +552,7 @@ const DashboardPage: React.FC = () => {
                                             loading={loading}
                                         />
                                 )}
+                                    </div>
                                 </div>
                             </div>
                         );

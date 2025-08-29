@@ -6,7 +6,7 @@ import { Theme } from '../../../../theme/theme';
 
 export const SelectContainer2 = styled(SelectContainer)`
     //same as select-field-base-model-style
-    min-width: 89px !important;
+    min-width: 64px !important;
     width: 100%;
     
 `;
@@ -14,6 +14,7 @@ export const SelectContainer2 = styled(SelectContainer)`
 export const SelectHeader2 = styled(SelectHeader)`
     //same as select-field-base-model-style
     font: ${Theme.typography.fonts.mediumM};
+    padding: clamp(10px, 3vw, 14px) clamp(10px, 3vw, 14px);
     
 `;
 
@@ -29,7 +30,7 @@ export const Option2 = styled(Option)`
 
 export const Label2 = styled(Label)`
   //same as select-field-base-model-style
-  margin-bottom: 16px;
+  margin-bottom: clamp(8px, 2.6vw, 16px);
 `;
 
 export const ChevronIcon2 = styled(ChevronIcon)<{ isOpen: boolean }>`

@@ -5,23 +5,25 @@ export const ProfileSectionStyle = styled.div`
     display: flex;
     flex-direction: column;
     align-items: start;
-    gap: 40px;
+    gap: clamp(16px, 4vw, 40px);
     width: 100%;
 
     .section-title {
         font: ${Theme.typography.fonts.h2};
         color: ${Theme.colors.black};
+        @media (max-width: 640px) { font: ${Theme.typography.fonts.h3}; }
     }
 
     .profile-image-container {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: clamp(10px, 3vw, 16px);
+        flex-wrap: wrap;
         
 
         .profile-image {
-            width: 120px;
-            height: 120px;
+            width: clamp(88px, 18vw, 120px);
+            height: clamp(88px, 18vw, 120px);
             border-radius: ${Theme.borders.radius.round};
             overflow: hidden;
             display: flex;
@@ -63,7 +65,7 @@ export const ProfileSectionStyle = styled.div`
             color: ${Theme.colors.black};
             font: ${Theme.typography.fonts.mediumM};
             border-radius: 999px;
-            padding: 8px 12px;
+            padding: 6px 10px;
             cursor: pointer;
             box-shadow: 0 6px 14px rgba(0,0,0,0.06);
             transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -89,7 +91,7 @@ export const ProfileSectionStyle = styled.div`
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         width: 100%;
-        gap: 20px;
+        gap: clamp(12px, 3.5vw, 20px);
    
         .profile-inbut-label {
             font: ${Theme.typography.fonts.largeB};
@@ -190,6 +192,11 @@ export const ProfileSectionStyle = styled.div`
                 }
             }
         }
+    }
+
+    @media (max-width: 700px) {
+        .profile-grid { grid-template-columns: 1fr; }
+        .profile-actions { justify-content: stretch; }
     }
     
     .error-message {

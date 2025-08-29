@@ -4,6 +4,7 @@ import { AdvertiserDashboardStyle } from './styles';
 import LoadingScreen from '../../../components/loading/LoadingScreen';
 import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import eventBus from '../../../utils/event-bus';
 import DashboardFooter from '../../../components/skeletons/constructed/footer/dashboard-footer';
 // import PhotoshootBanner from '../../../components/skeletons/banners/photoshoot-banner';
 
@@ -118,6 +119,7 @@ const AdvertiserDashboard: React.FC = () => {
         const url = SECTION_TO_URL[section];
         navigate(`/dashboard/advertiser/${url}`);
         setActiveSection(section);
+        setIsSidebarOpen(false);
     };
 
     // Update active section when URL changes
@@ -130,6 +132,37 @@ const AdvertiserDashboard: React.FC = () => {
             setActiveSection(newSection);
         }
     }, [location.pathname]);
+
+    // Sidebar open (mobile/tablet)
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isNarrow, setIsNarrow] = useState<boolean>(typeof window !== 'undefined' ? window.innerWidth <= 1200 : false);
+
+    useEffect(() => {
+        const onResize = () => setIsNarrow(window.innerWidth <= 1200);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
+
+    // Listen for header menu button toggle
+    useEffect(() => {
+        const unsubscribe = eventBus.on('dashboard:toggleSidebar', (payload: any) => {
+            if (payload && typeof payload.open === 'boolean') {
+                setIsSidebarOpen(payload.open);
+            } else {
+                setIsSidebarOpen(true);
+            }
+        });
+        return () => { unsubscribe(); };
+    }, []);
+
+    // Lock body scroll when sidebar is open on small screens
+    useEffect(() => {
+        if (isSidebarOpen && isNarrow) {
+            const original = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            return () => { document.body.style.overflow = original; };
+        }
+    }, [isSidebarOpen, isNarrow]);
 
     // Initial loading when the dashboard first loads
     useEffect(() => {
@@ -232,11 +265,30 @@ const AdvertiserDashboard: React.FC = () => {
     return (
         <>
             <LoadingScreen isLoading={isLoading || isSectionLoading} />
-            <div style={{ display: 'flex', maxWidth: '1500px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', maxWidth: '1500px', margin: '0 auto', position: 'relative', width: '100%', overflowX: 'hidden' }}>
+
+                {/* Dim background when sidebar is open on small screens */}
+                {isSidebarOpen && (
+                    <div
+                        onClick={() => setIsSidebarOpen(false)}
+                        style={{
+                            position: 'fixed',
+                            top: 80,
+                            left: 0,
+                            width: '100%',
+                            height: 'calc(100vh - 80px)',
+                            background: 'rgba(0,0,0,0.25)',
+                            zIndex: 59
+                        }}
+                    />
+                )}
+
                 <NavigationPannelAdviser 
                     activeSection={activeSection}
                     onSectionChange={handleSectionChange}
                     getTranslatedSectionName={getTranslatedSectionName}
+                    isOpen={isSidebarOpen}
+                    onClose={() => setIsSidebarOpen(false)}
                 />
                 <AdvertiserDashboardStyle>
                     <div className={`section-container ${isAnimating ? 'animating' : ''}`}>

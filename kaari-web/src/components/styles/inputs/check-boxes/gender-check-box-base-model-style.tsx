@@ -4,7 +4,7 @@ import styled from "styled-components";
 const CheckBoxBaseModelStyle3 = styled.div`
   display: flex;
   flex-direction: row;
-  gap: 24px;
+  gap: clamp(12px, 3vw, 24px);
   align-items: center;
   width: 100%;
   
@@ -16,8 +16,8 @@ const CheckBoxBaseModelStyle3 = styled.div`
     
     input[type="radio"] {
       appearance: none;
-      width: 20px;
-      height: 20px;
+      width: clamp(16px, 4vw, 20px);
+      height: clamp(16px, 4vw, 20px);
       border: ${Theme.colors.tertiary} 1px solid;
       border-radius: 50%;
       margin: 0;
@@ -33,8 +33,8 @@ const CheckBoxBaseModelStyle3 = styled.div`
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          width: 12px;
-          height: 12px;
+          width: clamp(8px, 3vw, 12px);
+          height: clamp(8px, 3vw, 12px);
           border-radius: 50%;
           background-color: ${Theme.colors.primary};
         }

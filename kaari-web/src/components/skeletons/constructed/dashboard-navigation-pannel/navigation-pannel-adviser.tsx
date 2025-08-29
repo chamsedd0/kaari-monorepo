@@ -20,15 +20,20 @@ interface NavigationPannelAdviserProps {
     activeSection: Section;
     onSectionChange: (section: Section) => void;
     getTranslatedSectionName?: (section: Section) => string;
+    isOpen?: boolean;
+    onClose?: () => void;
 }
 
 export const NavigationPannelAdviser: React.FC<NavigationPannelAdviserProps> = ({ 
     activeSection, 
     onSectionChange,
-    getTranslatedSectionName = (section) => section === 'MyProfile' ? 'My Profile' : section === 'ReferralProgram' ? 'Referral Program' : section
+    getTranslatedSectionName = (section) => section === 'MyProfile' ? 'My Profile' : section === 'ReferralProgram' ? 'Referral Program' : section,
+    isOpen = false,
+    onClose,
 }) => {
     return (
-        <NavigationPannelDashboardStyle>
+        <NavigationPannelDashboardStyle className={isOpen ? 'open' : undefined}>
+            <button aria-label="Close navigation" className="close-btn" onClick={onClose}>×</button>
             <button 
                 onClick={() => onSectionChange('Dashboard')} 
                 className={`nav-link ${activeSection === 'Dashboard' ? 'active' : ''}`}

@@ -13,7 +13,7 @@ const BannerContainer = styled.div`
   flex-direction: row;
   background: linear-gradient(90deg, #8F27CE 0%, #9747FF 100%);
   border-radius: 16px;
-  padding: 55px 48px;
+  padding: clamp(20px, 6vw, 55px) clamp(16px, 5vw, 48px);
   width: 100%;
   color: white;
   position: relative;
@@ -32,7 +32,7 @@ const ImageContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 40px;
+  margin-right: clamp(12px, 5vw, 40px);
   
   img {
     height: 110%;
@@ -44,8 +44,8 @@ const ImageContainer = styled.div`
     margin-bottom: 24px;
     
     img {
-      width: 150px;
-      height: 168px;
+      width: 140px;
+      height: 158px;
     }
   }
 `;
@@ -63,7 +63,7 @@ const ContentSection = styled.div`
 `;
 
 const Title = styled.h2`
-  font-size: 24px;
+  font-size: clamp(18px, 4.2vw, 24px);
   font-weight: 400;
   margin: 0;
   line-height: 1.2;
@@ -71,7 +71,7 @@ const Title = styled.h2`
 `;
 
 const Highlight = styled.span`
-  font-size: 48px;
+  font-size: clamp(28px, 8vw, 48px);
   font-weight: 900;
   display: block;
   margin-top: 8px;
@@ -79,7 +79,7 @@ const Highlight = styled.span`
 `;
 
 const Description = styled.p`
-  font-size: 16px;
+  font-size: clamp(13px, 3.6vw, 16px);
   font-weight: 400;
   margin: 0;
   line-height: 1.5;
@@ -96,9 +96,9 @@ const BookButton = styled.button`
   color: #8F27CE;
   border: none;
   border-radius: 50px;
-  padding: 16px 32px;
+  padding: 12px 24px;
   font-weight: 600;
-  font-size: 18px;
+  font-size: clamp(14px, 3.6vw, 18px);
   cursor: pointer;
   transition: all 0.2s ease;
   max-width: 260px;

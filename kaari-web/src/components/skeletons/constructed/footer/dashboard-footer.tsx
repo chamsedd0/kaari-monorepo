@@ -8,7 +8,7 @@ import logo from '../../../../assets/images/purpleLogo.svg';
 
 const DashboardFooterContainer = styled.footer`
   width: 100%;
-  padding: 40px;
+  padding: clamp(20px, 3vw, 40px);
   background: white;
   border-top: ${Theme.borders.primary};
 `;
@@ -16,7 +16,7 @@ const DashboardFooterContainer = styled.footer`
 const FooterContent = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: clamp(16px, 2vw, 24px);
   max-width: 1400px;
   margin: 0 auto;
 `;
@@ -25,6 +25,7 @@ const TopSection = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: clamp(12px, 2vw, 24px);
   
   @media (max-width: 768px) {
     flex-direction: column;
@@ -40,7 +41,7 @@ const Logo = styled.div`
 
 const SocialLinks = styled.div`
   display: flex;
-  gap: 16px;
+  gap: clamp(10px, 2vw, 16px);
   
   a {
     color: ${Theme.colors.gray2};
@@ -57,19 +58,23 @@ const SocialLinks = styled.div`
 `;
 
 const MiddleSection = styled.div`
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(16px, 2.4vw, 28px);
   
-  @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 24px;
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
   }
 `;
 
 const FooterLinkGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: clamp(8px, 1.5vw, 12px);
   
   h4 {
     font: ${Theme.typography.fonts.smallB};
@@ -94,13 +99,16 @@ const BottomSection = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 16px;
+  padding-top: clamp(10px, 1.5vw, 16px);
   border-top: 1px solid ${Theme.colors.gray}10;
   
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+  @media (max-width: 480px) {
+    gap: 12px;
   }
 `;
 

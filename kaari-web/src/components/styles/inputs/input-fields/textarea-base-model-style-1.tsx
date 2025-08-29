@@ -4,7 +4,7 @@ import styled from "styled-components";
 const TextAreaBaseModel1 = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: clamp(8px, 2.6vw, 16px);
   align-items: flex-start;
   width: 100%;
   
@@ -19,8 +19,8 @@ const TextAreaBaseModel1 = styled.div`
 
   textarea {
     width: 100%;
-    min-height: 200px;
-    padding: 24px;
+    min-height: clamp(120px, 30vw, 200px);
+    padding: clamp(12px, 3.4vw, 24px);
     border: ${Theme.borders.primary};
     border-radius: ${Theme.borders.radius.sm};
     font: ${Theme.typography.fonts.largeM};

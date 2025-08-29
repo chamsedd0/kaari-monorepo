@@ -4,20 +4,20 @@ import { Theme } from "../../../../theme/theme";
 export const ProfilePageStyle = styled.div`
     display: flex;
     width: 100%;
-    gap: 40px;
+    gap: clamp(16px, 4vw, 40px);
 
     .right {
         display: flex;
         flex-direction: column;
         flex: 0.35;
-        gap: 32px;
+        gap: clamp(12px, 3vw, 32px);
     }
 
     .left {
         display: flex;
         flex-direction: column;
         flex: 1;
-        gap: 40px;
+        gap: clamp(16px, 4vw, 40px);
     
         .section-title {
             font: ${Theme.typography.fonts.h3};
@@ -26,12 +26,14 @@ export const ProfilePageStyle = styled.div`
 
         .profile-image-container {
             display: flex;
-            gap: 18px;
+            gap: clamp(10px, 3vw, 18px);
+            align-items: center;
+            flex-wrap: wrap;
         
         .profile-image {
             position: relative;
-            width: 150px;
-            height: 150px;
+            width: clamp(96px, 18vw, 150px);
+            height: clamp(96px, 18vw, 150px);
 
             img {
                 width: 100%;
@@ -48,8 +50,8 @@ export const ProfilePageStyle = styled.div`
                 color: white;
                 border: none;
                 border-radius: 50%;
-                width: 36px;
-                height: 36px;
+                width: clamp(28px, 6vw, 36px);
+                height: clamp(28px, 6vw, 36px);
                 cursor: pointer;
             }
         }
@@ -65,23 +67,24 @@ export const ProfilePageStyle = styled.div`
             flex: 1;
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(2, 1fr);
-            gap: 40px 19px;
+            grid-template-rows: auto;
+            gap: clamp(12px, 4vw, 24px) clamp(10px, 3vw, 19px);
             width: 100%;
             align-items: end;
         }
 
         .profile-actions {
             display: flex;
-            gap: 16px;
-            max-width: 200px;
+            gap: 12px;
+            max-width: 100%;
+            flex-wrap: wrap;
         }
 
         .profile-inbut-group {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: clamp(8px, 2.5vw, 12px);
             width: 100%;
         }
 
@@ -110,5 +113,17 @@ export const ProfilePageStyle = styled.div`
                 opacity: 0.6;
             }
         }
+    }
+
+    /* Stack columns on tablets/phones */
+    @media (max-width: 1024px) {
+        flex-direction: column;
+        .right { order: -1; flex: 1; }
+        .left { background: #fff; border: ${Theme.borders.primary}; border-radius: 12px; padding: 12px; }
+    }
+
+    @media (max-width: 700px) {
+        .left .profile-grid { grid-template-columns: 1fr; }
+        .left .section-title { font: ${Theme.typography.fonts.h4B}; }
     }
 `;

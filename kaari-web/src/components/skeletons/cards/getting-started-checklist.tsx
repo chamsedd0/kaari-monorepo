@@ -66,17 +66,21 @@ const ChecklistContainer = styled.div`
   background-color: ${Theme.colors.white};
   border-radius: 12px;
   border: ${Theme.borders.primary};
-  padding: 24px;
+  padding: clamp(16px, 3vw, 24px);
   width: 100%;
   margin-top: 16px;
   animation: ${fadeIn} 0.5s ease-out;
+
+  &.mobile-condensed {
+    padding: 12px;
+  }
 `;
 
 const ChecklistHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: clamp(10px, 2vw, 16px);
 `;
 
 const Title = styled.h3`
@@ -107,7 +111,62 @@ const ProgressBar = styled.div<{ progress: number; prevProgress: number }>`
 const ChecklistItemsContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: clamp(8px, 2vw, 12px);
+`;
+
+// Mobile: condensed next-step row
+const NextItemRow = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: ${Theme.borders.primary};
+  background: #faf7ff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-align: left;
+
+  &:hover { background: #f4efff; }
+
+  .icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: ${Theme.colors.secondary};
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .label {
+    font: ${Theme.typography.fonts.mediumB};
+    color: ${Theme.colors.black};
+    flex: 1;
+  }
+
+  .chevron {
+    color: ${Theme.colors.gray2};
+  }
+`;
+
+const MobileActions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+
+  .show-all {
+    background: transparent;
+    border: none;
+    color: ${Theme.colors.secondary};
+    font: ${Theme.typography.fonts.smallB};
+    cursor: pointer;
+    padding: 6px 8px;
+  }
 `;
 
 interface ChecklistItemWrapperProps {
@@ -245,6 +304,8 @@ const GettingStartedChecklist: React.FC<GettingStartedChecklistProps> = ({
   const navigate = useNavigate();
   const [prevProgress, setPrevProgress] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showAllMobile, setShowAllMobile] = useState(false);
   
   // Use useMemo for derived state to prevent unnecessary re-renders
   const checklist = useMemo(() => {
@@ -268,6 +329,14 @@ const GettingStartedChecklist: React.FC<GettingStartedChecklistProps> = ({
     setProgress((completedCount / items.length) * 100);
   }, [items, progress]);
 
+  // Track viewport for mobile rendering
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth <= 640);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
   const handleItemClick = (item: ChecklistItem) => {
     // Only allow clicking if the item is the next available
     if (!isItemClickable(item.id)) return;
@@ -285,6 +354,34 @@ const GettingStartedChecklist: React.FC<GettingStartedChecklistProps> = ({
     // }
   };
 
+  // Mobile condensed view
+  if (isMobile && !showAllMobile) {
+    return (
+      <ChecklistContainer className="mobile-condensed">
+        <ChecklistHeader>
+          <Title>{t('advertiser_dashboard.getting_started.title', 'Getting Started')}</Title>
+          <span>{Math.round(progress)}%</span>
+        </ChecklistHeader>
+        <ProgressContainer>
+          <ProgressBar progress={progress} prevProgress={prevProgress} />
+        </ProgressContainer>
+        {nextItem && (
+          <NextItemRow onClick={() => handleItemClick(nextItem)} aria-label={nextItem.title}>
+            <div className="icon">✓</div>
+            <div className="label">{nextItem.title}</div>
+            <div className="chevron">›</div>
+          </NextItemRow>
+        )}
+        <MobileActions>
+          <button className="show-all" onClick={() => setShowAllMobile(true)}>
+            {t('common.show_all', 'Show all')}
+          </button>
+        </MobileActions>
+      </ChecklistContainer>
+    );
+  }
+
+  // Default full view
   return (
     <ChecklistContainer>
       <ChecklistHeader>
@@ -333,8 +430,6 @@ const GettingStartedChecklist: React.FC<GettingStartedChecklistProps> = ({
           );
         })}
       </ChecklistItemsContainer>
-      
-      
     </ChecklistContainer>
   );
 };

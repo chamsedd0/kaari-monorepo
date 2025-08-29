@@ -56,8 +56,8 @@ export const CardBaseModelStyleUpcomingPhotoshoot = styled.div`
             align-items: center;
             
             img {
-                width: 100px;
-                height: 100px;
+                width: clamp(72px, 12vw, 100px);
+                height: clamp(72px, 12vw, 100px);
                 object-fit: cover;
                 border-radius: ${Theme.borders.radius.extreme};
                 filter: brightness(0.9)
@@ -66,7 +66,7 @@ export const CardBaseModelStyleUpcomingPhotoshoot = styled.div`
             .personal-info-container {
                 display: flex;
                 flex-direction: column;
-                gap: 8px;
+                gap: 6px;
 
                 .name {
                     font: ${Theme.typography.fonts.largeB};
@@ -115,7 +115,7 @@ export const CardBaseModelStyleUpcomingPhotoshoot = styled.div`
         align-items: center;
 
         .button-container{
-            width: 60%;
+            width: min(100%, 640px);
             display: flex;
             align-items: center;
             gap: 12px;
@@ -166,5 +166,23 @@ export const CardBaseModelStyleUpcomingPhotoshoot = styled.div`
                 z-index: 10;
             }
         }
+    }
+
+    @media (max-width: 900px) {
+        .first-container { align-items: flex-start; }
+        .title-container .title { font: ${Theme.typography.fonts.largeB}; }
+        .info-text { font: ${Theme.typography.fonts.text14}; }
+        .middle-container { flex-direction: column; align-items: flex-start; gap: 12px; }
+        .right-container .date { font: ${Theme.typography.fonts.largeB}; }
+        .right-container .time { font: ${Theme.typography.fonts.h4B}; }
+        .bottom-container { flex-direction: column; align-items: stretch; gap: 10px; }
+        .bottom-container .button-container { width: 100%; }
+        .download-icon { align-self: flex-start; }
+    }
+
+    @media (max-width: 480px) {
+        padding: 16px;
+        .title-container .circle-number { width: 20px; height: 20px; }
+        .left-container img { width: 72px; height: 72px; }
     }
 `;

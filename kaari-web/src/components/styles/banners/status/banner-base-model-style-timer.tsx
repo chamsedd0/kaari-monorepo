@@ -12,19 +12,29 @@ export const BannerBaseModelStyleTimer = styled.div`
     backdrop-filter: blur(10px);
     border-radius: ${Theme.borders.radius.lg};
     max-width: 100%;
-    min-width: 370px;
+    width: 100%;
     display: flex;
-    align-items: start;
-    height: 72px;
-    padding: 16px;
+    align-items: center;
+    height: auto;
+    padding: 12px 16px;
 
 
     .timer {
-        font: normal 900 58px Visby CF;
+        font: normal 900 48px Visby CF;
         color: ${Theme.colors.black};
         text-align: center;
         vertical-align: center;
-        margin-top: 8px;
+        margin: 0;
+        letter-spacing: 1px;
+    }
+
+    @media (max-width: 900px) {
+        .timer { font-size: 36px; }
+    }
+
+    @media (max-width: 640px) {
+        padding: 10px 12px;
+        .timer { font-size: 28px; }
     }
 
 `

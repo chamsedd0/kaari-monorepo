@@ -7,11 +7,12 @@ export const AdvertiserDashboardStyle = styled.div`
     flex-direction: column;
     align-items: start;
     justify-content: start;
-    gap: 24px;
+    gap: clamp(12px, 3vw, 24px);
     flex: 1;
     margin-top: 80px;
-    padding: 32px 40px;
+    padding: clamp(16px, 4vw, 32px) clamp(12px, 5vw, 40px);
     position: relative;
+    overflow-x: hidden;
 
     .section-title {
         font: ${Theme.typography.fonts.h3};
@@ -97,6 +98,12 @@ export const AdvertiserDashboardStyle = styled.div`
 
             .alert-icon { display: none; }
         }
+    }
+
+    /* Reveal hamburger button when sidebar collapses */
+    @media (max-width: 1200px) {
+        .dashboard-hamburger { display: inline-flex !important; align-items: center; justify-content: center; }
+        padding-left: clamp(12px, 5vw, 24px); /* no extra left pad; respect global clamp */
     }
 `
 

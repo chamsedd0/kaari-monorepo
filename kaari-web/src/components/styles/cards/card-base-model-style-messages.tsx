@@ -107,4 +107,13 @@ export const CardBaseModelStyleMessages = styled.div`
             }
         }
     }
+
+    @media (max-width: 640px) {
+        .title-viewmore-container { flex-wrap: wrap; gap: 8px; }
+        .chat-container .chat-box { gap: 12px; }
+        .chat-container .chat-box .profile-picture { width: 44px; height: 44px; }
+        .chat-container .chat-box .text-container .name { font: ${Theme.typography.fonts.mediumB}; }
+        .chat-container .chat-box .end-container { align-items: center; gap: 8px; flex-direction: row; }
+        .chat-container .chat-box .end-container .details { font: ${Theme.typography.fonts.mediumB}; }
+    }
 `;

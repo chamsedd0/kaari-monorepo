@@ -14,8 +14,8 @@ export const UpToDateCard = styled.div`
     
    
    .report-Icon {
-    width: 64px;
-    height: 64px;
+    width: clamp(48px, 10vw, 64px);
+    height: clamp(48px, 10vw, 64px);
     color: ${Theme.colors.white};
     
     
@@ -37,6 +37,10 @@ export const UpToDateCard = styled.div`
     width: 100%;
     display: flex;
     justify-content: center;
+   }
+
+   @media (max-width: 640px) {
+     .report-title { max-width: none; }
    }
    
 `;

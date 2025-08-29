@@ -55,6 +55,7 @@ const HeaderContainer = styled(HeaderBaseModel)<{
     justify-content: space-between;
     width: 100%;
     margin: auto;
+    gap: 12px;
   }
   
   .logo {
@@ -73,7 +74,28 @@ const HeaderContainer = styled(HeaderBaseModel)<{
   .nav-links {
     display: flex;
     align-items: center;
-    gap: 30px;
+    gap: clamp(12px, 2.5vw, 30px);
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  /* Make header prettier: add subtle divider and compact icon group */
+  .nav-links::before {
+    content: '';
+    display: inline-block;
+    width: 1px;
+    height: 28px;
+    background: ${Theme.colors.gray}22;
+    margin-right: 8px;
+  }
+
+  .icon-container { border-radius: 10px; padding: 6px; }
+
+  /* Dashboard menu button: hidden by default, shown on <=1200px */
+  .dash-menu-button {
+    display: none;
+    align-items: center;
+    justify-content: center;
   }
   
   .link {
@@ -90,10 +112,10 @@ const HeaderContainer = styled(HeaderBaseModel)<{
   
   .search-container {
     position: relative;
-    flex: 1;
-    max-width: 400px;
+    flex: 1 1 260px;
+    max-width: min(46vw, 420px);
     height: 40px;
-    margin: 0 15px;
+    margin: 0 12px;
     
     input {
       width: 100%;
@@ -176,7 +198,7 @@ const HeaderContainer = styled(HeaderBaseModel)<{
   .sign-in {
     color: ${({ isWhite }) => isWhite ? Theme.colors.primary : Theme.colors.white};
     font-weight: 600;
-    font-size: 15px;
+    font-size: clamp(13px, 1.8vw, 15px);
     transition: all 0.3s;
     cursor: pointer;
     padding: 10px 20px;
@@ -207,6 +229,44 @@ const HeaderContainer = styled(HeaderBaseModel)<{
       border-radius: 50%;
       object-fit: cover;
     }
+  }
+
+  /* Tablet */
+  @media (max-width: 1024px) {
+    padding: 0 20px;
+
+    .nav-links { gap: clamp(10px, 2vw, 18px); }
+    .search-container { max-width: 360px; }
+    .link { display: none; } /* hide secondary links to reduce crowding */
+    .language-button { display: none; }
+    .dash-menu-button { display: inline-flex; align-items: center; justify-content: center; }
+    .nav-links::before { display: none; }
+  }
+
+  /* Large tablet/small desktop: ensure visible up to 1200px */
+  @media (max-width: 1200px) {
+    .dash-menu-button { display: inline-flex; }
+  }
+
+  /* Explicitly hide on >1200px */
+  @media (min-width: 1201px) {
+    .dash-menu-button { display: none !important; }
+  }
+
+  /* Phone */
+  @media (max-width: 640px) {
+    height: 72px;
+    .wrapper { gap: 8px; }
+    .logo { max-width: 100px; }
+    .search-container { display: none; }
+    .link { display: none; }
+    .language-button { display: none; }
+    .dash-menu-button { display: inline-flex; align-items: center; justify-content: center; }
+  }
+
+  /* Extra small phones */
+  @media (max-width: 480px) {
+    .nav-links { display: none; }
   }
 `;
 
@@ -555,6 +615,23 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const renderHeaderContent = () => {
     return (
       <div className="wrapper">
+        {userType === 'advertiser' && (
+          <button
+            aria-label="Open dashboard menu"
+            onClick={() => eventBus.emit('dashboard:toggleSidebar', { open: true })}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 999,
+              border: '1px solid #e5e5e5',
+              background: isWhite ? '#fff' : 'rgba(255,255,255,0.2)',
+              marginRight: 8
+            }}
+            className="dash-menu-button"
+          >
+            ☰
+          </button>
+        )}
         <div className="logo" onClick={handleHomeClick}>
           <img src={getLogo()} alt="Kaari Logo" />
         </div>

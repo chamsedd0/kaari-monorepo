@@ -22,6 +22,12 @@ export const PerformanceChartStyling = styled.div`
     justify-content: space-between;
     width: 100%;
 
+    @media (max-width: 640px) {
+      flex-direction: column;
+      gap: 12px;
+      align-items: stretch;
+    }
+
     .header {
     display: flex;
     justify-content: space-between;
@@ -44,7 +50,15 @@ export const PerformanceChartStyling = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: start;
-    gap: 40px;
+    gap: clamp(16px, 4vw, 40px);
+    flex-wrap: wrap;
+
+    @media (max-width: 640px) {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      align-items: center;
+    }
 
 
     .metric {
@@ -63,7 +77,6 @@ export const PerformanceChartStyling = styled.div`
 
         .value-number {
           font: ${Theme.typography.fonts.h3};
-          
         }
 
         &.views {
@@ -79,7 +92,7 @@ export const PerformanceChartStyling = styled.div`
         }
 
         .trend-icon {
-          font-size: 28px;
+          font-size: clamp(20px, 5vw, 28px);
 
           &.up {
             color: #29822D;
@@ -96,6 +109,10 @@ export const PerformanceChartStyling = styled.div`
       .label {
         font-size: ${Theme.typography.fonts.largeM};
         color: ${Theme.colors.black};
+        
+        @media (max-width: 640px) {
+          text-align: center;
+        }
       }
     }
   }
@@ -103,7 +120,7 @@ export const PerformanceChartStyling = styled.div`
 
   .chart {
     width: 100%;
-    height: 180px;
+    height: clamp(140px, 28vw, 200px);
     position: relative;
     border-radius: 24px;
     overflow: hidden;
@@ -128,13 +145,13 @@ export const PerformanceChartStyling = styled.div`
       padding: 0;
 
       img {
-        width: 70px;
+        width: clamp(52px, 10vw, 70px);
         margin-bottom: 8px;
       }
       .main-text {
         color: ${Theme.colors.primary};
         font-weight: 700;
-        font-size: 18px;
+        font-size: clamp(14px, 3.2vw, 18px);
         margin-bottom: 2px;
         margin-top: 4px;
         text-align: center;
@@ -142,7 +159,7 @@ export const PerformanceChartStyling = styled.div`
       .sub-text {
         color: ${Theme.colors.primary};
         font-weight: 400;
-        font-size: 13px;
+        font-size: clamp(12px, 3vw, 13px);
         opacity: 0.7;
         text-align: center;
       }
