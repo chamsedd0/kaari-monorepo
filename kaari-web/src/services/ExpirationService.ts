@@ -33,6 +33,8 @@ class ExpirationService {
     this.checkInterval = setInterval(async () => {
       try {
         await this.processSafetyWindowClosures();
+        await this.processUnpaidAcceptedExpirations();
+        await this.processPendingAdvertiserWindowExpirations();
         console.log('Processed safety window closures');
         const { processed, downgraded } = await this.enforceAdvertiserDowngrade();
         if (processed > 0) {
@@ -47,6 +49,8 @@ class ExpirationService {
     (async () => {
       try {
         await this.processSafetyWindowClosures();
+        await this.processUnpaidAcceptedExpirations();
+        await this.processPendingAdvertiserWindowExpirations();
         const { processed, downgraded } = await this.enforceAdvertiserDowngrade();
         if (processed > 0) {
           console.log(`Initial downgrade check. Processed: ${processed}, downgraded: ${downgraded}`);
@@ -193,6 +197,68 @@ class ExpirationService {
       return { processed, errors, payoutsCreated };
     } catch (e) {
       console.error('processUnpaidAcceptedExpirations error:', e);
+      return { processed, errors: errors + 1, payoutsCreated };
+    }
+  }
+
+  /**
+   * Auto-cancel pending bookings if advertiser did not respond within 24h and auto-create refund payout
+   */
+  async processPendingAdvertiserWindowExpirations(): Promise<{ processed: number; errors: number; payoutsCreated: number; }> {
+    let processed = 0;
+    let errors = 0;
+    let payoutsCreated = 0;
+    try {
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const requestsRef = collection(db, 'requests');
+      const q = query(
+        requestsRef,
+        where('status', '==', 'pending'),
+        where('updatedAt', '<', Timestamp.fromDate(twentyFourHoursAgo))
+      );
+      const snapshot = await getDocs(q);
+      for (const docSnap of snapshot.docs) {
+        try {
+          const id = docSnap.id;
+          const data: any = docSnap.data();
+          // Cancel booking
+          await updateDoc(doc(requestsRef, id), {
+            status: 'cancelled',
+            cancellationReason: 'Advertiser did not respond within 24h',
+            updatedAt: serverTimestamp()
+          });
+          // Free up property if present
+          try {
+            if (data.propertyId) {
+              await updateDoc(doc(db, 'properties', data.propertyId), {
+                status: 'available',
+                updatedAt: serverTimestamp()
+              });
+            }
+          } catch (pe) {
+            console.error('Failed to update property availability:', pe);
+          }
+          // Auto-create refund payout for tenant (if any amount was charged)
+          try {
+            const refundAmount = data.totalPrice || 0;
+            const userId = data.userId;
+            if (userId && refundAmount > 0) {
+              const ok = await PayoutsService.createRefundPayout(userId, refundAmount, `auto_refund_pending_${id}`, data.propertyId);
+              if (ok) payoutsCreated++;
+            }
+          } catch (pe) {
+            console.error('Failed to auto-create refund payout (pending):', pe);
+          }
+          processed++;
+        } catch (e) {
+          console.error('Error processing pending advertiser expiration:', e);
+          errors++;
+        }
+      }
+      return { processed, errors, payoutsCreated };
+    } catch (e) {
+      console.error('processPendingAdvertiserWindowExpirations error:', e);
       return { processed, errors: errors + 1, payoutsCreated };
     }
   }
