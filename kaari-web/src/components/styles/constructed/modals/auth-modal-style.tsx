@@ -31,6 +31,11 @@ export const ModalStyle = styled.div`
   animation: slideIn 0.3s ease;
   overflow: hidden;
 
+  @media (max-width: 700px) {
+    max-width: 94vw;
+    border-radius: 16px;
+  }
+
   @keyframes slideIn {
     from { transform: translateY(20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
@@ -76,6 +81,10 @@ export const ModalStyle = styled.div`
     padding: 24px;
     max-height: calc(100vh - 200px);
     overflow-y: auto;
+  }
+
+  @media (max-width: 700px) {
+    .modal-body { padding: 16px; max-height: calc(100vh - 140px); }
   }
 
   .modal-footer {

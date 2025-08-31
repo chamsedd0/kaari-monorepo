@@ -10,6 +10,7 @@ import { Notifications } from "../../icons/NotificationsIcon";
 import { MessageBubble } from "../../icons/messageBubbleIcon";
 import { House } from "../../icons/HouseIcon";
 import { FaSearch, FaCamera } from 'react-icons/fa';
+import { IoHomeOutline, IoHelpCircleOutline, IoHeartOutline, IoCameraOutline, IoGridOutline, IoLogOutOutline, IoLogInOutline, IoGlobeOutline, IoClose } from 'react-icons/io5';
 import UserAvatar from '../../../../components/UserAvatar';
 import { useStore } from '../../../../backend/store';
 import { AuthModal } from '../modals/auth-modal';
@@ -232,7 +233,7 @@ const HeaderContainer = styled(HeaderBaseModel)<{
   }
 
   /* Tablet */
-  @media (max-width: 1024px) {
+  @media (max-width: 1050px) {
     padding: 0 20px;
 
     .nav-links { gap: clamp(10px, 2vw, 18px); }
@@ -262,6 +263,46 @@ const HeaderContainer = styled(HeaderBaseModel)<{
     .link { display: none; }
     .language-button { display: none; }
     .dash-menu-button { display: inline-flex; align-items: center; justify-content: center; }
+  }
+
+  /* Mobile hamburger header */
+  .mobile-menu-button {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: ${({ isWhite }) => isWhite ? `1px solid ${Theme.colors.fifth}` : '1px solid rgba(255,255,255,0.4)'};
+    background: ${({ isWhite }) => isWhite ? Theme.colors.white : 'rgba(255,255,255,0.15)'};
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+  }
+  .mobile-menu-button:active { transform: scale(0.98); }
+  .mobile-menu-button .bar {
+    width: 18px;
+    height: 2px;
+    background: ${({ isWhite }) => isWhite ? Theme.colors.primary : Theme.colors.white};
+    border-radius: 2px;
+    position: relative;
+  }
+  .mobile-menu-button .bar::before,
+  .mobile-menu-button .bar::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 18px;
+    height: 2px;
+    background: inherit;
+    border-radius: 2px;
+  }
+  .mobile-menu-button .bar::before { top: -6px; }
+  .mobile-menu-button .bar::after { top: 6px; }
+
+  @media (max-width: 800px) {
+    .nav-links { display: none; }
+    .language-button { display: none; }
+    .mobile-menu-button { display: inline-flex; margin-left: auto; }
   }
 
   /* Extra small phones */
@@ -325,6 +366,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+    setTimeout(() => setMobileMenuVisible(false), 250);
+  };
   const [searchValue, setSearchValue] = useState('');
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'register'>('signin');
   const [referralCode, setReferralCode] = useState<string | null>(null);
@@ -635,6 +682,17 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         <div className="logo" onClick={handleHomeClick}>
           <img src={getLogo()} alt="Kaari Logo" />
         </div>
+        {/* Mobile hamburger */}
+        <button
+          className="mobile-menu-button"
+          aria-label="Open menu"
+          onClick={() => {
+            setMobileMenuVisible(true);
+            requestAnimationFrame(() => setMobileMenuOpen(true));
+          }}
+        >
+          <span className="bar" />
+        </button>
         
         {renderSearchBar()}
         
@@ -682,6 +740,97 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       >
         {renderHeaderContent()}
       </HeaderContainer>
+
+      {/* Mobile slide-over mount point (for future menu) */}
+      {mobileMenuVisible && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile menu"
+          style={{
+            position: 'fixed', top: 0, right: 0, bottom: 0, left: 0, zIndex: 1100,
+            background: `rgba(0,0,0,${mobileMenuOpen ? 0.5 : 0})`, display: 'flex', justifyContent: 'flex-end',
+            transition: 'background 250ms ease'
+          }}
+          onClick={closeMobileMenu}
+        >
+          <div
+            style={{
+              width: '80%', maxWidth: 360, height: '100%', background: '#fff',
+              boxShadow: '0 0 30px rgba(0,0,0,0.2)', transform: `translateX(${mobileMenuOpen ? 0 : 100}%)`, display: 'flex', flexDirection: 'column',
+              transition: 'transform 250ms ease'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <style>{`
+              .mm-link { 
+                text-align: left; background: transparent; border: 0; padding: 14px 12px; cursor: pointer; 
+                display: flex; align-items: center; gap: 12px; width: 100%; font-size: 16px; font-weight: 600; border-radius: 12px; color: #222;
+                transition: background 0.2s ease, transform 0.02s ease; 
+              }
+              .mm-link:hover { background: ${Theme.colors.tertiary}; }
+              .mm-link:active { transform: scale(0.995); background: ${Theme.colors.primary}10; }
+              .mm-footer { margin-top: auto; padding-top: 12px; border-top: 1px solid #eee; }
+              .mm-locale { display: flex; align-items: center; gap: 10px; padding: 10px 8px; }
+              .mm-locale-switch { display: flex; align-items: center; }
+            `}</style>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottom: '1px solid #eee' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <img src={getLogo()} alt="Kaari" style={{ height: 28 }} />
+              </div>
+              <button
+                aria-label="Close menu"
+                onClick={closeMobileMenu}
+                style={{ background: 'transparent', border: 0, fontSize: 30, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <IoClose />
+              </button>
+            </div>
+            <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <button onClick={() => { handleHomeClick(); closeMobileMenu(); }} className="mm-link">
+                <IoHomeOutline size={20} color={Theme.colors.secondary} /> Home
+              </button>
+              <button onClick={() => { navigate('/properties'); closeMobileMenu(); }} className="mm-link">
+                <IoGridOutline size={20} color={Theme.colors.secondary} /> Browse properties
+              </button>
+              <button onClick={() => { handleHelpClick(); closeMobileMenu(); }} className="mm-link">
+                <IoHelpCircleOutline size={20} color={Theme.colors.secondary} /> Help
+              </button>
+              {isUserAuthenticated ? (
+                <>
+                  <button onClick={() => { handleFavoritesClick(); closeMobileMenu(); }} className="mm-link">
+                    <IoHeartOutline size={20} color={Theme.colors.secondary} /> Favourites
+                  </button>
+                  {userType === 'advertiser' ? (
+                    <button onClick={() => { handleCameraClick(); closeMobileMenu(); }} className="mm-link">
+                      <IoCameraOutline size={20} color={Theme.colors.secondary} /> Book photoshoot
+                    </button>
+                  ) : (
+                    <button onClick={() => { handlePropertiesClick(); closeMobileMenu(); }} className="mm-link">
+                      <IoGridOutline size={20} color={Theme.colors.secondary} /> My dashboard
+                    </button>
+                  )}
+                  <button onClick={() => { setShowSignOutModal(true); closeMobileMenu(); }} className="mm-link" style={{ color: '#c00' }}>
+                    <IoLogOutOutline size={20} color={Theme.colors.secondary} /> Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => { handleSignIn(); closeMobileMenu(); }} className="mm-link">
+                    <IoLogInOutline size={20} color={Theme.colors.secondary} /> Sign in
+                  </button>
+                </>
+              )}
+              <div className="mm-footer">
+                <div className="mm-locale">
+                  <IoGlobeOutline size={20} color={Theme.colors.secondary} />
+                  <div className="mm-locale-switch"><LanguageSwitcher /></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Authentication Modal */}
       <AuthModal 

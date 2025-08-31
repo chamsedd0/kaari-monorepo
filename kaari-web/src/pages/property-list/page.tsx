@@ -4,6 +4,7 @@ import { IoMap, IoChevronBackOutline, IoChevronForwardOutline, IoClose } from 'r
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import { AppliedFilterBannerComponent } from "../../components/skeletons/banners/static/applied-filter-banner";
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
+import { PropertyCardSkeleton } from "../../components/skeletons/cards/property-card-skeleton";
 import SelectFieldBaseModelVariant2 from "../../components/skeletons/inputs/select-fields/select-field-base-model-variant-2"
 import { PropertyList } from "./styles"
 import { getProperties } from "../../backend/server-actions/PropertyServerActions";
@@ -1830,9 +1831,14 @@ export default function PropertyListPage() {
               </div>
 
               {isLoading ? (
-                <div className="loading-container">
-                  <div className="loading-spinner"></div>
-                  <p>{t('property_list.loading')}</p>
+                <div className="results-container">
+                  {Array.from({length: propertiesPerPage}).map((_, idx) => (
+                    <div className="result" key={`skeleton-${idx}`}>
+                      <div style={{ width: '100%' }}>
+                        <PropertyCardSkeleton />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : filteredProperties.length > 0 ? (
                 <>

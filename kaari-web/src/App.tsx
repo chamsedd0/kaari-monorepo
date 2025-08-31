@@ -69,6 +69,7 @@ import { checkAndFixLanguage } from './utils/language-utils';
 import PaymentCallback from './pages/payment-callback';
 import PaymentSuccess from './pages/payment-success';
 import { PaymentMethodProvider } from './components/PaymentMethodProvider';
+import { createGlobalStyle } from 'styled-components';
 
 // Function to ensure French is the default language
 const ensureFrenchAsDefault = () => {
@@ -696,6 +697,12 @@ function App() {
   // This was previously used to remind users to complete their profile
   
   // Wrapper component for all providers
+  const GlobalNoScrollbar = createGlobalStyle`
+    * { -ms-overflow-style: none; scrollbar-width: none; }
+    *::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none; background: transparent; }
+    body { overflow-y: scroll; }
+  `;
+
   const Wrapper = () => {
     // Check if the current path is part of the isolated advertiser signup flow
     const currentPath = window.location.pathname;
@@ -717,6 +724,7 @@ function App() {
           <NotificationProvider>
             <ChecklistProvider>
               <PaymentMethodProvider>
+                <GlobalNoScrollbar />
                 <ScrollToTop />
                 {routes}
               </PaymentMethodProvider>
@@ -732,6 +740,7 @@ function App() {
         <NotificationProvider>
           <ChecklistProvider>
             <PaymentMethodProvider>
+              <GlobalNoScrollbar />
               <ScrollToTop />
               <MainLayout>
                 {routes}

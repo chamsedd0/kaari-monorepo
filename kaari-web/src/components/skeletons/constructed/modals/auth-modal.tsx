@@ -18,6 +18,10 @@ const AuthModalContent = styled.div`
   min-width: 400px;
   max-width: 100%;
   overflow-x: hidden;
+
+  @media (max-width: 700px) {
+    min-width: 0;
+  }
   
   .logo-container {
     display: flex;
@@ -25,7 +29,7 @@ const AuthModalContent = styled.div`
     margin-bottom: 2rem;
     
     img {
-      height: 36px;
+      height: 50px;
       width: auto;
     }
   }
@@ -861,44 +865,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   aria-busy={isSubmitting || loading ? 'true' : 'false'}
                 />
 
-                {isAdvertiserMode ? (
-                  <button 
-                    type="button"
-                    onClick={toggleAdvertiserMode}
-                    className="advertiser-toggle"
-                    disabled={isSubmitting || loading}
-                  >
-                    ← Back to Regular Sign In
-                  </button>
-                ) : (
-                  <button 
-                    type="button"
-                    onClick={async () => {
-                      try {
-                        // Set loading state
-                        setIsSubmitting(true);
-                        
-                        // Close the modal first to improve UX
-                        onClose();
-                        
-                        // Trigger Google sign-in with advertiser flag
-                        await signInWithGooglePopup('advertiser', true);
-                        
-                        // The redirect will happen via the auth context handler
-                        // We'll go to step 1 with prefilled data, not skipping steps
-                      } catch (error) {
-                        console.error("Error in become advertiser flow:", error);
-                        toast.auth.loginError("Failed to start advertiser registration. Please try again.");
-                      } finally {
-                        setIsSubmitting(false);
-                      }
-                    }}
-                    className="advertiser-toggle"
-                    disabled={isSubmitting || loading}
-                  >
-                    Become an Advertiser
-                  </button>
-                )}
+                
               </>
             )}
           </form>
