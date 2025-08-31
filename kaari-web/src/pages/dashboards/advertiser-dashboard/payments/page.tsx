@@ -465,7 +465,7 @@ const PaymentsPage = () => {
                           {formatPayoutStatus(payout.status)}
                         </td>
                         <td>
-                          {formatDate(payout.createdAt)}
+                          {formatDateSafe(payout.createdAt)}
                         </td>
                         <td>
                           {payout.paidAt ? formatDateSafe(payout.paidAt) : '-'}

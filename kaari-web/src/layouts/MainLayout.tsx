@@ -114,6 +114,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       };
     }
     
+    // Referral claim/signup pages: hide header entirely
+    if (location.pathname.startsWith('/referral/claim-discount') || location.pathname.startsWith('/referral/signup')) {
+      return {
+        variant: 'white' as const,
+        userType: userType,
+        isAuthenticated,
+        showMinimalHeader: true
+      };
+    }
+    
     // Home page
     if (location.pathname === '/') {
       return {
@@ -201,6 +211,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     
     // Don't show footer on checkout process
     if (location.pathname.includes('/checkout-process')) {
+      return false;
+    }
+    
+    // Don't show footer on referral claim/signup pages
+    if (location.pathname.startsWith('/referral/')) {
       return false;
     }
     

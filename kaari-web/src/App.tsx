@@ -102,6 +102,8 @@ function App() {
     
     // Initialize expiration service
     ExpirationService.startExpirationCheck();
+    // Kick an immediate sweep for unpaid accepted expirations
+    ExpirationService.processUnpaidAcceptedExpirations().catch(() => {});
     
     // Ensure French as default language
     ensureFrenchAsDefault();

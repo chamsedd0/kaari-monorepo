@@ -285,6 +285,7 @@ const ReferralSignupPage: React.FC = () => {
                     <GoogleButtonMB48 
                       icon={googleIcon}
                       text="Connect  with Google"
+                      onClick={handleGoogleSignup as any}
                     />
                   </GoogleButtonWrapper>
                   

@@ -156,16 +156,16 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 80px);
-  padding: 20px;
-  margin-top: 80px;
+  min-height: 100vh;
+  padding: 12px 16px;
+  margin-top: 0;
   background: linear-gradient(135deg, rgba(67, 13, 174, 1) 0%, rgba(159, 50, 225, 1) 50%, rgba(225, 155, 50, 1) 100%);
 `;
 
 const ContentWrapper = styled.div`
   display: flex;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1100px;
   background: transparent;
   border-radius: ${Theme.borders.radius.lg};
   overflow: hidden;
@@ -176,7 +176,7 @@ const ContentWrapper = styled.div`
 `;
 
 const LeftContent = styled.div`
-  padding: 40px 48px;
+  padding: 24px 24px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -193,7 +193,7 @@ const RightContent = styled.div`
   align-items: center;
   justify-content: center;
   flex: 1;
-  padding: 20px;
+  padding: 12px;
   
   img {
     max-width: 100%;

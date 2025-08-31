@@ -989,6 +989,36 @@ export async function processPayment(reservationId: string): Promise<void> {
       updatedAt: new Date()
     });
     
+    // Immediately register a payment record for tenant history
+    try {
+      const { db } = await import('../firebase/config');
+      const { addDoc, collection, Timestamp } = await import('firebase/firestore');
+      
+      // Fetch property for advertiser id
+      let advertiserId: string | null = null;
+      if (reservation.propertyId) {
+        const prop = await getDocumentById<Property>(PROPERTIES_COLLECTION, reservation.propertyId);
+        advertiserId = (prop && (prop as any).ownerId) ? (prop as any).ownerId : null;
+      }
+      
+      await addDoc(collection(db, 'payments'), {
+        reservationId,
+        propertyId: reservation.propertyId || null,
+        userId: currentUser.id,
+        advertiserId,
+        amount: reservation.totalPrice || 0,
+        currency: 'MAD',
+        status: 'completed',
+        advertiserStatus: 'pending',
+        paymentMethod: 'card',
+        paymentDate: Timestamp.now(),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      });
+    } catch (e) {
+      console.error('Failed to register payment record:', e);
+    }
+    
     // Send notifications about the payment
     try {
       if (reservation.propertyId) {

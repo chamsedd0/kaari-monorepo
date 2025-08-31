@@ -144,6 +144,58 @@ class ExpirationService {
       return { processed, errors: errors + 1, payoutsCreated };
     }
   }
+
+  /**
+   * Auto-cancel accepted bookings that passed 24h payment window and auto-create refund payout
+   */
+  async processUnpaidAcceptedExpirations(): Promise<{ processed: number; errors: number; payoutsCreated: number; }> {
+    let processed = 0;
+    let errors = 0;
+    let payoutsCreated = 0;
+    try {
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const requestsRef = collection(db, 'requests');
+      const q = query(
+        requestsRef,
+        where('status', '==', 'accepted'),
+        where('updatedAt', '<', Timestamp.fromDate(twentyFourHoursAgo))
+      );
+      const snapshot = await getDocs(q);
+      for (const docSnap of snapshot.docs) {
+        try {
+          const id = docSnap.id;
+          const data: any = docSnap.data();
+          // Cancel booking
+          await updateDoc(doc(requestsRef, id), {
+            status: 'cancelled',
+            cancellationReason: 'Payment window expired',
+            updatedAt: serverTimestamp()
+          });
+          // Auto-create full refund payout for tenant
+          try {
+            const refundAmount = data.totalPrice || 0;
+            const userId = data.userId;
+            if (userId && refundAmount > 0) {
+              const { createRefundPayout } = await import('./PayoutsService');
+              const ok = await PayoutsService.createRefundPayout(userId, refundAmount, `auto_refund_${id}`, data.propertyId);
+              if (ok) payoutsCreated++;
+            }
+          } catch (pe) {
+            console.error('Failed to auto-create refund payout:', pe);
+          }
+          processed++;
+        } catch (e) {
+          console.error('Error processing unpaid accepted expiration:', e);
+          errors++;
+        }
+      }
+      return { processed, errors, payoutsCreated };
+    } catch (e) {
+      console.error('processUnpaidAcceptedExpirations error:', e);
+      return { processed, errors: errors + 1, payoutsCreated };
+    }
+  }
   
   /**
    * Check and process a specific booking's safety window
