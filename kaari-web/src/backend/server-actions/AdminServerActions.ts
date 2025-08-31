@@ -451,21 +451,8 @@ export const approveRefundRequest = async (refundRequestId: string): Promise<voi
         
         console.log(`Updated reservation ${refundData.reservationId} status to refundCompleted`);
       } else {
-        // If not found in 'requests', try 'reservations' collection
-        const alternativeReservationRef = doc(db, 'reservations', refundData.reservationId);
-        reservationDoc = await getDoc(alternativeReservationRef);
-        
-        if (reservationDoc.exists()) {
-          // Update reservation status to refundCompleted
-          await updateDoc(alternativeReservationRef, {
-            status: 'refundCompleted',
-            updatedAt: serverTimestamp()
-          });
-          
-          console.log(`Updated reservation ${refundData.reservationId} status to refundCompleted in 'reservations' collection`);
-        } else {
-          console.log(`Reservation ${refundData.reservationId} not found in either collection. Only the refund request status has been updated.`);
-        }
+        // Only use 'requests' collection going forward
+        console.log(`Reservation ${refundData.reservationId} not found in 'requests'. Skipping reservation status update.`);
       }
     }
     
@@ -537,23 +524,9 @@ export const rejectRefundRequest = async (refundRequestId: string): Promise<void
       let reservationData = null;
       let reservationCollection = 'requests';
       
-      // If not found in 'requests', try 'reservations' collection
+      // If not found in 'requests', do not update any other collection
       if (!reservationDoc.exists()) {
-        const alternativeReservationRef = doc(db, 'reservations', refundData.reservationId);
-        reservationDoc = await getDoc(alternativeReservationRef);
-        reservationCollection = 'reservations';
-        
-        if (reservationDoc.exists()) {
-          reservationData = reservationDoc.data();
-          await updateDoc(alternativeReservationRef, {
-            status: 'refundFailed',
-            updatedAt: serverTimestamp(),
-          });
-          
-          console.log(`Updated reservation ${refundData.reservationId} in 'reservations' collection status to refundFailed`);
-        } else {
-          console.log(`Reservation ${refundData.reservationId} not found in either collection. Only the refund request status has been updated.`);
-        }
+        console.log(`Reservation ${refundData.reservationId} not found in 'requests'. Skipping reservation status update.`);
       } else {
         // Found in 'requests' collection
         reservationData = reservationDoc.data();
@@ -998,8 +971,8 @@ export const createSampleRefundRequest = async (): Promise<string> => {
       propertyId = propertiesSnapshot.docs[0].id;
     }
     
-    // Create a sample reservation first
-    const reservationsRef = collection(db, 'reservations');
+    // Create a sample reservation first (in 'requests' collection)
+    const reservationsRef = collection(db, 'requests');
     const reservationRef = doc(reservationsRef);
     
     const reservationData = {
@@ -1087,8 +1060,8 @@ export const createSampleCancellationRequest = async (): Promise<string> => {
       propertyId = propertiesSnapshot.docs[0].id;
     }
     
-    // Create a sample reservation first
-    const reservationsRef = collection(db, 'reservations');
+    // Create a sample reservation first (in 'requests' collection)
+    const reservationsRef = collection(db, 'requests');
     const reservationRef = doc(reservationsRef);
     
     const originalAmount = Math.floor(Math.random() * 500) + 500;

@@ -227,7 +227,7 @@ interface Reservation {
   reservation: {
     id: string;
     requestType: string;
-    status: 'pending' | 'accepted' | 'rejected' | 'paid' | 'movedIn' | 'cancelled' | 'refundProcessing' | 'refundComplete' | 'refundFailed' | 'cancellationUnderReview';
+    status: 'pending' | 'accepted' | 'rejected' | 'paid' | 'movedIn' | 'cancelled' | 'refundProcessing' | 'refundCompleted' | 'refundFailed' | 'cancellationUnderReview';
     createdAt: Date;
     updatedAt: Date;
     scheduledDate?: Date;
@@ -999,7 +999,7 @@ const ReservationsPage: React.FC = () => {
       }
       
       return status === 'rejected' || status === 'cancelled' || 
-             status === 'refundComplete' || status === 'refundFailed';
+             status === 'refundCompleted' || status === 'refundFailed';
     });
   }, [reservations]);
     
@@ -1250,7 +1250,7 @@ const ReservationsPage: React.FC = () => {
               res.reservation.status === 'paid' ? 'Paid' :
               res.reservation.status === 'movedIn' ? 'MovedIn' :
               res.reservation.status === 'refundProcessing' ? 'Refund Processing' :
-              res.reservation.status === 'refundComplete' ? 'Refund Completed' :
+              res.reservation.status === 'refundCompleted' ? 'Refund Completed' :
               res.reservation.status === 'refundFailed' ? 'Refund Failed' :
               res.reservation.status === 'cancellationUnderReview' ? 'Cancellation Under Review' :
               'Pending';
@@ -1377,7 +1377,7 @@ const ReservationsPage: React.FC = () => {
                        res.reservation.status === 'paid' ? 'Paid' :
                        res.reservation.status === 'movedIn' ? 'Moved In' :
                        res.reservation.status === 'refundProcessing' ? 'Refund Processing' :
-                       res.reservation.status === 'refundComplete' ? 'Refund Completed' :
+                       res.reservation.status === 'refundCompleted' ? 'Refund Completed' :
                        res.reservation.status === 'refundFailed' ? 'Refund Failed' :
                        res.reservation.status === 'cancellationUnderReview' ? 'Under Review' :
                        'Pending'}
