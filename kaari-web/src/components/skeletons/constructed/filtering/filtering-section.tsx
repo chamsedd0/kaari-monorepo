@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
 import { Theme } from '../../../../theme/theme';
 import SearchFilterBar from '../../inputs/search-bars/search-filter-bar';
+import SearchFilterBarMobile from '../../inputs/search-bars/search-filter-bar-mobile';
 import { FaBed, FaCouch, FaTable, FaChair, FaDesktop, FaArrowLeft, FaUsers, FaPaw, FaSmoking, FaParking, FaSnowflake, FaWheelchair, FaSwimmingPool } from 'react-icons/fa';
 import { BiCloset, BiCabinet, BiWind } from 'react-icons/bi';
 import { MdTableRestaurant, MdOutlineCoffee, MdWaterDrop, MdOutlineLocalLaundryService, MdOutlineKitchen, MdOutlineMicrowave, MdOutlineBalcony, MdOutlineFireplace, MdOutlineBathtub, MdOutlineHeatPump, MdOutlineWindow } from 'react-icons/md';
@@ -18,6 +19,15 @@ const FilteringSectionContainer = styled.div`
   background-color: white;
   padding: 20px;
   border-radius: 12px;
+  
+  .mobile-search { display: none; }
+  .desktop-search { display: block; }
+  
+  @media (max-width: 660px) {
+    padding: 12px;
+    .mobile-search { display: block; }
+    .desktop-search { display: none; }
+  }
 `;
 
 const FilteringRow = styled.div`
@@ -71,9 +81,16 @@ const DropdownSelector = styled.div`
 `;
 
 const PriceInputsContainer = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  
+  @media (max-width: 660px) {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    .arrow { display: none; }
+  }
 `;
 
 const PriceInput = styled.input`
@@ -101,8 +118,11 @@ const AmenitiesGrid = styled.div`
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   
-  @media (min-width: 768px) {
+  @media (min-width: 560px) {
     grid-template-columns: repeat(3, 1fr);
+  }
+  @media (min-width: 860px) {
+    grid-template-columns: repeat(4, 1fr);
   }
 `;
 
@@ -481,20 +501,35 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
 
   return (
     <FilteringSectionContainer>
-      <SearchFilterBar 
-        onLocationChange={setLocalLocation}
-        onDateChange={setLocalDate}
-        onGenderChange={setLocalGender}
-        onSearch={() => {}}
-        onAdvancedFilteringClick={() => {}}
-        location={localLocation}
-        date={localDate}
-        gender={localGender}
-        showAdvancedButton={false}
-        showSearchButton={false}
-        showApplyFiltersButton={true}
-        onApplyFilters={handleApply}
-      />
+      <div className="desktop-search">
+        <SearchFilterBar 
+          onLocationChange={setLocalLocation}
+          onDateChange={setLocalDate}
+          onGenderChange={setLocalGender}
+          onSearch={() => {}}
+          onAdvancedFilteringClick={() => {}}
+          location={localLocation}
+          date={localDate}
+          gender={localGender}
+          showAdvancedButton={false}
+          showSearchButton={false}
+          showApplyFiltersButton={true}
+          onApplyFilters={handleApply}
+        />
+      </div>
+      <div className="mobile-search">
+        <SearchFilterBarMobile
+          onLocationChange={setLocalLocation}
+          onDateChange={setLocalDate}
+          onGenderChange={setLocalGender}
+          onSearch={handleApply}
+          onAdvancedFilteringClick={handleApply}
+          location={localLocation}
+          date={localDate}
+          gender={localGender}
+          confirmMode={true}
+        />
+      </div>
       
       <FilteringRow>
         <FilteringTitle>{t('property_list.bedrooms')}</FilteringTitle>
@@ -523,7 +558,7 @@ const FilteringSection: React.FC<FilteringSectionProps> = ({
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
           />
-          <span>→</span>
+          <span className="arrow">→</span>
           <PriceInput 
             type="number" 
             placeholder={t('common.max')}

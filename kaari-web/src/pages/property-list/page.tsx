@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { IoMap, IoChevronBackOutline, IoChevronForwardOutline, IoClose } from 'react-icons/io5';
-import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow, Autocomplete } from '@react-google-maps/api';
 import { AppliedFilterBannerComponent } from "../../components/skeletons/banners/static/applied-filter-banner";
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
 import { PropertyCardSkeleton } from "../../components/skeletons/cards/property-card-skeleton";
@@ -9,6 +9,7 @@ import SelectFieldBaseModelVariant2 from "../../components/skeletons/inputs/sele
 import { PropertyList } from "./styles"
 import { getProperties } from "../../backend/server-actions/PropertyServerActions";
 import SearchFilterBar from "../../components/skeletons/inputs/search-bars/search-filter-bar";
+import SearchFilterBarMobile from "../../components/skeletons/inputs/search-bars/search-filter-bar-mobile";
 import FilteringSection from "../../components/skeletons/constructed/filtering/filtering-section";
 // defaultImage import removed (unused)
 
@@ -16,6 +17,10 @@ import { useAuth } from "../../contexts/auth";
 import { useTranslation } from 'react-i18next';
 import { Theme } from "../../theme/theme";
 import { AuthModal } from '../../components/skeletons/constructed/modals/auth-modal';
+import AccessibleModal from '../../components/skeletons/constructed/modal/accessible-modal';
+import { PurpleButtonMB48 } from '../../components/skeletons/buttons/purple_MB48';
+import { BpurpleButtonMB48 } from '../../components/skeletons/buttons/border_purple_MB48';
+import CalendarComponent from '../../components/skeletons/constructed/calendar/calendar';
 import closeIcon from '../../components/skeletons/icons/Cross-Icon.svg';
 import { toggleSavedProperty, isPropertySaved } from "../../backend/server-actions/ClientServerActions";
 import { getGoogleMapsLoaderOptions } from '../../utils/googleMapsConfig';
@@ -741,21 +746,38 @@ export default function PropertyListPage() {
   const [selectedProperty, setSelectedProperty] = useState<PropertyType | null>(null);
   const [mapCenter, setMapCenter] = useState(DEFAULT_MAP_CENTER);
   const [mapZoom, setMapZoom] = useState(DEFAULT_MAP_ZOOM);
+  // Proximity search state
+  const [searchLat, setSearchLat] = useState<number | null>(null);
+  const [searchLng, setSearchLng] = useState<number | null>(null);
+  const [searchRadiusKm, setSearchRadiusKm] = useState<number>(0);
+  // Mobile search modals
+  const [openLocationModal, setOpenLocationModal] = useState(false);
+  const [openDateModal, setOpenDateModal] = useState(false);
+  const [openGuestsModal, setOpenGuestsModal] = useState(false);
+  const [modalMapCenter, setModalMapCenter] = useState(DEFAULT_MAP_CENTER);
+  const [modalMarkerPos, setModalMarkerPos] = useState<{lat:number; lng:number} | null>(null);
+  const autocompleteRef = useRef<any>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const geocoderRefPage = useRef<google.maps.Geocoder>();
 
   // Read URL search parameters
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const locationParam = params.get('location');
     const dateParam = params.get('date');
+    const cityParam = params.get('city') || params.get('location');
+    const latParam = params.get('lat');
+    const lngParam = params.get('lng');
+    const radiusParam = params.get('radius');
     
     // Set initial filter values from URL parameters
-    if (locationParam) {
-      setLocationInput(locationParam);
+    if (cityParam) {
+      setLocationInput(cityParam);
       setPendingFilters(prev => {
         // Remove any existing location filter
         const filtered = prev.filter(f => f.type !== 'Location');
         // Add the new location filter
-        return [...filtered, { type: 'Location', value: locationParam }];
+        return [...filtered, { type: 'Location', value: cityParam }];
       });
     }
     
@@ -770,17 +792,35 @@ export default function PropertyListPage() {
     }
     
     // Apply URL parameters as active filters after properties are loaded
-    if (locationParam || dateParam) {
+    if (cityParam || dateParam || latParam || lngParam) {
       const newFilters: string[] = [];
       
-      if (locationParam) {
-        newFilters.push(`Location: ${locationParam}`);
+      if (cityParam) {
+        newFilters.push(`Location: ${cityParam}`);
       }
       
       if (dateParam) {
         newFilters.push(dateParam); // Date filters are just the date string
       }
       
+      // Add proximity badge if lat/lng present (short label)
+      if (latParam && lngParam) newFilters.push('Searched by proximity');
+
+      // Store proximity state for immediate filtering
+      if (latParam && lngParam) {
+        setSearchLat(parseFloat(latParam));
+        setSearchLng(parseFloat(lngParam));
+        setSearchRadiusKm(Number(radiusParam || '15'));
+      }
+
+      // Add capacity (guests) if present
+      const guestsParam = params.get('guests');
+      if (guestsParam) {
+        const g = parseInt(guestsParam, 10);
+        if (!isNaN(g) && g > 0) {
+          newFilters.push(`Capacity: ${g}${g >= 7 ? '+ ' : ' '}People`.replace('  ', ' '));
+        }
+      }
       setActiveFilters(newFilters);
     }
   }, [location.search]);
@@ -1004,8 +1044,35 @@ export default function PropertyListPage() {
     
     setIsFilteringSectionVisible(false);
     
+    // Proximity pre-filter by chosen lat/lng if present
+    let baseList = [...properties];
+    const url = new URLSearchParams(location.search);
+    const latFromUrl = url.get('lat');
+    const lngFromUrl = url.get('lng');
+    const latParam = (typeof searchLat === 'number') ? searchLat : (latFromUrl ? parseFloat(latFromUrl) : NaN);
+    const lngParam = (typeof searchLng === 'number') ? searchLng : (lngFromUrl ? parseFloat(lngFromUrl) : NaN);
+    const radiusKm = searchRadiusKm || Number(url.get('radius') || '0');
+    if (!isNaN(latParam) && !isNaN(lngParam) && radiusKm > 0) {
+      const target = { lat: latParam, lng: lngParam };
+      const R = 6371;
+      const toRad = (d: number) => (d * Math.PI) / 180;
+      const within = (a: {lat:number; lng:number}, b: {lat:number; lng:number}) => {
+        const dLat = toRad(b.lat - a.lat);
+        const dLng = toRad(b.lng - a.lng);
+        const sinDLat = Math.sin(dLat/2);
+        const sinDLng = Math.sin(dLng/2);
+        const aa = sinDLat*sinDLat + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*sinDLng*sinDLng;
+        const c = 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(1-aa));
+        return R * c <= radiusKm;
+      };
+      baseList = baseList.filter(p => {
+        const loc = p.location as any;
+        return loc && typeof loc.lat === 'number' && typeof loc.lng === 'number' && within(target, { lat: loc.lat, lng: loc.lng });
+      });
+    }
+
     // Filter properties based on current active filters
-    const newFiltered = properties.filter(property => {
+    const newFiltered = baseList.filter(property => {
       // Always filter by property status - only show available properties
       if (property.status !== 'available') {
         return false;
@@ -1057,7 +1124,7 @@ export default function PropertyListPage() {
         }
         
         // Handle price filters
-        if (filter.includes('$') || filter.includes('to')) {
+        if (filter.includes('$') || filter.includes(' to ')) {
           // Price range filter
           if (filter.includes(" to ")) {
             const [min, max] = filter.split(" to ").map(part => parseInt(part.replace(/\D/g, '')));
@@ -1590,6 +1657,24 @@ export default function PropertyListPage() {
 
   // Handle search
   const handleSearch = () => {
+    // Sync URL params for proximity and visible labels
+    const params = new URLSearchParams(location.search);
+    if (locationInput) params.set('city', locationInput);
+    if (dateInput) params.set('date', dateInput);
+    if (genderInput) params.set('guests', genderInput);
+    const latVar: any = (window as any).__search_lat;
+    const lngVar: any = (window as any).__search_lng;
+    if (typeof latVar === 'number' && typeof lngVar === 'number') {
+      // Set state immediately so filtering in this tick uses the latest coords
+      setSearchLat(latVar);
+      setSearchLng(lngVar);
+      setSearchRadiusKm(15);
+      params.set('lat', String(latVar));
+      params.set('lng', String(lngVar));
+      if (!params.get('radius')) params.set('radius', '15');
+    }
+    navigate({ pathname: '/properties', search: params.toString() }, { replace: true });
+
     // Apply current pending filters to active filters
     if (pendingFilters.length > 0) {
       // Convert pending filters to string format and update active filters
@@ -1627,8 +1712,16 @@ export default function PropertyListPage() {
       setActiveFilters(newActiveFilters);
       applyCurrentFilters(newActiveFilters);
     } else {
-      // Just apply existing active filters if no pending changes
-    applyCurrentFilters();
+      // No pending changes: re-derive active filters from inputs and apply
+      const derived: string[] = [];
+      if (locationInput) derived.push(`Location: ${locationInput}`);
+      if (dateInput) derived.push(`Date: ${dateInput}`);
+      if (genderInput) {
+        const count = genderInput === '7+' ? '7+ People' : (parseInt(genderInput, 10) === 1 ? '1 Person' : `${parseInt(genderInput, 10)} People`);
+        derived.push(`Capacity: ${count}`);
+      }
+      setActiveFilters(derived);
+      applyCurrentFilters(derived);
     }
   };
 
@@ -1734,6 +1827,23 @@ export default function PropertyListPage() {
     }
   }, [selectedProperty]);
 
+  // Body scroll lock when fullscreen map is open
+  useEffect(() => {
+    const shouldLock = showMap && !isMainContentCollapsed;
+    if (shouldLock) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [showMap, isMainContentCollapsed]);
+
+  // Init page-level geocoder for mobile location modal
+  useEffect(() => {
+    if (isLoaded && window.google && window.google.maps) {
+      geocoderRefPage.current = new window.google.maps.Geocoder();
+    }
+  }, [isLoaded]);
+
     return (
     <PropertyList $isCollapsed={isMainContentCollapsed}>
       <div className={`main-content ${isMainContentCollapsed ? 'collapsed' : ''}`} ref={scrollRef}>
@@ -1765,16 +1875,33 @@ export default function PropertyListPage() {
         ) : (
           <div className="content-container">
             <div className="search-form">
-              <SearchFilterBar 
-                onLocationChange={handleSearchInputChange}
-                onDateChange={handleDateChange}
-                onGenderChange={handleGenderChange}
-                onSearch={handleSearch}
-                onAdvancedFilteringClick={toggleFilteringSection}
-                location={locationInput}
-                date={dateInput}
-                gender={genderInput}
-              />
+              <div className="desktop-search">
+                <SearchFilterBar 
+                  onLocationChange={handleSearchInputChange}
+                  onDateChange={handleDateChange}
+                  onGenderChange={handleGenderChange}
+                  onSearch={handleSearch}
+                  onAdvancedFilteringClick={toggleFilteringSection}
+                  location={locationInput}
+                  date={dateInput}
+                  gender={genderInput}
+                />
+              </div>
+              <div className="mobile-search">
+                <SearchFilterBarMobile
+                  onLocationChange={handleSearchInputChange}
+                  onDateChange={handleDateChange}
+                  onGenderChange={handleGenderChange}
+                  onSearch={handleSearch}
+                  onAdvancedFilteringClick={toggleFilteringSection}
+                  location={locationInput}
+                  date={dateInput}
+                  gender={genderInput}
+                  onOpenLocation={() => setOpenLocationModal(true)}
+                  onOpenDate={() => setOpenDateModal(true)}
+                  onOpenPeople={() => setOpenGuestsModal(true)}
+                />
+              </div>
             </div>
 
             {/* Restore the search results container */}
@@ -1942,6 +2069,135 @@ export default function PropertyListPage() {
           onClose={() => setShowAuthModal(false)}
         />
       )}
+
+      {/* Mobile location modal */}
+      <AccessibleModal
+        modalId="pl-location"
+        isOpen={openLocationModal}
+        onClose={() => setOpenLocationModal(false)}
+        title=""
+        size="small"
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          {isLoaded && (
+            <Autocomplete
+              onLoad={(ac: any) => {
+                autocompleteRef.current = ac;
+                ac.setOptions({ componentRestrictions: { country: ['ma'] }, fields: ['geometry','formatted_address','name'] });
+              }}
+              onPlaceChanged={() => {
+                const p = autocompleteRef.current?.getPlace();
+                if (!p) return;
+                const loc = p.geometry?.location;
+                const cityName = p.formatted_address || p.name || '';
+                if (loc) {
+                  const center = { lat: loc.lat(), lng: loc.lng() };
+                  setModalMapCenter(center);
+                  setModalMarkerPos(center);
+                  setLocationInput(cityName.slice(0,60));
+                  (window as any).__search_lat = center.lat;
+                  (window as any).__search_lng = center.lng;
+                }
+                if (inputRef.current && cityName) inputRef.current.value = cityName;
+              }}
+            >
+              <input
+                ref={inputRef}
+                autoComplete="off"
+                type="text"
+                placeholder={t('common.city_region')}
+                defaultValue={locationInput}
+                style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #eee', width: '100%', position: 'relative', zIndex: 4100 }}
+              />
+            </Autocomplete>
+          )}
+          <div style={{ height: 220, borderRadius: 12, overflow: 'hidden' }}>
+            {isLoaded && (
+              <GoogleMap
+                mapContainerStyle={{ width: '100%', height: '100%' }}
+                center={modalMapCenter}
+                zoom={12}
+                onClick={(e) => {
+                  if (!e.latLng) return;
+                  const pos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+                  setModalMarkerPos(pos);
+                  setModalMapCenter(pos);
+                  geocoderRefPage.current?.geocode({ location: pos }, (results, status) => {
+                    if (status === 'OK' && results && results[0]) {
+                      const addr = results[0].formatted_address;
+                      setLocationInput(addr.slice(0, 60));
+                      if (inputRef.current) inputRef.current.value = addr;
+                    }
+                  });
+                  (window as any).__search_lat = pos.lat;
+                  (window as any).__search_lng = pos.lng;
+                }}
+              >
+                {modalMarkerPos && <Marker position={modalMarkerPos} />}
+              </GoogleMap>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', alignItems: 'stretch' }}>
+            <BpurpleButtonMB48 text={t('common.cancel')} onClick={() => setOpenLocationModal(false)} />
+            <div style={{ minWidth: 150 }}>
+              <PurpleButtonMB48 text={t('common.save')} onClick={() => setOpenLocationModal(false)} />
+            </div>
+          </div>
+        </div>
+      </AccessibleModal>
+
+      {/* Mobile date modal */}
+      <AccessibleModal
+        modalId="pl-dates"
+        isOpen={openDateModal}
+        onClose={() => setOpenDateModal(false)}
+        title=""
+        size="small"
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          <CalendarComponent
+            selectedDate={dateInput ? new Date(dateInput) : null}
+            onDateSelect={(d) => setDateInput(d.toISOString().slice(0,10))}
+            minDate={new Date()}
+          />
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', alignItems: 'stretch' }}>
+            <BpurpleButtonMB48 text={t('common.cancel')} onClick={() => setOpenDateModal(false)} />
+            <div style={{ minWidth: 150 }}>
+              <PurpleButtonMB48 text={t('common.save')} onClick={() => setOpenDateModal(false)} />
+            </div>
+          </div>
+        </div>
+      </AccessibleModal>
+
+      {/* Mobile guests modal */}
+      <AccessibleModal
+        modalId="pl-guests"
+        isOpen={openGuestsModal}
+        onClose={() => setOpenGuestsModal(false)}
+        title=""
+        size="small"
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8 }}>
+            {[1,2,3,4].map(n => (
+              <button key={n} onClick={() => setGenderInput(String(n))} style={{
+                padding: '10px 0', borderRadius: 10, border: '1px solid #eee', fontWeight: 800,
+                background: genderInput===String(n) ? Theme.colors.secondary : '#fafafa', color: genderInput===String(n) ? '#fff' : '#111'
+              }}>{n}</button>
+            ))}
+            <button onClick={() => setGenderInput('7+')} style={{
+              padding: '10px 0', borderRadius: 10, border: '1px solid #eee', fontWeight: 800,
+              background: genderInput==='7+' ? Theme.colors.secondary : '#fafafa', color: genderInput==='7+' ? '#fff' : '#111'
+            }}>7+</button>
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', alignItems: 'stretch' }}>
+            <BpurpleButtonMB48 text={t('common.cancel')} onClick={() => setOpenGuestsModal(false)} />
+            <div style={{ minWidth: 150 }}>
+              <PurpleButtonMB48 text={t('common.save')} onClick={() => setOpenGuestsModal(false)} />
+            </div>
+          </div>
+        </div>
+      </AccessibleModal>
     </PropertyList>
   );
 }

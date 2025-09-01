@@ -4,6 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import BookingSearchForm from "../../components/skeletons/constructed/forms/booking-search-form";
 import MobileHeroSearchBar from "../../components/skeletons/inputs/mobile-hero-search-bar";
+import AccessibleModal from "../../components/skeletons/constructed/modal/accessible-modal";
+import { PurpleButtonMB48 } from "../../components/skeletons/buttons/purple_MB48";
+import { BpurpleButtonMB48 } from "../../components/skeletons/buttons/border_purple_MB48";
+import CalendarComponent from "../../components/skeletons/constructed/calendar/calendar";
+import { GoogleMap, Autocomplete, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { getGoogleMapsLoaderOptions } from '../../utils/googleMapsConfig';
 import { UsersLandingStyle, MobileCarouselFix } from "../../landing-page-style";
 import { PropertyCard } from "../../components/skeletons/cards/property-card-user-side";
 import { PropertyCardSkeleton } from "../../components/skeletons/cards/property-card-skeleton";
@@ -124,6 +130,26 @@ const UsersLanding: React.FC = () => {
   const [recSlides, setRecSlides] = useState<number>(1);
   const [topActive, setTopActive] = useState<number>(0);
   const [recActive, setRecActive] = useState<number>(0);
+  // Mobile hero search selections
+  const [location, setLocation] = useState<string>('');
+  const [moveInDate, setMoveInDate] = useState<string>('');
+  const [guests, setGuests] = useState<number>(0);
+  // Modals flags
+  const [openLocation, setOpenLocation] = useState(false);
+  const [openDates, setOpenDates] = useState(false);
+  const [openGuests, setOpenGuests] = useState(false);
+  // Maps
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
+  const [mapCenter, setMapCenter] = useState<{lat:number; lng:number}>({lat: 33.5731, lng: -7.5898}); // Casablanca default
+  const [markerPos, setMarkerPos] = useState<{lat:number; lng:number} | null>(null);
+  const { isLoaded: mapsLoaded } = useJsApiLoader(getGoogleMapsLoaderOptions());
+  useEffect(() => {
+    if (mapsLoaded && !geocoderRef.current) {
+      geocoderRef.current = new window.google.maps.Geocoder();
+    }
+  }, [mapsLoaded]);
   
   useEffect(() => {
     const loadLandingProperties = async () => {
@@ -398,7 +424,14 @@ const UsersLanding: React.FC = () => {
             <div className="search-container">
           <BookingSearchForm />
         </div>
-            <MobileHeroSearchBar />
+            <MobileHeroSearchBar 
+              onOpenLocation={() => setOpenLocation(true)}
+              onOpenDates={() => setOpenDates(true)}
+              onOpenGuests={() => setOpenGuests(true)}
+              locationLabel={location}
+              dateLabel={moveInDate}
+              guestsLabel={guests > 0 ? String(guests) : undefined}
+            />
             {/* Mobile stats */}
             <div className="mobile-hero-stats">
               <div className="stat">
@@ -987,6 +1020,138 @@ const UsersLanding: React.FC = () => {
         </section>
       </UsersLandingStyle>
       <MobileCarouselFix />
+
+      {/* Location modal */}
+      <AccessibleModal
+        modalId="location"
+        isOpen={openLocation}
+        onClose={() => setOpenLocation(false)}
+        title=""
+        size="small"
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          {mapsLoaded && (
+            <Autocomplete
+              onLoad={(ac) => {
+                autocompleteRef.current = ac;
+                ac.setOptions({ componentRestrictions: { country: ['ma'] }, fields: ['geometry','formatted_address','name'] });
+              }}
+              onPlaceChanged={() => {
+                const p = autocompleteRef.current?.getPlace();
+                if (!p) return;
+                const loc = p.geometry?.location;
+                const cityName = p.formatted_address || p.name || '';
+                if (loc) {
+                  const center = { lat: loc.lat(), lng: loc.lng() };
+                  setMapCenter(center);
+                  setMarkerPos(center);
+                  setLocation(cityName.slice(0, 60));
+                  (window as any).__search_lat = center.lat;
+                  (window as any).__search_lng = center.lng;
+                }
+                if (inputRef.current && cityName) inputRef.current.value = cityName;
+              }}
+            >
+              <input
+                ref={inputRef}
+                id="location-autocomplete"
+                autoComplete="off"
+                type="text"
+                placeholder={t('common.city_region','City, Region')}
+                defaultValue={location}
+                style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #eee', width: '100%', position: 'relative', zIndex: 4100 }}
+              />
+            </Autocomplete>
+          )}
+          <div style={{ height: 220, borderRadius: 12, overflow: 'hidden' }}>
+            {mapsLoaded && (
+              <GoogleMap
+                mapContainerStyle={{ width: '100%', height: '100%' }}
+                center={mapCenter}
+                zoom={12}
+                onClick={(e) => {
+                  if (!e.latLng) return;
+                  const pos = { lat: e.latLng.lat(), lng: e.latLng.lng() };
+                  setMarkerPos(pos);
+                  setMapCenter(pos);
+                  // Reverse geocode to update the input and location label
+                  geocoderRef.current?.geocode({ location: pos }, (results, status) => {
+                    if (status === 'OK' && results && results[0]) {
+                      const addr = results[0].formatted_address;
+                      setLocation(addr.slice(0, 40));
+                      if (inputRef.current) inputRef.current.value = addr;
+                    }
+                  });
+                  // Expose selection globally for search button reader
+                  (window as any).__search_lat = pos.lat;
+                  (window as any).__search_lng = pos.lng;
+                }}
+              >
+                {markerPos && <Marker position={markerPos} />}
+              </GoogleMap>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', alignItems: 'stretch' }}>
+            <BpurpleButtonMB48 text={t('common.cancel', 'Cancel')} onClick={() => setOpenLocation(false)} />
+            <div style={{ minWidth: 150 }}>
+              <PurpleButtonMB48 text={t('common.save', 'Save')} onClick={() => setOpenLocation(false)} />
+            </div>
+          </div>
+        </div>
+      </AccessibleModal>
+
+      {/* Dates modal */}
+      <AccessibleModal
+        modalId="dates"
+        isOpen={openDates}
+        onClose={() => setOpenDates(false)}
+        title=""
+        size="small"
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          <CalendarComponent
+            selectedDate={moveInDate ? new Date(moveInDate) : null}
+            onDateSelect={(d) => setMoveInDate(d.toISOString().slice(0,10))}
+            minDate={new Date()}
+          />
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', alignItems: 'stretch' }}>
+            <BpurpleButtonMB48 text={t('common.cancel', 'Cancel')} onClick={() => setOpenDates(false)} />
+            <div style={{ minWidth: 150 }}>
+              <PurpleButtonMB48 text={t('common.save', 'Save')} onClick={() => setOpenDates(false)} />
+            </div>
+          </div>
+        </div>
+      </AccessibleModal>
+
+      {/* Guests modal */}
+      <AccessibleModal
+        modalId="guests"
+        isOpen={openGuests}
+        onClose={() => setOpenGuests(false)}
+        title=""
+        size="small"
+      >
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 8 }}>
+            {[1,2,3,4].map(n => (
+              <button key={n} onClick={() => setGuests(n)} style={{
+                padding: '10px 0', borderRadius: 10, border: '1px solid #eee', fontWeight: 800,
+                background: guests===n ? '#8F27CE' : '#fafafa', color: guests===n ? '#fff' : '#111'
+              }}>{n}</button>
+            ))}
+            <button onClick={() => setGuests(5)} style={{
+              padding: '10px 0', borderRadius: 10, border: '1px solid #eee', fontWeight: 800,
+              background: guests>=5 ? '#8F27CE' : '#fafafa', color: guests>=5 ? '#fff' : '#111'
+            }}>5+</button>
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', alignItems: 'stretch' }}>
+            <BpurpleButtonMB48 text={t('common.cancel', 'Cancel')} onClick={() => setOpenGuests(false)} />
+            <div style={{ minWidth: 150 }}>
+              <PurpleButtonMB48 text={t('common.save', 'Save')} onClick={() => setOpenGuests(false)} />
+            </div>
+          </div>
+        </div>
+      </AccessibleModal>
     </>
   );
 };

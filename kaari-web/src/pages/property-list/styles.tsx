@@ -11,7 +11,7 @@ export const PropertyList = styled.div<PropertyListProps>`
     flex-direction: column;
 
     width: 100%;
-    height: calc(100vh - 80px);
+    min-height: calc(100vh - 80px);
     margin-top: 80px;
     
     @media (min-width: 992px) {
@@ -256,11 +256,8 @@ export const PropertyList = styled.div<PropertyListProps>`
         
         .content-container {
             margin: 0 auto;
-            max-width: 820px;
-            
-            @media (max-width: 1240px) {
-                padding: 0 20px;
-            }
+            max-width: 1180px;
+            padding: 0 16px;
         }
         
         &.collapsed {
@@ -303,9 +300,17 @@ export const PropertyList = styled.div<PropertyListProps>`
     }
 
     .search-form {
-        margin-bottom: 40px;
-        margin-top: 20px;
+        margin-bottom: 24px;
+        margin-top: 12px;
         border-radius: 12px;
+        
+        .mobile-search { display: none; }
+        .desktop-search { display: block; }
+        
+        @media (max-width: 670px) {
+            .mobile-search { display: block; }
+            .desktop-search { display: none; }
+        }
         
         .search-input-wrapper {
             position: relative;
@@ -378,17 +383,12 @@ export const PropertyList = styled.div<PropertyListProps>`
             .text-select {
                 display: flex;
                 justify-content: space-between;
-                align-items: flex-start;
+                align-items: center;
                 margin-bottom: 16px;
                 flex-wrap: wrap;
                 
-                @media (max-width: 576px) {
-                    flex-direction: column;
-                    
-                    .select-container {
-                        width: 100%;
-                        margin-top: 12px;
-                    }
+                @media (max-width: 1000px) {
+                    gap: 12px;
                 }
                 
                 .text {
@@ -406,7 +406,7 @@ export const PropertyList = styled.div<PropertyListProps>`
                 }
                 
                 .select-container {
-                    width: 180px;
+                    width: 200px;
                 }
             }
             
@@ -449,16 +449,20 @@ export const PropertyList = styled.div<PropertyListProps>`
         
         .results-container {
             display: grid;
-            grid-template-columns: 1fr;
             gap: 20px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             
-            @media (min-width: 768px) {
-                grid-template-columns: repeat(2, 1fr);
+            @media (max-width: 700px) {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            
+            @media (max-width: 500px) {
+                grid-template-columns: 1fr;
             }
             
             .result {
                 .property-card-wrapper {
-                    max-width: 400px;
+                    max-width: 100%;
                 }
             }
         }
@@ -570,7 +574,7 @@ export const PropertyList = styled.div<PropertyListProps>`
         width: 100%;
         height: 100%;
         
-        @media (min-width: 992px) {
+        @media (min-width: 1050px) {
             display: block;
             width: 100%;
             height: 100%;
@@ -587,15 +591,17 @@ export const PropertyList = styled.div<PropertyListProps>`
             bottom: 0;
             width: 100%;
             z-index: 100;
+            touch-action: pan-x pan-y; /* allow map gestures */
+            overscroll-behavior: contain; /* prevent page scroll chaining */
             
-            @media (min-width: 992px) {
+            @media (min-width: 1050px) {
                 position: sticky;
                 z-index: 1;
             }
         }
         
         &.expanded {
-            @media (min-width: 992px) {
+            @media (min-width: 1050px) {
                 grid-column: 2 / 3;
             }
         }
@@ -730,7 +736,7 @@ export const PropertyList = styled.div<PropertyListProps>`
         cursor: pointer;
         z-index: 10;
         
-        @media (min-width: 992px) {
+        @media (min-width: 1050px) {
             display: none;
         }
         
@@ -769,7 +775,7 @@ export const PropertyList = styled.div<PropertyListProps>`
         }
     }
 
-    @media (max-width: 991px) {
+    @media (max-width: 1049px) {
         display: block;
         
         .main-content {

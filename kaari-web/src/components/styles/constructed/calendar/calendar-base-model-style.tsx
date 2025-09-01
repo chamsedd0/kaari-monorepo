@@ -12,7 +12,8 @@ const CalendarComponentBaseModel = styled.div`
     flex-direction: column;
     padding: 0;
     width: 100%;
-    height: 100%;
+    height: auto;
+    max-height: 100%;
     background-color: ${Theme.colors.white};
     border-radius: 16px;
     border: 1px solid #E0E0E0;
@@ -136,8 +137,10 @@ const CalendarComponentBaseModel = styled.div`
                 color: #333;
                 margin: 2px auto;
 
-                &:hover:not(.disabled) {
-                    background-color: rgba(128, 0, 255, 0.1);
+                /* Avoid confusing second highlight; keep hover subtle when not selected */
+                &:hover:not(.disabled):not(.selected) {
+                    background-color: transparent;
+                    outline: 2px solid rgba(103, 58, 183, 0.25);
                 }
 
                 &.selected {

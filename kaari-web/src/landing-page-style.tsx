@@ -390,6 +390,7 @@ export const UsersLandingStyle = styled.div`
             box-shadow: 0 8px 24px rgba(0,0,0,0.12);
             overflow: hidden;
             border: 1px solid rgba(0,0,0,0.06);
+            position: relative;
         }
         .mobile-hero-search .section {
             appearance: none;
@@ -404,7 +405,62 @@ export const UsersLandingStyle = styled.div`
         }
         .mobile-hero-search .divider { width: 1px; background: rgba(0,0,0,0.08); }
         .mobile-hero-search .label { font: ${Theme.typography.fonts.smallM}; color: ${Theme.colors.gray2}; }
-        .mobile-hero-search .value { font: ${Theme.typography.fonts.mediumB}; color: ${Theme.colors.black}; }
+        .mobile-hero-search .value { font: ${Theme.typography.fonts.mediumB}; color: ${Theme.colors.black}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: block; }
+
+        /* Inline small search trigger button */
+        .mobile-hero-search .search-go {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: ${Theme.colors.secondary};
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+        }
+        .mobile-hero-search .search-go:hover { background: ${Theme.colors.primary}; }
+        .mobile-hero-search .search-go svg { width: 18px; height: 18px; }
+
+        /* Mobile modal styles */
+        .mobile-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: stretch; justify-content: center; z-index: 2000; }
+        .mobile-modal .modal-card { width: 100%; background: #fff; border-radius: 0; padding: 14px 16px; height: 100%; display: flex; flex-direction: column; }
+        .mobile-modal .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .mobile-modal .modal-header .title { font-weight: 800; font-size: 16px; }
+        .mobile-modal .modal-header .close { width: 28px; height: 28px; border-radius: 50%; border: none; background: ${Theme.colors.tertiary}; position: relative; }
+        .mobile-modal .modal-header .close::before, .mobile-modal .modal-header .close::after { content: ''; position: absolute; top: 50%; left: 50%; width: 12px; height: 2px; background: #fff; transform-origin: center; }
+        .mobile-modal .modal-header .close::before { transform: translate(-50%, -50%) rotate(45deg); }
+        .mobile-modal .modal-header .close::after { transform: translate(-50%, -50%) rotate(-45deg); }
+        .mobile-modal .modal-body { padding: 8px 2px; overflow: auto; }
+        .mobile-modal .text-input { width: 100%; border: 1px solid #eee; border-radius: 10px; padding: 12px 14px; font-size: 14px; }
+        .mobile-modal .hint { margin-top: 8px; font-size: 12px; color: ${Theme.colors.gray2}; }
+        .mobile-modal .tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .mobile-modal .tile { border: 1px solid #eee; border-radius: 10px; padding: 10px 0; font-weight: 700; background: #fafafa; }
+        .mobile-modal .tile.active { background: ${Theme.colors.secondary}; color: #fff; border-color: ${Theme.colors.secondary}; }
+        .mobile-modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
+        .mobile-modal .modal-actions .secondary { background: #f2f2f2; border: none; border-radius: 10px; padding: 10px 14px; }
+        .mobile-modal .modal-actions .primary { background: ${Theme.colors.secondary}; color: #fff; border: none; border-radius: 10px; padding: 10px 14px; }
+
+        /* Google Places suggestions drawer */
+        /* Ensure Places suggestions are visible and on top */
+        .pac-container { 
+          z-index: 4000 !important; 
+          border-radius: 12px; 
+          box-shadow: 0 12px 24px rgba(0,0,0,0.18); 
+          overflow: hidden; 
+          background: #fff !important; 
+          border: 1px solid #e6e6e6; 
+          pointer-events: auto; 
+        }
+        .pac-container .pac-item, .pac-container .pac-item-query { color: #222; }
+        .pac-logo:after { display: none; }
+        .pac-item { padding: 10px 12px; cursor: pointer; }
+        .pac-item:hover { background: ${Theme.colors.tertiary}; color: ${Theme.colors.black}; }
 
         @media (max-width: 1050px) {
             /* Swap to mobile-friendly background via Unsplash */

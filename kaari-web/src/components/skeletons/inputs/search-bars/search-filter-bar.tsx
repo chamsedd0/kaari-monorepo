@@ -11,10 +11,7 @@ const SearchFilterBarContainer = styled.div`
   width: 100%;
   margin-bottom: 16px;
   align-items: center;
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-  }
+  flex-wrap: wrap;
 `;
 
 const FilterItem = styled.div<{ active?: boolean, isSelect?: boolean }>`
@@ -30,9 +27,9 @@ const FilterItem = styled.div<{ active?: boolean, isSelect?: boolean }>`
   transition: all 0.2s ease;
   font-size: 14px;
   color: ${props => props.active ? Theme.colors.primary : "#64748B"};
-  flex: 1;
-  max-width: ${props => props.isSelect ? '180px' : 'unset'};
-  min-width: 100px;
+  flex: 1 1 260px;
+  max-width: 100%;
+  min-width: 160px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   
   &:hover {
@@ -251,6 +248,11 @@ const SearchButton = styled.button`
   transition: background-color 0.2s;
   flex-shrink: 0;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-left: auto;
+  
+  @media (max-width: 1000px) {
+    order: 5;
+  }
   
   &:hover {
     background-color: ${Theme.colors.primary};
@@ -274,6 +276,10 @@ const ApplyFiltersButton = styled.button`
   cursor: pointer;
   transition: color 0.2s;
   flex-shrink: 0;
+  
+  @media (max-width: 1000px) {
+    order: 6;
+  }
   
   .filter-text {
     display: none;

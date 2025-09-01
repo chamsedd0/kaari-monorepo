@@ -321,7 +321,7 @@ interface UnifiedHeaderProps {
   userType?: 'user' | 'advertiser' | 'admin' | 'none'; // User role for conditional rendering
   isAuthenticated?: boolean; // Override authentication status (useful for previews)
   onLanguageChange?: (lang: string) => void; // Language change handler
-  showSearchBar?: boolean; // Whether to display the search bar
+  showSearchBar?: boolean; // Whether to display the search bar (deprecated)
   customLink?: {
     text: string;
     onClick: () => void;
@@ -545,25 +545,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     );
   };
 
-  const renderSearchBar = () => {
-    if (!showSearchBar) return null;
-    
-    return (
-      <div className="search-container">
-        <form onSubmit={handleSearch}>
-          <input 
-            type="text" 
-            placeholder={t('common.search')}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-          />
-          <span className="search-icon" onClick={handleSearch}>
-            <FaSearch />
-          </span>
-        </form>
-      </div>
-    );
-  };
+  const renderSearchBar = () => null; // permanently hide header search per product decision
 
   const renderLanguageButton = () => {
     return (
@@ -699,7 +681,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           <span className="bar" />
         </button>
         
-        {renderSearchBar()}
+        {/* header search removed */}
         
         <div className="nav-links">
           {renderSwitchRoleLink()}

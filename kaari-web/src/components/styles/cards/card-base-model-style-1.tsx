@@ -235,6 +235,35 @@ export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
     }
   }
 
+  /* Progressive scaling for medium screens */
+  @media (max-width: 1400px) {
+    gap: 8px;
+    .title {
+      font-size: 18px;
+      line-height: 1.25;
+      b { font-size: 19px; }
+    }
+    .subtitle { font-size: 13px; }
+    .price { font-size: 18px; b { font-size: 16px; } }
+    .description { font-size: 13px; }
+    .image { .certifications { padding: 12px; gap: 8px; } }
+  }
+
+  @media (max-width: 1050px) {
+    gap: 7px;
+    .title { font-size: 16px; b { font-size: 17px; } }
+    .subtitle { font-size: 12.5px; }
+    .price { font-size: 17px; b { font-size: 15px; } }
+    .description { font-size: 12.5px; }
+  }
+
+  @media (max-width: 900px) {
+    .title { font-size: 15px; b { font-size: 16px; } }
+    .subtitle { font-size: 12px; }
+    .price { font-size: 16px; b { font-size: 14px; } }
+    .description { font-size: 12px; }
+  }
+
   /* Mobile reductions for <=700px */
   @media (max-width: 700px) {
     gap: 6px;
