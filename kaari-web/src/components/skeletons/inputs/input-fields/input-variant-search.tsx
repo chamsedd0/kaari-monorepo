@@ -25,10 +25,12 @@ const InputVariantSearch: React.FC<InputBaseProps> = ({
     // No-op here; parent should ensure Maps script is loaded
   }, []);
 
+  const mapsReady = typeof window !== 'undefined' && (window as any).google?.maps?.places;
+
   return (
     <InputBaseModel3>
       <span>{title}</span>
-      {onPlaceSelected ? (
+      {onPlaceSelected && mapsReady ? (
         <Autocomplete
           onLoad={(ac) => {
             acRef.current = ac as any;
@@ -61,6 +63,7 @@ const InputVariantSearch: React.FC<InputBaseProps> = ({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
+          autoComplete="off"
         />
       )}
     </InputBaseModel3>

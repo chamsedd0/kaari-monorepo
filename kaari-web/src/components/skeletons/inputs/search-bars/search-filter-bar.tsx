@@ -549,22 +549,33 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
         {/* Location Input */}
         <FilterItem active={!!location || locationFocused}>
           <IoLocationOutline />
-          <Autocomplete
-            onLoad={(ac: any) => {
-              ac.setOptions({ componentRestrictions: { country: ['ma'] }, fields: ['geometry','formatted_address','name'] });
-            }}
-            onPlaceChanged={() => {
-              const input = document.activeElement as HTMLInputElement | null;
-              const value = input?.value || location;
-              onLocationChange(value);
-              const p = (window as any).google?.maps?.places && (ac as any)?.getPlace ? (ac as any).getPlace() : null;
-              const loc = p?.geometry?.location;
-              if (loc) {
-                (window as any).__search_lat = loc.lat();
-                (window as any).__search_lng = loc.lng();
-              }
-            }}
-          >
+          {(window as any).google?.maps?.places ? (
+            <Autocomplete
+              onLoad={(ac: any) => {
+                ac.setOptions({ componentRestrictions: { country: ['ma'] }, fields: ['geometry','formatted_address','name'] });
+              }}
+              onPlaceChanged={() => {
+                const p = (ac as any).getPlace?.();
+                const text = p?.formatted_address || p?.name || location;
+                if (text) onLocationChange(text);
+                const loc = p?.geometry?.location;
+                if (loc) {
+                  (window as any).__search_lat = loc.lat();
+                  (window as any).__search_lng = loc.lng();
+                }
+              }}
+            >
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => onLocationChange(e.target.value)}
+                onFocus={() => setLocationFocused(true)}
+                onBlur={() => setLocationFocused(false)}
+                placeholder={t('common.city_region')}
+                autoComplete="off"
+              />
+            </Autocomplete>
+          ) : (
             <input
               type="text"
               value={location}
@@ -574,7 +585,7 @@ const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
               placeholder={t('common.city_region')}
               autoComplete="off"
             />
-          </Autocomplete>
+          )}
           {location && (
             <button
               type="button"
