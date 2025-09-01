@@ -10,7 +10,7 @@ export const HeaderBaseModel = styled.div`
 
     height: 80px;
     width: 100%;
-    border: ${Theme.borders.primary};
+    border: none; /* remove default primary border to avoid top purple line */
     padding: 20px;
 
 

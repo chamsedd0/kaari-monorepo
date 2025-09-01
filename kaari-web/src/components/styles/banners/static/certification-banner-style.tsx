@@ -33,6 +33,17 @@ export const CertifiedBanner = styled.div<{ $variant?: boolean }>`
         transition: all 0.3s ease;
     }
 
+    @media (max-width: 700px) {
+        padding: 5px 8px;
+        gap: 4px;
+        height: 22px;
+        font-size: 11px;
+
+        img { width: 10px; height: 10px; }
+
+        .text { max-width: 120px; }
+    }
+
 
 
 `

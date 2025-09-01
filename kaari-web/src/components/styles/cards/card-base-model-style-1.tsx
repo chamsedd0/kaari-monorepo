@@ -234,4 +234,63 @@ export const CardBaseModelStyle1 = styled.div<{$isRecommended?: boolean}>`
       box-shadow: 0 4px 10px rgba(103, 58, 183, 0.3);
     }
   }
+
+  /* Mobile reductions for <=700px */
+  @media (max-width: 700px) {
+    gap: 6px;
+
+    .image {
+      aspect-ratio: 16/11;
+      margin-bottom: 6px;
+
+      .pagination-dots { bottom: 56px; right: 12px; gap: 5px; }
+      .pagination-dots .dot { width: 6px; height: 6px; }
+
+      .certifications { padding: 10px 8px; gap: 6px; }
+      .favorite-icon {
+        top: 8px;
+        right: 8px;
+        width: 24px;
+        height: 24px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+        svg { font-size: 14px; }
+      }
+
+      .housing-preference-icon {
+        top: 8px;
+        right: 40px;
+        width: 24px;
+        height: 24px;
+        svg { font-size: 12px; }
+      }
+    }
+
+    .title {
+      font-size: 14px;
+      line-height: 1.2;
+      b { font-size: 15px; }
+      margin-bottom: 0px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .price {
+      font-size: 16px;
+      b { font-size: 14px; }
+      margin-bottom: 2px;
+    }
+
+    .description {
+      font-size: 12px;
+    }
+
+    .recommendedBanner {
+      top: 10px;
+      left: 10px;
+      .banner { padding: 4px 8px; font-size: 10px; }
+    }
+  }
 `;

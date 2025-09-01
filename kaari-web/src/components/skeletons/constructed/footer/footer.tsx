@@ -1,6 +1,6 @@
 import { FooterWrapper } from '../../../styles/constructed/footer/footer-style';
 import { Link } from 'react-router-dom';
-import { FaTelegram, FaInstagram, FaLinkedin, FaTwitter, FaFacebook, FaPhoneAlt, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaTelegram, FaInstagram, FaLinkedin, FaTwitter, FaFacebook } from 'react-icons/fa';
 import Logo from '../../icons/LogoWhite.svg';
 
 const Footer = () => {
@@ -38,6 +38,7 @@ const Footer = () => {
           </div>
         </div>
 
+        {/* Desktop/Tablet sections */}
         <div className="footer-section">
           <h3>Company</h3>
           <ul>
@@ -69,6 +70,40 @@ const Footer = () => {
             <li><Link to="/terms">Terms & Conditions</Link></li>
             <li><Link to="/privacy">Privacy Policy</Link></li>
           </ul>
+        </div>
+
+        {/* Mobile-only collapsible sections */}
+        <div className="footer-sections-mobile">
+          <details>
+            <summary>Company</summary>
+            <ul>
+              <li><Link to="/about-us">About Us</Link></li>
+              <li><Link to="/become-a-partner">Become a Partner</Link></li>
+              <li><Link to="/careers">Careers</Link></li>
+              <li><Link to="/blog">Blog</Link></li>
+              <li><Link to="/contact">Contact Us</Link></li>
+            </ul>
+          </details>
+          <details>
+            <summary>For Tenants</summary>
+            <ul>
+              <li><Link to="/how-it-works">How It Works</Link></li>
+              <li><Link to="/stay-protection-tenants">StayProtection™</Link></li>
+              <li><Link to="/help-tenants">Help Center</Link></li>
+              <li><Link to="/tenant-resources">Resources</Link></li>
+              <li><Link to="/testimonials">Testimonials</Link></li>
+            </ul>
+          </details>
+          <details>
+            <summary>For Advertisers</summary>
+            <ul>
+              <li><Link to="/signin">Sign In</Link></li>
+              <li><Link to="/advertiser-guide">Advertiser Guide</Link></li>
+              <li><Link to="/stay-protection-advertisers">StayProtection™</Link></li>
+              <li><Link to="/terms">Terms & Conditions</Link></li>
+              <li><Link to="/privacy">Privacy Policy</Link></li>
+            </ul>
+          </details>
         </div>
       </div>
       

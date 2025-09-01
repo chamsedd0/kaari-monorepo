@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import BookingSearchForm from "../../components/skeletons/constructed/forms/booking-search-form";
@@ -137,14 +138,14 @@ const UsersLanding: React.FC = () => {
           title: p.title || 'Property', // Property type
           subtitle: p.address?.city || p.city || '',
           price: (p.price ? `${p.price}` : '—'),
-          priceType: '/month',
+      priceType: '/month', 
           minstay: p.minStay ? `Min stay: ${p.minStay} months` : undefined,
           description: p.description || '',
           image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : PropertyImage,
           images: Array.isArray(p.images) ? p.images : undefined,
           isRecommended: !!p.isRecommended,
           propertyType: p.type || 'Apartment',
-          isFavorite: false,
+      isFavorite: false,
           housingPreference: p.housingPreference
         }));
         setTopProperties(topMapped);
@@ -158,14 +159,14 @@ const UsersLanding: React.FC = () => {
           title: p.title || 'Property',
           subtitle: p.address?.city || p.city || '',
           price: (p.price ? `${p.price}` : '—'),
-          priceType: '/month',
+      priceType: '/month',
           minstay: p.minStay ? `Min stay: ${p.minStay} months` : undefined,
           description: p.description || '',
           image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : PropertyImage,
           images: Array.isArray(p.images) ? p.images : undefined,
-          isRecommended: true,
+      isRecommended: true,
           propertyType: p.type || 'Apartment',
-          isFavorite: false,
+      isFavorite: false,
           housingPreference: p.housingPreference
         }));
         setRecommendedProperties(recMapped);
@@ -315,6 +316,13 @@ const UsersLanding: React.FC = () => {
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchDeltaX, setTouchDeltaX] = useState(0);
   const featureContainerRef = useRef<HTMLDivElement>(null);
+
+  // Footer features slider (mobile) state
+  const [footerFeatureIndex, setFooterFeatureIndex] = useState(0);
+  const [footerDragging, setFooterDragging] = useState(false);
+  const [footerTouchStartX, setFooterTouchStartX] = useState<number | null>(null);
+  const [footerTouchDeltaX, setFooterTouchDeltaX] = useState(0);
+  const footerFeatureContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onResize = () => setIsFeaturesMobile(window.innerWidth <= 1050);
     window.addEventListener('resize', onResize);
@@ -349,6 +357,37 @@ const UsersLanding: React.FC = () => {
     setTouchDeltaX(0);
   };
 
+  // Footer features touch handlers and auto-advance
+  useEffect(() => {
+    if (!isFeaturesMobile) return;
+    const id = setInterval(() => setFooterFeatureIndex(i => (i + 1) % features.length), 10000);
+    return () => clearInterval(id);
+  }, [isFeaturesMobile]);
+
+  const onFooterFeatureTouchStart = (e: React.TouchEvent) => {
+    setFooterDragging(true);
+    setFooterTouchStartX(e.touches[0].clientX);
+    setFooterTouchDeltaX(0);
+  };
+  const onFooterFeatureTouchMove = (e: React.TouchEvent) => {
+    if (footerTouchStartX === null) return;
+    const dx = e.touches[0].clientX - footerTouchStartX;
+    setFooterTouchDeltaX(dx);
+  };
+  const onFooterFeatureTouchEnd = () => {
+    if (footerTouchStartX === null) { setFooterDragging(false); return; }
+    const containerWidth = footerFeatureContainerRef.current?.clientWidth || 1;
+    const threshold = Math.min(60, containerWidth * 0.15);
+    if (footerTouchDeltaX <= -threshold) {
+      setFooterFeatureIndex(i => Math.min(i + 1, features.length - 1));
+    } else if (footerTouchDeltaX >= threshold) {
+      setFooterFeatureIndex(i => Math.max(i - 1, 0));
+    }
+    setFooterDragging(false);
+    setFooterTouchStartX(null);
+    setFooterTouchDeltaX(0);
+  };
+
   return (
     <>
       <UsersLandingStyle>
@@ -374,7 +413,7 @@ const UsersLanding: React.FC = () => {
                 <div className="num">24/7</div>
                 <div className="lab">{t('home.customer_support')}</div>
               </div>
-            </div>
+        </div>
             <div className="explore-link" onClick={() => navigate('/properties')}>
               <span>{t('home.explore_places')}</span>
               <span className="arrow-icon">
@@ -404,60 +443,27 @@ const UsersLanding: React.FC = () => {
           </div>
         </section>
 
-        {/* App Download - Mobile (<=1050px) */}
-        <section className="app-download-mobile">
-          <div className="mobile-card">
-            <div className="title">{t('home.app.title')}</div>
-            <div className="subtitle">{t('home.app.description')}</div>
-            <div className="mockup">
-              <img src={Mockup} alt="App" />
-            </div>
-            <div className="store-buttons">
-              <a href="#" className="app-store">
-                <div className="store-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17.05 20.28C16.07 21.23 15 21.08 13.97 20.63C12.88 20.17 11.88 20.15 10.73 20.63C9.29 21.25 8.53 21.07 7.67 20.28C2.79 15.25 3.51 7.59 9.09 7.31C10.5 7.38 11.43 8.05 12.24 8.11C13.43 7.89 14.57 7.2 15.9 7.3C17.47 7.42 18.68 8.1 19.49 9.33C15.76 11.44 16.52 16.13 19.95 17.34C19.31 18.41 18.54 19.47 17.05 20.29V20.28ZM12.03 7.25C11.88 5.02 13.69 3.18 15.77 3C16.06 5.58 13.43 7.5 12.03 7.25Z" fill="white"/>
-                  </svg>
-                </div>
-                <div className="store-text">
-                  <span className="small-text">{t('home.app.app_store')}</span>
-                  <span className="big-text">{t('home.app.app_store_name')}</span>
-                </div>
-              </a>
-              <a href="#" className="google-play">
-                <div className="store-icon">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4.42 20.1C4.15 19.89 4 19.56 4 19.2V4.8C4 4.44 4.16 4.11 4.42 3.9L12.13 12L4.42 20.1ZM13.93 13.87L6.99 17.71L14.93 13.12L16.58 12L14.93 10.88L6.99 6.29L13.93 10.13L17.17 12L13.93 13.87ZM14.42 20.6L21.18 16.4C21.7 16.08 22 15.54 22 14.95C22 14.36 21.7 13.82 21.18 13.5L14.42 9.4L12.71 11.07L16.38 12.93C16.51 13 16.51 13.2 16.38 13.27L12.71 15.13L14.42 16.8V20.6ZM4.42 3.9L6.99 6.29L16.43 12L6.99 17.71L4.42 20.1C4.74 20.33 5.16 20.35 5.5 20.12L13.93 15.13L16.19 13.17C16.27 13.11 16.33 13.01 16.33 12.91V12.09C16.33 11.99 16.27 11.89 16.19 11.83L13.93 9.87L5.5 4.88C5.16 4.65 4.73 4.67 4.42 4.9V3.9Z" fill="#673AB7"/>
-                  </svg>
-                </div>
-                <div className="store-text">
-                  <span className="small-text">{t('home.app.google_play')}</span>
-                  <span className="big-text">{t('home.app.google_play_name')}</span>
-                </div>
-              </a>
-            </div>
-          </div>
-        </section>
+        
 
         {/* Features Section (auto slider) */}
         <section className="features-section">
           {/* Desktop grid (>=1051px) */}
           <div className="features-grid">
-            <div className="feature-item">
-              <img src={VerifiedIcon} alt="Security" />
-              <p>{t('home.features.security')}</p>
-            </div>
-            <div className="feature-item">
-              <img src={IdentityIcon} alt="Identity" />
-              <p>{t('home.features.identity')}</p>
-            </div>
-            <div className="feature-item">
-              <img src={QualityIcon} alt="Quality" />
-              <p>{t('home.features.quality')}</p>
-            </div>
-            <div className="feature-item">
-              <img src={PriceIcon} alt="Price" />
-              <p>{t('home.features.price')}</p>
+          <div className="feature-item">
+            <img src={VerifiedIcon} alt="Security" />
+            <p>{t('home.features.security')}</p>
+          </div>
+          <div className="feature-item">
+            <img src={IdentityIcon} alt="Identity" />
+            <p>{t('home.features.identity')}</p>
+          </div>
+          <div className="feature-item">
+            <img src={QualityIcon} alt="Quality" />
+            <p>{t('home.features.quality')}</p>
+          </div>
+          <div className="feature-item">
+            <img src={PriceIcon} alt="Price" />
+            <p>{t('home.features.price')}</p>
             </div>
           </div>
 
@@ -644,14 +650,14 @@ const UsersLanding: React.FC = () => {
         {/* Top Picks Section */}
         <section className="top-picks" style={{maxWidth: `100%`}}>
           <div className="section-header">
-            <h2>{t('home.top_picks')}</h2>
+            <h2 className="top-picks-title">{t('home.top_picks')}</h2>
             {topProperties.length > 0 && (
               <div className="navigation-buttons">
-                <button onClick={() => handleTopNav('left')}>
-                  ‹
+                <button onClick={() => handleTopNav('left')} aria-label="Previous">
+                  <IoChevronBackOutline />
                 </button>
-                <button onClick={() => handleTopNav('right')}>
-                  ›
+                <button onClick={() => handleTopNav('right')} aria-label="Next">
+                  <IoChevronForwardOutline />
                 </button>
               </div>
             )}
@@ -663,25 +669,25 @@ const UsersLanding: React.FC = () => {
                 {topProperties.length === 0 ? (
                   <PropertyCardSkeleton />
                 ) : (
-                  <PropertyCard
-                    id={property.id}
-                    image={property.image}
-                    title={property.title}
-                    subtitle={property.subtitle}
-                    price={property.price}
-                    priceType={property.priceType}
-                    minstay={property.minstay}
-                    description={property.description}
-                    isRecommended={property.isRecommended}
-                    propertyType={property.propertyType}
-                    isFavorite={property.isFavorite}
-                    housingPreference={property.housingPreference}
-                    onToggleFavorite={() => {}}
-                  />
+                <PropertyCard
+                  id={property.id}
+                  image={property.image}
+                  title={property.title}
+                  subtitle={property.subtitle}
+                  price={property.price}
+                  priceType={property.priceType}
+                  minstay={property.minstay}
+                  description={property.description}
+                  isRecommended={property.isRecommended}
+                  propertyType={property.propertyType}
+                  isFavorite={property.isFavorite}
+                  housingPreference={property.housingPreference}
+                  onToggleFavorite={() => {}}
+                />
                 )}
               </div>
             ))}
-            </div>
+          </div>
           </div>
           {topProperties.length > 0 && (
             <div className="pagination-dots">
@@ -750,7 +756,7 @@ const UsersLanding: React.FC = () => {
         </section>
 
         {/* Renter Protection - Mobile Version (<=700px) */}
-        <section className="renter-protection-mobile">
+        <section className="renter-protection-mobile" style={{maxWidth: `100%`}}>
           <div className="rp-header">
             <div className="rp-title">{t('home.renter_protection.title')}</div>
           </div>
@@ -783,23 +789,20 @@ const UsersLanding: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="rp-cta">
-            <button className="primary-button" onClick={() => navigate('/properties')}>{t('home.slider.search_button')}</button>
-            <button className="secondary-button" onClick={() => navigate('/faqs')}>{t('home.slider.faq_button')}</button>
-          </div>
+          
         </section>
 
         {/* Recommended Properties Section */}
-        <section className="recommended-properties" style={{maxWidth: `100%`}}>
+        <section className="top-picks" style={{maxWidth: `100%`}}>
           <div className="section-header">
-            <h2>{t('home.recommended')}</h2>
+            <h2 className="top-picks-title" style={{maxWidth: `60%`}}>{t('home.recommended_short', 'Top Picks')}</h2>
             {recommendedProperties.length > 0 && (
               <div className="navigation-buttons">
-                <button onClick={() => handleRecNav('left')}>
-                  ‹
+                <button onClick={() => handleRecNav('left')} aria-label="Previous">
+                  <IoChevronBackOutline />
                 </button>
-                <button onClick={() => handleRecNav('right')}>
-                  ›
+                <button onClick={() => handleRecNav('right')} aria-label="Next">
+                  <IoChevronForwardOutline />
                 </button>
               </div>
             )}
@@ -811,25 +814,25 @@ const UsersLanding: React.FC = () => {
                   {recommendedProperties.length === 0 ? (
                     <PropertyCardSkeleton />
                   ) : (
-                    <PropertyCard
-                      id={property.id}
-                      image={property.image}
-                      title={property.title}
-                      subtitle={property.subtitle}
-                      price={property.price}
-                      priceType={property.priceType}
-                      minstay={property.minstay}
-                      description={property.description}
-                      isRecommended={property.isRecommended}
-                      propertyType={property.propertyType}
-                      isFavorite={property.isFavorite}
-                      housingPreference={property.housingPreference}
-                      onToggleFavorite={() => {}}
-                    />
+                <PropertyCard
+                  id={property.id}
+                  image={property.image}
+                  title={property.title}
+                  subtitle={property.subtitle}
+                  price={property.price}
+                  priceType={property.priceType}
+                  minstay={property.minstay}
+                  description={property.description}
+                  isRecommended={property.isRecommended}
+                  propertyType={property.propertyType}
+                  isFavorite={property.isFavorite}
+                  housingPreference={property.housingPreference}
+                  onToggleFavorite={() => {}}
+                />
                   )}
-                </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
           </div>
           {recommendedProperties.length > 0 && (
             <div className="pagination-dots">
@@ -930,8 +933,10 @@ const UsersLanding: React.FC = () => {
           </div>
         </section>
 
-        {/* Features Footer */}
+        {/* Features Footer (desktop grid + mobile slider) */}
         <section className="features-footer">
+          {/* Desktop grid */}
+          <div className="features-footer-grid">
           <div className="feature-item">
             <img src={VerifiedIcon} alt="Security" />
             <p>{t('home.features.security')}</p>
@@ -947,6 +952,37 @@ const UsersLanding: React.FC = () => {
           <div className="feature-item">
             <img src={PriceIcon} alt="Price" />
             <p>{t('home.features.price')}</p>
+            </div>
+          </div>
+
+          {/* Mobile slider */}
+          <div 
+            className="footer-features-slider"
+            ref={footerFeatureContainerRef}
+            onTouchStart={onFooterFeatureTouchStart}
+            onTouchMove={onFooterFeatureTouchMove}
+            onTouchEnd={onFooterFeatureTouchEnd}
+          >
+            <div 
+              className="feature-track"
+              style={{ transform: `translateX(calc(-${footerFeatureIndex * 100}% + ${footerDragging ? footerTouchDeltaX : 0}px))` }}
+            >
+              {features.map((f, i) => (
+                <div key={`footer-${i}`} className="feature-card">
+                  <img src={f.icon} alt="feature" className="feature-icon" />
+                  <p className="feature-text">{t(f.textKey)}</p>
+                </div>
+              ))}
+            </div>
+            <div className="feature-dots">
+              {features.map((_, i) => (
+                <span
+                  key={`footer-dot-${i}`}
+                  className={`dot ${i === footerFeatureIndex ? 'active' : ''}`}
+                  onClick={() => setFooterFeatureIndex(i)}
+                />
+              ))}
+            </div>
           </div>
         </section>
       </UsersLandingStyle>

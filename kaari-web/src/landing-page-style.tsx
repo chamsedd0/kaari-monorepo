@@ -26,17 +26,7 @@ export const UsersLandingStyle = styled.div`
         padding-top: 100px;
         overflow: hidden;
         
-        &::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 50%;
-            height: 100%;
-            background: radial-gradient(circle at right top, ${Theme.colors.primary}10, transparent 50%);
-            z-index: 1;
-            opacity: 0.8;
-        }
+        
 
         &::before {
             content: '';
@@ -59,30 +49,9 @@ export const UsersLandingStyle = styled.div`
             padding-top: 0px;
             position: relative;
             
-            &::before {
-                content: '';
-                position: absolute;
-                bottom: -150px;
-                right: -100px;
-                width: 250px;
-                height: 250px;
-                background: radial-gradient(circle, ${Theme.colors.secondary}20 0%, transparent 70%);
-                border-radius: 50%;
-                z-index: -1;
-            }
             
-            &::after {
-                content: '';
-                position: absolute;
-                top: -50px;
-                left: -150px;
-                width: 300px;
-                height: 300px;
-                background: radial-gradient(circle, ${Theme.colors.secondary}40 0%, transparent 70%);
-                border-radius: 50%;
-                z-index: -1;
-                animation: pulse 8s infinite ease-in-out;
-            }
+            
+           
 
             h1 {
             font: ${Theme.typography.fonts.h1};
@@ -110,32 +79,7 @@ export const UsersLandingStyle = styled.div`
 
 
                 
-                &::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-            width: 100%;
-                    height: 100%;
-                    border-radius: 16px;
-                    box-sizing: border-box;
-                    pointer-events: none;
-                    z-index: 4;
-                }
                 
-                &::after {
-                    content: '';
-                    position: absolute;
-                    bottom: -15px;
-                    left: 20px;
-                    right: 20px;
-                    height: 10px;
-                    background: rgba(0,0,0,0.1);
-                    filter: blur(10px);
-                    border-radius: 50%;
-                    z-index: -1;
-                    transition: all 0.3s ease;
-                }
         }
 
         .explore-link {
@@ -194,6 +138,15 @@ export const UsersLandingStyle = styled.div`
                 .explore-link {
                     justify-content: center;
                     display: flex;
+                }
+            }
+
+            @media (max-width: 700px) {
+                .explore-link {
+                    font-size: 14px;
+                    gap: 8px;
+                    margin-top: 18px;
+                    .arrow-icon img { width: 16px; height: 16px; }
                 }
             }
             
@@ -490,7 +443,7 @@ export const UsersLandingStyle = styled.div`
         padding: 80px 6%;
         background-color: ${Theme.colors.white};
         max-width: 1400px;
-        width: 100%;
+            width: 100%;
         margin: 0 auto;
 
         /* Desktop grid */
@@ -542,7 +495,7 @@ export const UsersLandingStyle = styled.div`
         }
         .feature-text {
             font: ${Theme.typography.fonts.largeM};
-            color: ${Theme.colors.gray2};
+                color: ${Theme.colors.gray2};
         }
         .feature-dots {
             display: flex;
@@ -944,10 +897,10 @@ export const UsersLandingStyle = styled.div`
             justify-content: space-between;
             max-width: 1400px;
             margin: 0 auto 24px;
-            
-            h2 {
-                font: ${Theme.typography.fonts.h2};
-                color: ${Theme.colors.black};
+        
+        h2 {
+            font: ${Theme.typography.fonts.h2};
+            color: ${Theme.colors.black};
                 margin: 0;
                 text-align: left;
             }
@@ -1019,11 +972,12 @@ export const UsersLandingStyle = styled.div`
         /* Mobile tweaks */
         @media (max-width: 1050px) {
             padding: 80px 4%;
-            .section-header { margin-bottom: 16px; }
+            .section-header { margin-bottom: 16px; font-size: 12px; }
+            .section-header .top-picks-title { font-size: 24px !important; }
             .carousel-viewport { width: 100%; max-width: 100%; overflow: visible; }
             .property-grid { width: 100%; max-width: 100%; gap: 16px; overflow-x: auto; padding-left: 8px; padding-right: 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
             .property-grid .property-card { min-width: calc(100% - 16px); max-width: calc(100% - 16px); scroll-snap-align: start; }
-            .navigation-buttons button { width: 44px; height: 44px; }
+            .navigation-buttons button { width: 36px; height: 36px; }
         }
 
         /* Mobile tweaks */
@@ -1034,7 +988,19 @@ export const UsersLandingStyle = styled.div`
             .property-grid .property-card { min-width: clamp(220px, 82vw, 300px); scroll-snap-align: start; }
             .property-grid .property-card:first-child { margin-left: 4px; }
             .property-grid .property-card:last-child { margin-right: 4px; }
-            .navigation-buttons button { width: 44px; height: 44px; }
+            .navigation-buttons button { width: 36px; height: 36px; }
+        }
+
+        /* Smaller cards under 700px */
+        @media (max-width: 700px) {
+            .property-grid { gap: 12px; padding-left: 4px; padding-right: 4px; }
+            .property-grid .property-card { min-width: clamp(200px, 74vw, 260px); max-width: clamp(200px, 74vw, 260px); }
+            .navigation-buttons button { width: 32px; height: 32px; }
+            /* Softer, narrower fades on mobile */
+            .carousel-viewport::before,
+            .carousel-viewport::after { width: 28px; }
+            .carousel-viewport::before { background: linear-gradient(to right, ${Theme.colors.white} 0%, rgba(255,255,255,0) 80%); }
+            .carousel-viewport::after { background: linear-gradient(to left, ${Theme.colors.white} 0%, rgba(255,255,255,0) 80%); }
         }
     }
 
@@ -1293,10 +1259,10 @@ export const UsersLandingStyle = styled.div`
             justify-content: space-between;
             max-width: 1400px;
             margin: 0 auto 24px;
-            
-            h2 {
-                font: ${Theme.typography.fonts.h2};
-                color: ${Theme.colors.black};
+        
+        h2 {
+            font: ${Theme.typography.fonts.h2};
+            color: ${Theme.colors.black};
                 margin: 0;
                 text-align: left;
             }
@@ -1365,6 +1331,14 @@ export const UsersLandingStyle = styled.div`
                 &.active { background: ${Theme.colors.secondary}; transform: scale(1.1); }
             }
         }
+    }
+
+    /* Recommended section mobile fade softness */
+    @media (max-width: 700px) {
+        .recommended-properties .carousel-viewport::before,
+        .recommended-properties .carousel-viewport::after { width: 28px; }
+        .recommended-properties .carousel-viewport::before { background: linear-gradient(to right, ${Theme.colors.white} 0%, rgba(255,255,255,0) 80%); }
+        .recommended-properties .carousel-viewport::after { background: linear-gradient(to left, ${Theme.colors.white} 0%, rgba(255,255,255,0) 80%); }
     }
 
     /* City Selection Section */
@@ -1542,29 +1516,29 @@ export const UsersLandingStyle = styled.div`
         
         @media (max-width: 768px) {
             padding: 60px 4%;
-
+            
             h2 {
                 font-size: 24px;
             }
-
+            
             .view-all {
                 margin-bottom: 24px;
                 padding: 10px 18px;
                 font-size: 14px;
-
+                
                 &::after {
                     width: 16px;
                     height: 16px;
                 }
             }
-
+            
             /* Mobile bento grid */
             .city-grid {
                 grid-template-columns: repeat(2, 1fr);
                 grid-auto-rows: clamp(90px, 22vw, 140px);
                 grid-auto-flow: dense;
                 gap: 12px;
-
+                
                 .city-card {
                     height: 100% !important;
 
@@ -1596,10 +1570,39 @@ export const UsersLandingStyle = styled.div`
                         grid-column: span 2;
                         grid-row: span 2;
                     }
-
+                    
                     .city-label {
                         font-size: 14px;
                         padding: 6px 14px;
+                    }
+                }
+            }
+        }
+
+        /* Tighter bento sizing under 700px */
+        @media (max-width: 700px) {
+            .city-grid {
+                /* Use 3 columns for smaller tiles and denser packing */
+                grid-template-columns: repeat(3, 1fr);
+                grid-auto-rows: clamp(70px, 18vw, 110px);
+                grid-auto-flow: dense;
+                gap: 10px;
+
+                .city-card {
+                    /* Default 1x1; create a balanced bento with no full-row singles */
+                    /* Large featured tile */
+                    &:nth-child(1) {
+                        grid-column: span 2 !important;
+                        grid-row: span 2 !important;
+                    }
+                    /* Tall tile later to keep early rows packed */
+                    &:nth-child(4) {
+                        grid-row: span 2 !important;
+                    }
+
+                    .city-label {
+                        font-size: 12px;
+                        padding: 5px 12px;
                     }
                 }
             }
@@ -2025,16 +2028,112 @@ export const UsersLandingStyle = styled.div`
         }
     }
 
+    /* Photoshoot card - mobile redesign <=700px */
+    @media (max-width: 700px) {
+        .list-property {
+            width: calc(100% - 24px);
+            padding: 22px 18px;
+            margin: 24px auto;
+            border-radius: 16px;
+            background: ${Theme.colors.secondary};
+            box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 12px;
+
+            &::after { display: none; }
+
+            .list-property-image {
+                order: 2;
+                margin: 0;
+                align-self: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                img {
+                    width: auto;
+                    height: 120px;
+                }
+            }
+
+            .list-property-content {
+                order: 1;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: flex-start;
+                h3 { 
+                    display: block; 
+                    color: ${Theme.colors.white};
+                    font-weight: 800; 
+                    font-size: 16px; 
+                    line-height: 16px; 
+                    margin: 0; 
+                }
+                h2 {
+                    font-weight: 800;
+                    font-size: 24px;
+                    line-height: 28px;
+                    margin: 8px 0 6px 0;
+                    color: ${Theme.colors.white};
+                }
+                p {
+                    margin: 8px 0;
+                    font-size: 12px;
+                    line-height: 16px;
+                    opacity: 0.95;
+                    max-width: none;
+                    color: ${Theme.colors.white};
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                    max-width: 50%;
+                }
+
+                .buttons-container {
+                    width: 100%;
+                    gap: 0;
+                }
+                .photoshoot-button {
+                    width: 70%;
+                    border-radius: 100px;
+                    font-size: 15px;
+                    font-weight: 800;
+                    min-width: 0;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    position: relative;
+                    background: ${Theme.colors.white};
+                    color: ${Theme.colors.secondary};
+                    border: none;
+                    max-width: 100%;
+                    box-sizing: border-box;
+                    overflow: hidden;
+                }
+                .read-more-button { display: none; }
+            }
+        }
+    }
+
     /* Features Footer */
     .features-footer {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 24px;
         padding: 60px 6%;
         background-color: ${Theme.colors.white};
         max-width: 1400px;
         width: 100%;
         margin: 0 auto;
+
+        /* Desktop grid */
+        .features-footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+        }
 
         .feature-item {
         display: flex;
@@ -2054,6 +2153,31 @@ export const UsersLandingStyle = styled.div`
                 color: ${Theme.colors.gray2};
                 line-height: 1.6;
             }
+        }
+
+        /* Mobile slider (hidden on desktop) */
+        .footer-features-slider {
+            max-width: 520px;
+            margin: 0 auto;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            overflow: hidden;
+        }
+
+        /* Reuse feature-track/card/dots styles */
+        .feature-track { display: flex; width: 100%; transition: transform 400ms ease; will-change: transform; }
+        .feature-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 28px 24px; border-radius: 16px; background: ${Theme.colors.white}; min-width: 100%; }
+        .feature-icon { width: 56px; height: 56px; margin-bottom: 16px; }
+        .feature-text { font: ${Theme.typography.fonts.largeM}; color: ${Theme.colors.gray2}; }
+        .feature-dots { display: flex; gap: 6px; align-items: center; justify-content: center; }
+        .feature-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: ${Theme.colors.sixth}; cursor: pointer; transition: transform 0.2s ease, background 0.2s ease; }
+        .feature-dots .dot.active { background: ${Theme.colors.secondary}; transform: scale(1.15); }
+
+        @media (max-width: 1050px) {
+            .features-footer-grid { display: none; }
+            .footer-features-slider { display: flex; }
         }
     }
 
@@ -2115,20 +2239,20 @@ export const MobileCarouselFix = styled.div`
       line-height: 1.2 !important;
     }
 
-    /* Hide edge fades by default on mobile; only show via explicit classes */
+    /* Ensure fades show correctly on mobile when classes are toggled */
     .top-picks .carousel-viewport::before,
     .top-picks .carousel-viewport::after,
     .recommended-properties .carousel-viewport::before,
     .recommended-properties .carousel-viewport::after {
-      opacity: 0 !important;
+      opacity: 0;
     }
     .top-picks .carousel-viewport.show-left-fade::before,
     .recommended-properties .carousel-viewport.show-left-fade::before {
-      opacity: 1 !important;
+      opacity: 1;
     }
     .top-picks .carousel-viewport.show-right-fade::after,
     .recommended-properties .carousel-viewport.show-right-fade::after {
-      opacity: 1 !important;
+      opacity: 1;
     }
 
     /* Make section titles smaller/responsive on mobile */
@@ -2162,6 +2286,6 @@ export const MobileCarouselFix = styled.div`
       min-width: calc(100% - 20px) !important;
       max-width: calc(100% - 20px) !important;
       scroll-snap-align: start;
+        }
     }
-  }
 `;

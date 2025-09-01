@@ -32,7 +32,7 @@ const HeaderContainer = styled(HeaderBaseModel)<{
     isWhite ? Theme.colors.white : 
     (isTransparent ? (scrolled ? Theme.colors.primary : 'transparent') : Theme.colors.primary)
   };
-  border: ${({ isWhite }) => isWhite ? Theme.borders.primary : 'none !important'};
+  border: none;
   padding: ${({ scrolled, isWhite }) => isWhite ? '20px' : (scrolled ? '0 40px' : '0 6%')};
   position: fixed;
   top: 0;
@@ -70,6 +70,10 @@ const HeaderContainer = styled(HeaderBaseModel)<{
       height: 100%;
       object-fit: contain;
     }
+  }
+
+  @media (max-width: 700px) {
+    .logo { height: 28px; max-width: 90px; }
   }
 
   .nav-links {
@@ -272,9 +276,10 @@ const HeaderContainer = styled(HeaderBaseModel)<{
     justify-content: center;
     width: 40px;
     height: 40px;
+    transform: translateX(10px);
     border-radius: 10px;
-    border: ${({ isWhite }) => isWhite ? `1px solid ${Theme.colors.fifth}` : '1px solid rgba(255,255,255,0.4)'};
-    background: ${({ isWhite }) => isWhite ? Theme.colors.white : 'rgba(255,255,255,0.15)'};
+    border: ${({ isWhite }) => isWhite ? `0px solid ${Theme.colors.fifth}` : '0px solid rgba(255,255,255,0.4)'};
+    background: ${({ isWhite }) => isWhite ? 'transparent' : 'transparent'};
     cursor: pointer;
     transition: background 0.2s ease, transform 0.1s ease;
   }

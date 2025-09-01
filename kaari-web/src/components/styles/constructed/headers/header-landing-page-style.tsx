@@ -45,6 +45,10 @@ export const HeaderLandingPageStyle = styled(HeaderBaseModel)<HeaderLandingPageS
         }
     }
 
+    @media (max-width: 700px) {
+        .logo { height: 28px; max-width: 90px; }
+    }
+
     .nav-links {
         display: flex;
         align-items: center;
