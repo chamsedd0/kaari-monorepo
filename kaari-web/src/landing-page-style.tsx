@@ -1197,8 +1197,7 @@ export const UsersLandingStyle = styled.div`
             }
 
             .protection-image {
-                flex: 1 1 320px;
-                min-width: 260px;
+                display: none; /* Hide protection image under 1050px */
             }
         }
     }
@@ -2174,6 +2173,11 @@ export const UsersLandingStyle = styled.div`
                 .read-more-button { display: none; }
             }
         }
+    }
+
+    /* Hide SVG/illustration in photoshoot card between 1050px and 700px */
+    @media (max-width: 1050px) and (min-width: 701px) {
+        .list-property .list-property-image { display: none; }
     }
 
     /* Features Footer */

@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useJsApiLoader } from '@react-google-maps/api';
+import { getGoogleMapsLoaderOptions } from '../../../../utils/googleMapsConfig';
 import { useNavigate } from "react-router-dom";
 import { FormBaseModelVariant1 } from "../../../styles/constructed/forms/form-base-model-style-variant-1";
 
@@ -24,6 +26,9 @@ const BookingSearchForm: React.FC<BookingSearchFormProps> = ({ onSubmit }) => {
   };
   
   const [selectedDate, setSelectedDate] = useState(getTomorrowDate());
+  const { isLoaded } = useJsApiLoader(getGoogleMapsLoaderOptions());
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocation(e.target.value);
@@ -41,6 +46,11 @@ const BookingSearchForm: React.FC<BookingSearchFormProps> = ({ onSubmit }) => {
     
     if (location) {
       params.append("location", location);
+    }
+    if (typeof lat === 'number' && typeof lng === 'number') {
+      params.set('lat', String(lat));
+      params.set('lng', String(lng));
+      params.set('radius', '15');
     }
     
     if (selectedDate) {
@@ -87,6 +97,14 @@ const BookingSearchForm: React.FC<BookingSearchFormProps> = ({ onSubmit }) => {
         placeholder="Location"
         value={location}
         onChange={handleSearchChange}
+        onPlaceSelected={(text, plat, plng) => {
+          setLocation(text);
+          if (typeof plat === 'number' && typeof plng === 'number') {
+            setLat(plat); setLng(plng);
+            (window as any).__search_lat = plat;
+            (window as any).__search_lng = plng;
+          }
+        }}
       />
 
       <InputVariantDatePicker
