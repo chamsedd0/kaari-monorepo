@@ -37,7 +37,10 @@ export const PropertyPage = styled.div<PropertyPageProps>`
 
     @media (max-width: 1400px) {
       padding-right: calc(33.3% + 20px);
-  }
+    }
+    @media (max-width: 1300px) {
+      padding-right: 0;
+    }
 
   .photo-slider {
     width: 100%;
@@ -540,6 +543,12 @@ export const PropertyPage = styled.div<PropertyPageProps>`
     box-sizing: border-box;
   }
 
+  @media (max-width: 1300px) {
+    .checkout-box {
+      display: none;
+    }
+  }
+
   .checkout-box.fixed {
     position: fixed;
     top: 0;
@@ -606,6 +615,92 @@ export const PropertyPage = styled.div<PropertyPageProps>`
       
     }
     
+  }
+
+  /* Mobile toggle elements for Send Request card */
+  .mobile-toggle-button {
+    position: fixed;
+    bottom: 60px;
+    right: 40px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: ${Theme.colors.secondary};
+    color: ${Theme.colors.white};
+    border: none;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    z-index: 1200;
+    cursor: pointer;
+  }
+
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.22);
+    z-index: 1100;
+    display: none;
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+
+  .mobile-card-container {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    background: ${Theme.colors.white};
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    border: ${Theme.borders.primary};
+    border-bottom: none;
+    padding: 0;
+    z-index: 1201;
+    transform: translateY(40px);
+    opacity: 0;
+    will-change: transform, opacity;
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 260ms ease;
+    visibility: hidden;
+    pointer-events: none;
+    box-shadow: 0 -12px 30px rgba(0,0,0,0.1);
+  }
+
+  @media (max-width: 1300px) {
+    .mobile-toggle-button { display: flex; }
+    .mobile-overlay.open { display: block; opacity: 1; }
+    .mobile-card-container { display: block; }
+    .mobile-card-container.open { transform: translateY(0); opacity: 1; visibility: visible; pointer-events: auto; }
+  }
+
+  @media (max-width: 700px) {
+    .mobile-card-container { max-height: 96vh; }
+  }
+
+  /* Close button inside the mobile bottom sheet */
+  .mobile-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.06);
+    color: ${Theme.colors.black};
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  @media (max-width: 1300px) {
+    .mobile-close { display: inline-flex; }
   }
 
 `;

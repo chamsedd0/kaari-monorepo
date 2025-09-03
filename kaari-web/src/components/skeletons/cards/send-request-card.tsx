@@ -314,27 +314,33 @@ const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({
 
   return (
     <PropertyRequestCardStyle>
-      <div className="title">
-        {title}
-        {isVerified && <CertificationBanner purple text="Kaari Verified" />}
+      <div className="scalable-section section-title">
+        <div className="title">
+          {title}
+          {isVerified && <CertificationBanner purple text="Kaari Verified" />}
+        </div>
       </div>
       
       {loading && (
-        <DiscountLoadingContainer>
-          <LoadingSpinner />
-          <span>Checking for available discounts...</span>
-        </DiscountLoadingContainer>
+        <div className="scalable-section section-loading">
+          <DiscountLoadingContainer>
+            <LoadingSpinner />
+            <span>Checking for available discounts...</span>
+          </DiscountLoadingContainer>
+        </div>
       )}
       
       {error && (
-        <ReferralDiscountErrorBanner 
-          error={error}
-          onRetry={refreshDiscount}
-        />
+        <div className="scalable-section section-error">
+          <ReferralDiscountErrorBanner 
+            error={error}
+            onRetry={refreshDiscount}
+          />
+        </div>
       )}
       
       {activeDiscount && (
-        <>
+        <div className="scalable-section section-discount">
           <ReferralDiscountExpiryWarning 
             timeLeft={activeDiscount.timeLeft}
             onBrowseProperties={handleBrowseProperties}
@@ -344,107 +350,117 @@ const PropertyRequestCard: React.FC<PropertyRequestCardProps> = ({
             timeLeft={activeDiscount.timeLeft}
             code={activeDiscount.code}
           />
-        </>
+        </div>
       )}
       
-      <div className="advertiser-information">
-        <div className="info-title">Advertiser</div>
-        <div className="profile-info">
-          <div className="profile">
-            <div className="badge">Landlord / Broker / Agency</div>
+      <div className="scalable-section section-advertiser">
+        <div className="advertiser-information">
+          <div className="info-title">Advertiser</div>
+          <div className="profile-info">
+            <div className="profile">
+              <div className="badge">Landlord / Broker / Agency</div>
+            </div>
+            <div className="view-profile" onClick={() => navigate(`/advertiser-profile/${ownerId}`)}>View Profile</div>
           </div>
-          <div className="view-profile" onClick={() => navigate(`/advertiser-profile/${ownerId}`)}>View Profile</div>
         </div>
       </div>
       
-      <div className="move-in-date" style={{ position: 'relative' }}>
-        <div className="info-title">Move in date</div>
-        <div className="details">
-          <div className="move-in-date-display" onClick={() => setDateDropdownOpen(!dateDropdownOpen)} style={{ cursor: 'pointer' }}>
-            <IoCalendarOutline style={{ marginRight: 8 }} />
-            {formatDateForDisplay(date)}
-            <IoChevronDown style={{ marginLeft: 8 }} />
-            {date && (
-              <button 
-                type="button"
-                style={{ background: 'none', border: 'none', marginLeft: 8, cursor: 'pointer' }}
-                onClick={e => { e.stopPropagation(); setDate(''); }}
-              >
-                <IoClose size={16} />
-              </button>
-            )}
+      <div className="scalable-section section-date">
+        <div className="move-in-date" style={{ position: 'relative' }}>
+          <div className="info-title">Move in date</div>
+          <div className="details">
+            <div className="move-in-date-display" onClick={() => setDateDropdownOpen(!dateDropdownOpen)} style={{ cursor: 'pointer' }}>
+              <IoCalendarOutline style={{ marginRight: 8 }} />
+              {formatDateForDisplay(date)}
+              <IoChevronDown style={{ marginLeft: 8 }} />
+              {date && (
+                <button 
+                  type="button"
+                  style={{ background: 'none', border: 'none', marginLeft: 8, cursor: 'pointer' }}
+                  onClick={e => { e.stopPropagation(); setDate(''); }}
+                >
+                  <IoClose size={16} />
+                </button>
+              )}
+            </div>
+            <div className="buttons">
+              <ShareButton onClick={() => setShareOpen(true)} />
+              <LikeBannerBaseModelLikeVariant1 />
+            </div>
           </div>
-          <div className="buttons">
-            <ShareButton onClick={() => setShareOpen(true)} />
-            <LikeBannerBaseModelLikeVariant1 />
-          </div>
-        </div>
-        <DatePickerDropdown isOpen={dateDropdownOpen} ref={datePickerRef} onClick={e => e.stopPropagation()}>
-          <DatePickerHeader>
-            <MonthNavigationButton type="button" onClick={handlePrevMonth}>&lsaquo;</MonthNavigationButton>
-            <MonthYearLabel>{currentMonth.toLocaleDateString(navigator.language, { month: 'long', year: 'numeric' })}</MonthYearLabel>
-            <MonthNavigationButton type="button" onClick={handleNextMonth}>&rsaquo;</MonthNavigationButton>
-          </DatePickerHeader>
-          <DaysHeader>
-            {dayNames.map((day, index) => (
-              <DayLabel key={index}>{day}</DayLabel>
-            ))}
-          </DaysHeader>
-          <DayGrid>
-            {generateCalendarDays().map((day, index) => (
-              <DayButton
-                key={index}
-                type="button"
-                isToday={isToday(day.year, day.month, day.day)}
-                isSelected={isSelectedDate(day.year, day.month, day.day)}
-                isCurrentMonth={day.isCurrentMonth}
-                onClick={() => handleDateSelect(day.year, day.month, day.day)}
-                disabled={new Date(day.year, day.month, day.day) < new Date(tomorrowISO)}
-              >
-                {day.day}
-              </DayButton>
-            ))}
-          </DayGrid>
-        </DatePickerDropdown>
-      </div>
-      
-      <div className="price-breakdown">
-          <div className="row first">Price breakdown <img src={InfoIcon} alt="info" /></div>
-        <div className="row">
-          <span>Price for 30 days</span>
-          <span>{priceFor30Days} MAD</span>
-        </div>
-        <div className="row">
-          <span>Tenant commission</span>
-          <span>{serviceFee} MAD</span>
-        </div>
-        {activeDiscount && (
-          <div className="row discount">
-            <span>Referral discount</span>
-            <span>-{activeDiscount.amount} MAD</span>
-          </div>
-        )}
-        <div className="separation-line"></div>
-        <div className="row total">
-          <span>In Total</span>
-          <span className="total-price">
-            {activeDiscount ? (
-              <>
-                <span style={{ textDecoration: 'line-through', fontSize: '0.8em', marginRight: '8px', color: Theme.colors.gray2 }}>
-                  {totalPrice} MAD
-                </span>
-                {discountedTotalPrice} MAD
-              </>
-            ) : (
-              `${totalPrice} MAD`
-            )}
-          </span>
+          <DatePickerDropdown isOpen={dateDropdownOpen} ref={datePickerRef} onClick={e => e.stopPropagation()}>
+            <DatePickerHeader>
+              <MonthNavigationButton type="button" onClick={handlePrevMonth}>&lsaquo;</MonthNavigationButton>
+              <MonthYearLabel>{currentMonth.toLocaleDateString(navigator.language, { month: 'long', year: 'numeric' })}</MonthYearLabel>
+              <MonthNavigationButton type="button" onClick={handleNextMonth}>&rsaquo;</MonthNavigationButton>
+            </DatePickerHeader>
+            <DaysHeader>
+              {dayNames.map((day, index) => (
+                <DayLabel key={index}>{day}</DayLabel>
+              ))}
+            </DaysHeader>
+            <DayGrid>
+              {generateCalendarDays().map((day, index) => (
+                <DayButton
+                  key={index}
+                  type="button"
+                  isToday={isToday(day.year, day.month, day.day)}
+                  isSelected={isSelectedDate(day.year, day.month, day.day)}
+                  isCurrentMonth={day.isCurrentMonth}
+                  onClick={() => handleDateSelect(day.year, day.month, day.day)}
+                  disabled={new Date(day.year, day.month, day.day) < new Date(tomorrowISO)}
+                >
+                  {day.day}
+                </DayButton>
+              ))}
+            </DayGrid>
+          </DatePickerDropdown>
         </div>
       </div>
       
-      <PurpleButtonLB60 text='Send A Request' onClick={handleSendRequest} disabled={!date} />
-      <div className="disclaimer">
-        You will not pay anything yet
+      <div className="scalable-section section-price">
+        <div className="price-breakdown">
+            <div className="row first">Price breakdown <img src={InfoIcon} alt="info" /></div>
+          <div className="row">
+            <span>Price for 30 days</span>
+            <span>{priceFor30Days} MAD</span>
+          </div>
+          <div className="row">
+            <span>Tenant commission</span>
+            <span>{serviceFee} MAD</span>
+          </div>
+          {activeDiscount && (
+            <div className="row discount">
+              <span>Referral discount</span>
+              <span>-{activeDiscount.amount} MAD</span>
+            </div>
+          )}
+          <div className="separation-line"></div>
+          <div className="row total">
+            <span>In Total</span>
+            <span className="total-price">
+              {activeDiscount ? (
+                <>
+                  <span style={{ textDecoration: 'line-through', fontSize: '0.8em', marginRight: '8px', color: Theme.colors.gray2 }}>
+                    {totalPrice} MAD
+                  </span>
+                  {discountedTotalPrice} MAD
+                </>
+              ) : (
+                `${totalPrice} MAD`
+              )}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="send-request-button scalable-section section-button">
+        <PurpleButtonLB60 text='Send A Request' onClick={handleSendRequest} disabled={!date} />
+      </div>
+      <div className="scalable-section section-disclaimer">
+        <div className="disclaimer">
+          You will not pay anything yet
+        </div>
       </div>
       <ShareFlatmateModal 
         open={shareOpen}

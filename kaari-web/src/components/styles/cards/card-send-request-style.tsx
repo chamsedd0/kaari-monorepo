@@ -18,6 +18,32 @@ export const PropertyRequestCardStyle = styled.div`
     padding-top: 30px;
 
 
+    .scalable-section {
+        width: 100%;
+        transform-origin: top left;
+        transition: transform 200ms ease;
+    }
+
+    @media (max-width: 1500px) {
+        gap: 16px;
+        .scalable-section { transform: translateX(60%) scale(0.8); }
+
+        /* Top sections move down slightly */
+        .section-title { transform: translateY(24px) scale(0.8); }
+        .section-loading { transform: translateY(16px) scale(0.8); }
+        .section-error { transform: translateY(16px) scale(0.8); }
+        .section-discount { transform: translateY(0px) scale(0.8); }
+        .section-advertiser { transform: translateY(-12px) scale(0.8); }
+
+        /* Mid section stays close to baseline or slight up */
+        .section-date { transform: translateY(-16px) scale(0.8); }
+        .section-price { transform: translateY(-24px) scale(0.8); }
+
+        /* Bottom sections move up more */
+        .section-button { transform: translateY(-40px) scale(0.8); }
+        .section-disclaimer { transform: translateY(-44px) scale(0.8); }
+    }
+
     .title {
         width: 100%;
         font: ${Theme.typography.fonts.h4DB};

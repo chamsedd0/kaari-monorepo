@@ -4,6 +4,7 @@ import { PropertyPage } from "./styles";
 import PhotoSlider from "../../components/skeletons/constructed/slider/photo-slider";
 import pictures from '../../assets/images/propertyExamplePic.png'
 import PropertyRequestCard from "../../components/skeletons/cards/send-request-card";
+import MobilePropertyRequestCard from "../../components/skeletons/cards/mobile-send-request-card";
 import ProfilePic from '../../assets/images/ProfilePicture.png'
 import TimeLine from '../../components/skeletons/icons/safeMoneyTimeLine.svg'
 import { CertificationBanner } from "../../components/skeletons/banners/static/certification-banner";
@@ -25,6 +26,7 @@ import { getUserById } from '../../backend/server-actions/UserServerActions';
 import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { useStore } from "../../backend/store";
 import { IoEyeOutline, IoPersonCircleOutline, IoLogInOutline, IoHomeOutline } from 'react-icons/io5';
+import { IoChatbubbleEllipsesOutline, IoClose } from 'react-icons/io5';
 import { getGoogleMapsLoaderOptions } from '../../utils/googleMapsConfig';
 
 
@@ -143,6 +145,7 @@ const PropertyPageComponent = () => {
   
   // Track window width for responsive positioning
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [mobileCardOpen, setMobileCardOpen] = useState(false);
   
   useEffect(() => {
     async function fetchData() {
@@ -200,6 +203,9 @@ const PropertyPageComponent = () => {
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
+      if (window.innerWidth > 1300) {
+        setMobileCardOpen(false);
+      }
     };
     
     const handleScroll = () => {
@@ -235,6 +241,14 @@ const PropertyPageComponent = () => {
       window.removeEventListener('resize', handleScroll);
       window.removeEventListener('resize', handleResize);
     };
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileCardOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
   // Apply the appropriate className and style to checkout box
@@ -750,6 +764,37 @@ const PropertyPageComponent = () => {
         )}
         {/* Share moved into popup from send-request card */}
       </div>
+      {/* Mobile toggle elements */}
+      <div className={`mobile-overlay ${mobileCardOpen ? 'open' : ''}`} onClick={() => setMobileCardOpen(false)} />
+      <div className={`mobile-card-container ${mobileCardOpen ? 'open' : ''}`}>
+        {isClient ? (
+          <div style={{ position: 'relative', padding: '20px 20px 28px', overflow: 'auto', maxHeight: '90vh' }}>
+            <button className="mobile-close" aria-label="Close" onClick={() => setMobileCardOpen(false)}>
+              <IoClose size={20} />
+            </button>
+            <MobilePropertyRequestCard
+              title={property.title || 'N/A'}
+              isVerified={true}
+              moveInDate={availableFrom}
+              priceFor30Days={property.price || 0}
+              serviceFee={Math.round((property.price || 0) * 0.25)}
+              totalPrice={Math.round((property.price || 0) + ((property.price || 0) * 0.25))}
+              propertyId={property.id}
+              ownerId={advertiser?.id || ''}
+              imageUrl={(property.images && property.images[0]) || ''}
+              city={property.address?.city}
+              country={property.address?.country}
+            />
+          </div>
+        ) : null}
+      </div>
+      <button 
+        className="mobile-toggle-button" 
+        onClick={() => setMobileCardOpen(prev => !prev)}
+        aria-label="Toggle send request card"
+      >
+        {mobileCardOpen ? <IoClose size={28} /> : <IoChatbubbleEllipsesOutline size={28} />}
+      </button>
     </PropertyPage>
   );
 };
